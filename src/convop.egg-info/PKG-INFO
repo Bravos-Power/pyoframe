@@ -1,0 +1,19 @@
+Metadata-Version: 2.1
+Name: convop
+Version: 0.0.1
+Summary: Blazing fast linear program interface
+Author-email: Martin Staadecker <machstg@gmail.com>
+Project-URL: Homepage, https://github.com/staadecker/convop
+Project-URL: Issues, https://github.com/staadecker/convop/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: polars==0.20.13
+Provides-Extra: dev
+Requires-Dist: black; extra == "dev"
+Requires-Dist: bumpver; extra == "dev"
+Requires-Dist: isort; extra == "dev"
+Requires-Dist: pip-tools; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"

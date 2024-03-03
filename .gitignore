@@ -1,1 +1,6 @@
-/pyproject.toml
+*.pyc
+__pycache__/
+build
+.vscode
+.venv
+.pytest_cache

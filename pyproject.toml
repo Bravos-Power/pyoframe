@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "convop"
+version = "0.0.1"
+authors = [{ name = "Martin Staadecker", email = "machstg@gmail.com" }]
+description = "Blazing fast linear program interface"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = ["polars==0.20.13"]
+
+[project.optional-dependencies]
+dev = ["black", "bumpver", "isort", "pip-tools", "pytest", "pre-commit"]
+
+[tool.isort]
+profile = "black"
+
+[project.urls]
+Homepage = "https://github.com/staadecker/convop"
+Issues = "https://github.com/staadecker/convop/issues"

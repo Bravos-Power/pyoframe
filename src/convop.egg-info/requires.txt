@@ -1,0 +1,9 @@
+polars==0.20.13
+
+[dev]
+black
+bumpver
+isort
+pip-tools
+pytest
+pre-commit
