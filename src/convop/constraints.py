@@ -1,11 +1,25 @@
 from enum import Enum
-from convop.expressions import Expression
+from re import L
+from typing import Literal, Self
+
+from convop.expressions import Expression, Expressionable
 
 
 class Sense(Enum):
     LE = "<="
     GE = ">="
     EQ = "="
+
+    @staticmethod
+    def from_str(s: str) -> "Sense":
+        if s == "<=":
+            return Sense.LE
+        elif s == ">=":
+            return Sense.GE
+        elif s == "=" or s == "==":
+            return Sense.EQ
+        else:
+            raise ValueError(f"Unknown sense: {s}")
 
 
 class Constraints:
@@ -26,9 +40,9 @@ class Constraints:
 
 def add_constraints(
     model,
-    lhs: Expression,
-    sense: Sense,
-    rhs: Expression,
+    lhs: Expressionable,
+    sense: Sense | Literal["<=", ">=", "=", "=="],
+    rhs: Expressionable,
     name: str | None = None,
 ):
     """Adds a constraint to the model.
@@ -44,6 +58,8 @@ def add_constraints(
     name: str, optional
         The name of the constraint. If using ModelBuilder this is automatically set to match your constraint name.
     """
-    constraints = Constraints(lhs=lhs, sense=sense, rhs=rhs, name=name)
+    if isinstance(sense, str):
+        sense = Sense.from_str(sense)
+    constraints = Constraints(lhs=lhs.to_expression(), sense=sense, rhs=rhs.to_expression(), name=name)
     model.constraints.append(constraints)
     return constraints

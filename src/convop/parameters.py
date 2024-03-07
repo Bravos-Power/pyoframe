@@ -1,5 +1,6 @@
-from convop.expressions import CONSTANTS_KEY, Expression, Expressionable
 import polars as pl
+
+from convop.expressions import CONSTANTS_KEY, Expression, Expressionable
 
 
 class Parameters(Expressionable):
@@ -21,7 +22,7 @@ class Parameters(Expressionable):
             + [pl.col(self.param_col_name).alias(CONSTANTS_KEY)]
         )
 
-    def toExpression(self):
+    def to_expression(self):
         return Expression(
             constants=self._getParamData(),
             variables=None,

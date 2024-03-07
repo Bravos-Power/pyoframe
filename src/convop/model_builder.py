@@ -1,14 +1,17 @@
 from pathlib import Path
-from typing import Any, Iterable, Tuple
+from typing import Any, Iterable, Sequence, Tuple, overload
+
+import polars as pl
+
 from convop.constraints import Constraints
 from convop.model import Model
 from convop.parameters import Parameters
 from convop.variables import Variables
 
-import polars as pl
-
 
 class ModelBuilder:
+    """Helper class that automatically handles assigning names to variables and constraints."""
+
     def __init__(self):
         self.m = Model()
 
@@ -18,15 +21,33 @@ class ModelBuilder:
         return super().__setattr__(__name, __value)
 
 
+@overload
 def load_parameters(
     df_or_path: str | pl.DataFrame | Path,
-    param_names: str | Iterable[str],
+    param_names: str,
+    dim: int | None = None,
+) -> Parameters: ...
+
+
+@overload
+def load_parameters(
+    df_or_path: str | pl.DataFrame | Path,
+    param_names: Sequence[str],
+    dim: int | None = None,
+) -> Tuple[Parameters, ...]: ...
+
+
+def load_parameters(
+    df_or_path: str | pl.DataFrame | Path,
+    param_names: str | Sequence[str],
     dim: int | None = None,
 ) -> Tuple[Parameters, ...] | Parameters:
-    param_names = list(param_names)
+    """Reads a DataFrame or file and returns a Parameters object for each column in param_names."""
+    if isinstance(param_names, str):
+        param_names = [param_names]
 
     if isinstance(df_or_path, (str, Path)):
-        df_or_path = read_file(df_or_path)
+        df_or_path = _read_file(df_or_path)
 
     assert len(df_or_path.columns) == len(set(df_or_path.columns))
 
@@ -41,7 +62,9 @@ def load_parameters(
 
     params = []
     for param_name in param_names:
-        assert param_name in df_or_path.columns
+        assert (
+            param_name in df_or_path.columns
+        ), f"Expected column '{param_name}' was not found in DataFrame."
         params.append(Parameters(df_or_path, index_columns, param_name, param_name))
 
     if len(params) == 1:
@@ -49,7 +72,7 @@ def load_parameters(
     return tuple(params)
 
 
-def read_file(path: str | Path) -> pl.DataFrame:
+def _read_file(path: str | Path) -> pl.DataFrame:
     if isinstance(path, str):
         path = Path(path)
 

@@ -1,4 +1,5 @@
-from typing import Self
+from typing import Self, Sequence
+
 import polars as pl
 
 CONSTANTS_KEY = "__constants"
@@ -7,7 +8,31 @@ COEFFICIENTS_KEY = "__coefficients"
 RESERVED_KEYS = (CONSTANTS_KEY, VARIABLES_KEY, COEFFICIENTS_KEY)
 
 
-class Expression:
+class Expressionable:
+    """Any object that can be converted into an expression."""
+
+    def to_expression(self):
+        """Convert the object into an Expression."""
+        raise NotImplementedError(
+            "to_expression must be implemented in subclass " + self.__class__.__name__
+        )
+
+    def sum(self, over: str | Sequence[str]):
+        return self.to_expression().sum(over)
+
+    def __add__(self, other):
+        return self.to_expression() + other
+
+    def __sub__(self, other):
+        return self.to_expression() - other
+
+    def __mul__(self, other):
+        return self.to_expression() * other
+
+
+class Expression(Expressionable):
+    """A linear expression."""
+
     def __init__(
         self,
         constants: pl.DataFrame | None,
@@ -22,8 +47,24 @@ class Expression:
             assert constants.select(constants_columns).n_unique() == len(constants)
             assert variables.select(variables_columns).n_unique() == len(constants)
 
+    def sum(self, over: str | Sequence[str]):
+        if isinstance(over, str):
+            over = [over]
+
+        constants = None
+        if self.constants is not None:
+            remaining_columns = (
+                set(self.constants.columns).difference(RESERVED_KEYS).difference(over)
+            )
+            constants = self.constants.group_by(remaining_columns).sum()
+        variables = None
+        if self.variables is not None:
+            variables = self.variables.drop(over)
+
+        return Expression(constants, variables)
+
     def __add__(self, other):
-        other = other.toExpression()
+        other = other.to_expression()
 
         if self.variables is not None and other.variables is not None:
             assert self.variables.columns == other.variables.columns
@@ -76,7 +117,7 @@ class Expression:
 
             return Expression(constants, variables)
         else:
-            other = other.toExpression()
+            other = other.to_expression()
 
             if other.variables is not None and self.variables is not None:
                 raise ValueError(
@@ -118,7 +159,7 @@ class Expression:
 
             return Expression(constants, variables)
 
-    def toExpression(self) -> Self:
+    def to_expression(self) -> Self:
         return self
 
     def __repr__(self) -> str:
@@ -133,17 +174,5 @@ class Expression:
         ).n_unique()
 
 
-class Expressionable:
-    def toExpression(self) -> Expression:
-        raise NotImplementedError(
-            "toExpression must be implemented in subclass " + self.__class__.__name__
-        )
-
-    def __add__(self, other):
-        return self.toExpression() + other
-
-    def __sub__(self, other):
-        return self.toExpression() - other
-
-    def __mul__(self, other):
-        return self.toExpression() * other
+def sum(over: str | Sequence[str], expr: Expressionable) -> Expression:
+    return expr.sum(over)

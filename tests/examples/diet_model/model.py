@@ -1,17 +1,24 @@
+# pylint: disable=attribute-defined-outside-init,invalid-name,missing-function-docstring
+
 import os
 from pathlib import Path
-import polars as pl
 
-from convop import ModelBuilder
+import convop as cp
+
 from convop.model_builder import load_parameters
+from convop.parameters import Parameters
 
 
-class DietModel(ModelBuilder):
+
+class DietModel(cp.ModelBuilder):
+    """
+    A simple diet model example.
+    """
     def load_data(self):
         # Get directory of this file
         input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
-        self.food_cost = load_parameters(input_dir / "foods.csv", ["cost"])
+        self.food_cost: Parameters = load_parameters(input_dir / "foods.csv", "cost")
         self.min_nutrients, self.max_nutrients = load_parameters(
             input_dir / "nutrients.csv", ["min_amount", "max_amount"]
         )
@@ -26,10 +33,10 @@ class DietModel(ModelBuilder):
         self.MinNutrients = self.m.add_constraints(
             lhs=self.min_nutrients,
             sense="<=",
-            rhs=self.BuyFood * self.nutrients_per_food,
+            rhs=cp.sum("food", self.BuyFood * self.nutrients_per_food),
         )
         self.MaxNutrients = self.m.add_constraints(
-            lhs=self.BuyFood * self.nutrients_per_food,
+            lhs=cp.sum("food", self.BuyFood * self.nutrients_per_food),
             sense="<=",
             rhs=self.max_nutrients,
         )

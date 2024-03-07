@@ -1,4 +1,5 @@
 from typing import Iterable
+
 import polars as pl
 
 from convop.expressions import (
@@ -31,7 +32,7 @@ class Variables(Expressionable):
         {self.data}
         """
 
-    def toExpression(self) -> Expression:
+    def to_expression(self) -> Expression:
         return Expression(
             constants=None,
             variables=self.data.with_columns(pl.lit(1.0).alias(COEFFICIENTS_KEY)),
