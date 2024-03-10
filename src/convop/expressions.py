@@ -1,33 +1,18 @@
-from typing import Self, Sequence
+from typing import Iterable, Self, Sequence, List, Set
 
 import polars as pl
+from convop.expressionable import Expressionable
 
-CONSTANTS_KEY = "__constants"
-VARIABLES_KEY = "__variables"
-COEFFICIENTS_KEY = "__coefficients"
-RESERVED_KEYS = (CONSTANTS_KEY, VARIABLES_KEY, COEFFICIENTS_KEY)
+from convop.util import align_and_concat
+
+CONST_KEY = "__constants"
+VAR_KEY = "__variables"
+COEF_KEY = "__coefficients"
+RESERVED_KEYS = (CONST_KEY, VAR_KEY, COEF_KEY)
 
 
-class Expressionable:
-    """Any object that can be converted into an expression."""
-
-    def to_expression(self):
-        """Convert the object into an Expression."""
-        raise NotImplementedError(
-            "to_expression must be implemented in subclass " + self.__class__.__name__
-        )
-
-    def sum(self, over: str | Sequence[str]):
-        return self.to_expression().sum(over)
-
-    def __add__(self, other):
-        return self.to_expression() + other
-
-    def __sub__(self, other):
-        return self.to_expression() - other
-
-    def __mul__(self, other):
-        return self.to_expression() * other
+def _get_dimensions(df: pl.DataFrame) -> List[str]:
+    return [x for x in df.columns if x not in RESERVED_KEYS]
 
 
 class Expression(Expressionable):
@@ -35,142 +20,152 @@ class Expression(Expressionable):
 
     def __init__(
         self,
-        constants: pl.DataFrame | None,
-        variables: pl.DataFrame | None,
+        constants: pl.DataFrame | None = None,
+        variables: pl.DataFrame | None = None,
     ):
-        self.constants = constants
-        self.variables = variables
-        if constants is not None and variables is not None:
-            constants_columns = set(constants.columns).difference(RESERVED_KEYS)
-            variables_columns = set(variables.columns).difference(RESERVED_KEYS)
-            assert constants_columns == variables_columns
-            assert constants.select(constants_columns).n_unique() == len(constants)
-            assert variables.select(variables_columns).n_unique() == len(constants)
-
-    def sum(self, over: str | Sequence[str]):
-        if isinstance(over, str):
-            over = [over]
-
-        constants = None
-        if self.constants is not None:
-            remaining_columns = (
-                set(self.constants.columns).difference(RESERVED_KEYS).difference(over)
+        if constants is None:
+            assert variables is not None
+            dim = _get_dimensions(variables)
+            constants = pl.DataFrame(
+                {**{d: [] for d in dim}, CONST_KEY: []},
+                schema={
+                    **{
+                        dim: dtype
+                        for dim, dtype in zip(variables.columns, variables.dtypes)
+                        if dim not in RESERVED_KEYS
+                    },
+                    CONST_KEY: pl.Float64,
+                },
             )
-            constants = self.constants.group_by(remaining_columns).sum()
-        variables = None
-        if self.variables is not None:
-            variables = self.variables.drop(over)
+        if variables is None:
+            dim = _get_dimensions(constants)
+            variables = pl.DataFrame(
+                {**{d: [] for d in dim}, VAR_KEY: [], COEF_KEY: []}
+            )
+        assert CONST_KEY in constants.columns
+        assert VAR_KEY in variables.columns
+        assert COEF_KEY in variables.columns
+        dim = _get_dimensions(variables)
+        assert (
+            _get_dimensions(constants) == dim
+        ), f"Dimensions do not match. {_get_dimensions(constants)} != {dim}"
+        assert not variables.drop(COEF_KEY).is_duplicated().any()
+        if len(dim) > 0:
+            assert (
+                len(constants) == 0
+                or not constants.drop(CONST_KEY).is_duplicated().any()
+            )
+        else:
+            assert len(constants) <= 1
 
-        return Expression(constants, variables)
+        constants = constants.with_columns(pl.col(CONST_KEY).cast(pl.Float64))
+        variables = variables.with_columns(pl.col(COEF_KEY).cast(pl.Float64))
+
+        self._constants: pl.DataFrame = constants
+        self._variables: pl.DataFrame = variables
+
+    @property
+    def constants(self) -> pl.DataFrame:
+        return self._constants
+
+    @property
+    def variables(self) -> pl.DataFrame:
+        return self._variables
+
+    @property
+    def dimensions(self) -> Set[str]:
+        dim_consts = _get_dimensions(self._constants)
+        dim_vars = _get_dimensions(self._variables)
+        assert dim_consts == dim_vars
+        dims = set(dim_consts)
+        assert len(dims) == len(dim_consts)
+        return dims
+
+    def sum(self, over: str | Iterable[str]):
+        if isinstance(over, str):
+            over = {over}
+        over = set(over)
+
+        dims = self.dimensions
+        assert over <= dims
+        remaining_dims = dims - over
+
+        constants = self.constants.drop(over)
+        variables = self.variables.drop(over)
+
+        if len(remaining_dims) == 0:
+            constants = constants.sum()
+        else:
+            constants = constants.group_by(remaining_dims).sum()
+
+        return Expression(
+            constants,
+            variables.group_by(remaining_dims | {VAR_KEY}).sum(),
+        )
 
     def __add__(self, other):
         other = other.to_expression()
+        dims = self.dimensions
+        assert dims == other.dimensions
 
-        if self.variables is not None and other.variables is not None:
-            assert self.variables.columns == other.variables.columns
-            # Get all columns except COEFFICIENTS_KEY
-            variables = (
-                pl.concat([self.variables, other.variables])
-                .group_by(set(self.variables.columns).difference([COEFFICIENTS_KEY]))
-                .sum()
-            )
-        elif self.variables is not None:
-            variables = self.variables
-        elif other.variables is not None:
-            variables = other.variables
+        constants = align_and_concat(self.constants, other.constants)
+
+        if len(dims) > 0:
+            constants = constants.group_by(dims).sum()
         else:
-            variables = None
+            constants = constants.sum()
 
-        if self.constants is not None and other.constants is not None:
-            assert self.constants.columns == other.constants.columns
-            constants = (
-                pl.concat([self.constants, other.constants])
-                .group_by(set(self.constants.columns).difference([CONSTANTS_KEY]))
-                .sum()
-            )
-        elif self.constants is not None:
-            constants = self.constants
-        elif other.constants is not None:
-            constants = other.constants
-        else:
-            constants = None
-
-        return Expression(constants, variables)
-
-    def __sub__(self, other):
-        assert isinstance(other, Expression)
-        return self + (other * -1)
+        return Expression(
+            constants,
+            align_and_concat(self.variables, other.variables)
+            .group_by(dims | {VAR_KEY})
+            .sum(),
+        )
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
-            constants = None
-            if self.constants is not None:
-                constants = self.constants.with_columns(
-                    pl.col(CONSTANTS_KEY).mul(other)
-                )
+            return Expression(
+                self.constants.with_columns(pl.col(CONST_KEY) * other),
+                self.variables.with_columns(pl.col(COEF_KEY) * other),
+            )
 
-            variables = None
-            if self.variables is not None:
-                variables = self.variables.with_columns(
-                    pl.col(COEFFICIENTS_KEY).mul(other)
-                )
+        other = other.to_expression()
 
-            return Expression(constants, variables)
-        else:
-            other = other.to_expression()
+        if len(self.variables) == 0:
+            self, other = other, self
 
-            if other.variables is not None and self.variables is not None:
-                raise ValueError(
-                    "Multiplication of two expressions with variables is not supported."
-                )
+        assert (
+            len(other.variables) == 0
+        ), "Multiplication of two expressions with variables is non-linear and not supported."
 
-            if other.variables is not None:
-                return other * self
-            # Now other doesn't have any variables.
-            assert other.variables is None
-            assert other.constants is not None
+        dims_in_common = tuple(self.dimensions & other.dimensions)
 
-            constant_multiplier = other.constants
+        constants = (
+            self.constants.join(other.constants, on=dims_in_common)
+            .with_columns(pl.col(CONST_KEY) * pl.col(CONST_KEY + "_right"))
+            .drop(CONST_KEY + "_right")
+        )
 
-            constants = None
-            if self.constants is not None:
-                indexes_in_common = set(constant_multiplier.columns).intersection(
-                    self.constants.columns
-                )
-                constants = self.constants.join(
-                    constant_multiplier, on=tuple(indexes_in_common)
-                )
-                left_coef, right_coef = CONSTANTS_KEY, CONSTANTS_KEY + "_right"
-                constants = constants.with_columns(
-                    pl.col(left_coef).mul(pl.col(right_coef))
-                ).drop(right_coef)
+        variables = (
+            self._variables.join(other.constants, on=dims_in_common)
+            .with_columns(pl.col(COEF_KEY) * pl.col(CONST_KEY))
+            .drop(CONST_KEY)
+        )
 
-            variables = None
-            if self.variables is not None:
-                indexes_in_common = set(constant_multiplier.columns).intersection(
-                    self.variables.columns
-                )
-                variables = self.variables.join(
-                    constant_multiplier, on=tuple(indexes_in_common)
-                )
-                variables = variables.with_columns(
-                    pl.col(COEFFICIENTS_KEY).mul(pl.col(CONSTANTS_KEY))
-                ).drop(CONSTANTS_KEY)
-
-            return Expression(constants, variables)
+        return Expression(constants, variables)
 
     def to_expression(self) -> Self:
         return self
 
     def __repr__(self) -> str:
-        return f"Constants: {self.constants}\nVariables: {self.variables}"
+        return f"Constants: {self._constants}\nVariables: {self._variables}"
 
     def __len__(self):
-        if self.constants is not None:
-            return len(self.constants)
-        assert self.variables is not None
-        return self.variables.select(
-            set(self.variables.columns).difference(RESERVED_KEYS)
+        if self._constants is not None:
+            return len(self._constants)
+        assert self._variables is not None
+        return self._variables.select(
+            set(self._variables.columns).difference(RESERVED_KEYS)
         ).n_unique()
 
 

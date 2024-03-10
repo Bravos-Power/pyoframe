@@ -3,22 +3,7 @@ from typing import Any, Iterable, Sequence, Tuple, overload
 
 import polars as pl
 
-from convop.constraints import Constraints
-from convop.model import Model
-from convop.parameters import Parameters
-from convop.variables import Variables
-
-
-class ModelBuilder:
-    """Helper class that automatically handles assigning names to variables and constraints."""
-
-    def __init__(self):
-        self.m = Model()
-
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        if isinstance(__value, (Variables, Constraints, Parameters)):
-            __value.name = __name
-        return super().__setattr__(__name, __value)
+from convop.parameters import Parameter
 
 
 @overload
@@ -26,7 +11,7 @@ def load_parameters(
     df_or_path: str | pl.DataFrame | Path,
     param_names: str,
     dim: int | None = None,
-) -> Parameters: ...
+) -> Parameter: ...
 
 
 @overload
@@ -34,14 +19,14 @@ def load_parameters(
     df_or_path: str | pl.DataFrame | Path,
     param_names: Sequence[str],
     dim: int | None = None,
-) -> Tuple[Parameters, ...]: ...
+) -> Tuple[Parameter, ...]: ...
 
 
 def load_parameters(
     df_or_path: str | pl.DataFrame | Path,
     param_names: str | Sequence[str],
     dim: int | None = None,
-) -> Tuple[Parameters, ...] | Parameters:
+) -> Tuple[Parameter, ...] | Parameter:
     """Reads a DataFrame or file and returns a Parameters object for each column in param_names."""
     if isinstance(param_names, str):
         param_names = [param_names]
@@ -65,7 +50,7 @@ def load_parameters(
         assert (
             param_name in df_or_path.columns
         ), f"Expected column '{param_name}' was not found in DataFrame."
-        params.append(Parameters(df_or_path, index_columns, param_name, param_name))
+        params.append(Parameter(df_or_path, index_columns, param_name, param_name))
 
     if len(params) == 1:
         return params[0]

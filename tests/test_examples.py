@@ -1,5 +1,4 @@
-from examples.diet_model.model import run_example
-
+from examples.diet_model.model import main
 
 def test_examples_run():
-    run_example()
+    main()

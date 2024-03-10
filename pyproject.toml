@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = ["polars==0.20.13"]
+dependencies = ["polars==0.20.13", "tqdm"]
 
 [project.optional-dependencies]
 dev = ["black", "bumpver", "isort", "pip-tools", "pytest", "pre-commit"]

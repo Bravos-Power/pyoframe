@@ -1,4 +1,5 @@
 polars==0.20.13
+tqdm
 
 [dev]
 black

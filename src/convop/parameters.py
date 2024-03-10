@@ -1,9 +1,10 @@
 import polars as pl
+from convop.expressionable import Expressionable
 
-from convop.expressions import CONSTANTS_KEY, Expression, Expressionable
+from convop.expressions import CONST_KEY, Expression
 
 
-class Parameters(Expressionable):
+class Parameter(Expressionable):
     def __init__(
         self,
         df: pl.DataFrame,
@@ -19,14 +20,11 @@ class Parameters(Expressionable):
     def _getParamData(self):
         return self.data.select(
             [pl.col(index) for index in self.index_col_names]
-            + [pl.col(self.param_col_name).alias(CONSTANTS_KEY)]
+            + [pl.col(self.param_col_name).alias(CONST_KEY)]
         )
 
     def to_expression(self):
-        return Expression(
-            constants=self._getParamData(),
-            variables=None,
-        )
+        return Expression(constants=self._getParamData())
 
     def __repr__(self):
         return f"""
