@@ -19,5 +19,8 @@ Requires-Dist: pip-tools; extra == "dev"
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: pre-commit; extra == "dev"
 Requires-Dist: gurobipy; extra == "dev"
+Provides-Extra: doc
+Requires-Dist: sphinx; extra == "doc"
+Requires-Dist: pydata-sphinx-theme; extra == "doc"
 
 # TODO add credit to linopy

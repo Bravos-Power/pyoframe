@@ -9,3 +9,7 @@ pip-tools
 pytest
 pre-commit
 gurobipy
+
+[doc]
+sphinx
+pydata-sphinx-theme

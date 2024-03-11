@@ -17,6 +17,7 @@ dependencies = ["polars==0.20.13", "numpy"]
 
 [project.optional-dependencies]
 dev = ["black", "bumpver", "isort", "pip-tools", "pytest", "pre-commit", "gurobipy"]
+doc = ["sphinx", "pydata-sphinx-theme"]
 
 [tool.isort]
 profile = "black"

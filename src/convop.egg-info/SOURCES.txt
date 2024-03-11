@@ -9,6 +9,7 @@ src/convop/model.py
 src/convop/model_element.py
 src/convop/objective.py
 src/convop/parameters.py
+src/convop/solvers.py
 src/convop/variables.py
 src/convop.egg-info/PKG-INFO
 src/convop.egg-info/SOURCES.txt
