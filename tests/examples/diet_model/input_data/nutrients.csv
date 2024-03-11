@@ -1,5 +1,5 @@
 category,min_amount,max_amount
 calories,1800,2200
 protein,91,
-fat,0,65
-sodium,0,1779
+fat,,65
+sodium,,1779

@@ -7,13 +7,10 @@ class Expressionable:
     """Any object that can be converted into an expression."""
 
     def to_expression(self):
-        """Convert the object into an Expression."""
+        """Converts the object into an Expression."""
         raise NotImplementedError(
             "to_expression must be implemented in subclass " + self.__class__.__name__
         )
-
-    def sum(self, over: str | Sequence[str]):
-        return self.to_expression().sum(over)
 
     def __add__(self, other):
         return self.to_expression() + other
@@ -41,6 +38,10 @@ class Expressionable:
 
     def __eq__(self, __value: object):
         return ConstraintExpression(self - __value, ConstraintSense.EQ)
+
+
+def sum(over: str | Sequence[str], expr: Expressionable):
+    return expr.to_expression().sum(over)
 
 
 class ConstraintSense(Enum):

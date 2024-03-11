@@ -8,6 +8,7 @@ from convop.variables import Variable
 
 @pytest.fixture
 def expression():
+    Variable._var_count = 0
     return (
         5 * Variable()
         + 3.4 * Variable()
@@ -18,13 +19,13 @@ def expression():
 
 @pytest.fixture
 def expression_with_dimensions():
-
     df = pl.DataFrame(
         {
             "x": [1, 2, 1, 2],
             "y": [1, 1, 2, 2],
         }
     )
+    Variable._var_count = 0
 
     return (
         5 * Variable(df)

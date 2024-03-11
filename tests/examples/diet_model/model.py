@@ -1,40 +1,41 @@
+"""
+Diet module example
+"""
+
 import os
 from pathlib import Path
 
-import convop as cp
-from convop.constraints import Constraint
-from convop.model import Model
 
-from convop.model_builder import load_parameters
-from convop.objective import Objective
-from convop.variables import Variable
+import convop as cp
+import numpy as np
 
 
 def main():
-    m = Model()
+    m = cp.Model("diet_model")
 
-    input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
+    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+    input_dir = working_dir / "input_data"
 
-    food_cost = load_parameters(input_dir / "foods.csv", "cost")
-    min_nutrients, max_nutrients = load_parameters(
-        input_dir / "nutrients.csv", ["min_amount", "max_amount"]
+    food_cost = cp.Parameter(input_dir / "foods.csv")
+    nutrients = cp.Parameters(
+        input_dir / "nutrients.csv",
+        dim=1,
+        defaults={"min_amount": 0, "max_amount": np.inf},
     )
-    nutrients_per_food = load_parameters(
-        input_dir / "foods_to_nutrients.csv", ["amount"]
+    nutrients_per_food = cp.Parameter(input_dir / "foods_to_nutrients.csv")
+
+    m.BuyFood = cp.Variable(food_cost, lb=0)
+
+    m.MinNutrients = cp.Constraint(
+        nutrients["min_amount"] <= cp.sum("food", m.BuyFood * nutrients_per_food)
+    )
+    m.MaxNutrients = cp.Constraint(
+        cp.sum("food", m.BuyFood * nutrients_per_food) <= nutrients["max_amount"]
     )
 
-    m.BuyFood = Variable(food_cost, lb=0)
+    m.Cost = cp.Objective(cp.sum("food", food_cost * m.BuyFood), sense="min")
 
-    m.MinNutrients = Constraint(
-        min_nutrients <= cp.sum("food", m.BuyFood * nutrients_per_food)
-    )
-    m.MaxNutrients = Constraint(
-        cp.sum("food", m.BuyFood * nutrients_per_food) <= max_nutrients
-    )
-
-    m.Cost = Objective(cp.sum("food", food_cost * m.BuyFood), sense="min")
-
-    m.to_file("diet.lp")
+    m.solve("gurobi", working_dir / "results")
 
 
 if __name__ == "__main__":

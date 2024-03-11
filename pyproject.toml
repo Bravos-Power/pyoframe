@@ -13,10 +13,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = ["polars==0.20.13", "tqdm"]
+dependencies = ["polars==0.20.13", "numpy"]
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "pytest", "pre-commit"]
+dev = ["black", "bumpver", "isort", "pip-tools", "pytest", "pre-commit", "gurobipy"]
 
 [tool.isort]
 profile = "black"

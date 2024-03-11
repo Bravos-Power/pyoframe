@@ -1,12 +1,11 @@
-from enum import Enum
 from convop.expressionable import ConstraintExpression
+from convop.model_element import ModelElement
 
 
-class Constraint:
+class Constraint(ModelElement):
     def __init__(
         self,
         constraint: ConstraintExpression,
-        name: str | None = None,
     ):
         """Adds a constraint to the model.
 
@@ -18,13 +17,10 @@ class Constraint:
             The sense of the constraint.
         rhs: Expression
             The right hand side of the constraint.
-        name: str, optional
-            The name of the constraint. If using ModelBuilder this is automatically set to match your constraint name.
         """
+        super().__init__()
         self.lhs = constraint.lhs.to_expression()
         self.sense = constraint.sense
-
-        self.name = name
 
     def __repr__(self):
 

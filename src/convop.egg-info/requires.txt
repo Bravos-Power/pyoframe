@@ -1,5 +1,5 @@
 polars==0.20.13
-tqdm
+numpy
 
 [dev]
 black
@@ -8,3 +8,4 @@ isort
 pip-tools
 pytest
 pre-commit
+gurobipy

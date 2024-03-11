@@ -1,18 +1,13 @@
-from typing import Iterable, Self, Sequence, List, Set
+from typing import Iterable, Self, List, Set
 
 import polars as pl
 from convop.expressionable import Expressionable
 
-from convop.util import align_and_concat
 
 CONST_KEY = "__constants"
 VAR_KEY = "__variables"
 COEF_KEY = "__coefficients"
 RESERVED_KEYS = (CONST_KEY, VAR_KEY, COEF_KEY)
-
-
-def _get_dimensions(df: pl.DataFrame) -> List[str]:
-    return [x for x in df.columns if x not in RESERVED_KEYS]
 
 
 class Expression(Expressionable):
@@ -25,41 +20,38 @@ class Expression(Expressionable):
     ):
         if constants is None:
             assert variables is not None
-            dim = _get_dimensions(variables)
-            constants = pl.DataFrame(
-                {**{d: [] for d in dim}, CONST_KEY: []},
-                schema={
-                    **{
-                        dim: dtype
-                        for dim, dtype in zip(variables.columns, variables.dtypes)
-                        if dim not in RESERVED_KEYS
-                    },
-                    CONST_KEY: pl.Float64,
-                },
+            constants = (
+                variables.clear()
+                .select(_get_dimensions(variables))
+                .with_columns(pl.lit(0.0).alias(CONST_KEY))
             )
         if variables is None:
-            dim = _get_dimensions(constants)
-            variables = pl.DataFrame(
-                {**{d: [] for d in dim}, VAR_KEY: [], COEF_KEY: []}
+            variables = (
+                constants.clear()
+                .select(_get_dimensions(constants))
+                .with_columns(
+                    pl.lit(0).cast(pl.UInt32).alias(VAR_KEY),
+                    pl.lit(0.0).alias(COEF_KEY),
+                )
             )
+
         assert CONST_KEY in constants.columns
         assert VAR_KEY in variables.columns
         assert COEF_KEY in variables.columns
+
         dim = _get_dimensions(variables)
         assert (
             _get_dimensions(constants) == dim
         ), f"Dimensions do not match. {_get_dimensions(constants)} != {dim}"
         assert not variables.drop(COEF_KEY).is_duplicated().any()
         if len(dim) > 0:
-            assert (
-                len(constants) == 0
-                or not constants.drop(CONST_KEY).is_duplicated().any()
-            )
+            if len(constants) > 0:
+                assert not constants.drop(CONST_KEY).is_duplicated().any()
         else:
             assert len(constants) <= 1
 
-        constants = constants.with_columns(pl.col(CONST_KEY).cast(pl.Float64))
-        variables = variables.with_columns(pl.col(COEF_KEY).cast(pl.Float64))
+        # constants = constants.with_columns(pl.col(CONST_KEY).cast(pl.Float64))
+        # variables = variables.with_columns(pl.col(COEF_KEY).cast(pl.Float64))
 
         self._constants: pl.DataFrame = constants
         self._variables: pl.DataFrame = variables
@@ -74,8 +66,8 @@ class Expression(Expressionable):
 
     @property
     def dimensions(self) -> Set[str]:
-        dim_consts = _get_dimensions(self._constants)
-        dim_vars = _get_dimensions(self._variables)
+        dim_consts = _get_dimensions(self.constants)
+        dim_vars = _get_dimensions(self.variables)
         assert dim_consts == dim_vars
         dims = set(dim_consts)
         assert len(dims) == len(dim_consts)
@@ -93,10 +85,9 @@ class Expression(Expressionable):
         constants = self.constants.drop(over)
         variables = self.variables.drop(over)
 
-        if len(remaining_dims) == 0:
-            constants = constants.sum()
-        else:
-            constants = constants.group_by(remaining_dims).sum()
+        constants = (
+            constants.group_by(remaining_dims) if len(remaining_dims) > 0 else constants
+        ).sum()
 
         return Expression(
             constants,
@@ -108,16 +99,12 @@ class Expression(Expressionable):
         dims = self.dimensions
         assert dims == other.dimensions
 
-        constants = align_and_concat(self.constants, other.constants)
-
-        if len(dims) > 0:
-            constants = constants.group_by(dims).sum()
-        else:
-            constants = constants.sum()
+        constants = _align_and_concat(self.constants, other.constants)
+        constants = (constants.group_by(dims) if len(dims) > 0 else constants).sum()
 
         return Expression(
             constants,
-            align_and_concat(self.variables, other.variables)
+            _align_and_concat(self.variables, other.variables)
             .group_by(dims | {VAR_KEY})
             .sum(),
         )
@@ -147,7 +134,7 @@ class Expression(Expressionable):
         )
 
         variables = (
-            self._variables.join(other.constants, on=dims_in_common)
+            self.variables.join(other.constants, on=dims_in_common)
             .with_columns(pl.col(COEF_KEY) * pl.col(CONST_KEY))
             .drop(CONST_KEY)
         )
@@ -158,16 +145,14 @@ class Expression(Expressionable):
         return self
 
     def __repr__(self) -> str:
-        return f"Constants: {self._constants}\nVariables: {self._variables}"
-
-    def __len__(self):
-        if self._constants is not None:
-            return len(self._constants)
-        assert self._variables is not None
-        return self._variables.select(
-            set(self._variables.columns).difference(RESERVED_KEYS)
-        ).n_unique()
+        return f"Constants: {self.constants}\nVariables: {self.variables}"
 
 
-def sum(over: str | Sequence[str], expr: Expressionable) -> Expression:
-    return expr.sum(over)
+def _get_dimensions(df: pl.DataFrame) -> List[str]:
+    return [x for x in df.columns if x not in RESERVED_KEYS]
+
+
+def _align_and_concat(left: pl.DataFrame, right: pl.DataFrame) -> pl.DataFrame:
+    assert sorted(left.columns) == sorted(right.columns)
+    right = right.select(left.columns)
+    return pl.concat([left, right], how="vertical_relaxed")
