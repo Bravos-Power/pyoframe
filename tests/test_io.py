@@ -9,10 +9,10 @@ from pyoframe.variables import Variable
 @pytest.fixture
 def expression():
     return (
-        5 * Variable()
-        + 3.4 * Variable()
-        - 2.1 * Variable()
-        + 1.1231237019273 * Variable()
+            5 * Variable()
+            + 3.4 * Variable()
+            - 2.1 * Variable()
+            + 1.1231237019273 * Variable()
     )
 
 
@@ -26,10 +26,10 @@ def expression_with_dimensions():
     )
 
     return (
-        5 * Variable(df)
-        + 3.4 * Variable(df)
-        - 2.1 * Variable(df)
-        + 1.1231237019273 * Variable(df)
+            5 * Variable(df)
+            + 3.4 * Variable(df)
+            - 2.1 * Variable(df)
+            + 1.1231237019273 * Variable(df)
     )
 
 

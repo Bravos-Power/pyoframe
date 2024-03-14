@@ -34,26 +34,23 @@ class NamedVariables(VariableMapping):
         var_maps = []
         for var in m.variables:
             df = var.data
-            var_maps.append(
-                df.select(
+            dim = var.dimensions
+            if dim:
+                df = df.select(
                     pl.concat_str(
-                        pl.lit(var.name + "["),
-                        pl.concat_str(*var.dimensions, separator=","),
-                        pl.lit("]"),
-                        separator="",
-                    )
-                    .str.replace_all(" ", "_")
-                    .alias(self.VAR_NAME_KEY),
+                        pl.lit(var.name + "["), pl.concat_str(*var.dimensions, separator=","), pl.lit("]"), separator=""
+                    ).alias(self.VAR_NAME_KEY),
                     VAR_KEY,
                 )
-            )
+            else:
+                df = df.select(pl.lit(var.name).alias(self.VAR_NAME_KEY), VAR_KEY)
+            df = df.with_columns(pl.col(self.VAR_NAME_KEY).str.replace_all(" ", "_"))
+            var_maps.append(df)
         self.map = pl.concat(var_maps)
 
     def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
         return (
-            df.join(self.map, on=VAR_KEY, how="left", validate="m:1")
-            .drop(VAR_KEY)
-            .rename({self.VAR_NAME_KEY: VAR_KEY})
+            df.join(self.map, on=VAR_KEY, how="left", validate="m:1").drop(VAR_KEY).rename({self.VAR_NAME_KEY: VAR_KEY})
         )
 
 
@@ -65,9 +62,7 @@ class NumberedVariables(VariableMapping):
 DEFAULT_MAP = NumberedVariables()
 
 
-def _expression_vars_to_string(
-    expr: Expression, var_map: VariableMapping = DEFAULT_MAP, sort=True
-) -> pl.DataFrame:
+def _expression_vars_to_string(expr: Expression, var_map: VariableMapping = DEFAULT_MAP, sort=True) -> pl.DataFrame:
     result = expr.variable_terms
     if sort:
         result = result.sort(by=VAR_KEY)
@@ -86,9 +81,7 @@ def _expression_vars_to_string(
     ).drop(COEF_KEY, VAR_KEY)
 
     if dimensions:
-        result = result.group_by(dimensions).agg(
-            pl.col("result").str.concat(delimiter="")
-        )
+        result = result.group_by(dimensions).agg(pl.col("result").str.concat(delimiter=""))
     else:
         result = result.select(pl.col("result").str.concat(delimiter=""))
 
@@ -103,9 +96,7 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     assert objective is not None, "No objective set."
 
     f.write(f"{objective.sense}\n\nobj:\n\n")
-    assert (
-        objective.expr.data.get_column(VAR_KEY) != VAR_CONST
-    ).all(), "Objective cannot have constant terms."
+    assert (objective.expr.data.get_column(VAR_KEY) != VAR_CONST).all(), "Objective cannot have constant terms."
     result = _expression_vars_to_string(objective.expr, var_map, sort=True)
     f.writelines(result.item())
 
@@ -125,27 +116,17 @@ def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
 
     for constraint in constraints:
         dims = constraint.dimensions
-        rhs = constraint.constant_terms.with_columns(pl.col(COEF_KEY) * -1).rename(
-            {COEF_KEY: "rhs"}
-        )
+        rhs = constraint.constant_terms.with_columns(pl.col(COEF_KEY) * -1).rename({COEF_KEY: "rhs"})
         data = _expression_vars_to_string(constraint, var_map).rename({"result": "data"})
         data = data.with_columns(
             name=pl.concat_str(
-                pl.lit(constraint.name + "["),
-                pl.concat_str(*dims, separator=","),
-                pl.lit("]"),
-                separator="",
-            ),
+                pl.lit(constraint.name + "["), pl.concat_str(*dims, separator=","), pl.lit("]"), separator=""
+            )
         )
         expression = pl.concat([data, rhs], how="align")
         expression = expression.select(
             result=pl.concat_str(
-                "name",
-                pl.lit(": "),
-                "data",
-                pl.lit(f" {constraint.sense.value} "),
-                "rhs",
-                pl.lit("\n"),
+                "name", pl.lit(": "), "data", pl.lit(f" {constraint.sense.value} "), "rhs", pl.lit("\n")
             )
         ).to_series()
         f.writelines(expression)
@@ -166,13 +147,7 @@ def bounds_to_file(m: "Model", f, var_map):
 
         df = var_map.map_vars(variable.data)
 
-        df = df.select(
-            result=pl.concat_str(
-                pl.lit(f"{lb} <= "),
-                VAR_KEY,
-                pl.lit(f" <= {ub}\n"),
-            )
-        ).to_series()
+        df = df.select(result=pl.concat_str(pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n"))).to_series()
         df = df.str.concat(delimiter="")
 
         f.writelines(df.item())
@@ -235,19 +210,12 @@ def bounds_to_file(m: "Model", f, var_map):
 #         f.writelines(batch)
 
 
-def to_file(
-    m: "Model", fn: str | Path | None, integer_label="general", use_var_names=False
-) -> Path:
+def to_file(m: "Model", fn: str | Path | None, integer_label="general", use_var_names=False) -> Path:
     """
     Write out a model to a lp file.
     """
     if fn is None:
-        with NamedTemporaryFile(
-            prefix="linoframe-problem-",
-            suffix=".lp",
-            mode="w",
-            delete=False,
-        ) as f:
+        with NamedTemporaryFile(prefix="linoframe-problem-", suffix=".lp", mode="w", delete=False) as f:
             fn = f.name
 
     fn = Path(fn)

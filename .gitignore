@@ -4,3 +4,4 @@ build
 .vscode
 .venv
 .pytest_cache
+*.egg-info

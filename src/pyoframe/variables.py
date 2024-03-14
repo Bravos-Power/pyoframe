@@ -5,6 +5,7 @@ from pyoframe.model_element import RESERVED_COL_KEYS, VAR_KEY
 from pyoframe.constraints import Expression
 from pyoframe.model_element import VAR_KEY, FrameWrapper, ModelElement
 import pandas as pd
+from typing import List
 
 
 class Variable(FrameWrapper, Expressionable, ModelElement):
@@ -14,17 +15,13 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
     def _reset_count(cls):
         cls._var_count = 1
 
-    def __init__(
-        self,
-        df: pl.DataFrame | None | pd.Index | pd.DataFrame | Expression = None,
-        lb: float = float("-inf"),
-        ub: float = float("inf"),
-    ):
+    def __init__(self, over: pl.DataFrame | None | pd.Index | pd.DataFrame | Expression | List[pd.Index | pd.DataFrame | pl.DataFrame]= None,
+                 lb: float = float("-inf"), ub: float = float("inf")):
         """Creates a variable for every row in the dataframe.
 
         Parameters
         ----------
-        df: pl.DataFrame
+        over: pl.DataFrame
             The dataframe over which variables should be created.
         lb: float
             The lower bound for all variables.
@@ -49,19 +46,16 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         >>> Variable(df[["dim1"]].drop_duplicates())
         <Variable name=unnamed lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
         """
-        if isinstance(df, pd.Index):
-            df = pl.from_pandas(pd.DataFrame(index=df).reset_index())
-        elif isinstance(df, pd.DataFrame):
-            df = pl.from_pandas(df)
-        elif isinstance(df, Expression):
-            df = df.data.drop(RESERVED_COL_KEYS).unique()
+        if isinstance(over, Expression):
+            over = over.data.drop(RESERVED_COL_KEYS).unique()
 
-        if df is None:
-            data = pl.DataFrame({VAR_KEY: [Variable._var_count]})
+        if over is None:
+            data = pl.DataFrame({VAR_KEY: [Variable._var_count]}, schema={VAR_KEY: pl.UInt32})
         else:
-            if df.is_duplicated().any():
+            over= Variable._coords_to_df(over)
+            if over.is_duplicated().any():
                 raise ValueError("Duplicate rows found in data.")
-            data = df.with_columns(
+            data = over.with_columns(
                 pl.int_range(
                     Variable._var_count,
                     Variable._var_count + pl.len(),
@@ -78,3 +72,52 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
 
     def to_expr(self) -> Expression:
         return Expression(self.data)
+
+    @staticmethod
+    def _coords_to_df(coords: pl.DataFrame | pd.DataFrame | pd.Index |  List[pl.DataFrame | pd.DataFrame | pd.Index]):
+        """
+        >>> import pandas as pd
+        >>> dim1 = pd.Index([1, 2, 3])
+        >>> dim2 = pd.Index(["a", "b"])
+        >>> Variable._coords_to_df([dim1, dim2])
+        Traceback (most recent call last):
+        ...
+        AssertionError: All coordinates must have unique column names.
+        >>> dim1.name = "dim1"
+        >>> dim2.name = "dim2"
+        >>> Variable._coords_to_df([dim1, dim2])
+        shape: (6, 2)
+        ┌──────┬──────┐
+        │ dim1 ┆ dim2 │
+        │ ---  ┆ ---  │
+        │ i64  ┆ str  │
+        ╞══════╪══════╡
+        │ 1    ┆ a    │
+        │ 1    ┆ b    │
+        │ 2    ┆ a    │
+        │ 2    ┆ b    │
+        │ 3    ┆ a    │
+        │ 3    ┆ b    │
+        └──────┴──────┘
+        """
+        if not isinstance(coords, list):
+            coords = [coords]
+
+        coord_pl: List[pl.DataFrame] = []
+
+        for coord in coords:
+            if isinstance(coord, pd.Index):
+                coord = pd.DataFrame(index=coord).reset_index()
+            if isinstance(coord, pd.DataFrame):
+                coord = pl.from_pandas(coord)
+            coord_pl.append(coord)
+
+        if len(coord_pl) == 1:
+            return coord_pl[0]
+
+        df = coord_pl[0]
+        for coord in coord_pl[1:]:
+            assert set(coord.columns) & set(df.columns) == set(), "All coordinates must have unique column names."
+            df = df.join(coord, how="cross")
+        return df
+

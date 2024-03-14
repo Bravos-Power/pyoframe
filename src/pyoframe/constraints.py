@@ -1,5 +1,6 @@
+from __future__ import annotations
 from enum import Enum
-from typing import Iterable, Self, Sequence, overload
+from typing import Iterable, Sequence, overload
 
 import polars as pl
 
@@ -96,7 +97,7 @@ class Expression(Expressionable, FrameWrapper):
 
         super().__init__(data)
 
-    def indices_match(self, other: Self):
+    def indices_match(self, other: Expression):
         # Check that the indices match
         dims = self.dimensions
         assert set(dims) == set(other.dimensions)
@@ -132,7 +133,7 @@ class Expression(Expressionable, FrameWrapper):
         if isinstance(over, str):
             over = [over]
         dims = self.dimensions
-        assert set(over) <= set(dims)
+        assert set(over) <= set(dims), f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
         return Expression(
@@ -265,7 +266,7 @@ class Expression(Expressionable, FrameWrapper):
         )
         return Expression(data)
 
-    def to_expr(self) -> Self:
+    def to_expr(self) -> Expression:
         return self
 
     @property
@@ -295,7 +296,7 @@ def sum(over: Expressionable): ...
 
 
 def sum(
-    over: str | Sequence[str] | Expressionable, expr: Expressionable | None = None
+        over: str | Sequence[str] | Expressionable, expr: Expressionable | None = None
 ) -> "Expression":
     if expr is None:
         assert isinstance(over, Expressionable)
@@ -317,9 +318,9 @@ def build_constraint(lhs: Expressionable, rhs, sense):
 
 class Constraint(Expression, ModelElement):
     def __init__(
-        self,
-        lhs: Expression,
-        sense: ConstraintSense,
+            self,
+            lhs: Expression,
+            sense: ConstraintSense,
     ):
         """Adds a constraint to the model.
 
