@@ -43,13 +43,31 @@ class Expressionable:
         return self.to_expr() + other
 
     def __le__(self, other):
-        return Constraint(self - other, ConstraintSense.LE)
+        """Equality constraint.
+        Examples
+        >>> from convop import Variable
+        >>> Variable() <= 1
+        <Constraint name=unnamed sense='<=' len=1 dimensions={}>
+        """
+        return build_constraint(self, other, ConstraintSense.LE)
 
     def __ge__(self, other):
-        return Constraint(self - other, ConstraintSense.GE)
+        """Equality constraint.
+        Examples
+        >>> from convop import Variable
+        >>> Variable() >= 1
+        <Constraint name=unnamed sense='>=' len=1 dimensions={}>
+        """
+        return build_constraint(self, other, ConstraintSense.GE)
 
     def __eq__(self, __value: object):
-        return Constraint(self - __value, ConstraintSense.EQ)
+        """Equality constraint.
+        Examples
+        >>> from convop import Variable
+        >>> Variable() == 1
+        <Constraint name=unnamed sense='=' len=1 dimensions={}>
+        """
+        return build_constraint(self, __value, ConstraintSense.EQ)
 
 
 class Expression(Expressionable, FrameWrapper):
@@ -77,6 +95,19 @@ class Expression(Expressionable, FrameWrapper):
         )
 
         super().__init__(data)
+
+    def indices_match(self, other: Self):
+        # Check that the indices match
+        dims = self.dimensions
+        assert set(dims) == set(other.dimensions)
+        if len(dims) == 0:
+            return  # No indices
+
+        unique_dims_left = self.data.select(dims).unique()
+        unique_dims_right = other.data.select(dims).unique()
+        return len(unique_dims_left) == len(
+            unique_dims_left.join(unique_dims_right, on=dims)
+        )
 
     def sum(self, over: str | Iterable[str]):
         """
@@ -170,9 +201,20 @@ class Expression(Expressionable, FrameWrapper):
         │ 3    ┆ 1.0     ┆ 3             │
         └──────┴─────────┴───────────────┘
         >>> expr += pd.DataFrame({"dim1": [1,2], "add": [10, 20]}).set_index("dim1")["add"]
-        Traceback (most recent call last):
-            ...
-        ValueError: Indices do not match during addition.
+        >>> expr.data.sort(["dim1", "__variable_id"])
+        shape: (6, 3)
+        ┌──────┬─────────┬───────────────┐
+        │ dim1 ┆ __coeff ┆ __variable_id │
+        │ ---  ┆ ---     ┆ ---           │
+        │ i64  ┆ f64     ┆ u32           │
+        ╞══════╪═════════╪═══════════════╡
+        │ 1    ┆ 22.0    ┆ 0             │
+        │ 1    ┆ 1.0     ┆ 1             │
+        │ 2    ┆ 42.0    ┆ 0             │
+        │ 2    ┆ 1.0     ┆ 2             │
+        │ 3    ┆ 32.0    ┆ 0             │
+        │ 3    ┆ 1.0     ┆ 3             │
+        └──────┴─────────┴───────────────┘
         """
         if isinstance(other, (int, float)):
             return Expression(
@@ -191,15 +233,6 @@ class Expression(Expressionable, FrameWrapper):
         ), f"Adding expressions with different dimensions, {dims} != {other.dimensions}"
 
         data, other_data = self.data, other.data
-
-        # Check that the indices match
-        if dims:
-            unique_dims_left = data.select(dims).unique()
-            unique_dims_right = other_data.select(dims).unique()
-            if not len(unique_dims_left.join(unique_dims_right, on=dims)) == len(
-                unique_dims_left
-            ):
-                raise ValueError("Indices do not match during addition.")
 
         assert sorted(data.columns) == sorted(other_data.columns)
         other_data = other_data.select(data.columns)
@@ -273,6 +306,15 @@ def sum(
         return expr.to_expr().sum(over)
 
 
+def build_constraint(lhs: Expressionable, rhs, sense):
+    lhs = lhs.to_expr()
+    if not isinstance(rhs, (int, float)):
+        rhs = rhs.to_expr()
+        if not lhs.indices_match(rhs):
+            raise ValueError("LHS and RHS values have different indices")
+    return Constraint(lhs - rhs, sense)
+
+
 class Constraint(Expression, ModelElement):
     def __init__(
         self,
@@ -294,4 +336,4 @@ class Constraint(Expression, ModelElement):
         self.sense = sense
 
     def __repr__(self):
-        return f"""<Constraint name={self.name} sense='{self.sense.value}' len={len(self.data)} dimensions={self.data.shape}>"""
+        return f"""<Constraint name={self.name} sense='{self.sense.value}' len={len(self)} dimensions={self.shape}>"""

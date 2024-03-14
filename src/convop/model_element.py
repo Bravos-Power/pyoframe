@@ -31,8 +31,18 @@ class FrameWrapper:
 
     @property
     def shape(self) -> Dict[str, int]:
+        """
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({VAR_KEY: [1]})
+        >>> FrameWrapper(pl.from_pandas(df)).shape
+        {}
+        """
         dims = self.dimensions
         return {dim: self.data[dim].n_unique() for dim in dims}
 
     def __len__(self) -> int:
+        if not self.dimensions:
+            return 1
         return self.data.drop(*RESERVED_COL_KEYS).n_unique()
