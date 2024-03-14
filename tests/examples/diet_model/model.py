@@ -24,10 +24,10 @@ def main(working_dir: Path | str):
     m = Model("diet")
     m.Buy = Variable(food_cost, lb=0)
 
-    m.con_min_nutrients = min_nutrient <= sum(
+    m.min_nutrients = min_nutrient <= sum(
         "food", m.Buy * food_nutrients.within(min_nutrient)
     )
-    m.con_max_nutrients = (
+    m.max_nutrients = (
         sum("food", m.Buy * food_nutrients.within(max_nutrient)) <= max_nutrient
     )
 
