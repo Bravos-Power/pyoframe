@@ -1,7 +1,7 @@
-﻿convop.Parameter
+﻿pyoframe.Parameter
 ================
 
-.. currentmodule:: convop
+.. currentmodule:: pyoframe
 
 .. autoclass:: Parameter
 

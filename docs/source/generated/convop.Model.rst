@@ -1,7 +1,7 @@
-﻿convop.Model
+﻿pyoframe.Model
 ============
 
-.. currentmodule:: convop
+.. currentmodule:: pyoframe
 
 .. autoclass:: Model
 

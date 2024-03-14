@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import convop
+import pyoframe
 
 
 def test_drops_na():

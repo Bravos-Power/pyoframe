@@ -1,7 +1,7 @@
 from typing import Literal
 
-from convop.constraints import Expressionable
-from convop.model_element import ModelElement
+from pyoframe.constraints import Expressionable
+from pyoframe.model_element import ModelElement
 
 
 class Objective(ModelElement):

@@ -1,7 +1,7 @@
-﻿convop.Constraint
+﻿pyoframe.Constraint
 =================
 
-.. currentmodule:: convop
+.. currentmodule:: pyoframe
 
 .. autoclass:: Constraint
 

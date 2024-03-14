@@ -1,9 +1,9 @@
 import polars as pl
-from convop.constraints import Expressionable
+from pyoframe.constraints import Expressionable
 
-from convop.model_element import RESERVED_COL_KEYS, VAR_KEY
-from convop.constraints import Expression
-from convop.model_element import VAR_KEY, FrameWrapper, ModelElement
+from pyoframe.model_element import RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.constraints import Expression
+from pyoframe.model_element import VAR_KEY, FrameWrapper, ModelElement
 import pandas as pd
 
 
@@ -38,7 +38,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         Examples
         --------
         >>> import pandas as pd
-        >>> from convop import Variable
+        >>> from pyoframe import Variable
         >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
         >>> Variable(df)
         <Variable name=unnamed lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>

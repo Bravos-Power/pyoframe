@@ -3,7 +3,7 @@ from typing import Iterable, Self, Sequence, overload
 
 import polars as pl
 
-from convop.model_element import COEF_KEY, VAR_KEY, ModelElement, FrameWrapper
+from pyoframe.model_element import COEF_KEY, VAR_KEY, ModelElement, FrameWrapper
 
 VAR_CONST = 0
 VAR_TYPE = pl.UInt32
@@ -45,7 +45,7 @@ class Expressionable:
     def __le__(self, other):
         """Equality constraint.
         Examples
-        >>> from convop import Variable
+        >>> from pyoframe import Variable
         >>> Variable() <= 1
         <Constraint name=unnamed sense='<=' len=1 dimensions={}>
         """
@@ -54,7 +54,7 @@ class Expressionable:
     def __ge__(self, other):
         """Equality constraint.
         Examples
-        >>> from convop import Variable
+        >>> from pyoframe import Variable
         >>> Variable() >= 1
         <Constraint name=unnamed sense='>=' len=1 dimensions={}>
         """
@@ -63,7 +63,7 @@ class Expressionable:
     def __eq__(self, __value: object):
         """Equality constraint.
         Examples
-        >>> from convop import Variable
+        >>> from pyoframe import Variable
         >>> Variable() == 1
         <Constraint name=unnamed sense='=' len=1 dimensions={}>
         """
@@ -114,7 +114,7 @@ class Expression(Expressionable, FrameWrapper):
         Examples
         --------
         >>> import pandas as pd
-        >>> from convop import Variable
+        >>> from pyoframe import Variable
         >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
         >>> quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
         >>> expr = (quantity * df["cost"]).sum("time")
@@ -167,7 +167,7 @@ class Expression(Expressionable, FrameWrapper):
         Examples
         --------
         >>> import pandas as pd
-        >>> from convop import Variable
+        >>> from pyoframe import Variable
         >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).set_index("dim1")["add"]
         >>> var = Variable(add.index)
         >>> expr = var + add

@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import polars as pl
 
-from convop import sum, Model, Variable
+from pyoframe import sum, Model, Variable
 
 
 def main(working_dir: Path | str):

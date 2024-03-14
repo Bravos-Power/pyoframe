@@ -1,10 +1,10 @@
 import pandas as pd
 import polars as pl
-from convop.constraints import Expressionable
-from convop.constraints import Expression
+from pyoframe.constraints import Expressionable
+from pyoframe.constraints import Expression
 from functools import wraps
 
-from convop.model_element import COEF_KEY
+from pyoframe.model_element import COEF_KEY
 
 # pyright: reportAttributeAccessIssue=false
 

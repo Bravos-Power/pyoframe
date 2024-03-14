@@ -1,11 +1,11 @@
 from typing import Any, List
-from convop.constraints import Expression
-from convop.model_element import ModelElement
-from convop.constraints import Constraint
-from convop.objective import Objective
-from convop.variables import Variable
-from convop.io import to_file
-from convop.solvers import solve
+from pyoframe.constraints import Expression
+from pyoframe.model_element import ModelElement
+from pyoframe.constraints import Constraint
+from pyoframe.objective import Objective
+from pyoframe.variables import Variable
+from pyoframe.io import to_file
+from pyoframe.solvers import solve
 
 
 class Model:

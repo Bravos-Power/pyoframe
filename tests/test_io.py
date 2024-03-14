@@ -1,9 +1,9 @@
 import pytest
 import polars as pl
 from polars.testing import assert_frame_equal
-from convop.io import _expression_vars_to_string
+from pyoframe.io import _expression_vars_to_string
 
-from convop.variables import Variable
+from pyoframe.variables import Variable
 
 
 @pytest.fixture

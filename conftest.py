@@ -1,6 +1,6 @@
 import pytest
 
-from convop.variables import Variable
+from pyoframe.variables import Variable
 
 
 @pytest.fixture(autouse=True)

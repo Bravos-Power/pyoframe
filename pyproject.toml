@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "convop"
+name = "pyoframe"
 version = "0.0.1"
 authors = [{ name = "Martin Staadecker", email = "machstg@gmail.com" }]
 description = "Blazing fast linear program interface"
@@ -32,5 +32,5 @@ doc = ["sphinx", "pydata-sphinx-theme"]
 profile = "black"
 
 [project.urls]
-Homepage = "https://github.com/staadecker/convop"
-Issues = "https://github.com/staadecker/convop/issues"
+Homepage = "https://github.com/staadecker/pyoframe"
+Issues = "https://github.com/staadecker/pyoframe/issues"

@@ -13,11 +13,11 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from convop.constraints import VAR_CONST, Expression
-from convop.model_element import COEF_KEY, VAR_KEY
+from pyoframe.constraints import VAR_CONST, Expression
+from pyoframe.model_element import COEF_KEY, VAR_KEY
 
 if TYPE_CHECKING:
-    from convop.model import Model
+    from pyoframe.model import Model
 
 import polars as pl
 

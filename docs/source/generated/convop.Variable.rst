@@ -1,7 +1,7 @@
-﻿convop.Variable
+﻿pyoframe.Variable
 ===============
 
-.. currentmodule:: convop
+.. currentmodule:: pyoframe
 
 .. autoclass:: Variable
 
