@@ -13,7 +13,8 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from convop.expressions import COEF_KEY, CONST_KEY, VAR_KEY, Expression
+from convop.constraints import VAR_CONST, Expression
+from convop.model_element import COEF_KEY, VAR_KEY
 
 if TYPE_CHECKING:
     from convop.model import Model
@@ -35,9 +36,14 @@ class NamedVariables(VariableMapping):
             df = var.data
             var_maps.append(
                 df.select(
-                    pl.concat_str(pl.lit(var.name), *var.dimensions, separator="_").str.replace_all(" ", "_").alias(
-                        self.VAR_NAME_KEY
-                    ),
+                    pl.concat_str(
+                        pl.lit(var.name + "["),
+                        pl.concat_str(*var.dimensions, separator=","),
+                        pl.lit("]"),
+                        separator="",
+                    )
+                    .str.replace_all(" ", "_")
+                    .alias(self.VAR_NAME_KEY),
                     VAR_KEY,
                 )
             )
@@ -62,7 +68,7 @@ DEFAULT_MAP = NumberedVariables()
 def _expression_vars_to_string(
     expr: Expression, var_map: VariableMapping = DEFAULT_MAP, sort=True
 ) -> pl.DataFrame:
-    result = expr.variables
+    result = expr.variable_terms
     if sort:
         result = result.sort(by=VAR_KEY)
 
@@ -75,7 +81,7 @@ def _expression_vars_to_string(
             COEF_KEY,
             pl.lit(" "),
             VAR_KEY,
-            pl.lit("\n"),
+            pl.lit(" "),
         )
     ).drop(COEF_KEY, VAR_KEY)
 
@@ -97,7 +103,9 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     assert objective is not None, "No objective set."
 
     f.write(f"{objective.sense}\n\nobj:\n\n")
-    assert objective.expr.constants.is_empty, "Objective cannot have constant terms."
+    assert (
+        objective.expr.data.get_column(VAR_KEY) != VAR_CONST
+    ).all(), "Objective cannot have constant terms."
     result = _expression_vars_to_string(objective.expr, var_map, sort=True)
     f.writelines(result.item())
 
@@ -116,24 +124,28 @@ def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
     #     )
 
     for constraint in constraints:
-        expr = constraint.lhs
-        dims = expr.dimensions
-        rhs = expr.constants.with_columns(pl.col(CONST_KEY) * -1)
-        lhs = _expression_vars_to_string(expr, var_map).rename(
-            {"result": "lhs"}
+        dims = constraint.dimensions
+        rhs = constraint.constant_terms.with_columns(pl.col(COEF_KEY) * -1).rename(
+            {COEF_KEY: "rhs"}
         )
-        lhs = lhs.with_columns(
-            name=pl.concat_str(pl.lit(constraint.name), *tuple(dims), separator="_"),
+        data = _expression_vars_to_string(constraint, var_map).rename({"result": "data"})
+        data = data.with_columns(
+            name=pl.concat_str(
+                pl.lit(constraint.name + "["),
+                pl.concat_str(*dims, separator=","),
+                pl.lit("]"),
+                separator="",
+            ),
         )
-        expression = pl.concat([lhs, rhs], how="align")
+        expression = pl.concat([data, rhs], how="align")
         expression = expression.select(
             result=pl.concat_str(
                 "name",
-                pl.lit(":\n"),
-                "lhs",
+                pl.lit(": "),
+                "data",
                 pl.lit(f" {constraint.sense.value} "),
-                CONST_KEY,
-                pl.lit("\n\n"),
+                "rhs",
+                pl.lit("\n"),
             )
         ).to_series()
         f.writelines(expression)
@@ -166,61 +178,61 @@ def bounds_to_file(m: "Model", f, var_map):
         f.writelines(df.item())
 
 
-def binaries_to_file(m: "Model", f, log=False):
-    """
-    Write out binaries of a model to a lp file.
-    """
+# def binaries_to_file(m: "Model", f, log=False):
+#     """
+#     Write out binaries of a model to a lp file.
+#     """
 
-    names = m.variables.binaries
-    if not len(list(names)):
-        return
+#     names = m.variables.binaries
+#     if not len(list(names)):
+#         return
 
-    f.write("\n\nbinary\n\n")
-    if log:
-        names = tqdm(
-            list(names),
-            desc="Writing binary variables.",
-            colour=TQDM_COLOR,
-        )
+#     f.write("\n\nbinary\n\n")
+#     if log:
+#         names = tqdm(
+#             list(names),
+#             desc="Writing binary variables.",
+#             colour=TQDM_COLOR,
+#         )
 
-    batch = []  # to store batch of lines
-    for name in names:
-        df = m.variables[name].flat
+#     batch = []  # to store batch of lines
+#     for name in names:
+#         df = m.variables[name].flat
 
-        for label in df.labels.values:
-            batch.append(f"x{label}\n")
-            batch = handle_batch(batch, f)
+#         for label in df.labels.values:
+#             batch.append(f"x{label}\n")
+#             batch = handle_batch(batch, f)
 
-    if batch:  # write the remaining lines
-        f.writelines(batch)
+#     if batch:  # write the remaining lines
+#         f.writelines(batch)
 
 
-def integers_to_file(m: "Model", f, log=False, integer_label="general"):
-    """
-    Write out integers of a model to a lp file.
-    """
-    names = m.variables.integers
-    if not len(list(names)):
-        return
+# def integers_to_file(m: "Model", f, log=False, integer_label="general"):
+#     """
+#     Write out integers of a model to a lp file.
+#     """
+#     names = m.variables.integers
+#     if not len(list(names)):
+#         return
 
-    f.write(f"\n\n{integer_label}\n\n")
-    if log:
-        names = tqdm(
-            list(names),
-            desc="Writing integer variables.",
-            colour=TQDM_COLOR,
-        )
+#     f.write(f"\n\n{integer_label}\n\n")
+#     if log:
+#         names = tqdm(
+#             list(names),
+#             desc="Writing integer variables.",
+#             colour=TQDM_COLOR,
+#         )
 
-    batch = []  # to store batch of lines
-    for name in names:
-        df = m.variables[name].flat
+#     batch = []  # to store batch of lines
+#     for name in names:
+#         df = m.variables[name].flat
 
-        for label in df.labels.values:
-            batch.append(f"x{label}\n")
-            batch = handle_batch(batch, f)
+#         for label in df.labels.values:
+#             batch.append(f"x{label}\n")
+#             batch = handle_batch(batch, f)
 
-    if batch:  # write the remaining lines
-        f.writelines(batch)
+#     if batch:  # write the remaining lines
+#         f.writelines(batch)
 
 
 def to_file(

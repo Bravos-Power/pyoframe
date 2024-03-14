@@ -14,7 +14,7 @@
    .. autosummary::
    
       ~Parameter.__init__
-      ~Parameter.to_expression
+      ~Parameter.to_expr
    
    
 

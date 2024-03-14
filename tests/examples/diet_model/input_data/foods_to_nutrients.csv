@@ -7,10 +7,10 @@ chicken,calories,420
 chicken,protein,32
 chicken,fat,10
 chicken,sodium,1190
-hot dog,calories,560
-hot dog,protein,20
-hot dog,fat,32
-hot dog,sodium,1800
+hot_dog,calories,560
+hot_dog,protein,20
+hot_dog,fat,32
+hot_dog,sodium,1800
 fries,calories,380
 fries,protein,4
 fries,fat,19
@@ -31,7 +31,7 @@ milk,calories,100
 milk,protein,8
 milk,fat,2.5
 milk,sodium,125
-ice cream,calories,330
-ice cream,protein,8
-ice cream,fat,10
-ice cream,sodium,180
+ice_cream,calories,330
+ice_cream,protein,8
+ice_cream,fat,10
+ice_cream,sodium,180

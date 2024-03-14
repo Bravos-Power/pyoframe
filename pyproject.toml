@@ -13,10 +13,19 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = ["polars==0.20.13", "numpy"]
+dependencies = ["polars==0.20.13", "numpy", "pyarrow", "pandas"]
 
 [project.optional-dependencies]
-dev = ["black", "bumpver", "isort", "pip-tools", "pytest", "pre-commit", "gurobipy"]
+dev = [
+    "black",
+    "bumpver",
+    "isort",
+    "pip-tools",
+    "pytest",
+    "pre-commit",
+    "gurobipy",
+    "pandas",
+]
 doc = ["sphinx", "pydata-sphinx-theme"]
 
 [tool.isort]

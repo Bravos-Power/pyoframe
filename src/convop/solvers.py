@@ -18,5 +18,8 @@ def gurobi_solve(model, dir_path: Path, use_var_names=True):
     model.to_file(problem_file, use_var_names=use_var_names)
     gurobi_model = gp.read(str(problem_file))
     gurobi_model.optimize()
+    if gurobi_model.status != gp.GRB.OPTIMAL:
+        raise Exception(f"Optimization failed with status {gurobi_model.status}")
+
     gurobi_model.write(str(dir_path / f"{model.name}.sol"))
     return gurobi_model

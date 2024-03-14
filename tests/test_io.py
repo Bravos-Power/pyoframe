@@ -8,7 +8,6 @@ from convop.variables import Variable
 
 @pytest.fixture
 def expression():
-    Variable._var_count = 0
     return (
         5 * Variable()
         + 3.4 * Variable()
@@ -25,7 +24,6 @@ def expression_with_dimensions():
             "y": [1, 1, 2, 2],
         }
     )
-    Variable._var_count = 0
 
     return (
         5 * Variable(df)
@@ -39,7 +37,7 @@ def test_variables_to_string(expression):
     result = _expression_vars_to_string(expression, sort=True)
     assert len(result) == 1
     result = result["result"][0]
-    expected_result = "+5.0 x0\n+3.4 x1\n-2.1 x2\n+1.1231237019273 x3\n"
+    expected_result = "+5.0 x1 +3.4 x2 -2.1 x3 +1.1231237019273 x4 "
     print(result)
     assert result == expected_result
 
@@ -51,11 +49,11 @@ def test_variables_to_string_with_dimensions(expression_with_dimensions):
             "x": [1, 2, 1, 2],
             "y": [1, 1, 2, 2],
             "result": [
-                "+5.0 x0\n+3.4 x4\n-2.1 x8\n+1.1231237019273 x12\n",
-                "+5.0 x1\n+3.4 x5\n-2.1 x9\n+1.1231237019273 x13\n",
-                "+5.0 x2\n+3.4 x6\n-2.1 x10\n+1.1231237019273 x14\n",
-                "+5.0 x3\n+3.4 x7\n-2.1 x11\n+1.1231237019273 x15\n",
-            ],
+                "+5.0 x1 +3.4 x5 -2.1 x9 +1.1231237019273 x13 ",
+                "+5.0 x2 +3.4 x6 -2.1 x10 +1.1231237019273 x14 ",
+                "+5.0 x3 +3.4 x7 -2.1 x11 +1.1231237019273 x15 ",
+                "+5.0 x4 +3.4 x8 -2.1 x12 +1.1231237019273 x16 ",
+            ], 
         }
     )
     assert_frame_equal(

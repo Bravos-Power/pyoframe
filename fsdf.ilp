@@ -1,0 +1,22 @@
+\ Model obj_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+ 
+Subject To
+ MinNutrients[protein]: 24 buy[hamburger] + 32 buy[chicken]
+   + 20 buy[hot_dog] + 4 buy[fries] + 12 buy[macaroni] + 15 buy[pizza]
+   + 31 buy[salad] + 8 buy[milk] + 8 buy[ice_cream] >= 91
+ MaxNutrients[protein]: 24 buy[hamburger] + 32 buy[chicken]
+   + 20 buy[hot_dog] + 4 buy[fries] + 12 buy[macaroni] + 15 buy[pizza]
+   + 31 buy[salad] + 8 buy[milk] + 8 buy[ice_cream] <= 0
+Bounds
+ buy[hamburger] free
+ buy[chicken] free
+ buy[hot_dog] free
+ buy[fries] free
+ buy[macaroni] free
+ buy[pizza] free
+ buy[salad] free
+ buy[milk] free
+ buy[ice_cream] free
+End

@@ -14,7 +14,7 @@
    .. autosummary::
    
       ~Variable.__init__
-      ~Variable.to_expression
+      ~Variable.to_expr
    
    
 

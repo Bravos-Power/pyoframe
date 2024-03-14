@@ -14,7 +14,5 @@ This page provides an auto-generated summary of convop's API.
     Model
     Constraint
     Variable
-    Parameter
-    Parameters
 
 

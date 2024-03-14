@@ -7,8 +7,8 @@ src/convop/expressions.py
 src/convop/io.py
 src/convop/model.py
 src/convop/model_element.py
+src/convop/monkey_patch.py
 src/convop/objective.py
-src/convop/parameters.py
 src/convop/solvers.py
 src/convop/variables.py
 src/convop.egg-info/PKG-INFO
@@ -17,4 +17,5 @@ src/convop.egg-info/dependency_links.txt
 src/convop.egg-info/requires.txt
 src/convop.egg-info/top_level.txt
 tests/test_examples.py
+tests/test_expressions.py
 tests/test_io.py

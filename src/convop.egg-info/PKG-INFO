@@ -11,6 +11,8 @@ Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 Requires-Dist: polars==0.20.13
 Requires-Dist: numpy
+Requires-Dist: pyarrow
+Requires-Dist: pandas
 Provides-Extra: dev
 Requires-Dist: black; extra == "dev"
 Requires-Dist: bumpver; extra == "dev"
@@ -19,6 +21,7 @@ Requires-Dist: pip-tools; extra == "dev"
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: pre-commit; extra == "dev"
 Requires-Dist: gurobipy; extra == "dev"
+Requires-Dist: pandas; extra == "dev"
 Provides-Extra: doc
 Requires-Dist: sphinx; extra == "doc"
 Requires-Dist: pydata-sphinx-theme; extra == "doc"
