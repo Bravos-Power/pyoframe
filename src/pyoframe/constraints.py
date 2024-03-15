@@ -4,6 +4,7 @@ from typing import Iterable, Sequence, overload
 
 import polars as pl
 
+from pyoframe.var_mapping import DEFAULT_MAP, NamedVariables, VariableMapping
 from pyoframe.model_element import COEF_KEY, VAR_KEY, ModelElement, FrameWrapper
 
 VAR_CONST = 0
@@ -75,6 +76,21 @@ class Expression(Expressionable, FrameWrapper):
     """A linear expression."""
 
     def __init__(self, data: pl.DataFrame):
+        """
+        >>> import pandas as pd
+        >>> from pyoframe import Variable, Model
+        >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
+        >>> m = Model()
+        >>> m.Time = Variable(df.index)
+        >>> m.Size = Variable(df.index)
+        >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
+        >>> print(expr.to_str(model=m, sort=True))
+        +2.0 Time[1,tue] +2.0 Size[1,tue] 
+        +4.0 Time[2,mon] +4.0 Size[2,mon] 
+        +3.0 Time[1,wed] +3.0 Size[1,wed] 
+        +5.0 Time[2,tue] +5.0 Size[2,tue] 
+        +1.0 Time[1,mon] +1.0 Size[1,mon]
+        """
         # Sanity checks, at least VAR_KEY or COEF_KEY must be present
         assert len(data.columns) == len(set(data.columns))
         assert VAR_KEY in data.columns or COEF_KEY in data.columns
@@ -283,8 +299,55 @@ class Expression(Expressionable, FrameWrapper):
     def variable_terms(self):
         return self.data.filter(pl.col(VAR_KEY) != VAR_CONST)
 
+    def to_str(
+        self,
+        model=None,
+        max_terms=None,
+        max_rows=None,
+        include_const_term=True,
+        sort=False,
+    ):
+        if include_const_term:
+            data = self.data
+        else:
+            data = self.variable_terms
+        if sort:
+            data = data.sort(by=VAR_KEY)
+
+        if model:
+            data = NamedVariables(model).map_vars(data)
+        else:
+            data = DEFAULT_MAP.map_vars(data)
+        dimensions = self.dimensions
+
+        data = data.with_columns(
+            result=pl.concat_str(
+                pl.when(pl.col(COEF_KEY) < 0).then(pl.lit("")).otherwise(pl.lit("+")),
+                COEF_KEY,
+                pl.lit(" "),
+                VAR_KEY,
+                pl.lit(" "),
+            )
+        ).drop(COEF_KEY, VAR_KEY)
+
+        if dimensions:
+            if max_terms:
+                data = data.group_by(dimensions).head(max_terms)
+            data = data.group_by(dimensions).agg(
+                pl.col("result").str.concat(delimiter="")
+            )
+        else:
+            if max_terms:
+                data = data.head(max_terms)
+            data = data.select(pl.col("result").str.concat(delimiter=""))
+
+        if max_rows:
+            data = data.head(max_rows)
+
+        return data.select(pl.col("result").str.concat(delimiter="\n")).item()
+
     def __repr__(self) -> str:
-        return f"<Expression size={len(self)} dimensions={self.shape}>"
+        return f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_rows=5, max_terms=8)}"
 
 
 @overload
@@ -296,7 +359,7 @@ def sum(over: Expressionable): ...
 
 
 def sum(
-        over: str | Sequence[str] | Expressionable, expr: Expressionable | None = None
+    over: str | Sequence[str] | Expressionable, expr: Expressionable | None = None
 ) -> "Expression":
     if expr is None:
         assert isinstance(over, Expressionable)
@@ -318,9 +381,9 @@ def build_constraint(lhs: Expressionable, rhs, sense):
 
 class Constraint(Expression, ModelElement):
     def __init__(
-            self,
-            lhs: Expression,
-            sense: ConstraintSense,
+        self,
+        lhs: Expression,
+        sense: ConstraintSense,
     ):
         """Adds a constraint to the model.
 

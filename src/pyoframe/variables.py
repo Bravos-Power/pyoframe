@@ -15,8 +15,19 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
     def _reset_count(cls):
         cls._var_count = 1
 
-    def __init__(self, over: pl.DataFrame | None | pd.Index | pd.DataFrame | Expression | List[pd.Index | pd.DataFrame | pl.DataFrame]= None,
-                 lb: float = float("-inf"), ub: float = float("inf")):
+    def __init__(
+        self,
+        over: (
+            pl.DataFrame
+            | None
+            | pd.Index
+            | pd.DataFrame
+            | Expression
+            | List[pd.Index | pd.DataFrame | pl.DataFrame]
+        ) = None,
+        lb: float = float("-inf"),
+        ub: float = float("inf"),
+    ):
         """Creates a variable for every row in the dataframe.
 
         Parameters
@@ -50,9 +61,11 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
             over = over.data.drop(RESERVED_COL_KEYS).unique()
 
         if over is None:
-            data = pl.DataFrame({VAR_KEY: [Variable._var_count]}, schema={VAR_KEY: pl.UInt32})
+            data = pl.DataFrame(
+                {VAR_KEY: [Variable._var_count]}, schema={VAR_KEY: pl.UInt32}
+            )
         else:
-            over= Variable._coords_to_df(over)
+            over = Variable._coords_to_df(over)
             if over.is_duplicated().any():
                 raise ValueError("Duplicate rows found in data.")
             data = over.with_columns(
@@ -74,7 +87,14 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         return Expression(self.data)
 
     @staticmethod
-    def _coords_to_df(coords: pl.DataFrame | pd.DataFrame | pd.Index |  List[pl.DataFrame | pd.DataFrame | pd.Index]):
+    def _coords_to_df(
+        coords: (
+            pl.DataFrame
+            | pd.DataFrame
+            | pd.Index
+            | List[pl.DataFrame | pd.DataFrame | pd.Index]
+        ),
+    ):
         """
         >>> import pandas as pd
         >>> dim1 = pd.Index([1, 2, 3])
@@ -117,7 +137,8 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
 
         df = coord_pl[0]
         for coord in coord_pl[1:]:
-            assert set(coord.columns) & set(df.columns) == set(), "All coordinates must have unique column names."
+            assert (
+                set(coord.columns) & set(df.columns) == set()
+            ), "All coordinates must have unique column names."
             df = df.join(coord, how="cross")
         return df
-
