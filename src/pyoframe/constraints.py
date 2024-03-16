@@ -1,11 +1,14 @@
 from __future__ import annotations
 from enum import Enum
-from typing import Iterable, Sequence, overload
+from typing import TYPE_CHECKING, Iterable, Optional, Sequence, overload
 
 import polars as pl
 
-from pyoframe.var_mapping import DEFAULT_MAP, NamedVariables, VariableMapping
+from pyoframe.var_mapping import DEFAULT_MAP, NamedVariables
 from pyoframe.model_element import COEF_KEY, VAR_KEY, ModelElement, FrameWrapper
+
+if TYPE_CHECKING:
+    from pyoframe.model import Model
 
 VAR_CONST = 0
 VAR_TYPE = pl.UInt32
@@ -75,7 +78,7 @@ class Expressionable:
 class Expression(Expressionable, FrameWrapper):
     """A linear expression."""
 
-    def __init__(self, data: pl.DataFrame):
+    def __init__(self, data: pl.DataFrame, model: Optional["Model"] = None):
         """
         >>> import pandas as pd
         >>> from pyoframe import Variable, Model
@@ -84,12 +87,13 @@ class Expression(Expressionable, FrameWrapper):
         >>> m.Time = Variable(df.index)
         >>> m.Size = Variable(df.index)
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
-        >>> print(expr.to_str(model=m, sort=True))
+        >>> expr
+        <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
+        +1.0 Time[1,mon] +1.0 Size[1,mon] 
         +2.0 Time[1,tue] +2.0 Size[1,tue] 
-        +4.0 Time[2,mon] +4.0 Size[2,mon] 
         +3.0 Time[1,wed] +3.0 Size[1,wed] 
+        +4.0 Time[2,mon] +4.0 Size[2,mon] 
         +5.0 Time[2,tue] +5.0 Size[2,tue] 
-        +1.0 Time[1,mon] +1.0 Size[1,mon]
         """
         # Sanity checks, at least VAR_KEY or COEF_KEY must be present
         assert len(data.columns) == len(set(data.columns))
@@ -111,6 +115,7 @@ class Expression(Expressionable, FrameWrapper):
             pl.col(COEF_KEY).cast(pl.Float64), pl.col(VAR_KEY).cast(VAR_TYPE)
         )
 
+        self._model = model
         super().__init__(data)
 
     def indices_match(self, other: Expression):
@@ -135,7 +140,7 @@ class Expression(Expressionable, FrameWrapper):
         >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
         >>> quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
         >>> expr = (quantity * df["cost"]).sum("time")
-        >>> expr.data.sort(["item", "__variable_id"])
+        >>> expr.data
         shape: (2, 3)
         ┌──────┬─────────┬───────────────┐
         │ item ┆ __coeff ┆ __variable_id │
@@ -152,8 +157,10 @@ class Expression(Expressionable, FrameWrapper):
         assert set(over) <= set(dims), f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
-        return Expression(
-            self.data.drop(over).group_by(remaining_dims + [VAR_KEY]).sum()
+        return self._new(
+            self.data.drop(over)
+            .group_by(remaining_dims + [VAR_KEY], maintain_order=True)
+            .sum()
         )
 
     def within(self, by: Expressionable):
@@ -162,7 +169,7 @@ class Expression(Expressionable, FrameWrapper):
         >>> import pandas as pd
         >>> general_expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
         >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
-        >>> general_expr.within(filter_expr).data.sort(["dim1", "__variable_id"])
+        >>> general_expr.within(filter_expr).data
         shape: (2, 3)
         ┌──────┬─────────┬───────────────┐
         │ dim1 ┆ __coeff ┆ __variable_id │
@@ -177,7 +184,12 @@ class Expression(Expressionable, FrameWrapper):
         dims = self.dimensions
         dims_in_common = [dim for dim in dims if dim in by.dimensions]
         by_dims = by.data.select(dims_in_common).unique()
-        return Expression(self.data.join(by_dims, on=dims_in_common))
+        return self._new(self.data.join(by_dims, on=dims_in_common))
+
+    def with_columns(self, polars_expr: pl.Expr) -> "Expression":
+        """Returns a new Expression after having transfered the inner .data using Polars' with_columns function."""
+        return self._new(self.data.with_columns(polars_expr))
+    
 
     def __add__(self, other):
         """
@@ -188,59 +200,57 @@ class Expression(Expressionable, FrameWrapper):
         >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).set_index("dim1")["add"]
         >>> var = Variable(add.index)
         >>> expr = var + add
-        >>> expr.data.sort(["dim1", "__variable_id"])
+        >>> expr.data
         shape: (6, 3)
         ┌──────┬─────────┬───────────────┐
         │ dim1 ┆ __coeff ┆ __variable_id │
         │ ---  ┆ ---     ┆ ---           │
         │ i64  ┆ f64     ┆ u32           │
         ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 10.0    ┆ 0             │
         │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 20.0    ┆ 0             │
         │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 30.0    ┆ 0             │
         │ 3    ┆ 1.0     ┆ 3             │
+        │ 1    ┆ 10.0    ┆ 0             │
+        │ 2    ┆ 20.0    ┆ 0             │
+        │ 3    ┆ 30.0    ┆ 0             │
         └──────┴─────────┴───────────────┘
         >>> expr += 2
-        >>> expr.data.sort(["dim1", "__variable_id"])
+        >>> expr.data
         shape: (6, 3)
         ┌──────┬─────────┬───────────────┐
         │ dim1 ┆ __coeff ┆ __variable_id │
         │ ---  ┆ ---     ┆ ---           │
         │ i64  ┆ f64     ┆ u32           │
         ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 12.0    ┆ 0             │
         │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 22.0    ┆ 0             │
         │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 32.0    ┆ 0             │
         │ 3    ┆ 1.0     ┆ 3             │
+        │ 1    ┆ 12.0    ┆ 0             │
+        │ 2    ┆ 22.0    ┆ 0             │
+        │ 3    ┆ 32.0    ┆ 0             │
         └──────┴─────────┴───────────────┘
         >>> expr += pd.DataFrame({"dim1": [1,2], "add": [10, 20]}).set_index("dim1")["add"]
-        >>> expr.data.sort(["dim1", "__variable_id"])
+        >>> expr.data
         shape: (6, 3)
         ┌──────┬─────────┬───────────────┐
         │ dim1 ┆ __coeff ┆ __variable_id │
         │ ---  ┆ ---     ┆ ---           │
         │ i64  ┆ f64     ┆ u32           │
         ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 22.0    ┆ 0             │
         │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 42.0    ┆ 0             │
         │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 32.0    ┆ 0             │
         │ 3    ┆ 1.0     ┆ 3             │
+        │ 1    ┆ 22.0    ┆ 0             │
+        │ 2    ┆ 42.0    ┆ 0             │
+        │ 3    ┆ 32.0    ┆ 0             │
         └──────┴─────────┴───────────────┘
         """
         if isinstance(other, (int, float)):
-            return Expression(
-                self.data.with_columns(
-                    pl.when(pl.col(VAR_KEY) == VAR_CONST)
-                    .then(pl.col(COEF_KEY) + other)
-                    .otherwise(pl.col(COEF_KEY))
-                    .alias(COEF_KEY)
-                ),
+            return self.with_columns(
+                pl.when(pl.col(VAR_KEY) == VAR_CONST)
+                .then(pl.col(COEF_KEY) + other)
+                .otherwise(pl.col(COEF_KEY))
+                .alias(COEF_KEY)
             )
 
         other = other.to_expr()
@@ -254,13 +264,13 @@ class Expression(Expressionable, FrameWrapper):
         assert sorted(data.columns) == sorted(other_data.columns)
         other_data = other_data.select(data.columns)
         data = pl.concat([data, other_data], how="vertical_relaxed")
-        data = data.group_by(dims + [VAR_KEY]).sum()
+        data = data.group_by(dims + [VAR_KEY], maintain_order=True).sum()
 
-        return Expression(data)
+        return self._new(data)
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
-            return Expression(self.data.with_columns(pl.col(COEF_KEY) * other))
+            return self.with_columns(pl.col(COEF_KEY) * other)
 
         other = other.to_expr()
 
@@ -280,10 +290,13 @@ class Expression(Expressionable, FrameWrapper):
             .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
             .drop(COEF_KEY + "_right")
         )
-        return Expression(data)
+        return self._new(data)
 
     def to_expr(self) -> Expression:
         return self
+
+    def _new(self, data: pl.DataFrame) -> Expression:
+        return Expression(data, model=self._model)
 
     @property
     def constant_terms(self):
@@ -301,7 +314,6 @@ class Expression(Expressionable, FrameWrapper):
 
     def to_str(
         self,
-        model=None,
         max_terms=None,
         max_rows=None,
         include_const_term=True,
@@ -314,8 +326,8 @@ class Expression(Expressionable, FrameWrapper):
         if sort:
             data = data.sort(by=VAR_KEY)
 
-        if model:
-            data = NamedVariables(model).map_vars(data)
+        if self._model is not None:
+            data = NamedVariables(self._model).map_vars(data)
         else:
             data = DEFAULT_MAP.map_vars(data)
         dimensions = self.dimensions
@@ -332,8 +344,8 @@ class Expression(Expressionable, FrameWrapper):
 
         if dimensions:
             if max_terms:
-                data = data.group_by(dimensions).head(max_terms)
-            data = data.group_by(dimensions).agg(
+                data = data.group_by(dimensions, maintain_order=True).head(max_terms)
+            data = data.group_by(dimensions, maintain_order=True).agg(
                 pl.col("result").str.concat(delimiter="")
             )
         else:

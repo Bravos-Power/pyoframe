@@ -42,7 +42,7 @@ def _expression_vars_to_string(expr: Expression, var_map: VariableMapping = DEFA
     ).drop(COEF_KEY, VAR_KEY)
 
     if dimensions:
-        result = result.group_by(dimensions).agg(pl.col("result").str.concat(delimiter=""))
+        result = result.group_by(dimensions, maintain_order=True).agg(pl.col("result").str.concat(delimiter=""))
     else:
         result = result.select(pl.col("result").str.concat(delimiter=""))
 

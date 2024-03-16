@@ -51,6 +51,7 @@ class Model:
             ), f"Cannot create {__name} since it was already created."
 
             __value.name = __name
+            __value._model = self
 
             if isinstance(__value, Objective):
                 assert self.objective is None, "Cannot create more than one objective."

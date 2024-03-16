@@ -84,7 +84,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         return f"""<Variable name={self.name} lb={self.lb} ub={self.ub} size={self.data.height} dimensions={self.shape}>"""
 
     def to_expr(self) -> Expression:
-        return Expression(self.data)
+        return Expression(self.data, model=self._model)
 
     @staticmethod
     def _coords_to_df(

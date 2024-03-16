@@ -1,6 +1,10 @@
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 import polars as pl
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyoframe.model import Model
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
@@ -10,6 +14,7 @@ RESERVED_COL_KEYS = [COEF_KEY, VAR_KEY]
 @dataclass
 class ModelElement:
     name: str = "unnamed"
+    _model: Optional["Model"] = None
 
 
 class FrameWrapper:
