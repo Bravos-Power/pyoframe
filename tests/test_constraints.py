@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import pytest
+
 
 
 def test_drops_na():
@@ -14,3 +16,6 @@ def test_drops_na():
         ]
         expected_constraint = 5 <= expected_df.to_expr()
         assert constraint == expected_constraint
+
+if __name__ == "__main__":
+    pytest.main([__file__])

@@ -4,14 +4,13 @@ from typing import TYPE_CHECKING, Iterable, Optional, Sequence, overload
 
 import polars as pl
 
-from pyoframe.dataframe import COEF_KEY, VAR_KEY, concat_dimensions
-from pyoframe.var_mapping import DEFAULT_MAP, NamedVariables
+from pyoframe.dataframe import COEF_KEY, CONST_TERM, VAR_KEY, concat_dimensions
+from pyoframe.var_mapping import DEFAULT_MAP
 from pyoframe.model_element import ModelElement, FrameWrapper
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
 
-VAR_CONST = 0
 VAR_TYPE = pl.UInt32
 
 
@@ -102,7 +101,7 @@ class Expression(Expressionable, FrameWrapper):
 
         # Add missing columns if needed
         if VAR_KEY not in data.columns:
-            data = data.with_columns(pl.lit(VAR_CONST).cast(VAR_TYPE).alias(VAR_KEY))
+            data = data.with_columns(pl.lit(CONST_TERM).cast(VAR_TYPE).alias(VAR_KEY))
         if COEF_KEY not in data.columns:
             data = data.with_columns(pl.lit(1.0).alias(COEF_KEY))
 
@@ -244,14 +243,13 @@ class Expression(Expressionable, FrameWrapper):
         │ 2    ┆ 42.0    ┆ 0             │
         │ 3    ┆ 32.0    ┆ 0             │
         └──────┴─────────┴───────────────┘
+        >>> expr = 5 + 2 * Variable()
+        >>> expr
+        <Expression size=1 dimensions={} terms=2>
+        2.0 x4 +5.0
         """
         if isinstance(other, (int, float)):
-            return self.with_columns(
-                pl.when(pl.col(VAR_KEY) == VAR_CONST)
-                .then(pl.col(COEF_KEY) + other)
-                .otherwise(pl.col(COEF_KEY))
-                .alias(COEF_KEY)
-            )
+            return self._add_const(other)
 
         other = other.to_expr()
         dims = self.dimensions
@@ -274,10 +272,10 @@ class Expression(Expressionable, FrameWrapper):
 
         other = other.to_expr()
 
-        if (other.data.get_column(VAR_KEY) != VAR_CONST).any():
+        if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
             self, other = other, self
 
-        if (other.data.get_column(VAR_KEY) != VAR_CONST).any():
+        if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
             raise ValueError(
                 "Multiplication of two expressions with variables is non-linear and not supported."
             )
@@ -298,11 +296,44 @@ class Expression(Expressionable, FrameWrapper):
     def _new(self, data: pl.DataFrame) -> Expression:
         return Expression(data, model=self._model)
 
+    def _add_const(self, const: int | float) -> Expression:
+        dim = self.dimensions
+        data = self.data
+        # Fill in missing constant terms
+        if not dim:
+            if CONST_TERM not in data[VAR_KEY]:
+                data = pl.concat(
+                    [
+                        data,
+                        pl.DataFrame(
+                            {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
+                            schema={COEF_KEY: pl.Float64, VAR_KEY: VAR_TYPE},
+                        ),
+                    ],
+                    how="vertical_relaxed",
+                )
+        else:
+            keys = (
+                data.select(dim)
+                .unique()
+                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
+            )
+            data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
+            data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
+
+        data = data.with_columns(
+            pl.when(pl.col(VAR_KEY) == CONST_TERM)
+            .then(pl.col(COEF_KEY) + const)
+            .otherwise(pl.col(COEF_KEY))
+        )
+
+        return self._new(data)
+
     @property
     def constant_terms(self):
         dims = self.dimensions
         return (
-            self.data.filter(pl.col(VAR_KEY) == VAR_CONST)
+            self.data.filter(pl.col(VAR_KEY) == pl.lit(CONST_TERM))
             .drop(VAR_KEY)
             .join(self.data.select(dims).unique(), on=dims, how="outer_coalesce")
             .fill_null(0.0)
@@ -310,16 +341,14 @@ class Expression(Expressionable, FrameWrapper):
 
     @property
     def variable_terms(self):
-        return self.data.filter(pl.col(VAR_KEY) != VAR_CONST)
+        return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
 
     def to_str_table(
         self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
     ):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
-            var_map = (
-                self._model.var_map if self._model is not None else DEFAULT_MAP
-            )
+            var_map = self._model.var_map if self._model is not None else DEFAULT_MAP
         data = var_map.map_vars(data)
         dimensions = self.dimensions
 

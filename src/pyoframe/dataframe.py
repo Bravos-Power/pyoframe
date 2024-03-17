@@ -3,7 +3,7 @@ import polars as pl
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
-
+CONST_TERM = 0
 
 RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY)
 

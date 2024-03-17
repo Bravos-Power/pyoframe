@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import polars as pl
+from pyoframe.dataframe import CONST_TERM
 from pyoframe.dataframe import VAR_KEY, concat_dimensions
 
 if TYPE_CHECKING:
@@ -16,8 +17,11 @@ class NamedVariables(VariableMapping):
 
     def __init__(self, m: "Model") -> None:
         self.map = pl.DataFrame(
-            {VAR_KEY: [], self.VAR_NAME_KEY: []},
-            schema={VAR_KEY: pl.UInt32, self.VAR_NAME_KEY: pl.Utf8},
+            {
+                VAR_KEY: [CONST_TERM],
+                self.VAR_NAME_KEY: [""],
+            },  # Constant value is variable 0
+            schema={VAR_KEY: pl.UInt32, self.VAR_NAME_KEY: pl.String},
         )
 
         for var in m.variables:
@@ -43,7 +47,12 @@ class NamedVariables(VariableMapping):
 
 class NumberedVariables(VariableMapping):
     def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
-        return df.with_columns(pl.concat_str(pl.lit("x"), VAR_KEY).alias(VAR_KEY))
+        return df.with_columns(
+            pl.when(pl.col(VAR_KEY) == pl.lit(CONST_TERM))
+            .then(pl.lit(""))
+            .otherwise(pl.concat_str(pl.lit("x"), VAR_KEY))
+            .alias(VAR_KEY)
+        )
 
 
 DEFAULT_MAP = NumberedVariables()

@@ -13,45 +13,14 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyoframe.constraints import Expression
 from pyoframe.dataframe import COEF_KEY
 from pyoframe.dataframe import VAR_KEY
-from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
+from pyoframe.var_mapping import DEFAULT_MAP
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
 
 import polars as pl
-
-
-def _expression_vars_to_string(
-    expr: Expression, var_map: VariableMapping = DEFAULT_MAP, sort=True
-) -> pl.DataFrame:
-    result = expr.variable_terms
-    if sort:
-        result = result.sort(by=VAR_KEY)
-
-    result = var_map.map_vars(result)
-    dimensions = expr.dimensions
-
-    result = result.with_columns(
-        result=pl.concat_str(
-            pl.when(pl.col(COEF_KEY) < 0).then(pl.lit("")).otherwise(pl.lit("+")),
-            COEF_KEY,
-            pl.lit(" "),
-            VAR_KEY,
-            pl.lit(" "),
-        )
-    ).drop(COEF_KEY, VAR_KEY)
-
-    if dimensions:
-        result = result.group_by(dimensions, maintain_order=True).agg(
-            pl.col("result").str.concat(delimiter="")
-        )
-    else:
-        result = result.select(pl.col("result").str.concat(delimiter=""))
-
-    return result
 
 
 def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
@@ -106,13 +75,13 @@ def bounds_to_file(m: "Model", f, var_map):
     f.write("\n\nbounds\n\n")
 
     for variable in m.variables:
-        lb = "-inf" if variable.lb is None else f"{variable.lb:+.12g}"
-        ub = "inf" if variable.ub is None else f"{variable.ub:+.12g}"
+        lb = f"{variable.lb:+.12g}"
+        ub = f"{variable.ub:+.12g}"
 
         df = var_map.map_vars(variable.data)
 
         df = df.select(
-            result=pl.concat_str(pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n"))
+            pl.concat_str(pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n"))
         ).to_series()
         df = df.str.concat(delimiter="")
 
