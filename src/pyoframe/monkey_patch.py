@@ -4,7 +4,7 @@ from pyoframe.constraints import Expressionable
 from pyoframe.constraints import Expression
 from functools import wraps
 
-from pyoframe.model_element import COEF_KEY
+from pyoframe.dataframe import COEF_KEY
 
 # pyright: reportAttributeAccessIssue=false
 

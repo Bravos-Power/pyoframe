@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING, Iterable, Optional, Sequence, overload
 
 import polars as pl
 
+from pyoframe.dataframe import COEF_KEY, VAR_KEY, concat_dimensions
 from pyoframe.var_mapping import DEFAULT_MAP, NamedVariables
-from pyoframe.model_element import COEF_KEY, VAR_KEY, ModelElement, FrameWrapper
+from pyoframe.model_element import ModelElement, FrameWrapper
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -89,11 +90,11 @@ class Expression(Expressionable, FrameWrapper):
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
         >>> expr
         <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
-        +1.0 Time[1,mon] +1.0 Size[1,mon] 
-        +2.0 Time[1,tue] +2.0 Size[1,tue] 
-        +3.0 Time[1,wed] +3.0 Size[1,wed] 
-        +4.0 Time[2,mon] +4.0 Size[2,mon] 
-        +5.0 Time[2,tue] +5.0 Size[2,tue] 
+        [1,mon]: 1.0 Time[1,mon] +1.0 Size[1,mon]
+        [1,tue]: 2.0 Time[1,tue] +2.0 Size[1,tue]
+        [1,wed]: 3.0 Time[1,wed] +3.0 Size[1,wed]
+        [2,mon]: 4.0 Time[2,mon] +4.0 Size[2,mon]
+        [2,tue]: 5.0 Time[2,tue] +5.0 Size[2,tue]
         """
         # Sanity checks, at least VAR_KEY or COEF_KEY must be present
         assert len(data.columns) == len(set(data.columns))
@@ -189,7 +190,6 @@ class Expression(Expressionable, FrameWrapper):
     def with_columns(self, polars_expr: pl.Expr) -> "Expression":
         """Returns a new Expression after having transfered the inner .data using Polars' with_columns function."""
         return self._new(self.data.with_columns(polars_expr))
-    
 
     def __add__(self, other):
         """
@@ -312,54 +312,91 @@ class Expression(Expressionable, FrameWrapper):
     def variable_terms(self):
         return self.data.filter(pl.col(VAR_KEY) != VAR_CONST)
 
-    def to_str(
-        self,
-        max_terms=None,
-        max_rows=None,
-        include_const_term=True,
-        sort=False,
+    def to_str_table(
+        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
     ):
-        if include_const_term:
-            data = self.data
-        else:
-            data = self.variable_terms
-        if sort:
-            data = data.sort(by=VAR_KEY)
-
-        if self._model is not None:
-            data = NamedVariables(self._model).map_vars(data)
-        else:
-            data = DEFAULT_MAP.map_vars(data)
+        data = self.data if include_const_term else self.variable_terms
+        if var_map is None:
+            var_map = (
+                self._model.var_map if self._model is not None else DEFAULT_MAP
+            )
+        data = var_map.map_vars(data)
         dimensions = self.dimensions
 
+        # Create a string for each term
         data = data.with_columns(
-            result=pl.concat_str(
-                pl.when(pl.col(COEF_KEY) < 0).then(pl.lit("")).otherwise(pl.lit("+")),
-                COEF_KEY,
+            expr=pl.concat_str(
+                pl.when(pl.col(COEF_KEY) < 0)
+                .then(pl.lit(" -"))
+                .otherwise(pl.lit(" +")),
+                pl.col(COEF_KEY).abs(),
                 pl.lit(" "),
-                VAR_KEY,
-                pl.lit(" "),
+                pl.col(VAR_KEY),
             )
         ).drop(COEF_KEY, VAR_KEY)
 
+        # Combine terms into one string
         if dimensions:
-            if max_terms:
-                data = data.group_by(dimensions, maintain_order=True).head(max_terms)
             data = data.group_by(dimensions, maintain_order=True).agg(
-                pl.col("result").str.concat(delimiter="")
+                pl.col("expr").str.concat(delimiter="")
             )
         else:
-            if max_terms:
-                data = data.head(max_terms)
-            data = data.select(pl.col("result").str.concat(delimiter=""))
+            data = data.select(pl.col("expr").str.concat(delimiter=""))
+
+        # Remove leading +
+        data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
 
         if max_rows:
             data = data.head(max_rows)
 
-        return data.select(pl.col("result").str.concat(delimiter="\n")).item()
+        if max_line_len:
+            data = data.with_columns(
+                pl.when(pl.col("expr").str.len_chars() > max_line_len)
+                .then(
+                    pl.concat_str(
+                        pl.col("expr").str.slice(0, max_line_len),
+                        pl.lit("..."),
+                    )
+                )
+                .otherwise(pl.col("expr"))
+            )
+
+        # Prefix with the dimensions
+        prefix = getattr(self, "name") if hasattr(self, "name") else None
+        if prefix or dimensions:
+            data = concat_dimensions(data, prefix=prefix, ignore_columns=["expr"])
+            data = data.with_columns(
+                pl.concat_str(
+                    pl.col("concated_dim"), pl.lit(": "), pl.col("expr")
+                ).alias("expr")
+            ).drop("concated_dim")
+
+        return data
+
+    def to_str(
+        self,
+        max_line_len=None,
+        max_rows=None,
+        include_const_term=True,
+        var_map=None,
+        include_header=True,
+    ):
+        str_table = self.to_str_table(
+            max_line_len=max_line_len,
+            max_rows=max_rows,
+            include_const_term=include_const_term,
+            var_map=var_map,
+        )
+        result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
+        if include_header:
+            result = (
+                f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n"
+                + result
+            )
+        return result
 
     def __repr__(self) -> str:
-        return f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_rows=5, max_terms=8)}"
+        return self.to_str(max_line_len=80, max_rows=5)
 
 
 @overload

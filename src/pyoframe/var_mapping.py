@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING
 import polars as pl
-from pyoframe.model_element import VAR_KEY
+from pyoframe.dataframe import VAR_KEY, concat_dimensions
 
 if TYPE_CHECKING:
-    from pyoframe.model import Model
+    from pyoframe.model import Model, Variable
 
 
 class VariableMapping:
@@ -15,25 +15,23 @@ class NamedVariables(VariableMapping):
     VAR_NAME_KEY = "_var_name"
 
     def __init__(self, m: "Model") -> None:
-        var_maps = []
+        self.map = pl.DataFrame(
+            {VAR_KEY: [], self.VAR_NAME_KEY: []},
+            schema={VAR_KEY: pl.UInt32, self.VAR_NAME_KEY: pl.Utf8},
+        )
+
         for var in m.variables:
-            df = var.data
-            dim = var.dimensions
-            if dim:
-                df = df.select(
-                    pl.concat_str(
-                        pl.lit(var.name + "["),
-                        pl.concat_str(*var.dimensions, separator=","),
-                        pl.lit("]"),
-                        separator="",
-                    ).alias(self.VAR_NAME_KEY),
-                    VAR_KEY,
-                )
-            else:
-                df = df.select(pl.lit(var.name).alias(self.VAR_NAME_KEY), VAR_KEY)
-            df = df.with_columns(pl.col(self.VAR_NAME_KEY).str.replace_all(" ", "_"))
-            var_maps.append(df)
-        self.map = pl.concat(var_maps)
+            self.add_var(var)
+
+    def add_var(self, var: "Variable") -> None:
+        self.map = pl.concat(
+            [
+                self.map,
+                concat_dimensions(var.data, keep_dims=False, prefix=var.name).rename(
+                    {"concated_dim": self.VAR_NAME_KEY}
+                ),
+            ]
+        )
 
     def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
         return (

@@ -3,6 +3,7 @@ from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
+from pyoframe.var_mapping import NamedVariables
 from pyoframe.variables import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve
@@ -13,6 +14,7 @@ class Model:
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self._objective: Objective | None = None
+        self.var_map = NamedVariables(self)
         self.name = name
 
     @property
@@ -58,6 +60,7 @@ class Model:
                 self._objective = __value
             if isinstance(__value, Variable):
                 self._variables.append(__value)
+                self.var_map.add_var(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
 

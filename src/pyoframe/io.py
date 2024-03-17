@@ -13,9 +13,10 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pyoframe.constraints import VAR_CONST, Expression
-from pyoframe.model_element import COEF_KEY, VAR_KEY
-from pyoframe.var_mapping import DEFAULT_MAP, NamedVariables, VariableMapping
+from pyoframe.constraints import Expression
+from pyoframe.dataframe import COEF_KEY
+from pyoframe.dataframe import VAR_KEY
+from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -23,7 +24,9 @@ if TYPE_CHECKING:
 import polars as pl
 
 
-def _expression_vars_to_string(expr: Expression, var_map: VariableMapping = DEFAULT_MAP, sort=True) -> pl.DataFrame:
+def _expression_vars_to_string(
+    expr: Expression, var_map: VariableMapping = DEFAULT_MAP, sort=True
+) -> pl.DataFrame:
     result = expr.variable_terms
     if sort:
         result = result.sort(by=VAR_KEY)
@@ -42,7 +45,9 @@ def _expression_vars_to_string(expr: Expression, var_map: VariableMapping = DEFA
     ).drop(COEF_KEY, VAR_KEY)
 
     if dimensions:
-        result = result.group_by(dimensions, maintain_order=True).agg(pl.col("result").str.concat(delimiter=""))
+        result = result.group_by(dimensions, maintain_order=True).agg(
+            pl.col("result").str.concat(delimiter="")
+        )
     else:
         result = result.select(pl.col("result").str.concat(delimiter=""))
 
@@ -57,9 +62,8 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     assert objective is not None, "No objective set."
 
     f.write(f"{objective.sense}\n\nobj:\n\n")
-    assert (objective.expr.data.get_column(VAR_KEY) != VAR_CONST).all(), "Objective cannot have constant terms."
-    result = _expression_vars_to_string(objective.expr, var_map, sort=True)
-    f.writelines(result.item())
+    result = objective.expr.to_str(var_map=var_map, include_header=False)
+    f.writelines(result)
 
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
@@ -76,21 +80,20 @@ def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
     #     )
 
     for constraint in constraints:
-        dims = constraint.dimensions
-        rhs = constraint.constant_terms.with_columns(pl.col(COEF_KEY) * -1).rename({COEF_KEY: "rhs"})
-        data = _expression_vars_to_string(constraint, var_map).rename({"result": "data"})
-        data = data.with_columns(
-            name=pl.concat_str(
-                pl.lit(constraint.name + "["), pl.concat_str(*dims, separator=","), pl.lit("]"), separator=""
-            )
+        rhs = constraint.constant_terms.with_columns(pl.col(COEF_KEY) * -1).rename(
+            {COEF_KEY: "rhs"}
         )
-        expression = pl.concat([data, rhs], how="align")
-        expression = expression.select(
-            result=pl.concat_str(
-                "name", pl.lit(": "), "data", pl.lit(f" {constraint.sense.value} "), "rhs", pl.lit("\n")
+        lhs = constraint.to_str_table(var_map=var_map, include_const_term=False)
+        constr_str = pl.concat([lhs, rhs], how="align")
+        constr_str = constr_str.select(
+            pl.concat_str(
+                "expr",
+                pl.lit(f" {constraint.sense.value} "),
+                "rhs",
+                pl.lit("\n"),
             )
         ).to_series()
-        f.writelines(expression)
+        f.writelines(constr_str)
 
 
 def bounds_to_file(m: "Model", f, var_map):
@@ -108,7 +111,9 @@ def bounds_to_file(m: "Model", f, var_map):
 
         df = var_map.map_vars(variable.data)
 
-        df = df.select(result=pl.concat_str(pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n"))).to_series()
+        df = df.select(
+            result=pl.concat_str(pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n"))
+        ).to_series()
         df = df.str.concat(delimiter="")
 
         f.writelines(df.item())
@@ -171,12 +176,16 @@ def bounds_to_file(m: "Model", f, var_map):
 #         f.writelines(batch)
 
 
-def to_file(m: "Model", fn: str | Path | None, integer_label="general", use_var_names=False) -> Path:
+def to_file(
+    m: "Model", fn: str | Path | None, integer_label="general", use_var_names=False
+) -> Path:
     """
     Write out a model to a lp file.
     """
     if fn is None:
-        with NamedTemporaryFile(prefix="linoframe-problem-", suffix=".lp", mode="w", delete=False) as f:
+        with NamedTemporaryFile(
+            prefix="linoframe-problem-", suffix=".lp", mode="w", delete=False
+        ) as f:
             fn = f.name
 
     fn = Path(fn)
@@ -185,7 +194,7 @@ def to_file(m: "Model", fn: str | Path | None, integer_label="general", use_var_
     if fn.exists():
         fn.unlink()
 
-    var_map = NamedVariables(m) if use_var_names else DEFAULT_MAP
+    var_map = m.var_map if use_var_names else DEFAULT_MAP
 
     with open(fn, mode="w") as f:
         objective_to_file(m, f, var_map)

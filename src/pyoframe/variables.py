@@ -1,11 +1,16 @@
 import polars as pl
+import pandas as pd
+from typing import Iterable, List
+
 from pyoframe.constraints import Expressionable
 
-from pyoframe.model_element import RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.dataframe import RESERVED_COL_KEYS, VAR_KEY
 from pyoframe.constraints import Expression
-from pyoframe.model_element import VAR_KEY, FrameWrapper, ModelElement
-import pandas as pd
-from typing import List
+from pyoframe.model_element import FrameWrapper, ModelElement
+from pyoframe.util import _parse_inputs_as_iterable
+
+
+VariableSet = pl.DataFrame | pd.Index | pd.DataFrame | Expression
 
 
 class Variable(FrameWrapper, Expressionable, ModelElement):
@@ -17,14 +22,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
 
     def __init__(
         self,
-        over: (
-            pl.DataFrame
-            | None
-            | pd.Index
-            | pd.DataFrame
-            | Expression
-            | List[pd.Index | pd.DataFrame | pl.DataFrame]
-        ) = None,
+        *over: VariableSet | Iterable[VariableSet],
         lb: float = float("-inf"),
         ub: float = float("inf"),
     ):
@@ -57,15 +55,12 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         >>> Variable(df[["dim1"]].drop_duplicates())
         <Variable name=unnamed lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
         """
-        if isinstance(over, Expression):
-            over = over.data.drop(RESERVED_COL_KEYS).unique()
-
+        over: pl.DataFrame | None = Variable._parse_over(*over)
         if over is None:
             data = pl.DataFrame(
                 {VAR_KEY: [Variable._var_count]}, schema={VAR_KEY: pl.UInt32}
             )
         else:
-            over = Variable._coords_to_df(over)
             if over.is_duplicated().any():
                 raise ValueError("Duplicate rows found in data.")
             data = over.with_columns(
@@ -87,25 +82,20 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         return Expression(self.data, model=self._model)
 
     @staticmethod
-    def _coords_to_df(
-        coords: (
-            pl.DataFrame
-            | pd.DataFrame
-            | pd.Index
-            | List[pl.DataFrame | pd.DataFrame | pd.Index]
-        ),
-    ):
+    def _parse_over(
+        *over: VariableSet | Iterable[VariableSet],
+    ) -> pl.DataFrame | None:
         """
         >>> import pandas as pd
         >>> dim1 = pd.Index([1, 2, 3])
         >>> dim2 = pd.Index(["a", "b"])
-        >>> Variable._coords_to_df([dim1, dim2])
+        >>> Variable._parse_over([dim1, dim2])
         Traceback (most recent call last):
         ...
         AssertionError: All coordinates must have unique column names.
         >>> dim1.name = "dim1"
         >>> dim2.name = "dim2"
-        >>> Variable._coords_to_df([dim1, dim2])
+        >>> Variable._parse_over([dim1, dim2])
         shape: (6, 2)
         ┌──────┬──────┐
         │ dim1 ┆ dim2 │
@@ -120,25 +110,27 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         │ 3    ┆ b    │
         └──────┴──────┘
         """
-        if not isinstance(coords, list):
-            coords = [coords]
+        if len(over) == 0:
+            return None
 
-        coord_pl: List[pl.DataFrame] = []
+        over: Iterable[VariableSet] = _parse_inputs_as_iterable(over)
 
-        for coord in coords:
-            if isinstance(coord, pd.Index):
-                coord = pd.DataFrame(index=coord).reset_index()
-            if isinstance(coord, pd.DataFrame):
-                coord = pl.from_pandas(coord)
-            coord_pl.append(coord)
+        def _parse_input(input: VariableSet) -> pl.DataFrame:
+            if isinstance(input, pd.Index):
+                input = pd.DataFrame(index=input).reset_index()
+            if isinstance(input, pd.DataFrame):
+                input = pl.from_pandas(input)
+            if isinstance(input, Expression):
+                input = input.data.drop(RESERVED_COL_KEYS).unique()
+            return input
 
-        if len(coord_pl) == 1:
-            return coord_pl[0]
+        over: List[pl.DataFrame] = [_parse_input(input) for input in over]
 
-        df = coord_pl[0]
-        for coord in coord_pl[1:]:
+        over_merged = over[0]
+
+        for df in over[1:]:
             assert (
-                set(coord.columns) & set(df.columns) == set()
+                set(over_merged.columns) & set(df.columns) == set()
             ), "All coordinates must have unique column names."
-            df = df.join(coord, how="cross")
-        return df
+            over_merged = over_merged.join(df, how="cross")
+        return over_merged

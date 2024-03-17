@@ -3,12 +3,10 @@ from typing import Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
 
+from pyoframe.dataframe import RESERVED_COL_KEYS, get_dimensions
+
 if TYPE_CHECKING:
     from pyoframe.model import Model
-
-COEF_KEY = "__coeff"
-VAR_KEY = "__variable_id"
-RESERVED_COL_KEYS = [COEF_KEY, VAR_KEY]
 
 
 @dataclass
@@ -21,7 +19,7 @@ class FrameWrapper:
     def __init__(self, data: pl.DataFrame):
         # Reorder columns to keep things consistent
         data = data.select(
-            [col for col in data.columns if col not in RESERVED_COL_KEYS]
+            get_dimensions(data)
             + [col for col in RESERVED_COL_KEYS if col in data.columns]
         )
         self._data = data
@@ -32,7 +30,21 @@ class FrameWrapper:
 
     @property
     def dimensions(self) -> List[str]:
-        return [col for col in self.data.columns if col not in RESERVED_COL_KEYS]
+        """
+        The dimensions of the data.
+
+        Examples
+        --------
+        >>> from pyoframe.variables import Variable
+        >>> Variable().dimensions
+        []
+        >>> import pandas as pd
+        >>> hours = pd.DataFrame({"hour": ["00:00", "06:00", "12:00", "18:00"]})
+        >>> cities = pd.DataFrame({"city": ["Toronto", "Berlin", "Paris"]})
+        >>> Variable([hours, cities]).dimensions
+        ['hour', 'city']
+        """
+        return get_dimensions(self.data)
 
     @property
     def shape(self) -> Dict[str, int]:
@@ -40,6 +52,7 @@ class FrameWrapper:
         Examples
         --------
         >>> import pandas as pd
+        >>> from pyoframe.dataframe import VAR_KEY
         >>> df = pd.DataFrame({VAR_KEY: [1]})
         >>> FrameWrapper(pl.from_pandas(df)).shape
         {}
