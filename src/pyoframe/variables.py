@@ -1,16 +1,17 @@
+from __future__ import annotations
 import polars as pl
 import pandas as pd
 from typing import Iterable, List
 
 from pyoframe.constraints import Expressionable
 
-from pyoframe.dataframe import RESERVED_COL_KEYS, VAR_KEY
-from pyoframe.constraints import Expression
+from pyoframe.dataframe import VAR_KEY
+from pyoframe.constraints import Expression, _set_to_polars
 from pyoframe.model_element import FrameWrapper, ModelElement
 from pyoframe.util import _parse_inputs_as_iterable
 
 
-VariableSet = pl.DataFrame | pd.Index | pd.DataFrame | Expression
+Set = pl.DataFrame | pd.Index | pd.DataFrame | Expression
 
 
 class Variable(FrameWrapper, Expressionable, ModelElement):
@@ -22,7 +23,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
 
     def __init__(
         self,
-        *over: VariableSet | Iterable[VariableSet],
+        *sets: Set | Iterable[Set],
         lb: float = float("-inf"),
         ub: float = float("inf"),
     ):
@@ -55,15 +56,15 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         >>> Variable(df[["dim1"]].drop_duplicates())
         <Variable name=unnamed lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
         """
-        over: pl.DataFrame | None = Variable._parse_over(*over)
-        if over is None:
+        indexing_set: pl.DataFrame | None = Variable._parse_set(*sets)
+        if indexing_set is None:
             data = pl.DataFrame(
                 {VAR_KEY: [Variable._var_count]}, schema={VAR_KEY: pl.UInt32}
             )
         else:
-            if over.is_duplicated().any():
+            if indexing_set.is_duplicated().any():
                 raise ValueError("Duplicate rows found in data.")
-            data = over.with_columns(
+            data = indexing_set.with_columns(
                 pl.int_range(
                     Variable._var_count,
                     Variable._var_count + pl.len(),
@@ -82,20 +83,20 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         return Expression(self.data, model=self._model)
 
     @staticmethod
-    def _parse_over(
-        *over: VariableSet | Iterable[VariableSet],
+    def _parse_set(
+        *over: Set | Iterable[Set],
     ) -> pl.DataFrame | None:
         """
         >>> import pandas as pd
         >>> dim1 = pd.Index([1, 2, 3])
         >>> dim2 = pd.Index(["a", "b"])
-        >>> Variable._parse_over([dim1, dim2])
+        >>> Variable._parse_set([dim1, dim2])
         Traceback (most recent call last):
         ...
         AssertionError: All coordinates must have unique column names.
         >>> dim1.name = "dim1"
         >>> dim2.name = "dim2"
-        >>> Variable._parse_over([dim1, dim2])
+        >>> Variable._parse_set([dim1, dim2])
         shape: (6, 2)
         ┌──────┬──────┐
         │ dim1 ┆ dim2 │
@@ -113,24 +114,66 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         if len(over) == 0:
             return None
 
-        over: Iterable[VariableSet] = _parse_inputs_as_iterable(over)
+        over_iter: Iterable[Set] = _parse_inputs_as_iterable(over)
 
-        def _parse_input(input: VariableSet) -> pl.DataFrame:
-            if isinstance(input, pd.Index):
-                input = pd.DataFrame(index=input).reset_index()
-            if isinstance(input, pd.DataFrame):
-                input = pl.from_pandas(input)
-            if isinstance(input, Expression):
-                input = input.data.drop(RESERVED_COL_KEYS).unique()
-            return input
+        over_frames: List[pl.DataFrame] = [_set_to_polars(set) for set in over_iter]
 
-        over: List[pl.DataFrame] = [_parse_input(input) for input in over]
+        over_merged = over_frames[0]
 
-        over_merged = over[0]
-
-        for df in over[1:]:
+        for df in over_frames[1:]:
             assert (
                 set(over_merged.columns) & set(df.columns) == set()
             ), "All coordinates must have unique column names."
             over_merged = over_merged.join(df, how="cross")
         return over_merged
+
+    def next(self, dim: str, wrap_around=False) -> Expression:
+        """
+        TODO add documentation
+
+        >>> import pandas as pd
+        >>> from pyoframe import Variable, Model
+        >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
+        >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
+        >>> m = Model()
+        >>> m.bat_charge = Variable(time_dim, space_dim)
+        >>> m.bat_flow = Variable(time_dim, space_dim)
+        >>> m.bat_charge
+        <Variable name=bat_charge lb=-inf ub=inf size=8 dimensions={'time': 4, 'city': 2}>
+        >>> (m.bat_charge + m.bat_flow).within({"time": ["00:00", "06:00", "12:00"]}) == m.bat_charge.next("time")
+        <Constraint name=unnamed sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
+        unnamed[00:00,Toronto]: 1.0 bat_charge[00:00,Toronto] +1.0 bat_flow[00:00,Toronto] -1.0 bat_charge[06:00... = 0
+        unnamed[00:00,Berlin]: 1.0 bat_charge[00:00,Berlin] +1.0 bat_flow[00:00,Berlin] -1.0 bat_charge[06:00,B... = 0
+        unnamed[06:00,Toronto]: 1.0 bat_charge[06:00,Toronto] +1.0 bat_flow[06:00,Toronto] -1.0 bat_charge[12:00... = 0
+        unnamed[06:00,Berlin]: 1.0 bat_charge[06:00,Berlin] +1.0 bat_flow[06:00,Berlin] -1.0 bat_charge[12:00,B... = 0
+        unnamed[12:00,Toronto]: 1.0 bat_charge[12:00,Toronto] +1.0 bat_flow[12:00,Toronto] -1.0 bat_charge[18:00... = 0
+        unnamed[12:00,Berlin]: 1.0 bat_charge[12:00,Berlin] +1.0 bat_flow[12:00,Berlin] -1.0 bat_charge[18:00,B... = 0
+        >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
+        <Constraint name=unnamed sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=22>
+        unnamed[00:00,Toronto]: 1.0 bat_charge[00:00,Toronto] +1.0 bat_flow[00:00,Toronto] -1.0 bat_charge[06:00... = 0
+        unnamed[00:00,Berlin]: 1.0 bat_charge[00:00,Berlin] +1.0 bat_flow[00:00,Berlin] -1.0 bat_charge[06:00,B... = 0
+        unnamed[06:00,Toronto]: 1.0 bat_charge[06:00,Toronto] +1.0 bat_flow[06:00,Toronto] -1.0 bat_charge[12:00... = 0
+        unnamed[06:00,Berlin]: 1.0 bat_charge[06:00,Berlin] +1.0 bat_flow[06:00,Berlin] -1.0 bat_charge[12:00,B... = 0
+        unnamed[12:00,Toronto]: 1.0 bat_charge[12:00,Toronto] +1.0 bat_flow[12:00,Toronto] -1.0 bat_charge[18:00... = 0
+        unnamed[12:00,Berlin]: 1.0 bat_charge[12:00,Berlin] +1.0 bat_flow[12:00,Berlin] -1.0 bat_charge[18:00,B... = 0
+        unnamed[18:00,Toronto]: 0.0 bat_charge[18:00,Toronto] +1.0 bat_flow[18:00,Toronto] = 0
+        unnamed[18:00,Berlin]: 0.0 bat_charge[18:00,Berlin] +1.0 bat_flow[18:00,Berlin] = 0
+        """
+
+        wrapped = self.data.select(dim).unique().sort(by=dim)
+        wrapped = wrapped.with_columns(
+            pl.col(dim).shift(-1).alias("__next")
+        )
+        if wrap_around:
+            wrapped = wrapped.with_columns(
+                pl.col("__next").fill_null(pl.first())
+            )
+        else:
+            wrapped = wrapped.drop_nulls(dim)
+
+        expr = self.to_expr()
+        data = expr.data.rename({dim: "__prev"})
+        data = data.join(
+            wrapped, left_on="__prev", right_on="__next", how="inner"
+        ).drop(["__prev", "__next"])
+        return expr._new(data)

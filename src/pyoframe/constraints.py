@@ -1,10 +1,18 @@
 from __future__ import annotations
 from enum import Enum
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence, overload
+from typing import TYPE_CHECKING, Iterable, Optional, Sequence, overload, Dict, List
 
 import polars as pl
+import pandas as pd
 
-from pyoframe.dataframe import COEF_KEY, CONST_TERM, VAR_KEY, concat_dimensions
+from pyoframe.dataframe import (
+    COEF_KEY,
+    CONST_TERM,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+    concat_dimensions,
+    get_dimensions,
+)
 from pyoframe.var_mapping import DEFAULT_MAP
 from pyoframe.model_element import ModelElement, FrameWrapper
 
@@ -52,7 +60,8 @@ class Expressionable:
         Examples
         >>> from pyoframe import Variable
         >>> Variable() <= 1
-        <Constraint name=unnamed sense='<=' len=1 dimensions={}>
+        <Constraint name=unnamed sense='<=' size=1 dimensions={} terms=2>
+        unnamed: 1.0 x1 -1.0 <= 0
         """
         return build_constraint(self, other, ConstraintSense.LE)
 
@@ -61,7 +70,8 @@ class Expressionable:
         Examples
         >>> from pyoframe import Variable
         >>> Variable() >= 1
-        <Constraint name=unnamed sense='>=' len=1 dimensions={}>
+        <Constraint name=unnamed sense='>=' size=1 dimensions={} terms=2>
+        unnamed: 1.0 x1 -1.0 >= 0
         """
         return build_constraint(self, other, ConstraintSense.GE)
 
@@ -70,9 +80,13 @@ class Expressionable:
         Examples
         >>> from pyoframe import Variable
         >>> Variable() == 1
-        <Constraint name=unnamed sense='=' len=1 dimensions={}>
+        <Constraint name=unnamed sense='=' size=1 dimensions={} terms=2>
+        unnamed: 1.0 x1 -1.0 = 0
         """
         return build_constraint(self, __value, ConstraintSense.EQ)
+
+
+Set = pl.DataFrame | pd.Index | pd.DataFrame | Expressionable | Dict[str, List]
 
 
 class Expression(Expressionable, FrameWrapper):
@@ -108,7 +122,7 @@ class Expression(Expressionable, FrameWrapper):
         # Sanity checks
         assert (
             not data.drop(COEF_KEY).is_duplicated().any()
-        ), "There are duplicata indices"
+        ), "There are duplicate indices"
 
         # Cast to proper datatypes (TODO check if needed)
         data = data.with_columns(
@@ -163,7 +177,7 @@ class Expression(Expressionable, FrameWrapper):
             .sum()
         )
 
-    def within(self, by: Expressionable):
+    def within(self, set: Set) -> Expression:
         """
         Examples
         >>> import pandas as pd
@@ -180,10 +194,11 @@ class Expression(Expressionable, FrameWrapper):
         │ 3    ┆ 3.0     ┆ 0             │
         └──────┴─────────┴───────────────┘
         """
-        by = by.to_expr()
+        set: pl.DataFrame = _set_to_polars(set)
+        set_dims = get_dimensions(set)
         dims = self.dimensions
-        dims_in_common = [dim for dim in dims if dim in by.dimensions]
-        by_dims = by.data.select(dims_in_common).unique()
+        dims_in_common = [dim for dim in dims if dim in set_dims]
+        by_dims = set.select(dims_in_common).unique()
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
     def with_columns(self, polars_expr: pl.Expr) -> "Expression":
@@ -403,12 +418,7 @@ class Expression(Expressionable, FrameWrapper):
         return data
 
     def to_str(
-        self,
-        max_line_len=None,
-        max_rows=None,
-        include_const_term=True,
-        var_map=None,
-        include_header=True,
+        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
     ):
         str_table = self.to_str_table(
             max_line_len=max_line_len,
@@ -417,15 +427,11 @@ class Expression(Expressionable, FrameWrapper):
             var_map=var_map,
         )
         result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
-        if include_header:
-            result = (
-                f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n"
-                + result
-            )
+
         return result
 
     def __repr__(self) -> str:
-        return self.to_str(max_line_len=80, max_rows=5)
+        return f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
 
 @overload
@@ -453,8 +459,13 @@ def build_constraint(lhs: Expressionable, rhs, sense):
     if not isinstance(rhs, (int, float)):
         rhs = rhs.to_expr()
         if not lhs.indices_match(rhs):
-            raise ValueError("LHS and RHS values have different indices")
-    return Constraint(lhs - rhs, sense)
+            raise ValueError(
+                "LHS and RHS values have different indices"
+                + str(lhs)
+                + "\nvs\n"
+                + str(rhs)
+            )
+    return Constraint(lhs - rhs, sense, model=lhs._model)
 
 
 class Constraint(Expression, ModelElement):
@@ -462,6 +473,7 @@ class Constraint(Expression, ModelElement):
         self,
         lhs: Expression,
         sense: ConstraintSense,
+        model: "Model" | None = None,
     ):
         """Adds a constraint to the model.
 
@@ -476,6 +488,41 @@ class Constraint(Expression, ModelElement):
         """
         super().__init__(lhs.data)
         self.sense = sense
+        self._model = model
 
-    def __repr__(self):
-        return f"""<Constraint name={self.name} sense='{self.sense.value}' len={len(self)} dimensions={self.shape}>"""
+    def to_str(
+        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
+    ):
+        str_table = self.to_str_table(
+            max_line_len=max_line_len,
+            max_rows=max_rows,
+            include_const_term=include_const_term,
+            var_map=var_map,
+        )
+        str_table = str_table.with_columns(
+            pl.concat_str(
+                "expr",
+                pl.lit(f" {self.sense.value} 0"),
+            )
+        )
+        result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
+
+        return result
+
+    def __repr__(self) -> str:
+        return f"<Constraint name={self.name} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
+
+
+def _set_to_polars(set: Set) -> pl.DataFrame:
+    if isinstance(set, dict):
+        return pl.DataFrame(set)
+    if isinstance(set, Expressionable):
+        return set.to_expr().data.drop(RESERVED_COL_KEYS).unique()
+    if isinstance(set, pd.Index):
+        return pl.from_pandas(pd.DataFrame(index=set).reset_index())
+    if isinstance(set, pd.DataFrame):
+        return pl.from_pandas(set)
+    if isinstance(set, pl.DataFrame):
+        return set
+
+    raise ValueError(f"Cannot convert {set} to a polars DataFrame")

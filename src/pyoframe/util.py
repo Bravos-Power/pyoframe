@@ -2,6 +2,9 @@ from typing import Any, Iterable
 import polars as pl
 import pandas as pd
 
+from pyoframe.dataframe import RESERVED_COL_KEYS
+
+
 
 def _parse_inputs_as_iterable(
     inputs: tuple[Any, ...] | tuple[Iterable[Any]],

@@ -30,7 +30,7 @@ def test_variables_to_string():
         - 2.1 * Variable()
         + 1.1231237019273 * Variable()
     )
-    result = expression.to_str(include_header=False)
+    result = expression.to_str()
     expected_result = "5.0 x1 +3.4 x2 -2.1 x3 +1.1231237019273 x4"
     assert result == expected_result
 
@@ -56,7 +56,7 @@ def test_variables_to_string_with_dimensions(expression_with_dimensions: Express
 
 def test_expression_with_const_to_str():
     expr = 5 + 2 * Variable()
-    result = expr.to_str(include_header=False)
+    result = expr.to_str()
     expected_result = "2.0 x1 +5.0"
     assert result == expected_result
 
