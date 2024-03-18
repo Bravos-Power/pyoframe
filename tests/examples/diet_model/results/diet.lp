@@ -15,13 +15,13 @@ max_nutrients[sodium]: 730.0 Buy[hamburger] +1190.0 Buy[chicken] +1800.0 Buy[hot
 
 bounds
 
-+0 <= Buy[ice_cream] <= +inf
++0 <= Buy[hamburger] <= +inf
++0 <= Buy[salad] <= +inf
 +0 <= Buy[hot_dog] <= +inf
++0 <= Buy[macaroni] <= +inf
++0 <= Buy[fries] <= +inf
++0 <= Buy[ice_cream] <= +inf
 +0 <= Buy[chicken] <= +inf
 +0 <= Buy[milk] <= +inf
-+0 <= Buy[fries] <= +inf
 +0 <= Buy[pizza] <= +inf
-+0 <= Buy[salad] <= +inf
-+0 <= Buy[macaroni] <= +inf
-+0 <= Buy[hamburger] <= +inf
 end

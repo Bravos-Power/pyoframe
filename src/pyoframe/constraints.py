@@ -84,6 +84,9 @@ class Expressionable:
         unnamed: 1.0 x1 -1.0 = 0
         """
         return build_constraint(self, __value, ConstraintSense.EQ)
+    
+    def filter(self, *args, **kwargs):
+        return self.to_expr().filter(*args, **kwargs)
 
 
 Set = pl.DataFrame | pd.Index | pd.DataFrame | Expressionable | Dict[str, List]
@@ -201,9 +204,35 @@ class Expression(Expressionable, FrameWrapper):
         by_dims = set.select(dims_in_common).unique()
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
-    def with_columns(self, polars_expr: pl.Expr) -> "Expression":
+    def with_columns(self, *args, **kwargs) -> "Expression":
         """Returns a new Expression after having transfered the inner .data using Polars' with_columns function."""
-        return self._new(self.data.with_columns(polars_expr))
+        return self._new(self.data.with_columns(*args, **kwargs))
+    
+    def filter(self, *args, **kwargs):
+        """
+        Creates a new expression with only a subset of the data.
+        Filtering uses the same syntax as polars.DataFrame.filter.
+
+        Examples
+        --------
+        >>> from pyoframe import Variable
+        >>> time = [1, 2, 3]
+        >>> city = ["Toronto", "Berlin"]
+        >>> var = Variable({"time": time}, {"city": city})
+        >>> expr = 2 * var
+        >>> expr
+        <Expression size=6 dimensions={'time': 3, 'city': 2} terms=6>
+        [1,Toronto]: 2.0 x1
+        [1,Berlin]: 2.0 x2
+        [2,Toronto]: 2.0 x3
+        [2,Berlin]: 2.0 x4
+        [3,Toronto]: 2.0 x5
+        [3,Berlin]: 2.0 x6
+        >>> expr.filter(city="Toronto", time=2)
+        <Expression size=1 dimensions={'time': 1, 'city': 1} terms=1>
+        [2,Toronto]: 2.0 x3
+        """
+        return self._new(self.data.filter(*args, **kwargs))
 
     def __add__(self, other):
         """
