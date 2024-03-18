@@ -49,20 +49,7 @@ def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
     #     )
 
     for constraint in constraints:
-        rhs = constraint.constant_terms.with_columns(pl.col(COEF_KEY) * -1).rename(
-            {COEF_KEY: "rhs"}
-        )
-        lhs = constraint.to_str_table(var_map=var_map, include_const_term=False)
-        constr_str = pl.concat([lhs, rhs], how="align")
-        constr_str = constr_str.select(
-            pl.concat_str(
-                "expr",
-                pl.lit(f" {constraint.sense.value} "),
-                "rhs",
-                pl.lit("\n"),
-            )
-        ).to_series()
-        f.writelines(constr_str)
+        f.writelines(constraint.to_str(var_map=var_map) + "\n")
 
 
 def bounds_to_file(m: "Model", f, var_map):

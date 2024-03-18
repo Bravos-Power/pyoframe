@@ -125,3 +125,53 @@ def get_dimensions(df: pl.DataFrame) -> List[str]:
     ['x', 'y']
     """
     return [col for col in df.columns if col not in RESERVED_COL_KEYS]
+
+
+def cast_coef_to_string(
+    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True
+) -> pl.DataFrame:
+    """
+    Examples
+    --------
+    >>> import polars as pl
+    >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
+    >>> cast_coef_to_string(df, "x")
+    shape: (4, 2)
+    ┌─────┬───────────────┐
+    │ x   ┆ __variable_id │
+    │ --- ┆ ---           │
+    │ str ┆ i64           │
+    ╞═════╪═══════════════╡
+    │ +   ┆ 1             │
+    │ -2  ┆ 2             │
+    │ +1  ┆ 0             │
+    │ +4  ┆ 4             │
+    └─────┴───────────────┘
+    """
+    df = df.with_columns(
+        pl.col(column_name).abs(),
+        _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
+    )
+
+    df = df.with_columns(
+        pl.when(pl.col(column_name) == pl.col(column_name).floor())
+        .then(pl.col(column_name).cast(pl.Int64).cast(pl.String))
+        .otherwise(pl.col(column_name).cast(pl.String))
+        .alias(column_name)
+    )
+
+    if drop_ones:
+        condition = pl.col(column_name) == str(1)
+        if VAR_KEY in df.columns:
+            condition = condition & (pl.col(VAR_KEY) != CONST_TERM)
+        df = df.with_columns(
+            pl.when(condition)
+            .then(pl.lit(""))
+            .otherwise(pl.col(column_name))
+            .alias(column_name)
+        )
+    else:
+        df = df.with_columns(pl.col(column_name).cast(pl.Utf8))
+    return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
+        "_sign"
+    )

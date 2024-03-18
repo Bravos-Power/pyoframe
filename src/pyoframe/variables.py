@@ -142,22 +142,23 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         <Variable name=bat_charge lb=-inf ub=inf size=8 dimensions={'time': 4, 'city': 2}>
         >>> (m.bat_charge + m.bat_flow).within({"time": ["00:00", "06:00", "12:00"]}) == m.bat_charge.next("time")
         <Constraint name=unnamed sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
-        unnamed[00:00,Toronto]: 1.0 bat_charge[00:00,Toronto] +1.0 bat_flow[00:00,Toronto] -1.0 bat_charge[06:00... = 0
-        unnamed[00:00,Berlin]: 1.0 bat_charge[00:00,Berlin] +1.0 bat_flow[00:00,Berlin] -1.0 bat_charge[06:00,B... = 0
-        unnamed[06:00,Toronto]: 1.0 bat_charge[06:00,Toronto] +1.0 bat_flow[06:00,Toronto] -1.0 bat_charge[12:00... = 0
-        unnamed[06:00,Berlin]: 1.0 bat_charge[06:00,Berlin] +1.0 bat_flow[06:00,Berlin] -1.0 bat_charge[12:00,B... = 0
-        unnamed[12:00,Toronto]: 1.0 bat_charge[12:00,Toronto] +1.0 bat_flow[12:00,Toronto] -1.0 bat_charge[18:00... = 0
-        unnamed[12:00,Berlin]: 1.0 bat_charge[12:00,Berlin] +1.0 bat_flow[12:00,Berlin] -1.0 bat_charge[18:00,B... = 0
+        unnamed[00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+        unnamed[00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+        unnamed[06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+        unnamed[06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+        unnamed[12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+        unnamed[12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+        
         >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
-        <Constraint name=unnamed sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=22>
-        unnamed[00:00,Toronto]: 1.0 bat_charge[00:00,Toronto] +1.0 bat_flow[00:00,Toronto] -1.0 bat_charge[06:00... = 0
-        unnamed[00:00,Berlin]: 1.0 bat_charge[00:00,Berlin] +1.0 bat_flow[00:00,Berlin] -1.0 bat_charge[06:00,B... = 0
-        unnamed[06:00,Toronto]: 1.0 bat_charge[06:00,Toronto] +1.0 bat_flow[06:00,Toronto] -1.0 bat_charge[12:00... = 0
-        unnamed[06:00,Berlin]: 1.0 bat_charge[06:00,Berlin] +1.0 bat_flow[06:00,Berlin] -1.0 bat_charge[12:00,B... = 0
-        unnamed[12:00,Toronto]: 1.0 bat_charge[12:00,Toronto] +1.0 bat_flow[12:00,Toronto] -1.0 bat_charge[18:00... = 0
-        unnamed[12:00,Berlin]: 1.0 bat_charge[12:00,Berlin] +1.0 bat_flow[12:00,Berlin] -1.0 bat_charge[18:00,B... = 0
-        unnamed[18:00,Toronto]: 0.0 bat_charge[18:00,Toronto] +1.0 bat_flow[18:00,Toronto] = 0
-        unnamed[18:00,Berlin]: 0.0 bat_charge[18:00,Berlin] +1.0 bat_flow[18:00,Berlin] = 0
+        <Constraint name=unnamed sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
+        unnamed[00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+        unnamed[00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+        unnamed[06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+        unnamed[06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+        unnamed[12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+        unnamed[12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+        unnamed[18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
+        unnamed[18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
 
         wrapped = self.data.select(dim).unique().sort(by=dim)
@@ -166,7 +167,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         )
         if wrap_around:
             wrapped = wrapped.with_columns(
-                pl.col("__next").fill_null(pl.first())
+                pl.col("__next").fill_null(pl.first(dim))
             )
         else:
             wrapped = wrapped.drop_nulls(dim)

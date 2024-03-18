@@ -10,6 +10,7 @@ from pyoframe.dataframe import (
     CONST_TERM,
     RESERVED_COL_KEYS,
     VAR_KEY,
+    cast_coef_to_string,
     concat_dimensions,
     get_dimensions,
 )
@@ -61,7 +62,7 @@ class Expressionable:
         >>> from pyoframe import Variable
         >>> Variable() <= 1
         <Constraint name=unnamed sense='<=' size=1 dimensions={} terms=2>
-        unnamed: 1.0 x1 -1.0 <= 0
+        unnamed: x1 <= 1
         """
         return build_constraint(self, other, ConstraintSense.LE)
 
@@ -71,7 +72,7 @@ class Expressionable:
         >>> from pyoframe import Variable
         >>> Variable() >= 1
         <Constraint name=unnamed sense='>=' size=1 dimensions={} terms=2>
-        unnamed: 1.0 x1 -1.0 >= 0
+        unnamed: x1 >= 1
         """
         return build_constraint(self, other, ConstraintSense.GE)
 
@@ -81,10 +82,10 @@ class Expressionable:
         >>> from pyoframe import Variable
         >>> Variable() == 1
         <Constraint name=unnamed sense='=' size=1 dimensions={} terms=2>
-        unnamed: 1.0 x1 -1.0 = 0
+        unnamed: x1 = 1
         """
         return build_constraint(self, __value, ConstraintSense.EQ)
-    
+
     def filter(self, *args, **kwargs):
         return self.to_expr().filter(*args, **kwargs)
 
@@ -106,11 +107,11 @@ class Expression(Expressionable, FrameWrapper):
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
         >>> expr
         <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
-        [1,mon]: 1.0 Time[1,mon] +1.0 Size[1,mon]
-        [1,tue]: 2.0 Time[1,tue] +2.0 Size[1,tue]
-        [1,wed]: 3.0 Time[1,wed] +3.0 Size[1,wed]
-        [2,mon]: 4.0 Time[2,mon] +4.0 Size[2,mon]
-        [2,tue]: 5.0 Time[2,tue] +5.0 Size[2,tue]
+        [1,mon]: Time[1,mon] + Size[1,mon]
+        [1,tue]: 2 Time[1,tue] +2 Size[1,tue]
+        [1,wed]: 3 Time[1,wed] +3 Size[1,wed]
+        [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
+        [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
         """
         # Sanity checks, at least VAR_KEY or COEF_KEY must be present
         assert len(data.columns) == len(set(data.columns))
@@ -207,7 +208,7 @@ class Expression(Expressionable, FrameWrapper):
     def with_columns(self, *args, **kwargs) -> "Expression":
         """Returns a new Expression after having transfered the inner .data using Polars' with_columns function."""
         return self._new(self.data.with_columns(*args, **kwargs))
-    
+
     def filter(self, *args, **kwargs):
         """
         Creates a new expression with only a subset of the data.
@@ -222,15 +223,15 @@ class Expression(Expressionable, FrameWrapper):
         >>> expr = 2 * var
         >>> expr
         <Expression size=6 dimensions={'time': 3, 'city': 2} terms=6>
-        [1,Toronto]: 2.0 x1
-        [1,Berlin]: 2.0 x2
-        [2,Toronto]: 2.0 x3
-        [2,Berlin]: 2.0 x4
-        [3,Toronto]: 2.0 x5
-        [3,Berlin]: 2.0 x6
+        [1,Toronto]: 2 x1
+        [1,Berlin]: 2 x2
+        [2,Toronto]: 2 x3
+        [2,Berlin]: 2 x4
+        [3,Toronto]: 2 x5
+        [3,Berlin]: 2 x6
         >>> expr.filter(city="Toronto", time=2)
         <Expression size=1 dimensions={'time': 1, 'city': 1} terms=1>
-        [2,Toronto]: 2.0 x3
+        [2,Toronto]: 2 x3
         """
         return self._new(self.data.filter(*args, **kwargs))
 
@@ -290,7 +291,7 @@ class Expression(Expressionable, FrameWrapper):
         >>> expr = 5 + 2 * Variable()
         >>> expr
         <Expression size=1 dimensions={} terms=2>
-        2.0 x4 +5.0
+        2 x4 +5
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
@@ -376,12 +377,18 @@ class Expression(Expressionable, FrameWrapper):
     @property
     def constant_terms(self):
         dims = self.dimensions
-        return (
-            self.data.filter(pl.col(VAR_KEY) == pl.lit(CONST_TERM))
-            .drop(VAR_KEY)
-            .join(self.data.select(dims).unique(), on=dims, how="outer_coalesce")
-            .fill_null(0.0)
-        )
+        constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
+        if dims:
+            return constant_terms.join(
+                self.data.select(dims).unique(), on=dims, how="outer_coalesce"
+            ).fill_null(0.0)
+        else:
+            if len(constant_terms) == 0:
+                return pl.DataFrame(
+                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: VAR_TYPE},
+                )
+            return constant_terms
 
     @property
     def variable_terms(self):
@@ -393,28 +400,26 @@ class Expression(Expressionable, FrameWrapper):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
             var_map = self._model.var_map if self._model is not None else DEFAULT_MAP
+        data = cast_coef_to_string(data)
         data = var_map.map_vars(data)
         dimensions = self.dimensions
 
         # Create a string for each term
         data = data.with_columns(
             expr=pl.concat_str(
-                pl.when(pl.col(COEF_KEY) < 0)
-                .then(pl.lit(" -"))
-                .otherwise(pl.lit(" +")),
-                pl.col(COEF_KEY).abs(),
+                COEF_KEY,
                 pl.lit(" "),
-                pl.col(VAR_KEY),
+                VAR_KEY,
             )
         ).drop(COEF_KEY, VAR_KEY)
 
         # Combine terms into one string
         if dimensions:
             data = data.group_by(dimensions, maintain_order=True).agg(
-                pl.col("expr").str.concat(delimiter="")
+                pl.col("expr").str.concat(delimiter=" ")
             )
         else:
-            data = data.select(pl.col("expr").str.concat(delimiter=""))
+            data = data.select(pl.col("expr").str.concat(delimiter=" "))
 
         # Remove leading +
         data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
@@ -519,24 +524,28 @@ class Constraint(Expression, ModelElement):
         self.sense = sense
         self._model = model
 
-    def to_str(
-        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
-    ):
+    def to_str(self, max_line_len=None, max_rows=None, var_map=None):
+        dims = self.dimensions
         str_table = self.to_str_table(
             max_line_len=max_line_len,
             max_rows=max_rows,
-            include_const_term=include_const_term,
+            include_const_term=False,
             var_map=var_map,
         )
-        str_table = str_table.with_columns(
-            pl.concat_str(
-                "expr",
-                pl.lit(f" {self.sense.value} 0"),
-            )
+        rhs = self.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
+        rhs = cast_coef_to_string(rhs, drop_ones=False)
+        # Remove leading +
+        rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters=" +"))
+        rhs = rhs.rename({COEF_KEY: "rhs"})
+        constr_str = pl.concat(
+            [str_table, rhs], how=("align" if dims else "horizontal")
         )
-        result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
-
-        return result
+        constr_str = constr_str.select(
+            pl.concat_str("expr", pl.lit(f" {self.sense.value} "), "rhs").str.concat(
+                delimiter="\n"
+            )
+        ).item()
+        return constr_str
 
     def __repr__(self) -> str:
         return f"<Constraint name={self.name} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
