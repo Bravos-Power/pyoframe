@@ -6,10 +6,7 @@ from pathlib import Path
 from pyoframe import Model, Variable, sum
 
 
-def main(working_dir: Path | str):
-    working_dir = Path(working_dir)
-    input_dir = working_dir / "input_data"
-
+def main(input_dir, output_dir: Path | str):
     plants = pd.read_csv(input_dir / "plants.csv").set_index("plant")
     warehouses = pd.read_csv(input_dir / "wharehouses.csv").set_index("wharehouse")
     transport_costs = (
@@ -28,8 +25,9 @@ def main(working_dir: Path | str):
 
     m.minimize = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
 
-    m.solve("gurobi", dir_path=working_dir / "results")
+    m.solve("gurobi", output_dir)
 
 
 if __name__ == "__main__":
-    main(os.path.dirname(os.path.realpath(__file__)))
+    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+    main(working_dir / "input_data", working_dir / "results")

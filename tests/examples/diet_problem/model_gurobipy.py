@@ -8,10 +8,7 @@ from gurobipy import GRB, Model, quicksum
 import pandas as pd
 
 
-def main(working_dir):
-    working_dir = Path(working_dir)
-    input_dir = working_dir / "input_data"
-
+def main(input_dir, output_dir):
     df = pd.read_csv(input_dir / "foods.csv").set_index("food")
     cost = df["cost"].to_dict()
     foods = df.index.tolist()
@@ -53,10 +50,11 @@ def main(working_dir):
     m.setObjective(buy.prod(cost), GRB.MINIMIZE)
 
     # Solve
-    m.write(str(working_dir / "results" / "diet-gurobipy.lp"))
+    m.write(str(output_dir / "diet-gurobipy.lp"))
     m.optimize()
-    m.write(str(working_dir / "results" / "diet-gurobipy.sol"))
+    m.write(str(output_dir / "diet-gurobipy.sol"))
 
 
 if __name__ == "__main__":
-    main(os.path.dirname(os.path.realpath(__file__)))
+    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
+    main(working_dir / "input_data", working_dir / "results")

@@ -1,12 +1,12 @@
 from pathlib import Path
 
 
-def solve(m, solver, dir_path: Path | None = None, **kwargs):
-    if dir_path is not None and not dir_path.exists():
-        dir_path.mkdir(parents=True)
+def solve(m, solver, output_dir: Path | None = None, **kwargs):
+    if output_dir is not None and not output_dir.exists():
+        output_dir.mkdir(parents=True)
 
     if solver == "gurobi":
-        return gurobi_solve(m, dir_path=dir_path, **kwargs)
+        return gurobi_solve(m, dir_path=output_dir, **kwargs)
     else:
         raise ValueError(f"Solver {solver} not recognized or supported.")
 

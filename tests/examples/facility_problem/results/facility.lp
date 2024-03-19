@@ -11,10 +11,6 @@ con_max_capacity[1]: transport[0,1] + transport[1,1] + transport[2,1] + transpor
 con_max_capacity[2]: transport[0,2] + transport[1,2] + transport[2,2] + transport[3,2] -17 open[2] <= 0
 con_max_capacity[3]: transport[0,3] + transport[1,3] + transport[2,3] + transport[3,3] -19 open[3] <= 0
 con_max_capacity[4]: transport[0,4] + transport[1,4] + transport[2,4] + transport[3,4] -18 open[4] <= 0
-
-
-s.t.
-
 con_meet_demand[0]: transport[0,0] + transport[0,1] + transport[0,2] + transport[0,3] + transport[0,4] = 15
 con_meet_demand[1]: transport[1,0] + transport[1,1] + transport[1,2] + transport[1,3] + transport[1,4] = 18
 con_meet_demand[2]: transport[2,0] + transport[2,1] + transport[2,2] + transport[2,3] + transport[2,4] = 14
@@ -28,10 +24,6 @@ bounds
 -inf <= open[2] <= +inf
 -inf <= open[3] <= +inf
 -inf <= open[4] <= +inf
-
-
-bounds
-
 +0 <= transport[0,0] <= +inf
 +0 <= transport[0,1] <= +inf
 +0 <= transport[0,2] <= +inf

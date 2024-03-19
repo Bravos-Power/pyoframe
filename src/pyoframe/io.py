@@ -93,6 +93,7 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
     for item in iterable:
         if not wrote:
             f.write(f"\n\n{section_header}\n\n")
+            wrote = True
         yield item
 
 

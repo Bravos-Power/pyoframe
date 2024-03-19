@@ -1,7 +1,4 @@
-from io import TextIOWrapper
-from math import exp
 from pathlib import Path
-from tabnanny import check
 from typing import List, Tuple
 
 from tests.examples.diet_problem.model import main as main_diet
@@ -14,45 +11,57 @@ from tests.examples.cutting_stock_problem.model import main as main_cutting_stoc
 
 
 def test_diet_example():
-    working_dir = Path("tests/examples/diet_problem/")
-    result_dir = working_dir / "results"
-    # Delete previous results
-    if result_dir.exists():
-        for file in result_dir.iterdir():
-            file.unlink()
+    input_dir = Path("tests/examples/diet_problem/input_data/")
+    output_dir = Path("tmp/diet_problem/")
+    expected_output = Path("tests/examples/diet_problem/results/")
+    delete_dir(output_dir)
 
-    main_diet_gurobipy(working_dir)
-    main_diet(working_dir)
+    main_diet(input_dir, output_dir)
+    main_diet_gurobipy(input_dir, output_dir)
 
-    check_sol_equal(result_dir / "diet-gurobipy.sol", result_dir / "diet.sol")
+    check_files_equal(expected_output / "diet.lp", output_dir / "diet.lp")
+    check_files_equal(expected_output / "diet.sol", output_dir / "diet.sol")
+    check_sol_equal(expected_output / "diet-gurobipy.sol", output_dir / "diet.sol")
 
 
 def test_facility_example():
-    working_dir = Path("tests/examples/facility_problem/")
-    result_dir = working_dir / "results"
-    # Delete previous results
-    if result_dir.exists():
-        for file in result_dir.iterdir():
-            file.unlink()
+    input_dir = Path("tests/examples/facility_problem/input_data/")
+    output_dir = Path("tmp/facility_problem/")
+    expected_output = Path("tests/examples/facility_problem/results/")
 
-    main_facility_gurobipy(working_dir)
-    main_facility(working_dir)
+    delete_dir(output_dir)
+
+    main_facility(input_dir, output_dir)
+    main_facility_gurobipy(input_dir, output_dir)
 
     # Check that two files results are equal
-    check_sol_equal(result_dir / "facility-gurobipy.sol", result_dir / "facility.sol")
+    check_files_equal(expected_output / "facility.lp", output_dir / "facility.lp")
+    check_files_equal(expected_output / "facility.sol", output_dir / "facility.sol")
+    check_sol_equal(
+        expected_output / "facility-gurobipy.sol", output_dir / "facility.sol"
+    )
 
 
 def test_cutting_stock_example():
-    working_dir = Path("tests/examples/cutting_stock_problem/")
-    result_dir = working_dir / "results"
-    # Delete previous results
-    if result_dir.exists():
-        for file in result_dir.iterdir():
-            file.unlink()
+    input_dir = Path("tests/examples/cutting_stock_problem/input_data/")
+    output_dir = Path("tmp/cutting_stock/")
+    expected_output = Path("tests/examples/cutting_stock_problem/results/")
 
-    main_cutting_stock(working_dir)
+    main_cutting_stock(input_dir, output_dir)
 
-    check_integer_solutions_only(result_dir / "cutting_stock.sol")
+    check_files_equal(
+        expected_output / "cutting_stock.lp", output_dir / "cutting_stock.lp"
+    )
+    check_integer_solutions_only(output_dir / "cutting_stock.sol")
+
+
+def check_files_equal(file_expected: Path, file_actual: Path):
+    with open(file_expected) as f:
+        expected = f.readlines()
+    with open(file_actual) as f:
+        actual = f.readlines()
+    for e, a in zip(expected, actual):
+        assert e == a, f"Expected {e} but got {a}"
 
 
 def check_integer_solutions_only(sol_file):
@@ -83,3 +92,9 @@ def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = [line.partition(" ") for line in sol]
     sol = [(name, float(value)) for name, _, value in sol]
     return sol
+
+
+def delete_dir(dir: Path):
+    if dir.exists():
+        for file in dir.iterdir():
+            file.unlink()
