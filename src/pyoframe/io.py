@@ -26,11 +26,10 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     """
     Write out the objective of a model to a lp file.
     """
-    objective = m.objective
-    assert objective is not None, "No objective set."
+    assert m.objective is not None, "No objective set."
 
-    f.write(f"{objective.sense}\n\nobj:\n\n")
-    result = objective.expr.to_str(var_map=var_map)
+    f.write(f"{m.objective.sense}\n\nobj:\n\n")
+    result = m.objective.to_str(var_map=var_map)
     f.writelines(result)
 
 

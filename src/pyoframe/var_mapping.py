@@ -28,6 +28,7 @@ class NamedVariables(VariableMapping):
             self.add_var(var)
 
     def add_var(self, var: "Variable") -> None:
+        assert var.name is not None, "Variable must have a name to be used in a NamedVariables mapping."
         self.map = pl.concat(
             [
                 self.map,

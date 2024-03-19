@@ -5,13 +5,13 @@ from typing import Iterable, List, Literal
 
 from pyoframe.constraints import Expressionable
 
-from pyoframe.dataframe import VAR_KEY
+from pyoframe.dataframe import COEF_KEY, VAR_KEY
 from pyoframe.constraints import Expression, _set_to_polars, Set
-from pyoframe.model_element import FrameWrapper, ModelElement
+from pyoframe.model_element import ModelElement
 from pyoframe.util import _parse_inputs_as_iterable
 
 
-class Variable(FrameWrapper, Expressionable, ModelElement):
+class Variable(ModelElement, Expressionable):
     _var_count = 1  # Must start at 1 since 0 is reserved for constant terms
 
     @classmethod
@@ -46,29 +46,36 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         >>> from pyoframe import Variable
         >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
         >>> Variable(df)
-        <Variable name=unnamed lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
+        <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
+        [1,a]: x1
+        [1,b]: x2
+        [2,a]: x3
+        [2,b]: x4
+        [3,a]: x5
+        [3,b]: x6
         >>> Variable(df[["dim1"]])
         Traceback (most recent call last):
         ...
         ValueError: Duplicate rows found in data.
         >>> Variable(df[["dim1"]].drop_duplicates())
-        <Variable name=unnamed lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
+        <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
+        [1]: x7
+        [2]: x8
+        [3]: x9
         """
         indexing_set: pl.DataFrame | None = Variable._parse_set(*sets)
         if indexing_set is None:
-            data = pl.DataFrame(
-                {VAR_KEY: [Variable._var_count]}, schema={VAR_KEY: pl.UInt32}
-            )
+            data = pl.DataFrame({VAR_KEY: [Variable._var_count]})
         else:
             if indexing_set.is_duplicated().any():
                 raise ValueError("Duplicate rows found in data.")
             data = indexing_set.with_columns(
-                pl.int_range(
-                    Variable._var_count,
-                    Variable._var_count + pl.len(),
-                    dtype=pl.UInt32,
-                ).alias(VAR_KEY)
+                pl.int_range(Variable._var_count, Variable._var_count + pl.len()).alias(
+                    VAR_KEY
+                )
             )
+
+        super().__init__(data)
         Variable._var_count += data.height
         self.lb = lb
         self.ub = ub
@@ -78,17 +85,18 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
             "integer",
         ), "type must be one of 'continuous', 'binary', or 'integer'"
         self._vtype: Literal["continuous", "binary", "integer"] = vtype
-        super().__init__(data)
 
     @property
     def vtype(self) -> Literal["continuous", "binary", "integer"]:
         return self._vtype
 
     def __repr__(self):
-        return f"""<Variable name={self.name} lb={self.lb} ub={self.ub} size={self.data.height} dimensions={self.shape}>"""
+        return f"""<Variable{' name='+self.name if self.name is not None else ''} lb={self.lb} ub={self.ub} size={self.data.height} dimensions={self.shape}>\n{self.to_expr().to_str(max_line_len=80, max_rows=10)}"""
 
     def to_expr(self) -> Expression:
-        return Expression(self.data, model=self._model)
+        return Expression(
+            self.data.with_columns(pl.lit(1.0).alias(COEF_KEY)), model=self._model
+        )
 
     @staticmethod
     def _parse_set(
@@ -145,27 +153,25 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         >>> m = Model()
         >>> m.bat_charge = Variable(time_dim, space_dim)
         >>> m.bat_flow = Variable(time_dim, space_dim)
-        >>> m.bat_charge
-        <Variable name=bat_charge lb=-inf ub=inf size=8 dimensions={'time': 4, 'city': 2}>
         >>> (m.bat_charge + m.bat_flow).within({"time": ["00:00", "06:00", "12:00"]}) == m.bat_charge.next("time")
-        <Constraint name=unnamed sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
-        unnamed[00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
-        unnamed[00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
-        unnamed[06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
-        unnamed[06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
-        unnamed[12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
-        unnamed[12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+        <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
+        [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+        [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+        [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+        [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+        [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+        [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
 
         >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
-        <Constraint name=unnamed sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
-        unnamed[00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
-        unnamed[00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
-        unnamed[06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
-        unnamed[06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
-        unnamed[12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
-        unnamed[12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
-        unnamed[18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
-        unnamed[18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
+        <Constraint sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
+        [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+        [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+        [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+        [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+        [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+        [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+        [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
+        [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
 
         wrapped = self.data.select(dim).unique().sort(by=dim)

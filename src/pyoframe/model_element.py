@@ -1,28 +1,40 @@
-from dataclasses import dataclass
 from typing import Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
 
-from pyoframe.dataframe import RESERVED_COL_KEYS, get_dimensions
+from pyoframe.dataframe import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY, get_dimensions
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
 
 
-@dataclass
 class ModelElement:
-    name: str = "unnamed"
-    _model: Optional["Model"] = None
+    def __init__(
+        self,
+        data: pl.DataFrame,
+        model: Optional["Model"] = None,
+        name: str | None = None,
+    ) -> None:
+        # Sanity checks, no duplicate column names
+        assert len(data.columns) == len(
+            set(data.columns)
+        ), "Duplicate column names found."
 
+        dimensions = get_dimensions(data)
+        reserved_cols = [col for col in RESERVED_COL_KEYS if col in data.columns]
 
-class FrameWrapper:
-    def __init__(self, data: pl.DataFrame):
         # Reorder columns to keep things consistent
-        data = data.select(
-            get_dimensions(data)
-            + [col for col in RESERVED_COL_KEYS if col in data.columns]
-        )
+        data = data.select(dimensions + reserved_cols)
+
+        # Cast to proper dtype
+        if COEF_KEY in reserved_cols:
+            data = data.cast({COEF_KEY: pl.Float64})
+        if VAR_KEY in reserved_cols:
+            data = data.cast({VAR_KEY: pl.UInt32})
+
         self._data = data
+        self.name = name
+        self._model = model
 
     @property
     def data(self) -> pl.DataFrame:
@@ -31,17 +43,16 @@ class FrameWrapper:
     @property
     def dimensions(self) -> List[str]:
         """
-        The dimensions of the data.
+        The names of the data's dimensions.
 
         Examples
         --------
         >>> from pyoframe.variables import Variable
+        >>> # A variable with no dimensions
         >>> Variable().dimensions
         []
-        >>> import pandas as pd
-        >>> hours = pd.DataFrame({"hour": ["00:00", "06:00", "12:00", "18:00"]})
-        >>> cities = pd.DataFrame({"city": ["Toronto", "Berlin", "Paris"]})
-        >>> Variable([hours, cities]).dimensions
+        >>> # A variable with dimensions of "hour" and "city"
+        >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
         ['hour', 'city']
         """
         return get_dimensions(self.data)
@@ -49,18 +60,22 @@ class FrameWrapper:
     @property
     def shape(self) -> Dict[str, int]:
         """
+        The number of indices in each dimension.
+
         Examples
         --------
-        >>> import pandas as pd
-        >>> from pyoframe.dataframe import VAR_KEY
-        >>> df = pd.DataFrame({VAR_KEY: [1]})
-        >>> FrameWrapper(pl.from_pandas(df)).shape
+        >>> from pyoframe.variables import Variable
+        >>> # A variable with no dimensions
+        >>> Variable().shape
         {}
+        >>> # A variable with dimensions of "hour" and "city"
+        >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
+        {'hour': 4, 'city': 3}
         """
-        dims = self.dimensions
-        return {dim: self.data[dim].n_unique() for dim in dims}
+        return {dim: self.data[dim].n_unique() for dim in self.dimensions}
 
     def __len__(self) -> int:
         if not self.dimensions:
             return 1
         return self.data.drop(*RESERVED_COL_KEYS).n_unique()
+    

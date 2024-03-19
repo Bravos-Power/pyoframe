@@ -15,7 +15,7 @@ from pyoframe.dataframe import (
     get_dimensions,
 )
 from pyoframe.var_mapping import DEFAULT_MAP
-from pyoframe.model_element import ModelElement, FrameWrapper
+from pyoframe.model_element import ModelElement
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -61,8 +61,8 @@ class Expressionable:
         Examples
         >>> from pyoframe import Variable
         >>> Variable() <= 1
-        <Constraint name=unnamed sense='<=' size=1 dimensions={} terms=2>
-        unnamed: x1 <= 1
+        <Constraint sense='<=' size=1 dimensions={} terms=2>
+        x1 <= 1
         """
         return build_constraint(self, other, ConstraintSense.LE)
 
@@ -71,8 +71,8 @@ class Expressionable:
         Examples
         >>> from pyoframe import Variable
         >>> Variable() >= 1
-        <Constraint name=unnamed sense='>=' size=1 dimensions={} terms=2>
-        unnamed: x1 >= 1
+        <Constraint sense='>=' size=1 dimensions={} terms=2>
+        x1 >= 1
         """
         return build_constraint(self, other, ConstraintSense.GE)
 
@@ -81,8 +81,8 @@ class Expressionable:
         Examples
         >>> from pyoframe import Variable
         >>> Variable() == 1
-        <Constraint name=unnamed sense='=' size=1 dimensions={} terms=2>
-        unnamed: x1 = 1
+        <Constraint sense='=' size=1 dimensions={} terms=2>
+        x1 = 1
         """
         return build_constraint(self, __value, ConstraintSense.EQ)
 
@@ -99,7 +99,7 @@ Set = (
 )
 
 
-class Expression(Expressionable, FrameWrapper):
+class Expression(Expressionable, ModelElement):
     """A linear expression."""
 
     def __init__(self, data: pl.DataFrame, model: Optional["Model"] = None):
@@ -119,28 +119,15 @@ class Expression(Expressionable, FrameWrapper):
         [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
         [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
         """
-        # Sanity checks, at least VAR_KEY or COEF_KEY must be present
-        assert len(data.columns) == len(set(data.columns))
-        assert VAR_KEY in data.columns or COEF_KEY in data.columns
+        # Sanity checks, VAR_KEY and COEF_KEY must be present
+        assert VAR_KEY in data.columns and COEF_KEY in data.columns
 
-        # Add missing columns if needed
-        if VAR_KEY not in data.columns:
-            data = data.with_columns(pl.lit(CONST_TERM).cast(VAR_TYPE).alias(VAR_KEY))
-        if COEF_KEY not in data.columns:
-            data = data.with_columns(pl.lit(1.0).alias(COEF_KEY))
+        # Sanity check no duplicates indices
+        if data.drop(COEF_KEY).is_duplicated().any():
+            duplicated_data = data.filter(data.drop(COEF_KEY).is_duplicated())
+            raise ValueError(f"Duplicate indices found:\n{duplicated_data}.")
 
-        # Sanity checks
-        assert (
-            not data.drop(COEF_KEY).is_duplicated().any()
-        ), "There are duplicate indices"
-
-        # Cast to proper datatypes (TODO check if needed)
-        data = data.with_columns(
-            pl.col(COEF_KEY).cast(pl.Float64), pl.col(VAR_KEY).cast(VAR_TYPE)
-        )
-
-        self._model = model
-        super().__init__(data)
+        super().__init__(data, model=model)
 
     def indices_match(self, other: Expression):
         # Check that the indices match
@@ -196,7 +183,7 @@ class Expression(Expressionable, FrameWrapper):
         This method applies a rolling sum operation over the dimension specified by `over`,
         using a window defined by `window_size`.
 
-        
+
         Parameters
         ----------
         over : str
@@ -261,11 +248,11 @@ class Expression(Expressionable, FrameWrapper):
         │ 3    ┆ 3.0     ┆ 0             │
         └──────┴─────────┴───────────────┘
         """
-        set: pl.DataFrame = _set_to_polars(set)
-        set_dims = get_dimensions(set)
+        df: pl.DataFrame = _set_to_polars(set)
+        set_dims = get_dimensions(df)
         dims = self.dimensions
         dims_in_common = [dim for dim in dims if dim in set_dims]
-        by_dims = set.select(dims_in_common).unique()
+        by_dims = df.select(dims_in_common).unique()
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
     def with_columns(self, *args, **kwargs) -> "Expression":
@@ -574,12 +561,12 @@ def build_constraint(lhs: Expressionable, rhs, sense):
     return Constraint(lhs - rhs, sense, model=lhs._model)
 
 
-class Constraint(Expression, ModelElement):
+class Constraint(Expression):
     def __init__(
         self,
         lhs: Expression,
         sense: ConstraintSense,
-        model: "Model" | None = None,
+        model: Optional["Model"] = None,
     ):
         """Adds a constraint to the model.
 
@@ -620,14 +607,14 @@ class Constraint(Expression, ModelElement):
         return constr_str
 
     def __repr__(self) -> str:
-        return f"<Constraint name={self.name} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
+        return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
 
 def _set_to_polars(set: Set) -> pl.DataFrame:
     if isinstance(set, dict):
         df = pl.DataFrame(set)
     elif isinstance(set, Expressionable):
-        df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique()
+        df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
     elif isinstance(set, pd.Index):
         df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
     elif isinstance(set, pd.DataFrame):
