@@ -31,6 +31,7 @@ def patch_class(cls):
 patch_class(pd.DataFrame)
 patch_class(pd.Series)
 patch_class(pl.DataFrame)
+patch_class(pl.Series)
 
 
 def to_expr(self: pl.DataFrame) -> Expression:
@@ -42,5 +43,6 @@ def to_expr(self: pl.DataFrame) -> Expression:
 
 
 pl.DataFrame.to_expr = to_expr
+pl.Series.to_expr = lambda self: self.to_frame().to_expr()
 pd.DataFrame.to_expr = lambda self: pl.from_pandas(self).to_expr()
 pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()

@@ -45,6 +45,19 @@ class Expressionable:
         return self.to_expr() * -1
 
     def __sub__(self, other):
+        """
+        >>> import polars as pl
+        >>> from pyoframe import Variable
+        >>> df = pl.DataFrame({"dim1": [1,2,3], "value": [1,2,3]})
+        >>> var = Variable(df["dim1"])
+        >>> var - df
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: x1 -1
+        [2]: x2 -2
+        [3]: x3 -3
+        """
+        if not isinstance(other, (int, float)):
+            other = other.to_expr()
         return self.to_expr() + (other * -1)
 
     def __mul__(self, other):
@@ -621,8 +634,10 @@ def _set_to_polars(set: Set) -> pl.DataFrame:
         df = pl.from_pandas(set)
     elif isinstance(set, pl.DataFrame):
         df = set
+    elif isinstance(set, pl.Series):
+        df = set.to_frame()
     else:
-        raise ValueError(f"Cannot convert {set} to a polars DataFrame")
+        raise ValueError(f"Cannot convert type {type(set)} to a polars DataFrame")
 
     if "index" in df.columns:
         raise ValueError(
