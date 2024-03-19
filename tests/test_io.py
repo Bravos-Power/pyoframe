@@ -62,4 +62,4 @@ def test_expression_with_const_to_str():
 
 
 if __name__ == "__main__":
-    pytest.main(args=[__file__])
+    pytest.main([__file__])
