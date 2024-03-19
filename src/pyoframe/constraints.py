@@ -223,7 +223,7 @@ class Expression(Expressionable, FrameWrapper):
         >>> df = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
         >>> quantity = Variable(df[["item", "time"]].unique())
         >>> cost = df[["item", "time", "cost"]].to_expr()
-        >>> (quantity * costexpr).rolling_sum(over="time", period=2).data
+        >>> (quantity * cost).rolling_sum(over="time", window_size=2).data
         shape: (8, 4)
         ┌──────┬──────┬─────────┬───────────────┐
         │ item ┆ time ┆ __coeff ┆ __variable_id │
@@ -232,12 +232,12 @@ class Expression(Expressionable, FrameWrapper):
         ╞══════╪══════╪═════════╪═══════════════╡
         │ 1    ┆ 1    ┆ 1.0     ┆ 1             │
         │ 1    ┆ 2    ┆ 1.0     ┆ 1             │
-        │ 1    ┆ 2    ┆ 2.0     ┆ 2             │
-        │ 1    ┆ 3    ┆ 2.0     ┆ 2             │
-        │ 1    ┆ 3    ┆ 3.0     ┆ 5             │
-        │ 2    ┆ 1    ┆ 4.0     ┆ 3             │
-        │ 2    ┆ 2    ┆ 4.0     ┆ 3             │
-        │ 2    ┆ 2    ┆ 5.0     ┆ 4             │
+        │ 1    ┆ 2    ┆ 2.0     ┆ 4             │
+        │ 1    ┆ 3    ┆ 2.0     ┆ 4             │
+        │ 1    ┆ 3    ┆ 3.0     ┆ 2             │
+        │ 2    ┆ 1    ┆ 4.0     ┆ 5             │
+        │ 2    ┆ 2    ┆ 4.0     ┆ 5             │
+        │ 2    ┆ 2    ┆ 5.0     ┆ 3             │
         └──────┴──────┴─────────┴───────────────┘
         """
 
