@@ -458,7 +458,7 @@ class Expression(Expressionable, ModelElement):
         return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
 
     def to_str_table(
-        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
+        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None, include_name=True
     ):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
@@ -503,7 +503,7 @@ class Expression(Expressionable, ModelElement):
             )
 
         # Prefix with the dimensions
-        prefix = getattr(self, "name") if hasattr(self, "name") else None
+        prefix = getattr(self, "name") if hasattr(self, "name") and include_name else None
         if prefix or dimensions:
             data = concat_dimensions(data, prefix=prefix, ignore_columns=["expr"])
             data = data.with_columns(
@@ -515,13 +515,14 @@ class Expression(Expressionable, ModelElement):
         return data
 
     def to_str(
-        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None
+        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None, include_name=True
     ):
         str_table = self.to_str_table(
             max_line_len=max_line_len,
             max_rows=max_rows,
             include_const_term=include_const_term,
             var_map=var_map,
+            include_name=include_name
         )
         result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 

@@ -56,6 +56,8 @@ class Model:
                 __value, Expressionable
             ), f"Setting {__name} on the model requires an objective expression."
             self._objective = Objective(__value, sense=__name)
+            self._objective.name = __name
+            self._objective._model = self
             return
 
         if isinstance(__value, ModelElement) and not __name.startswith("_"):

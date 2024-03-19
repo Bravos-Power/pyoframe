@@ -29,7 +29,7 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     assert m.objective is not None, "No objective set."
 
     f.write(f"{m.objective.sense}\n\nobj:\n\n")
-    result = m.objective.to_str(var_map=var_map)
+    result = m.objective.to_str(var_map=var_map, include_name=False)
     f.writelines(result)
 
 
