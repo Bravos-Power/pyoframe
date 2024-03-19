@@ -381,7 +381,7 @@ class Expression(Expressionable, FrameWrapper):
         if dims:
             return constant_terms.join(
                 self.data.select(dims).unique(), on=dims, how="outer_coalesce"
-            ).fill_null(0.0)
+            ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
                 return pl.DataFrame(
