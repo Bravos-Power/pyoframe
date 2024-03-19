@@ -24,7 +24,6 @@ dev = [
     "pytest",
     "pre-commit",
     "gurobipy",
-    "pandas",
 ]
 doc = ["sphinx", "pydata-sphinx-theme"]
 

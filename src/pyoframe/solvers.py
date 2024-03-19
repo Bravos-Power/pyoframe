@@ -1,14 +1,17 @@
 from pathlib import Path
 
 
-def solve(m, solver, *args, **kwargs):
+def solve(m, solver, dir_path: Path | None = None, **kwargs):
+    if dir_path is not None and not dir_path.exists():
+        dir_path.mkdir(parents=True)
+
     if solver == "gurobi":
-        return gurobi_solve(m, *args, **kwargs)
+        return gurobi_solve(m, dir_path=dir_path, **kwargs)
     else:
         raise ValueError(f"Solver {solver} not recognized or supported.")
 
 
-def gurobi_solve(model, dir_path: Path = None, use_var_names=True):
+def gurobi_solve(model, dir_path: Path | None = None, use_var_names=True):
     import gurobipy as gp
 
     if dir_path is None:
