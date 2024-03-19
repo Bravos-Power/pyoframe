@@ -189,75 +189,60 @@ class Expression(Expressionable, FrameWrapper):
             .sum()
         )
 
-
-    def rolling_sum(
-            self, over: str, window_size: int
-    ):
+    def rolling_sum(self, over: str, window_size: int):
         """
         Calculates the rolling sum of the Expression over a specified window size for a given dimension.
 
-        This method applies a rolling sum operation over the dimension specified by `over`, 
-        using a window defined by `window_size`. 
+        This method applies a rolling sum operation over the dimension specified by `over`,
+        using a window defined by `window_size`.
 
-
+        
         Parameters
         ----------
         over : str
-               The name of the dimension (column) over which the rolling sum is calculated. 
+               The name of the dimension (column) over which the rolling sum is calculated.
                This dimension must exist within the Expression's dimensions.
         window_size : int
-               The size of the moving window in terms of number of records. 
+               The size of the moving window in terms of number of records.
                The rolling sum is calculated over this many consecutive elements.
 
         Returns
         -------
         Expression
-               A new Expression instance containing the result of the rolling sum operation. 
-               This new Expression retains all dimensions (columns) of the original data, 
+               A new Expression instance containing the result of the rolling sum operation.
+               This new Expression retains all dimensions (columns) of the original data,
                with the rolling sum applied over the specified dimension.
 
         Examples
         --------
         >>> import polars as pl
-        >>> from pyoframe import Variable
-        >>> df = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
-        >>> quantity = Variable(df[["item", "time"]].unique())
-        >>> cost = df[["item", "time", "cost"]].to_expr()
-        >>> (quantity * cost).rolling_sum(over="time", window_size=2).data
-        shape: (8, 4)
-        ┌──────┬──────┬─────────┬───────────────┐
-        │ item ┆ time ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ i64  ┆ f64     ┆ u32           │
-        ╞══════╪══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1    ┆ 1.0     ┆ 1             │
-        │ 1    ┆ 2    ┆ 1.0     ┆ 1             │
-        │ 1    ┆ 2    ┆ 2.0     ┆ 4             │
-        │ 1    ┆ 3    ┆ 2.0     ┆ 4             │
-        │ 1    ┆ 3    ┆ 3.0     ┆ 2             │
-        │ 2    ┆ 1    ┆ 4.0     ┆ 5             │
-        │ 2    ┆ 2    ┆ 4.0     ┆ 5             │
-        │ 2    ┆ 2    ┆ 5.0     ┆ 3             │
-        └──────┴──────┴─────────┴───────────────┘
+        >>> from pyoframe import Variable, Model
+        >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
+        >>> m = Model()
+        >>> m.quantity = Variable(cost[["item", "time"]])
+        >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
+        <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
+        [1,1]: quantity[1,1]
+        [1,2]: quantity[1,1] +2 quantity[1,2]
+        [1,3]: 2 quantity[1,2] +3 quantity[1,3]
+        [2,1]: 4 quantity[2,1]
+        [2,2]: 4 quantity[2,1] +5 quantity[2,2]
         """
 
         dims = self.dimensions
-        assert over in set(dims), f"Cannot sum over {over} as it is not in {dims}"
+        assert over in dims, f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
         return self._new(
             pl.concat(
                 [
-                    df[1].with_columns(pl.col(over).max().alias(over))
-                    for df in self.data.rolling(
-                            index_column=over,
-                            period=f"{window_size}i",
-                            by=remaining_dims,
+                    df.with_columns(pl.col(over).max())
+                    for _, df in self.data.rolling(
+                        index_column=over, period=f"{window_size}i", by=remaining_dims
                     )
                 ]
             )
         )
-    
 
     def within(self, set: Set) -> Expression:
         """
