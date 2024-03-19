@@ -1,17 +1,14 @@
 from __future__ import annotations
 import polars as pl
 import pandas as pd
-from typing import Iterable, List
+from typing import Iterable, List, Literal
 
 from pyoframe.constraints import Expressionable
 
 from pyoframe.dataframe import VAR_KEY
-from pyoframe.constraints import Expression, _set_to_polars
+from pyoframe.constraints import Expression, _set_to_polars, Set
 from pyoframe.model_element import FrameWrapper, ModelElement
 from pyoframe.util import _parse_inputs_as_iterable
-
-
-Set = pl.DataFrame | pd.Index | pd.DataFrame | Expression
 
 
 class Variable(FrameWrapper, Expressionable, ModelElement):
@@ -26,6 +23,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         *sets: Set | Iterable[Set],
         lb: float = float("-inf"),
         ub: float = float("inf"),
+        vtype: Literal["continuous", "binary", "integer"] = "continuous",
     ):
         """Creates a variable for every row in the dataframe.
 
@@ -74,7 +72,17 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         Variable._var_count += data.height
         self.lb = lb
         self.ub = ub
+        assert vtype in (
+            "continuous",
+            "binary",
+            "integer",
+        ), "type must be one of 'continuous', 'binary', or 'integer'"
+        self._vtype: Literal["continuous", "binary", "integer"] = vtype
         super().__init__(data)
+
+    @property
+    def vtype(self) -> Literal["continuous", "binary", "integer"]:
+        return self._vtype
 
     def __repr__(self):
         return f"""<Variable name={self.name} lb={self.lb} ub={self.ub} size={self.data.height} dimensions={self.shape}>"""
@@ -88,13 +96,12 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
     ) -> pl.DataFrame | None:
         """
         >>> import pandas as pd
-        >>> dim1 = pd.Index([1, 2, 3])
-        >>> dim2 = pd.Index(["a", "b"])
+        >>> dim1 = pd.Index([1, 2, 3], name="dim1")
+        >>> dim2 = pd.Index(["a", "b"], name="dim1")
         >>> Variable._parse_set([dim1, dim2])
         Traceback (most recent call last):
         ...
         AssertionError: All coordinates must have unique column names.
-        >>> dim1.name = "dim1"
         >>> dim2.name = "dim2"
         >>> Variable._parse_set([dim1, dim2])
         shape: (6, 2)
@@ -148,7 +155,7 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         unnamed[06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
         unnamed[12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
         unnamed[12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
-        
+
         >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
         <Constraint name=unnamed sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
         unnamed[00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
@@ -162,13 +169,9 @@ class Variable(FrameWrapper, Expressionable, ModelElement):
         """
 
         wrapped = self.data.select(dim).unique().sort(by=dim)
-        wrapped = wrapped.with_columns(
-            pl.col(dim).shift(-1).alias("__next")
-        )
+        wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))
         if wrap_around:
-            wrapped = wrapped.with_columns(
-                pl.col("__next").fill_null(pl.first(dim))
-            )
+            wrapped = wrapped.with_columns(pl.col("__next").fill_null(pl.first(dim)))
         else:
             wrapped = wrapped.drop_nulls(dim)
 

@@ -11,11 +11,10 @@ Module containing all import/export functionalities.
 from io import TextIOWrapper
 from tempfile import NamedTemporaryFile
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, TypeVar
 
-from pyoframe.dataframe import COEF_KEY
 from pyoframe.dataframe import VAR_KEY
-from pyoframe.var_mapping import DEFAULT_MAP
+from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -36,19 +35,7 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
 
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
-    if not m.constraints:
-        return
-
-    f.write("\n\ns.t.\n\n")
-    constraints = m.constraints
-    # if log:
-    #     constraints = tqdm(
-    #         list(constraints),
-    #         desc="Writing constraints.",
-    #         colour=TQDM_COLOR,
-    #     )
-
-    for constraint in constraints:
+    for constraint in create_section(m.constraints, f, "s.t."):
         f.writelines(constraint.to_str(var_map=var_map) + "\n")
 
 
@@ -56,80 +43,58 @@ def bounds_to_file(m: "Model", f, var_map):
     """
     Write out variables of a model to a lp file.
     """
-    if not m.variables:
-        return
-
-    f.write("\n\nbounds\n\n")
-
-    for variable in m.variables:
+    for variable in create_section(m.variables, f, "bounds"):
         lb = f"{variable.lb:+.12g}"
         ub = f"{variable.ub:+.12g}"
 
-        df = var_map.map_vars(variable.data)
+        df = (
+            var_map.map_vars(variable.data)
+            .select(
+                pl.concat_str(
+                    pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n")
+                ).str.concat("")
+            )
+            .item()
+        )
 
-        df = df.select(
-            pl.concat_str(pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n"))
-        ).to_series()
-        df = df.str.concat(delimiter="")
-
-        f.writelines(df.item())
-
-
-# def binaries_to_file(m: "Model", f, log=False):
-#     """
-#     Write out binaries of a model to a lp file.
-#     """
-
-#     names = m.variables.binaries
-#     if not len(list(names)):
-#         return
-
-#     f.write("\n\nbinary\n\n")
-#     if log:
-#         names = tqdm(
-#             list(names),
-#             desc="Writing binary variables.",
-#             colour=TQDM_COLOR,
-#         )
-
-#     batch = []  # to store batch of lines
-#     for name in names:
-#         df = m.variables[name].flat
-
-#         for label in df.labels.values:
-#             batch.append(f"x{label}\n")
-#             batch = handle_batch(batch, f)
-
-#     if batch:  # write the remaining lines
-#         f.writelines(batch)
+        f.writelines(df)
 
 
-# def integers_to_file(m: "Model", f, log=False, integer_label="general"):
-#     """
-#     Write out integers of a model to a lp file.
-#     """
-#     names = m.variables.integers
-#     if not len(list(names)):
-#         return
+def binaries_to_file(m: "Model", f, var_map: VariableMapping):
+    """
+    Write out binaries of a model to a lp file.
+    """
+    for variable in create_section(m.binary_variables, f, "binary"):
+        lines = (
+            var_map.map_vars(variable.data)
+            .select(pl.col(VAR_KEY).str.concat("\n"))
+            .item()
+        )
+        f.writelines(lines + "\n")
 
-#     f.write(f"\n\n{integer_label}\n\n")
-#     if log:
-#         names = tqdm(
-#             list(names),
-#             desc="Writing integer variables.",
-#             colour=TQDM_COLOR,
-#         )
 
-#     batch = []  # to store batch of lines
-#     for name in names:
-#         df = m.variables[name].flat
+def integers_to_file(m: "Model", f, var_map: VariableMapping):
+    """
+    Write out integers of a model to a lp file.
+    """
+    for variable in create_section(m.integer_variables, f, "general"):
+        lines = (
+            var_map.map_vars(variable.data)
+            .select(pl.col(VAR_KEY).str.concat("\n"))
+            .item()
+        )
+        f.writelines(lines + "\n")
 
-#         for label in df.labels.values:
-#             batch.append(f"x{label}\n")
-#             batch = handle_batch(batch, f)
 
-#     if batch:  # write the remaining lines
-#         f.writelines(batch)
+T = TypeVar("T")
+
+
+def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
+    wrote = False
+    for item in iterable:
+        if not wrote:
+            f.write(f"\n\n{section_header}\n\n")
+        yield item
 
 
 def to_file(
@@ -156,8 +121,8 @@ def to_file(
         objective_to_file(m, f, var_map)
         constraints_to_file(m, f, var_map)
         bounds_to_file(m, f, var_map)
-        # binaries_to_file(m, f)
-        # integers_to_file(m, f, integer_label=integer_label)
+        binaries_to_file(m, f, var_map)
+        integers_to_file(m, f, var_map)
         f.write("end\n")
 
     return fn

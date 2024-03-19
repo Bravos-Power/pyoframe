@@ -1,10 +1,11 @@
-# From https://www.gurobi.com/documentation/current/examples/diet_py.html
+"""
+Adapted from https://www.gurobi.com/documentation/current/examples/diet_py.html. Copyright belongs there.
+"""
 
 import os
 from pathlib import Path
 from gurobipy import GRB, Model, quicksum
 import pandas as pd
-import numpy as np
 
 
 def main(working_dir):

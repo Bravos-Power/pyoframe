@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from typing import TYPE_CHECKING, Iterable, Optional, Sequence, overload, Dict, List
+from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence, overload
 
 import polars as pl
 import pandas as pd
@@ -90,7 +90,13 @@ class Expressionable:
         return self.to_expr().filter(*args, **kwargs)
 
 
-Set = pl.DataFrame | pd.Index | pd.DataFrame | Expressionable | Dict[str, List]
+Set = (
+    pl.DataFrame
+    | pd.Index
+    | pd.DataFrame
+    | Expressionable
+    | Mapping[str, Sequence[object]]
+)
 
 
 class Expression(Expressionable, FrameWrapper):
@@ -139,7 +145,9 @@ class Expression(Expressionable, FrameWrapper):
     def indices_match(self, other: Expression):
         # Check that the indices match
         dims = self.dimensions
-        assert set(dims) == set(other.dimensions)
+        assert set(dims) == set(
+            other.dimensions
+        ), f"Dimensions do not match: {dims} != {other.dimensions}"
         if len(dims) == 0:
             return  # No indices
 
@@ -558,7 +566,14 @@ def sum(
         return expr.to_expr().sum(over)
 
 
-    
+def sum_by(by: str | Sequence[str], expr: Expressionable) -> "Expression":
+    if isinstance(by, str):
+        by = [by]
+    expr = expr.to_expr()
+    dimensions = expr.dimensions
+    remaining_dims = [dim for dim in dimensions if dim not in by]
+    return sum(over=remaining_dims, expr=expr)
+
 
 def build_constraint(lhs: Expressionable, rhs, sense):
     lhs = lhs.to_expr()
@@ -625,14 +640,27 @@ class Constraint(Expression, ModelElement):
 
 def _set_to_polars(set: Set) -> pl.DataFrame:
     if isinstance(set, dict):
-        return pl.DataFrame(set)
-    if isinstance(set, Expressionable):
-        return set.to_expr().data.drop(RESERVED_COL_KEYS).unique()
-    if isinstance(set, pd.Index):
-        return pl.from_pandas(pd.DataFrame(index=set).reset_index())
-    if isinstance(set, pd.DataFrame):
-        return pl.from_pandas(set)
-    if isinstance(set, pl.DataFrame):
-        return set
+        df = pl.DataFrame(set)
+    elif isinstance(set, Expressionable):
+        df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique()
+    elif isinstance(set, pd.Index):
+        df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
+    elif isinstance(set, pd.DataFrame):
+        df = pl.from_pandas(set)
+    elif isinstance(set, pl.DataFrame):
+        df = set
+    else:
+        raise ValueError(f"Cannot convert {set} to a polars DataFrame")
 
-    raise ValueError(f"Cannot convert {set} to a polars DataFrame")
+    if "index" in df.columns:
+        raise ValueError(
+            "Please specify a custom dimension name rather than using 'index' to avoid confusion."
+        )
+
+    for reserved_key in RESERVED_COL_KEYS:
+        if reserved_key in df.columns:
+            raise ValueError(
+                f"Cannot use reserved column names {reserved_key} as dimensions."
+            )
+
+    return df

@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Iterable, List
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
@@ -18,8 +18,16 @@ class Model:
         self.name = name
 
     @property
-    def variables(self):
+    def variables(self) -> List[Variable]:
         return self._variables
+
+    @property
+    def binary_variables(self) -> Iterable[Variable]:
+        return (v for v in self.variables if v.vtype == "binary")
+
+    @property
+    def integer_variables(self) -> Iterable[Variable]:
+        return (v for v in self.variables if v.vtype == "integer")
 
     @property
     def constraints(self):

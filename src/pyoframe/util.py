@@ -5,7 +5,6 @@ import pandas as pd
 from pyoframe.dataframe import RESERVED_COL_KEYS
 
 
-
 def _parse_inputs_as_iterable(
     inputs: tuple[Any, ...] | tuple[Iterable[Any]],
 ) -> Iterable[Any]:
@@ -22,4 +21,7 @@ def _parse_inputs_as_iterable(
 
 def _is_iterable(input: Any | Iterable[Any]) -> bool:
     # Inspired from the polars library
-    return isinstance(input, Iterable) and not isinstance(input, (str, bytes, pl.DataFrame, pl.Series, pd.DataFrame, pd.Series, pd.Index))
+    return isinstance(input, Iterable) and not isinstance(
+        input,
+        (str, bytes, pl.DataFrame, pl.Series, pd.DataFrame, pd.Series, pd.Index, dict),
+    )
