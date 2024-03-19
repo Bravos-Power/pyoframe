@@ -609,6 +609,27 @@ class Constraint(Expression):
     def __repr__(self) -> str:
         return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
+    def rename(self, mapping: dict) -> Expression:
+        """
+         Renames dimensions of the Expression according to the given mapping. Only the dimensions of the
+         Expression can be renamed, not other columns for internal use.
+
+        Parameters
+        ----------
+        mapping : dict
+                  A dictionary where each key is a string representing the original name of
+                  a dimension of the Expression and each value is the new name.
+
+        Returns
+        -------
+        Expression
+        """
+
+        return self._new(
+            self.data.rename(
+                {k: v for k, v in mapping.items() if k in self.dimensions}
+            )
+        )
 
 def _set_to_polars(set: Set) -> pl.DataFrame:
     if isinstance(set, dict):
