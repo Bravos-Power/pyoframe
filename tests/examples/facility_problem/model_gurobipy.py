@@ -59,26 +59,6 @@ def main(working_dir: Path | str):
     # Demand constraints
     m.addConstrs((transport.sum(w) == demand[w] for w in warehouses), "Demand")
 
-    # Save model
-    m.write("facilityPY.lp")
-
-    # Guess at the starting point: close the plant with the highest fixed costs;
-    # open all others
-
-    # First open all plants
-    for p in plants:
-        open[p].Start = 1.0
-
-    # Now close the plant with the highest fixed cost
-    print("Initial guess:")
-    maxFixed = max(fixedCosts)
-    for p in plants:
-        if fixedCosts[p] == maxFixed:
-            open[p].Start = 0.0
-            print(f"Closing plant {p}")
-            break
-    print("")
-
     # Use barrier to solve root relaxation
     m.Params.Method = 2
 
