@@ -109,9 +109,6 @@ class Expressionable:
         """
         return build_constraint(self, __value, ConstraintSense.EQ)
 
-    def filter(self, *args, **kwargs):
-        return self.to_expr().filter(*args, **kwargs)
-
 
 AcceptableSets = Union[
     pl.DataFrame,
@@ -131,6 +128,11 @@ class Set(ModelElement, Expressionable):
         if df.is_duplicated().any():
             raise ValueError("Duplicate rows found in data.")
         super().__init__(df)
+
+    def _new(self, data: pl.DataFrame):
+        s = Set(data)
+        s._model = self._model
+        return s
 
     @staticmethod
     def _parse_acceptable_sets(
@@ -252,7 +254,8 @@ class Expression(Expressionable, ModelElement):
         [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
         """
         # Sanity checks, VAR_KEY and COEF_KEY must be present
-        assert VAR_KEY in data.columns and COEF_KEY in data.columns
+        assert VAR_KEY in data.columns, "Missing variable column."
+        assert COEF_KEY in data.columns, "Missing coefficient column."
 
         # Sanity check no duplicates indices
         if data.drop(COEF_KEY).is_duplicated().any():
@@ -276,27 +279,7 @@ class Expression(Expressionable, ModelElement):
             unique_dims_left.join(unique_dims_right, on=dims)
         )
 
-    def rename(self, mapping: dict) -> Expression:
-        """
-         Renames dimensions of the Expression according to the given mapping. Only the dimensions of the
-         Expression can be renamed, not other columns for internal use.
-
-        Parameters
-        ----------
-        mapping : dict
-                  A dictionary where each key is a string representing the original name of
-                  a dimension of the Expression and each value is the new name.
-
-        Returns
-        -------
-        Expression
-        """
-        dims = self.dimensions
-        assert all(
-            k in dims for k in mapping.keys()
-        ), "Trying to rename non-existing dimensions"
-
-        return self._new(self.data.rename(mapping))
+    
 
     def sum(self, over: str | Iterable[str]):
         """
@@ -409,35 +392,7 @@ class Expression(Expressionable, ModelElement):
         by_dims = df.select(dims_in_common).unique()
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
-    def with_columns(self, *args, **kwargs) -> "Expression":
-        """Returns a new Expression after having transfered the inner .data using Polars' with_columns function."""
-        return self._new(self.data.with_columns(*args, **kwargs))
 
-    def filter(self, *args, **kwargs):
-        """
-        Creates a new expression with only a subset of the data.
-        Filtering uses the same syntax as polars.DataFrame.filter.
-
-        Examples
-        --------
-        >>> from pyoframe import Variable
-        >>> time = [1, 2, 3]
-        >>> city = ["Toronto", "Berlin"]
-        >>> var = Variable({"time": time}, {"city": city})
-        >>> expr = 2 * var
-        >>> expr
-        <Expression size=6 dimensions={'time': 3, 'city': 2} terms=6>
-        [1,Toronto]: 2 x1
-        [1,Berlin]: 2 x2
-        [2,Toronto]: 2 x3
-        [2,Berlin]: 2 x4
-        [3,Toronto]: 2 x5
-        [3,Berlin]: 2 x6
-        >>> expr.filter(city="Toronto", time=2)
-        <Expression size=1 dimensions={'time': 1, 'city': 1} terms=1>
-        [2,Toronto]: 2 x3
-        """
-        return self._new(self.data.filter(*args, **kwargs))
 
     def __add__(self, other):
         """
@@ -735,7 +690,7 @@ def build_constraint(lhs: Expressionable, rhs, sense):
 class Constraint(Expression):
     def __init__(
         self,
-        lhs: Expression,
+        lhs: Expression | pl.DataFrame,
         sense: ConstraintSense,
         model: Optional["Model"] = None,
     ):
@@ -750,7 +705,9 @@ class Constraint(Expression):
         rhs: Expression
             The right hand side of the constraint.
         """
-        super().__init__(lhs.data)
+        if isinstance(lhs, Expression):
+            lhs = lhs.data
+        super().__init__(lhs)
         self.sense = sense
         self._model = model
 
@@ -780,4 +737,6 @@ class Constraint(Expression):
     def __repr__(self) -> str:
         return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
+    def _new(self, data: pl.DataFrame):
+        return Constraint(data, self.sense, model=self._model)
 

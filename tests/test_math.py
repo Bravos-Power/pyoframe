@@ -7,6 +7,7 @@ import polars as pl
 
 from pyoframe.dataframe import COEF_KEY, CONST_TERM, VAR_KEY
 from pyoframe import Variable
+from pyoframe.constraints import Expression
 
 
 def test_set_multiplication():
@@ -56,6 +57,25 @@ def test_within_set():
         check_dtype=False,
     )
 
+def test_filter_expression():
+    expr = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+    result = expr.filter(dim1=2)
+    assert_frame_equal(result.data, pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}), check_dtype=False)
+
+def test_filter_constraint():
+    const = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr() >= 0
+    result = const.filter(dim1=2)
+    assert_frame_equal(result.data, pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}), check_dtype=False)
+
+def test_filter_variable():
+    v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
+    result = v.filter(dim1=2)
+    assert_frame_equal(result.data, pl.DataFrame({"dim1": [2], COEF_KEY: [1], VAR_KEY: [2]}), check_dtype=False)
+
+def test_filter_set():
+    s = Set(x=[1, 2, 3])
+    result = s.filter(x=2)
+    assert_frame_equal(result.data, pl.DataFrame({"x": [2]}), check_dtype=False)
 
 def test_drops_na():
     for na in [None, float("nan"), np.nan]:

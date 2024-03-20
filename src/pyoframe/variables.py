@@ -93,8 +93,11 @@ class Variable(ModelElement, Expressionable):
         return f"""<Variable{' name='+self.name if self.name is not None else ''} lb={self.lb} ub={self.ub} size={self.data.height} dimensions={self.shape}>\n{self.to_expr().to_str(max_line_len=80, max_rows=10)}"""
 
     def to_expr(self) -> Expression:
+        return self._new(self.data)
+
+    def _new(self, data: pl.DataFrame):
         return Expression(
-            self.data.with_columns(pl.lit(1.0).alias(COEF_KEY)), model=self._model
+            data.with_columns(pl.lit(1.0).alias(COEF_KEY)), model=self._model
         )
 
     def next(self, dim: str, wrap_around=False) -> Expression:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+from functools import wraps
 from typing import Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
@@ -6,6 +8,13 @@ from pyoframe.dataframe import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY, get_dimensi
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
+
+
+def _pass_polars_method(method_name: str):
+    def method(self, *args, **kwargs):
+        return self._new(getattr(self.data, method_name)(*args, **kwargs))
+
+    return method
 
 
 class ModelElement:
@@ -78,4 +87,10 @@ class ModelElement:
         if not self.dimensions:
             return 1
         return self.data.drop(*RESERVED_COL_KEYS).n_unique()
-    
+
+    def _new(self, data: pl.DataFrame):
+        raise NotImplementedError("Subclasses must implement this method")
+
+    rename = _pass_polars_method("rename")
+    with_columns = _pass_polars_method("with_columns")
+    filter = _pass_polars_method("filter")
