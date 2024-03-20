@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import pytest
-from pyoframe.constraints import Set
+from pyoframe.constraints import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl
 
@@ -60,16 +60,19 @@ def test_within_set():
 def test_filter_expression():
     expr = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
     result = expr.filter(dim1=2)
+    assert isinstance(result, Expression)
     assert_frame_equal(result.data, pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}), check_dtype=False)
 
 def test_filter_constraint():
     const = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr() >= 0
     result = const.filter(dim1=2)
+    assert isinstance(result, Constraint)
     assert_frame_equal(result.data, pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}), check_dtype=False)
 
 def test_filter_variable():
     v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
     result = v.filter(dim1=2)
+    assert isinstance(result, Expression)
     assert_frame_equal(result.data, pl.DataFrame({"dim1": [2], COEF_KEY: [1], VAR_KEY: [2]}), check_dtype=False)
 
 def test_filter_set():
