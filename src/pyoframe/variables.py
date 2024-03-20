@@ -3,12 +3,12 @@ import polars as pl
 import pandas as pd
 from typing import Iterable, List, Literal
 
-from pyoframe.constraints import Expressionable
+from pyoframe.constraints import Expressionable, Set
 
 from pyoframe.dataframe import COEF_KEY, VAR_KEY
-from pyoframe.constraints import Expression, _set_to_polars, AcceptableSets
+from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
-from pyoframe.set import Set
+from pyoframe.constraints import AcceptableSets
 from pyoframe.util import _parse_inputs_as_iterable
 
 

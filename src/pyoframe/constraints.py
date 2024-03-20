@@ -1,9 +1,18 @@
 from __future__ import annotations
 from enum import Enum
-from typing import TYPE_CHECKING, Iterable, Mapping, Optional, Sequence, overload
+from typing import (
+    TYPE_CHECKING,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    overload,
+    Union,
+)
 
-import polars as pl
 import pandas as pd
+import polars as pl
 
 from pyoframe.dataframe import (
     COEF_KEY,
@@ -14,6 +23,7 @@ from pyoframe.dataframe import (
     concat_dimensions,
     get_dimensions,
 )
+from pyoframe.util import _parse_inputs_as_iterable
 from pyoframe.var_mapping import DEFAULT_MAP
 from pyoframe.model_element import ModelElement
 
@@ -103,13 +113,122 @@ class Expressionable:
         return self.to_expr().filter(*args, **kwargs)
 
 
-AcceptableSets = (
-    pl.DataFrame
-    | pd.Index
-    | pd.DataFrame
-    | Expressionable
-    | Mapping[str, Sequence[object]]
-)
+AcceptableSets = Union[
+    pl.DataFrame,
+    pd.Index,
+    pd.DataFrame,
+    Expressionable,
+    Mapping[str, Sequence[object]],
+    "Set",
+]
+
+class Set(ModelElement, Expressionable):
+    def __init__(self, *data: AcceptableSets | Iterable[AcceptableSets], **named_data):
+        data_list = list(data)
+        for name, set in named_data.items():
+            data_list.append({name: set})
+        df = self._parse_acceptable_sets(*data_list)
+        if df.is_duplicated().any():
+            raise ValueError("Duplicate rows found in data.")
+        super().__init__(df)
+
+    @staticmethod
+    def _parse_acceptable_sets(
+        *over: AcceptableSets | Iterable[AcceptableSets],
+    ) -> pl.DataFrame:
+        """
+        >>> import pandas as pd
+        >>> dim1 = pd.Index([1, 2, 3], name="dim1")
+        >>> dim2 = pd.Index(["a", "b"], name="dim1")
+        >>> Set._parse_acceptable_sets([dim1, dim2])
+        Traceback (most recent call last):
+        ...
+        AssertionError: All coordinates must have unique column names.
+        >>> dim2.name = "dim2"
+        >>> Set._parse_acceptable_sets([dim1, dim2])
+        shape: (6, 2)
+        ┌──────┬──────┐
+        │ dim1 ┆ dim2 │
+        │ ---  ┆ ---  │
+        │ i64  ┆ str  │
+        ╞══════╪══════╡
+        │ 1    ┆ a    │
+        │ 1    ┆ b    │
+        │ 2    ┆ a    │
+        │ 2    ┆ b    │
+        │ 3    ┆ a    │
+        │ 3    ┆ b    │
+        └──────┴──────┘
+        """
+        assert len(over) > 0, "At least one set must be provided."
+        over_iter: Iterable[AcceptableSets] = _parse_inputs_as_iterable(over)
+
+        over_frames: List[pl.DataFrame] = [Set._set_to_polars(set) for set in over_iter]
+
+        over_merged = over_frames[0]
+
+        for df in over_frames[1:]:
+            assert (
+                set(over_merged.columns) & set(df.columns) == set()
+            ), "All coordinates must have unique column names."
+            over_merged = over_merged.join(df, how="cross")
+        return over_merged
+
+    def to_expr(self) -> Expression:
+        return Expression(
+            data=self.data.with_columns(
+                pl.lit(1).alias(COEF_KEY), pl.lit(CONST_TERM).alias(VAR_KEY)
+            )
+        )
+
+    def __mul__(self, other):
+        if isinstance(other, Set):
+            assert (
+                set(self.data.columns) & set(other.data.columns) == set()
+            ), "Cannot multiply two sets with columns in common."
+            return Set(self.data, other.data)
+        return super().__mul__(other)
+
+    def __add__(self, other):
+        if isinstance(other, Set):
+            raise ValueError("Cannot add two sets.")
+        return super().__add__(other)
+
+    def __repr__(self):
+        return f"""<Set{' name='+self.name if self.name is not None else ''} size={self.data.height} dimensions={self.shape}>\n{self.to_expr().to_str(max_line_len=80, max_rows=10)}"""
+
+
+    @staticmethod
+    def _set_to_polars(set: "AcceptableSets") -> pl.DataFrame:
+        if isinstance(set, dict):
+            df = pl.DataFrame(set)
+        elif isinstance(set, Expressionable):
+            df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
+        elif isinstance(set, pd.Index):
+            df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
+        elif isinstance(set, pd.DataFrame):
+            df = pl.from_pandas(set)
+        elif isinstance(set, pl.DataFrame):
+            df = set
+        elif isinstance(set, pl.Series):
+            df = set.to_frame()
+        elif isinstance(set, Set):
+            df = set.data
+        else:
+            raise ValueError(f"Cannot convert type {type(set)} to a polars DataFrame")
+
+        if "index" in df.columns:
+            raise ValueError(
+                "Please specify a custom dimension name rather than using 'index' to avoid confusion."
+            )
+
+        for reserved_key in RESERVED_COL_KEYS:
+            if reserved_key in df.columns:
+                raise ValueError(
+                    f"Cannot use reserved column names {reserved_key} as dimensions."
+                )
+
+        return df
 
 
 class Expression(Expressionable, ModelElement):
@@ -266,7 +385,7 @@ class Expression(Expressionable, ModelElement):
             )
         )
 
-    def within(self, set: AcceptableSets) -> Expression:
+    def within(self, set: "AcceptableSets") -> Expression:
         """
         Examples
         >>> import pandas as pd
@@ -283,7 +402,7 @@ class Expression(Expressionable, ModelElement):
         │ 3    ┆ 3.0     ┆ 0             │
         └──────┴─────────┴───────────────┘
         """
-        df: pl.DataFrame = _set_to_polars(set)
+        df: pl.DataFrame = Set(set).data
         set_dims = get_dimensions(df)
         dims = self.dimensions
         dims_in_common = [dim for dim in dims if dim in set_dims]
@@ -662,31 +781,3 @@ class Constraint(Expression):
         return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
 
-def _set_to_polars(set: AcceptableSets) -> pl.DataFrame:
-    if isinstance(set, dict):
-        df = pl.DataFrame(set)
-    elif isinstance(set, Expressionable):
-        df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
-    elif isinstance(set, pd.Index):
-        df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
-    elif isinstance(set, pd.DataFrame):
-        df = pl.from_pandas(set)
-    elif isinstance(set, pl.DataFrame):
-        df = set
-    elif isinstance(set, pl.Series):
-        df = set.to_frame()
-    else:
-        raise ValueError(f"Cannot convert type {type(set)} to a polars DataFrame")
-
-    if "index" in df.columns:
-        raise ValueError(
-            "Please specify a custom dimension name rather than using 'index' to avoid confusion."
-        )
-
-    for reserved_key in RESERVED_COL_KEYS:
-        if reserved_key in df.columns:
-            raise ValueError(
-                f"Cannot use reserved column names {reserved_key} as dimensions."
-            )
-
-    return df

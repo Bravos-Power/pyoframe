@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
 import pytest
-from pyoframe import Set
+from pyoframe.constraints import Set
 from polars.testing import assert_frame_equal
 import polars as pl
 
 from pyoframe.dataframe import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe import Variable
 
 
 def test_set_multiplication():
@@ -37,10 +38,22 @@ def test_multiplication_no_common_dimensions():
                 "dim1": [1, 1, 2, 2, 3, 3],
                 "dim2": ["a", "b", "a", "b", "a", "b"],
                 COEF_KEY: [1, 2, 2, 4, 3, 6],
-                VAR_KEY: [CONST_TERM] * 6
+                VAR_KEY: [CONST_TERM] * 6,
             }
         ),
-        check_dtype=False
+        check_dtype=False,
+    )
+
+
+def test_within_set():
+    small_set = Set(x=[1, 2], y=["a"])
+    large_set = Set(x=[1, 2, 3], y=["a", "b", "c"])
+    v = Variable(large_set)
+    result = v.to_expr().within(small_set)
+    assert_frame_equal(
+        result.data,
+        pl.DataFrame({"x": [1, 2], "y": ["a", "a"], COEF_KEY: [1, 1], VAR_KEY: [1, 4]}),
+        check_dtype=False,
     )
 
 
