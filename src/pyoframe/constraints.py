@@ -157,6 +157,28 @@ class Expression(Expressionable, ModelElement):
             unique_dims_left.join(unique_dims_right, on=dims)
         )
 
+    def rename(self, mapping: dict) -> Expression:
+        """
+         Renames dimensions of the Expression according to the given mapping. Only the dimensions of the
+         Expression can be renamed, not other columns for internal use.
+
+        Parameters
+        ----------
+        mapping : dict
+                  A dictionary where each key is a string representing the original name of
+                  a dimension of the Expression and each value is the new name.
+
+        Returns
+        -------
+        Expression
+        """
+        dims = self.dimensions
+        assert all(
+            k in dims for k in mapping.keys()
+        ), "Trying to rename non-existing dimensions"
+
+        return self._new(self.data.rename(mapping))
+
     def sum(self, over: str | Iterable[str]):
         """
         Examples
@@ -392,7 +414,11 @@ class Expression(Expressionable, ModelElement):
         dims_in_common = [dim for dim in self.dimensions if dim in other.dimensions]
 
         data = (
-            self.data.join(multiplier, on=dims_in_common, how="inner" if dims_in_common else "cross")
+            self.data.join(
+                multiplier,
+                on=dims_in_common,
+                how="inner" if dims_in_common else "cross",
+            )
             .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
             .drop(COEF_KEY + "_right")
         )
@@ -458,7 +484,12 @@ class Expression(Expressionable, ModelElement):
         return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
 
     def to_str_table(
-        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None, include_name=True
+        self,
+        max_line_len=None,
+        max_rows=None,
+        include_const_term=True,
+        var_map=None,
+        include_name=True,
     ):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
@@ -503,7 +534,9 @@ class Expression(Expressionable, ModelElement):
             )
 
         # Prefix with the dimensions
-        prefix = getattr(self, "name") if hasattr(self, "name") and include_name else None
+        prefix = (
+            getattr(self, "name") if hasattr(self, "name") and include_name else None
+        )
         if prefix or dimensions:
             data = concat_dimensions(data, prefix=prefix, ignore_columns=["expr"])
             data = data.with_columns(
@@ -515,14 +548,19 @@ class Expression(Expressionable, ModelElement):
         return data
 
     def to_str(
-        self, max_line_len=None, max_rows=None, include_const_term=True, var_map=None, include_name=True
+        self,
+        max_line_len=None,
+        max_rows=None,
+        include_const_term=True,
+        var_map=None,
+        include_name=True,
     ):
         str_table = self.to_str_table(
             max_line_len=max_line_len,
             max_rows=max_rows,
             include_const_term=include_const_term,
             var_map=var_map,
-            include_name=include_name
+            include_name=include_name,
         )
         result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
@@ -623,27 +661,6 @@ class Constraint(Expression):
     def __repr__(self) -> str:
         return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
-    def rename(self, mapping: dict) -> Expression:
-        """
-         Renames dimensions of the Expression according to the given mapping. Only the dimensions of the
-         Expression can be renamed, not other columns for internal use.
-
-        Parameters
-        ----------
-        mapping : dict
-                  A dictionary where each key is a string representing the original name of
-                  a dimension of the Expression and each value is the new name.
-
-        Returns
-        -------
-        Expression
-        """
-
-        return self._new(
-            self.data.rename(
-                {k: v for k, v in mapping.items() if k in self.dimensions}
-            )
-        )
 
 def _set_to_polars(set: AcceptableSets) -> pl.DataFrame:
     if isinstance(set, dict):
