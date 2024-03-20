@@ -6,8 +6,9 @@ from typing import Iterable, List, Literal
 from pyoframe.constraints import Expressionable
 
 from pyoframe.dataframe import COEF_KEY, VAR_KEY
-from pyoframe.constraints import Expression, _set_to_polars, Set
+from pyoframe.constraints import Expression, _set_to_polars, AcceptableSets
 from pyoframe.model_element import ModelElement
+from pyoframe.set import Set
 from pyoframe.util import _parse_inputs_as_iterable
 
 
@@ -20,7 +21,7 @@ class Variable(ModelElement, Expressionable):
 
     def __init__(
         self,
-        *sets: Set | Iterable[Set],
+        *sets: AcceptableSets | Iterable[AcceptableSets],
         lb: float = float("-inf"),
         ub: float = float("inf"),
         vtype: Literal["continuous", "binary", "integer"] = "continuous",
@@ -63,12 +64,10 @@ class Variable(ModelElement, Expressionable):
         [2]: x8
         [3]: x9
         """
-        indexing_set: pl.DataFrame | None = Variable._parse_set(*sets)
-        if indexing_set is None:
+        if len(sets) == 0:
             data = pl.DataFrame({VAR_KEY: [Variable._var_count]})
         else:
-            if indexing_set.is_duplicated().any():
-                raise ValueError("Duplicate rows found in data.")
+            indexing_set = Set(*sets).data
             data = indexing_set.with_columns(
                 pl.int_range(Variable._var_count, Variable._var_count + pl.len()).alias(
                     VAR_KEY
@@ -97,50 +96,6 @@ class Variable(ModelElement, Expressionable):
         return Expression(
             self.data.with_columns(pl.lit(1.0).alias(COEF_KEY)), model=self._model
         )
-
-    @staticmethod
-    def _parse_set(
-        *over: Set | Iterable[Set],
-    ) -> pl.DataFrame | None:
-        """
-        >>> import pandas as pd
-        >>> dim1 = pd.Index([1, 2, 3], name="dim1")
-        >>> dim2 = pd.Index(["a", "b"], name="dim1")
-        >>> Variable._parse_set([dim1, dim2])
-        Traceback (most recent call last):
-        ...
-        AssertionError: All coordinates must have unique column names.
-        >>> dim2.name = "dim2"
-        >>> Variable._parse_set([dim1, dim2])
-        shape: (6, 2)
-        ┌──────┬──────┐
-        │ dim1 ┆ dim2 │
-        │ ---  ┆ ---  │
-        │ i64  ┆ str  │
-        ╞══════╪══════╡
-        │ 1    ┆ a    │
-        │ 1    ┆ b    │
-        │ 2    ┆ a    │
-        │ 2    ┆ b    │
-        │ 3    ┆ a    │
-        │ 3    ┆ b    │
-        └──────┴──────┘
-        """
-        if len(over) == 0:
-            return None
-
-        over_iter: Iterable[Set] = _parse_inputs_as_iterable(over)
-
-        over_frames: List[pl.DataFrame] = [_set_to_polars(set) for set in over_iter]
-
-        over_merged = over_frames[0]
-
-        for df in over_frames[1:]:
-            assert (
-                set(over_merged.columns) & set(df.columns) == set()
-            ), "All coordinates must have unique column names."
-            over_merged = over_merged.join(df, how="cross")
-        return over_merged
 
     def next(self, dim: str, wrap_around=False) -> Expression:
         """

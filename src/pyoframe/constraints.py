@@ -103,7 +103,7 @@ class Expressionable:
         return self.to_expr().filter(*args, **kwargs)
 
 
-Set = (
+AcceptableSets = (
     pl.DataFrame
     | pd.Index
     | pd.DataFrame
@@ -244,7 +244,7 @@ class Expression(Expressionable, ModelElement):
             )
         )
 
-    def within(self, set: Set) -> Expression:
+    def within(self, set: AcceptableSets) -> Expression:
         """
         Examples
         >>> import pandas as pd
@@ -645,7 +645,7 @@ class Constraint(Expression):
             )
         )
 
-def _set_to_polars(set: Set) -> pl.DataFrame:
+def _set_to_polars(set: AcceptableSets) -> pl.DataFrame:
     if isinstance(set, dict):
         df = pl.DataFrame(set)
     elif isinstance(set, Expressionable):
