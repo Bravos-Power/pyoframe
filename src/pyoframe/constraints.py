@@ -392,7 +392,7 @@ class Expression(Expressionable, ModelElement):
         dims_in_common = [dim for dim in self.dimensions if dim in other.dimensions]
 
         data = (
-            self.data.join(multiplier, on=dims_in_common)
+            self.data.join(multiplier, on=dims_in_common, how="inner" if dims_in_common else "cross")
             .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
             .drop(COEF_KEY + "_right")
         )

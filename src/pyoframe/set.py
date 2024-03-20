@@ -14,8 +14,11 @@ from pyoframe.util import _parse_inputs_as_iterable
 
 
 class Set(ModelElement, Expressionable):
-    def __init__(self, *data: AcceptableSets | Iterable[AcceptableSets]):
-        df = self._parse_acceptable_sets(*data)
+    def __init__(self, *data: AcceptableSets | Iterable[AcceptableSets], **named_data):
+        data_list = list(data)
+        for name, set in named_data.items():
+            data_list.append({name: set})
+        df = self._parse_acceptable_sets(*data_list)
         if df.is_duplicated().any():
             raise ValueError("Duplicate rows found in data.")
         super().__init__(df)
@@ -71,5 +74,13 @@ class Set(ModelElement, Expressionable):
 
     def __mul__(self, other):
         if isinstance(other, Set):
+            assert (
+                set(self.data.columns) & set(other.data.columns) == set()
+            ), "Cannot multiply two sets with columns in common."
             return Set(self.data, other.data)
         return super().__mul__(other)
+
+    def __add__(self, other):
+        if isinstance(other, Set):
+            raise ValueError("Cannot add two sets.")
+        return super().__add__(other)
