@@ -47,12 +47,12 @@ def test_multiplication_no_common_dimensions():
 
 def test_within_set():
     small_set = Set(x=[1, 2], y=["a"])
-    large_set = Set(x=[1, 2, 3], y=["a", "b", "c"])
+    large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
     v = Variable(large_set)
     result = v.to_expr().within(small_set)
     assert_frame_equal(
         result.data,
-        pl.DataFrame({"x": [1, 2], "y": ["a", "a"], COEF_KEY: [1, 1], VAR_KEY: [1, 4]}),
+        pl.DataFrame({"x": [1, 2], "y": ["a", "a"], "z": [1,1], COEF_KEY: [1, 1], VAR_KEY: [1, 4]}),
         check_dtype=False,
     )
 
