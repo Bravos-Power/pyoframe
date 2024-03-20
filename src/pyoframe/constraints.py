@@ -688,6 +688,28 @@ class Expression(Expressionable, ModelElement):
     def __repr__(self) -> str:
         return f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
+    def rename(self, mapping: dict) -> Expression:
+        """
+         Renames dimensions of the Expression according to the given mapping. Only the dimensions of the
+         Expression can be renamed, not other columns for internal use.
+
+        Parameters
+        ----------
+        mapping : dict
+                  A dictionary where each key is a string representing the original name of
+                  a dimension of the Expression and each value is the new name.
+
+        Returns
+        -------
+        Expression
+        """
+
+        return self._new(
+            self.data.rename(
+                {k: v for k, v in mapping.items() if k in self.dimensions}
+            )
+        )
+
 
 @overload
 def sum(over: str | Sequence[str], expr: Expressionable): ...
@@ -780,4 +802,57 @@ class Constraint(Expression):
     def __repr__(self) -> str:
         return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
 
+
+    def filter(self, *args, **kwargs):
+        """
+        Filter the constraints, returning a new Constraint object.
+
+        Examples
+        --------
+        >>> import polars as pl
+        >>> from pyoframe import Variable, Model
+        >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
+        >>> m = Model()
+        >>> m.quantity = Variable(cost[["item", "time"]])
+        >>> c = m.quantity * cost <= 100
+        >>> cf = c.filter(item=1)
+        >>> type(cf)
+        <class 'pyoframe.constraints.Constraint'>
+        >>> print(cf)
+        <Constraint sense='<=' size=3 dimensions={'item': 1, 'time': 3} terms=6>
+        [1,1]: quantity[1,1] <= 100
+        [1,2]: 2 quantity[1,2] <= 100
+        [1,3]: 3 quantity[1,3] <= 100
+        """
+        return Constraint(super().filter(*args, **kwargs), self.sense, self._model)
+
+
+def _set_to_polars(set: AcceptableSets) -> pl.DataFrame:
+    if isinstance(set, dict):
+        df = pl.DataFrame(set)
+    elif isinstance(set, Expressionable):
+        df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
+    elif isinstance(set, pd.Index):
+        df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
+    elif isinstance(set, pd.DataFrame):
+        df = pl.from_pandas(set)
+    elif isinstance(set, pl.DataFrame):
+        df = set
+    elif isinstance(set, pl.Series):
+        df = set.to_frame()
+    else:
+        raise ValueError(f"Cannot convert type {type(set)} to a polars DataFrame")
+
+    if "index" in df.columns:
+        raise ValueError(
+            "Please specify a custom dimension name rather than using 'index' to avoid confusion."
+        )
+
+    for reserved_key in RESERVED_COL_KEYS:
+        if reserved_key in df.columns:
+            raise ValueError(
+                f"Cannot use reserved column names {reserved_key} as dimensions."
+            )
+
+    return df
 
