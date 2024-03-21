@@ -109,7 +109,7 @@ class Expressionable:
         """
         return build_constraint(self, __value, ConstraintSense.EQ)
 
-    def align(self, other: Expressionable) -> Expression:
+    def align(self, other: Expressionable, maintain_order: bool = True) -> Expression:
         """Returns a new Expression that is aligned with other, meaning it has the same dimensions,
         and the same coordinates in all dimensions, corresponding to the intersection of the
         coordinates in the common dimensions (inner join over these dimensions).
@@ -136,7 +136,7 @@ class Expressionable:
         <BLANKLINE>
         """
 
-        return self.to_expr().align(other)
+        return self.to_expr().align(other, maintain_order)
 
 
 AcceptableSets = Union[
@@ -586,7 +586,7 @@ class Expression(Expressionable, ModelElement):
     def variable_terms(self):
         return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
 
-    def align(self, other: Expressionable) -> Expression:
+    def align(self, other: Expressionable, maintain_order: bool = True) -> Expression:
         """Returns a new Expression that is aligned with other, meaning it has the same dimensions,
         and the same coordinates in all dimensions, corresponding to the intersection of the
         coordinates in the common dimensions (inner join over these dimensions).
@@ -599,7 +599,7 @@ class Expression(Expressionable, ModelElement):
         >>> m = pf.Model
         >>> m.x = pf.Variable(pl.DataFrame({"p": [1,2,3]}), pl.DataFrame({"t": [0,1]}))
         >>> y = pf.sum("t", m.x)
-        >>> z = y.align(m.x.to_expr())
+        >>> z = y.align(m.x, maintain_order=False)
         >>> set(z.dimensions) == set(m.x.dimensions)
         True
         >>> z.filter(p=1, t=0)
@@ -617,7 +617,8 @@ class Expression(Expressionable, ModelElement):
             self.data
             .lazy()
             .join(
-                other.data.lazy().select(other.dimensions).unique(), on=common_dimensions
+                other.data.lazy().select(other.dimensions).unique(maintain_order=maintain_order),
+                on=common_dimensions,
             )
             .collect(),
         )
