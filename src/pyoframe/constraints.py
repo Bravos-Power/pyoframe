@@ -481,7 +481,7 @@ class Expression(Expressionable, ModelElement):
 
         if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
             raise ValueError(
-                "Multiplication of two expressions with variables is non-liner and not supported."
+                "Multiplication of two expressions with variables is non-linear and not supported."
             )
         multiplier = other.data.drop(VAR_KEY)
 
