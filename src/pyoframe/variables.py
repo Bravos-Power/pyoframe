@@ -146,31 +146,3 @@ class Variable(ModelElement, Expressionable):
         ).drop(["__prev", "__next"])
         return expr._new(data)
 
-    def align(self, other: Variable | Expression) -> Expression:
-        """Returns a new Expression that is aligned with other, meaning it has the same dimensions,
-        and the same coordinates in all dimensions, corresponding to the intersection of the
-        coordinates in the common dimensions (inner join over these dimensions).
-        If other has extra dimensions, broadcasting is performed.
-
-        Examples
-        --------
-        >>> import polars as pl
-        >>> import pyoframe as pf
-        >>> m = pf.Model
-        >>> m.x = pf.Variable(pl.DataFrame({"p": [1,2]}), pl.DataFrame({"t": [0,1]}))
-        >>> m.y = pf.Variable(pl.DataFrame({"p": [1,2,3]}))
-        >>> z = m.y.align(m.x) + m.x
-        >>> set(z.dimensions) == set(m.x.dimensions)
-        True
-        >>> z.filter(p=1, t=0)
-        <Expression size=1 dimensions={'p': 1, 't': 1} terms=2>
-        [1,0]: x5 + x1
-        >>> z.filter(p=1, t=1)
-        <Expression size=1 dimensions={'p': 1, 't': 1} terms=2>
-        [1,1]: x5 + x2
-        >>> z.filter(p=3, t=1)
-        <Expression size=0 dimensions={'p': 0, 't': 0} terms=0>
-        <BLANKLINE>
-        """
-
-        return self.to_expr().align(other.to_expr())
