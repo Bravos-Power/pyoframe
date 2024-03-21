@@ -136,7 +136,7 @@ class Expressionable:
         <BLANKLINE>
         """
 
-        return self.to_expr().align(other.to_expr())
+        return self.to_expr().align(other)
 
 
 AcceptableSets = Union[
@@ -586,7 +586,7 @@ class Expression(Expressionable, ModelElement):
     def variable_terms(self):
         return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
 
-    def align(self, other: Expression) -> Expression:
+    def align(self, other: Expressionable) -> Expression:
         """Returns a new Expression that is aligned with other, meaning it has the same dimensions,
         and the same coordinates in all dimensions, corresponding to the intersection of the
         coordinates in the common dimensions (inner join over these dimensions).
@@ -610,6 +610,7 @@ class Expression(Expressionable, ModelElement):
         [3,1]: x5 + x6
         """
 
+        other = other.to_expr()
         common_dimensions = list(set(self.dimensions).intersection(other.dimensions))
 
         return self._new(
