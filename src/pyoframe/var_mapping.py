@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 import polars as pl
-from pyoframe.dataframe import CONST_TERM
-from pyoframe.dataframe import VAR_KEY, concat_dimensions
+from pyoframe.constants import CONST_TERM
+from pyoframe.constants import VAR_KEY
+from pyoframe.util import concat_dimensions
 
 if TYPE_CHECKING:
     from pyoframe.model import Model, Variable

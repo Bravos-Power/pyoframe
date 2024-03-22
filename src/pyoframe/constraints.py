@@ -1,29 +1,34 @@
 from __future__ import annotations
-from enum import Enum
 from typing import (
     TYPE_CHECKING,
     Iterable,
     List,
     Mapping,
     Optional,
+    Protocol,
     Sequence,
     overload,
     Union,
 )
+from abc import ABC, abstractmethod
 
 import pandas as pd
 import polars as pl
 
-from pyoframe.dataframe import (
+from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     RESERVED_COL_KEYS,
     VAR_KEY,
+    ConstraintSense,
+)
+from pyoframe.util import (
     cast_coef_to_string,
     concat_dimensions,
     get_dimensions,
+    get_obj_repr,
+    parse_inputs_as_iterable,
 )
-from pyoframe.util import _parse_inputs_as_iterable
 from pyoframe.var_mapping import DEFAULT_MAP
 from pyoframe.model_element import ModelElement
 
@@ -33,23 +38,30 @@ if TYPE_CHECKING:
 VAR_TYPE = pl.UInt32
 
 
-class ConstraintSense(Enum):
-    LE = "<="
-    GE = ">="
-    EQ = "="
+def _forward_to_expression(func_name: str):
+    def wrapper(self: "Expressionable", *args, **kwargs) -> "Expression":
+        expr = self.to_expr()
+        return getattr(expr, func_name)(*args, **kwargs)
+
+    return wrapper
 
 
-class Expressionable:
+class SupportsToExpr(Protocol):
+    def to_expr(self) -> "Expression": ...
+
+
+class Expressionable(ABC):
     """Any object that can be converted into an expression."""
 
+    @abstractmethod
     def to_expr(self) -> "Expression":
-        """Converts the object into an Expression."""
-        raise NotImplementedError(
-            "to_expr must be implemented in subclass " + self.__class__.__name__
-        )
+        raise NotImplementedError
 
-    def __add__(self, other):
-        return self.to_expr() + other
+    __add__ = _forward_to_expression("__add__")
+    __mul__ = _forward_to_expression("__mul__")
+    sum = _forward_to_expression("sum")
+    fill_missing = _forward_to_expression("fill_missing")
+    drop_missing = _forward_to_expression("drop_missing")
 
     def __neg__(self):
         return self.to_expr() * -1
@@ -70,9 +82,6 @@ class Expressionable:
             other = other.to_expr()
         return self.to_expr() + (other * -1)
 
-    def __mul__(self, other):
-        return self.to_expr() * other
-
     def __rmul__(self, other):
         return self.to_expr() * other
 
@@ -87,7 +96,7 @@ class Expressionable:
         <Constraint sense='<=' size=1 dimensions={} terms=2>
         x1 <= 1
         """
-        return build_constraint(self, other, ConstraintSense.LE)
+        return Constraint(self - other, ConstraintSense.LE)
 
     def __ge__(self, other):
         """Equality constraint.
@@ -97,7 +106,7 @@ class Expressionable:
         <Constraint sense='>=' size=1 dimensions={} terms=2>
         x1 >= 1
         """
-        return build_constraint(self, other, ConstraintSense.GE)
+        return Constraint(self - other, ConstraintSense.GE)
 
     def __eq__(self, __value: object):
         """Equality constraint.
@@ -107,10 +116,10 @@ class Expressionable:
         <Constraint sense='=' size=1 dimensions={} terms=2>
         x1 = 1
         """
-        return build_constraint(self, __value, ConstraintSense.EQ)
+        return Constraint(self - __value, ConstraintSense.EQ)
 
 
-AcceptableSets = Union[
+SetTypes = Union[
     pl.DataFrame,
     pd.Index,
     pd.DataFrame,
@@ -119,14 +128,15 @@ AcceptableSets = Union[
     "Set",
 ]
 
+
 class Set(ModelElement, Expressionable):
-    def __init__(self, *data: AcceptableSets | Iterable[AcceptableSets], **named_data):
+    def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
         data_list = list(data)
         for name, set in named_data.items():
             data_list.append({name: set})
         df = self._parse_acceptable_sets(*data_list)
         if df.is_duplicated().any():
-            raise ValueError("Duplicate rows found in data.")
+            raise ValueError("Duplicate rows found in input data.")
         super().__init__(df)
 
     def _new(self, data: pl.DataFrame):
@@ -136,7 +146,7 @@ class Set(ModelElement, Expressionable):
 
     @staticmethod
     def _parse_acceptable_sets(
-        *over: AcceptableSets | Iterable[AcceptableSets],
+        *over: SetTypes | Iterable[SetTypes],
     ) -> pl.DataFrame:
         """
         >>> import pandas as pd
@@ -163,7 +173,7 @@ class Set(ModelElement, Expressionable):
         └──────┴──────┘
         """
         assert len(over) > 0, "At least one set must be provided."
-        over_iter: Iterable[AcceptableSets] = _parse_inputs_as_iterable(over)
+        over_iter: Iterable[SetTypes] = parse_inputs_as_iterable(*over)
 
         over_frames: List[pl.DataFrame] = [Set._set_to_polars(set) for set in over_iter]
 
@@ -197,11 +207,14 @@ class Set(ModelElement, Expressionable):
         return super().__add__(other)
 
     def __repr__(self):
-        return f"""<Set{' name='+self.name if self.name is not None else ''} size={self.data.height} dimensions={self.shape}>\n{self.to_expr().to_str(max_line_len=80, max_rows=10)}"""
-
+        return (
+            get_obj_repr(self, ("name",), size=self.data.height, dimensions=self.shape)
+            + "\n"
+            + self.to_expr().to_str(max_line_len=80, max_rows=10)
+        )
 
     @staticmethod
-    def _set_to_polars(set: "AcceptableSets") -> pl.DataFrame:
+    def _set_to_polars(set: "SetTypes") -> pl.DataFrame:
         if isinstance(set, dict):
             df = pl.DataFrame(set)
         elif isinstance(set, Expressionable):
@@ -278,8 +291,6 @@ class Expression(Expressionable, ModelElement):
         return len(unique_dims_left) == len(
             unique_dims_left.join(unique_dims_right, on=dims)
         )
-
-    
 
     def sum(self, over: str | Iterable[str]):
         """
@@ -368,7 +379,7 @@ class Expression(Expressionable, ModelElement):
             )
         )
 
-    def within(self, set: "AcceptableSets") -> Expression:
+    def within(self, set: "SetTypes") -> Expression:
         """
         Examples
         >>> import pandas as pd
@@ -391,8 +402,6 @@ class Expression(Expressionable, ModelElement):
         dims_in_common = [dim for dim in dims if dim in set_dims]
         by_dims = df.select(dims_in_common).unique()
         return self._new(self.data.join(by_dims, on=dims_in_common))
-
-
 
     def __add__(self, other):
         """
@@ -470,7 +479,9 @@ class Expression(Expressionable, ModelElement):
 
         return self._new(data)
 
-    def __mul__(self, other):
+    def __mul__(
+        self: "Expression", other: int | float | SupportsToExpr
+    ) -> "Expression":
         if isinstance(other, (int, float)):
             return self.with_columns(pl.col(COEF_KEY) * other)
 
@@ -592,6 +603,7 @@ class Expression(Expressionable, ModelElement):
         # Remove leading +
         data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
 
+        # TODO add vertical ... if too many rows, in the middle of the table
         if max_rows:
             data = data.head(max_rows)
 
@@ -641,19 +653,26 @@ class Expression(Expressionable, ModelElement):
         return result
 
     def __repr__(self) -> str:
-        return f"<Expression size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
+        return (
+            get_obj_repr(
+                self, size=len(self), dimensions=self.shape, terms=len(self.data)
+            )
+            + "\n"
+            + self.to_str(max_line_len=80, max_rows=15)
+        )
 
 
 @overload
-def sum(over: str | Sequence[str], expr: Expressionable): ...
+def sum(over: str | Sequence[str], expr: SupportsToExpr): ...
 
 
 @overload
-def sum(over: Expressionable): ...
+def sum(over: SupportsToExpr): ...
 
 
 def sum(
-    over: str | Sequence[str] | Expressionable, expr: Expressionable | None = None
+    over: str | Sequence[str] | SupportsToExpr,
+    expr: SupportsToExpr | None = None,
 ) -> "Expression":
     if expr is None:
         assert isinstance(over, Expressionable)
@@ -664,7 +683,7 @@ def sum(
         return expr.to_expr().sum(over)
 
 
-def sum_by(by: str | Sequence[str], expr: Expressionable) -> "Expression":
+def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> "Expression":
     if isinstance(by, str):
         by = [by]
     expr = expr.to_expr()
@@ -672,19 +691,16 @@ def sum_by(by: str | Sequence[str], expr: Expressionable) -> "Expression":
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
 
-
-def build_constraint(lhs: Expressionable, rhs, sense):
-    lhs = lhs.to_expr()
-    if not isinstance(rhs, (int, float)):
-        rhs = rhs.to_expr()
-        if not lhs.indices_match(rhs):
-            raise ValueError(
-                "LHS and RHS values have different indices"
-                + str(lhs)
-                + "\nvs\n"
-                + str(rhs)
-            )
-    return Constraint(lhs - rhs, sense, model=lhs._model)
+    # lhs = lhs.to_expr()
+    # if not isinstance(rhs, (int, float)):
+    #     rhs = rhs.to_expr()
+    #     if not lhs.indices_match(rhs):
+    #         raise ValueError(
+    #             "LHS and RHS values have different indices"
+    #             + str(lhs)
+    #             + "\nvs\n"
+    #             + str(rhs)
+    #         )
 
 
 class Constraint(Expression):
@@ -706,6 +722,8 @@ class Constraint(Expression):
             The right hand side of the constraint.
         """
         if isinstance(lhs, Expression):
+            if model is None:
+                model = lhs._model
             lhs = lhs.data
         super().__init__(lhs)
         self.sense = sense
@@ -735,8 +753,18 @@ class Constraint(Expression):
         return constr_str
 
     def __repr__(self) -> str:
-        return f"<Constraint{' name='+self.name if self.name is not None else ''} sense='{self.sense.value}' size={len(self)} dimensions={self.shape} terms={len(self.data)}>\n{self.to_str(max_line_len=80, max_rows=15)}"
+        return (
+            get_obj_repr(
+                self,
+                ("name",),
+                sense=f"'{self.sense.value}'",
+                size=len(self),
+                dimensions=self.shape,
+                terms=len(self.data),
+            )
+            + "\n"
+            + self.to_str(max_line_len=80, max_rows=15)
+        )
 
     def _new(self, data: pl.DataFrame):
         return Constraint(data, self.sense, model=self._model)
-

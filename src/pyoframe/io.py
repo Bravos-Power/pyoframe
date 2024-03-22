@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, TypeVar
 
-from pyoframe.dataframe import VAR_KEY
+from pyoframe.constants import VAR_KEY
 from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     """
     assert m.objective is not None, "No objective set."
 
-    f.write(f"{m.objective.sense}\n\nobj:\n\n")
+    f.write(f"{m.objective.sense.value}\n\nobj:\n\n")
     result = m.objective.to_str(var_map=var_map, include_name=False)
     f.writelines(result)
 

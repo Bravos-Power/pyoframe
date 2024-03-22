@@ -1,4 +1,5 @@
 from typing import Any, Iterable, List
+from pyoframe.constants import ObjSense, VType
 from pyoframe.constraints import Expressionable
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
@@ -13,6 +14,7 @@ class Model:
     """
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
     """
+
     def __init__(self, name="model"):
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
@@ -26,11 +28,11 @@ class Model:
 
     @property
     def binary_variables(self) -> Iterable[Variable]:
-        return (v for v in self.variables if v.vtype == "binary")
+        return (v for v in self.variables if v.vtype == VType.BINARY)
 
     @property
     def integer_variables(self) -> Iterable[Variable]:
-        return (v for v in self.variables if v.vtype == "integer")
+        return (v for v in self.variables if v.vtype == VType.INTEGER)
 
     @property
     def constraints(self):
@@ -42,12 +44,12 @@ class Model:
 
     @property
     def maximize(self):
-        assert self.objective is not None and self.objective.sense == "maximize"
+        assert self.objective is not None and self.objective.sense == ObjSense.MAX
         return self.objective
 
     @property
     def minimize(self):
-        assert self.objective is not None and self.objective.sense == "minimize"
+        assert self.objective is not None and self.objective.sense == ObjSense.MIN
         return self.objective
 
     def __setattr__(self, __name: str, __value: Any) -> None:

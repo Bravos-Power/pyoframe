@@ -4,37 +4,30 @@ from pyoframe.constraints import Expressionable
 from pyoframe.constraints import Expression
 from functools import wraps
 
-from pyoframe.dataframe import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
 
 # pyright: reportAttributeAccessIssue=false
 
 
-def patch_method(func):
-    @wraps(func)
-    def wrapper(self, other):
-        if isinstance(other, Expressionable):
-            return NotImplemented
-        return func(self, other)
+def _patch_class(cls):
+    def _patch_method(func):
+        @wraps(func)
+        def wrapper(self, other):
+            if isinstance(other, Expressionable):
+                return NotImplemented
+            return func(self, other)
 
-    return wrapper
+        return wrapper
 
-
-def patch_class(cls):
-    cls.__add__ = patch_method(cls.__add__)
-    cls.__mul__ = patch_method(cls.__mul__)
-    cls.__sub__ = patch_method(cls.__sub__)
-    cls.__le__ = patch_method(cls.__le__)
-    cls.__ge__ = patch_method(cls.__ge__)
-    cls.__contains__ = patch_method(cls.__contains__)
-
-
-patch_class(pd.DataFrame)
-patch_class(pd.Series)
-patch_class(pl.DataFrame)
-patch_class(pl.Series)
+    cls.__add__ = _patch_method(cls.__add__)
+    cls.__mul__ = _patch_method(cls.__mul__)
+    cls.__sub__ = _patch_method(cls.__sub__)
+    cls.__le__ = _patch_method(cls.__le__)
+    cls.__ge__ = _patch_method(cls.__ge__)
+    cls.__contains__ = _patch_method(cls.__contains__)
 
 
-def to_expr(self: pl.DataFrame) -> Expression:
+def _dataframe_to_expr(self: pl.DataFrame) -> Expression:
     return Expression(
         self.rename({self.columns[-1]: COEF_KEY})
         .drop_nulls(COEF_KEY)
@@ -42,7 +35,20 @@ def to_expr(self: pl.DataFrame) -> Expression:
     )
 
 
-pl.DataFrame.to_expr = to_expr
-pl.Series.to_expr = lambda self: self.to_frame().to_expr()
-pd.DataFrame.to_expr = lambda self: pl.from_pandas(self).to_expr()
-pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()
+def patch_dataframe_libraries():
+    """
+    Applies two patches to the DataFrame and Series classes of both pandas and polars.
+    1) Patches arithmetic operators (e.g. `__add__`) such that operations between DataFrames/Series and `Expressionable`s
+        are not supported (i.e. `return NotImplemented`). This leads Python to try the reverse operation (e.g. `__radd__`)
+        which is supported by the `Expressionable` class.
+    2) Adds a `to_expr` method to DataFrame/Series that allows them to be converted to an `Expression` object.
+        Series become dataframes and dataframes become expressions where everything but the last column are treated as dimensions.
+    """
+    _patch_class(pd.DataFrame)
+    _patch_class(pd.Series)
+    _patch_class(pl.DataFrame)
+    _patch_class(pl.Series)
+    pl.DataFrame.to_expr = _dataframe_to_expr
+    pl.Series.to_expr = lambda self: self.to_frame().to_expr()
+    pd.DataFrame.to_expr = lambda self: pl.from_pandas(self).to_expr()
+    pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()

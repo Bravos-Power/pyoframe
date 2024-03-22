@@ -1,96 +1,100 @@
+"""
+File containing Variable class representing decision variables in optimization models.
+"""
+
 from __future__ import annotations
+from typing import Iterable
+
 import polars as pl
-import pandas as pd
-from typing import Iterable, List, Literal
 
 from pyoframe.constraints import Expressionable, Set
 
-from pyoframe.dataframe import COEF_KEY, VAR_KEY
+from pyoframe.constants import COEF_KEY, VAR_KEY, VType, VTypeValue
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
-from pyoframe.constraints import AcceptableSets
-from pyoframe.util import _parse_inputs_as_iterable
+from pyoframe.constraints import SetTypes
+from pyoframe.util import get_obj_repr
 
 
 class Variable(ModelElement, Expressionable):
+    """
+    Represents one or many decision variable in an optimization model.
+
+    Parameters
+    ----------
+    *indexing_sets: SetTypes (typically a DataFrame or Set)
+        If no indexing_sets are provided, a single variable with no dimensions is created.
+        Otherwise, a variable is created for each element in the Cartesian product of the indexing_sets (see Set for details on behaviour).
+    lb: float
+        The lower bound for all variables.
+    ub: float
+        The upper bound for all variables.
+    vtype: VType | VTypeValue
+        The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from pyoframe import Variable
+    >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
+    >>> Variable(df)
+    <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
+    [1,a]: x1
+    [1,b]: x2
+    [2,a]: x3
+    [2,b]: x4
+    [3,a]: x5
+    [3,b]: x6
+    >>> Variable(df[["dim1"]])
+    Traceback (most recent call last):
+    ...
+    ValueError: Duplicate rows found in input data.
+    >>> Variable(df[["dim1"]].drop_duplicates())
+    <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
+    [1]: x7
+    [2]: x8
+    [3]: x9
+    """
+
     _var_count = 1  # Must start at 1 since 0 is reserved for constant terms
 
     @classmethod
-    def _reset_count(cls):
+    def reset_var_count(cls):
+        """Resets the variable count. Useful to ensure consistency in unit tests."""
         cls._var_count = 1
 
+    # TODO: Breaking change, remove support for Iterable[AcceptableSets]
     def __init__(
         self,
-        *sets: AcceptableSets | Iterable[AcceptableSets],
+        *indexing_sets: SetTypes | Iterable[SetTypes],
         lb: float = float("-inf"),
         ub: float = float("inf"),
-        vtype: Literal["continuous", "binary", "integer"] = "continuous",
+        vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
-        """Creates a variable for every row in the dataframe.
-
-        Parameters
-        ----------
-        over: pl.DataFrame
-            The dataframe over which variables should be created.
-        lb: float
-            The lower bound for all variables.
-        ub: float
-            The upper bound for all variables.
-        dim: int, optional
-            The number of starting columns to be used as an index. If None, and df is a Parameters object, the dimension is inferred from the Parameters object. Otherwise, all columns are used as an index.
-        name: str, optional
-            The name of the variable. If using ModelBuilder this is automatically set to match your variable name.
-
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from pyoframe import Variable
-        >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
-        >>> Variable(df)
-        <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
-        [1,a]: x1
-        [1,b]: x2
-        [2,a]: x3
-        [2,b]: x4
-        [3,a]: x5
-        [3,b]: x6
-        >>> Variable(df[["dim1"]])
-        Traceback (most recent call last):
-        ...
-        ValueError: Duplicate rows found in data.
-        >>> Variable(df[["dim1"]].drop_duplicates())
-        <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
-        [1]: x7
-        [2]: x8
-        [3]: x9
-        """
-        if len(sets) == 0:
+        if len(indexing_sets) == 0:
             data = pl.DataFrame({VAR_KEY: [Variable._var_count]})
         else:
-            indexing_set = Set(*sets).data
-            data = indexing_set.with_columns(
+            data = Set(*indexing_sets).data.with_columns(
                 pl.int_range(Variable._var_count, Variable._var_count + pl.len()).alias(
                     VAR_KEY
                 )
             )
-
         super().__init__(data)
+
         Variable._var_count += data.height
+
         self.lb = lb
         self.ub = ub
-        assert vtype in (
-            "continuous",
-            "binary",
-            "integer",
-        ), "type must be one of 'continuous', 'binary', or 'integer'"
-        self._vtype: Literal["continuous", "binary", "integer"] = vtype
-
-    @property
-    def vtype(self) -> Literal["continuous", "binary", "integer"]:
-        return self._vtype
+        self.vtype: VType = VType(vtype)
 
     def __repr__(self):
-        return f"""<Variable{' name='+self.name if self.name is not None else ''} lb={self.lb} ub={self.ub} size={self.data.height} dimensions={self.shape}>\n{self.to_expr().to_str(max_line_len=80, max_rows=10)}"""
+        return (
+            get_obj_repr(
+                self, ("name", "lb", "ub"), size=self.data.height, dimensions=self.shape
+            )
+            + "\n"
+            + self.to_expr().to_str(max_line_len=80, max_rows=10)
+        )
 
     def to_expr(self) -> Expression:
         return self._new(self.data)

@@ -1,10 +1,11 @@
 from __future__ import annotations
-from functools import wraps
+from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
 
-from pyoframe.dataframe import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY, get_dimensions
+from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.util import get_dimensions
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -17,7 +18,7 @@ def _pass_polars_method(method_name: str):
     return method
 
 
-class ModelElement:
+class ModelElement(ABC):
     def __init__(
         self,
         data: pl.DataFrame,
@@ -88,6 +89,7 @@ class ModelElement:
             return 1
         return self.data.drop(*RESERVED_COL_KEYS).n_unique()
 
+    @abstractmethod
     def _new(self, data: pl.DataFrame):
         raise NotImplementedError("Subclasses must implement this method")
 

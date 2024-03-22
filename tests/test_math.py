@@ -5,7 +5,7 @@ from pyoframe.constraints import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl
 
-from pyoframe.dataframe import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
 from pyoframe import Variable
 from pyoframe.constraints import Expression
 
