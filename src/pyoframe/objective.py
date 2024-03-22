@@ -1,9 +1,9 @@
 from pyoframe.constants import ObjSense, ObjSenseValue
-from pyoframe.constraints import Expressionable, Expression
+from pyoframe.constraints import SupportsMath, Expression
 
 
 class Objective(Expression):
-    def __init__(self, expr: Expressionable, sense: ObjSense | ObjSenseValue) -> None:
+    def __init__(self, expr: SupportsMath, sense: ObjSense | ObjSenseValue) -> None:
         """
         Examples
         --------
@@ -19,7 +19,8 @@ class Objective(Expression):
         self.sense = ObjSense(sense)
 
         expr = expr.to_expr()
-        super().__init__(expr.to_expr().data, model=expr._model)
+        super().__init__(expr.to_expr().data)
+        self._model = expr._model
         assert (
-            not self.dimensions
+            self.dimensions is not None
         ), "Objective cannot have dimensions as it must be a single expression"

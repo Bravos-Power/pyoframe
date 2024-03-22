@@ -1,6 +1,6 @@
 from typing import Any, Iterable, List
 from pyoframe.constants import ObjSense, VType
-from pyoframe.constraints import Expressionable
+from pyoframe.constraints import SupportsMath
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
@@ -55,7 +55,7 @@ class Model:
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name in ("maximize", "minimize"):
             assert isinstance(
-                __value, Expressionable
+                __value, SupportsMath
             ), f"Setting {__name} on the model requires an objective expression."
             self._objective = Objective(__value, sense=__name)
             self._objective.name = __name

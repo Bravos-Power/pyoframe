@@ -31,6 +31,12 @@ class VType(Enum):
     INTEGER = "integer"
 
 
+class MissingStrategy(Enum):
+    ERROR = "error"
+    DROP = "drop"
+    FILL = "fill"
+
+
 # This is a hack to get the Literal type for VType
 # See: https://stackoverflow.com/questions/67292470/type-hinting-enum-member-value-in-python
 ObjSenseValue = Literal["minimize", "maximize"]

@@ -7,7 +7,7 @@ from typing import Iterable
 
 import polars as pl
 
-from pyoframe.constraints import Expressionable, Set
+from pyoframe.constraints import SupportsMath, Set
 
 from pyoframe.constants import COEF_KEY, VAR_KEY, VType, VTypeValue
 from pyoframe.constraints import Expression
@@ -16,7 +16,7 @@ from pyoframe.constraints import SetTypes
 from pyoframe.util import get_obj_repr
 
 
-class Variable(ModelElement, Expressionable):
+class Variable(ModelElement, SupportsMath):
     """
     Represents one or many decision variable in an optimization model.
 
@@ -100,9 +100,11 @@ class Variable(ModelElement, Expressionable):
         return self._new(self.data)
 
     def _new(self, data: pl.DataFrame):
-        return Expression(
-            data.with_columns(pl.lit(1.0).alias(COEF_KEY)), model=self._model
-        )
+        e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
+        e._model = self._model
+        e.missing_strategy = self.missing_strategy
+        e.allowed_new_dims = self.allowed_new_dims
+        return e
 
     def next(self, dim: str, wrap_around=False) -> Expression:
         """
@@ -115,7 +117,12 @@ class Variable(ModelElement, Expressionable):
         >>> m = Model()
         >>> m.bat_charge = Variable(time_dim, space_dim)
         >>> m.bat_flow = Variable(time_dim, space_dim)
-        >>> (m.bat_charge + m.bat_flow).within({"time": ["00:00", "06:00", "12:00"]}) == m.bat_charge.next("time")
+        >>> # Fails because the dimensions are not the same
+        >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
+        Traceback (most recent call last):
+        ...
+        ValueError: ...
+        >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time").drop_missing()
         <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
         [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
         [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
@@ -136,7 +143,7 @@ class Variable(ModelElement, Expressionable):
         [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
 
-        wrapped = self.data.select(dim).unique().sort(by=dim)
+        wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)
         wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))
         if wrap_around:
             wrapped = wrapped.with_columns(pl.col("__next").fill_null(pl.first(dim)))

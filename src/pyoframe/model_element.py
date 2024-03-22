@@ -5,7 +5,7 @@ import polars as pl
 from typing import TYPE_CHECKING
 
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
-from pyoframe.util import get_dimensions
+from pyoframe.arithmetic import get_dimensions
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -19,39 +19,37 @@ def _pass_polars_method(method_name: str):
 
 
 class ModelElement(ABC):
-    def __init__(
-        self,
-        data: pl.DataFrame,
-        model: Optional["Model"] = None,
-        name: str | None = None,
-    ) -> None:
+    def __init__(self, data: pl.DataFrame, **kwargs) -> None:
         # Sanity checks, no duplicate column names
         assert len(data.columns) == len(
             set(data.columns)
         ), "Duplicate column names found."
 
-        dimensions = get_dimensions(data)
-        reserved_cols = [col for col in RESERVED_COL_KEYS if col in data.columns]
+        cols = get_dimensions(data)
+        if cols is None:
+            cols = []
+        cols += [col for col in RESERVED_COL_KEYS if col in data.columns]
 
         # Reorder columns to keep things consistent
-        data = data.select(dimensions + reserved_cols)
+        data = data.select(cols)
 
         # Cast to proper dtype
-        if COEF_KEY in reserved_cols:
+        if COEF_KEY in data.columns:
             data = data.cast({COEF_KEY: pl.Float64})
-        if VAR_KEY in reserved_cols:
+        if VAR_KEY in data.columns:
             data = data.cast({VAR_KEY: pl.UInt32})
 
         self._data = data
-        self.name = name
-        self._model = model
+        self._model = None
+        self.name = None
+        super().__init__(**kwargs)
 
     @property
     def data(self) -> pl.DataFrame:
         return self._data
 
     @property
-    def dimensions(self) -> List[str]:
+    def dimensions(self) -> List[str] | None:
         """
         The names of the data's dimensions.
 
@@ -60,7 +58,7 @@ class ModelElement(ABC):
         >>> from pyoframe.variables import Variable
         >>> # A variable with no dimensions
         >>> Variable().dimensions
-        []
+
         >>> # A variable with dimensions of "hour" and "city"
         >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
         ['hour', 'city']
@@ -68,7 +66,7 @@ class ModelElement(ABC):
         return get_dimensions(self.data)
 
     @property
-    def shape(self) -> Dict[str, int]:
+    def shape(self) -> Dict[str, int] | None:
         """
         The number of indices in each dimension.
 
@@ -82,16 +80,20 @@ class ModelElement(ABC):
         >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
         {'hour': 4, 'city': 3}
         """
-        return {dim: self.data[dim].n_unique() for dim in self.dimensions}
+        dims = self.dimensions
+        if dims is None:
+            return None
+        return {dim: self.data[dim].n_unique() for dim in dims}
 
     def __len__(self) -> int:
-        if not self.dimensions:
+        dims = self.dimensions
+        if dims is None:
             return 1
-        return self.data.drop(*RESERVED_COL_KEYS).n_unique()
+        return self.data.select(dims).n_unique()
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
-        raise NotImplementedError("Subclasses must implement this method")
+        raise NotImplementedError
 
     rename = _pass_polars_method("rename")
     with_columns = _pass_polars_method("with_columns")
