@@ -702,6 +702,46 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> "Expression":
     #             + str(rhs)
     #         )
 
+def sum_list(*elist: Iterable[SupportsToExpr] | SupportsToExpr) -> Expression:
+    """
+    Sums a list of expressionable elements. For large elements, this can be
+    significantly faster than creating an explicit sequence of additions
+    e1 + e2 + e3 ...
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import polars as pl
+    >>> from pyoframe import Model, Variable
+    >>> from pyoframe.constraints import sum_list
+    >>> m = Model()
+    >>> p = pl.DataFrame({"p": np.arange(3000)})
+    >>> t = pl.DataFrame({"t": np.arange(200)})
+    >>> for v in "xyzw":
+    ...    setattr(m, v, Variable(p, t))
+    >>> sl = sum_list([m.x, m.y, m.z, m.w])
+    >>> sa = m.x + m.y + m.z + m.w
+    >>> assert sl.data.sort("p", "t").equals(sa.data.sort("p", "t"))
+    >>> sl.filter(p=42, t=42)
+    <Expression size=1 dimensions={'p': 1, 't': 1} terms=4>
+    [42,42]: x[42,42] + y[42,42] + z[42,42] + w[42,42]
+    """
+
+    assert len(elist) > 0, "At least one element must be provided."
+    elist = [el.to_expr() for el in parse_inputs_as_iterable(*elist)]
+
+    # Check that dimensions are consistent
+    dims = set(elist[0].dimensions)
+    for el in elist[1:]:
+        if set(el.dimensions) != dims:
+            raise ValueError(f"Incompatible dimensions: {dims}, {el.dimensions}")
+
+    return elist[0]._new(
+        pl.concat([
+            el.data for el in elist
+        ],
+        how="vertical_relaxed")
+    )
 
 class Constraint(Expression):
     def __init__(
