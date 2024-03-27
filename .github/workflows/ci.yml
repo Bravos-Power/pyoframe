@@ -8,19 +8,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python 3.10
+      - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.7'
       - name: Install dependencies
-        run: pip install .
-      - name: Run ATS
-        uses: codecov/codecov-ats@v0
-        env:
-          CODECOV_STATIC_TOKEN: ${{ secrets.CODECOV_STATIC_TOKEN }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: pip install .[dev]
       - name: Run tests and collect coverage
-        run: pytest --cov app ${{ env.CODECOV_ATS_TESTS }}
+        run: pytest --cov=src/pyoframe
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         with:
