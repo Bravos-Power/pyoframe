@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.8'
       - name: Install dependencies
-        run: pip install .[dev]
+        run: pip install --editable .[dev]
       - name: Run tests and collect coverage
         run: pytest --cov=src/pyoframe
       - name: Upload coverage to Codecov
