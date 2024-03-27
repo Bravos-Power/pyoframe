@@ -22,5 +22,5 @@ class Objective(Expression):
         super().__init__(expr.to_expr().data)
         self._model = expr._model
         assert (
-            self.dimensions is not None
+            self.dimensions is None
         ), "Objective cannot have dimensions as it must be a single expression"

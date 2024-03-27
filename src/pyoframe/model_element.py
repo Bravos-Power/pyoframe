@@ -77,7 +77,7 @@ class ModelElement(ABC):
         return dims
 
     @property
-    def shape(self) -> Dict[str, int] | None:
+    def shape(self) -> Dict[str, int]:
         """
         The number of indices in each dimension.
 
@@ -93,7 +93,7 @@ class ModelElement(ABC):
         """
         dims = self.dimensions
         if dims is None:
-            return None
+            return {}
         return {dim: self.data[dim].n_unique() for dim in dims}
 
     def __len__(self) -> int:

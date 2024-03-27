@@ -121,8 +121,20 @@ class Variable(ModelElement, SupportsMath):
         >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
         Traceback (most recent call last):
         ...
-        ValueError: ...
-        >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time").drop_unmatched()
+        pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+        <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
+        Due to error:
+        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+        shape: (2, 4)
+        ┌───────┬─────────┬────────────┬────────────┐
+        │ time  ┆ city    ┆ time_right ┆ city_right │
+        │ ---   ┆ ---     ┆ ---        ┆ ---        │
+        │ str   ┆ str     ┆ str        ┆ str        │
+        ╞═══════╪═════════╪════════════╪════════════╡
+        │ 18:00 ┆ Toronto ┆ null       ┆ null       │
+        │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
+        └───────┴─────────┴────────────┴────────────┘
+        >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next("time")
         <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
         [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
         [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0

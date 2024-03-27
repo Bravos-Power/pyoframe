@@ -3,6 +3,7 @@ import re
 import pandas as pd
 import numpy as np
 import pytest
+from pyoframe.arithmetic import PyoframeError
 from pyoframe.constraints import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl
@@ -170,28 +171,44 @@ def test_add_expressions_with_vars_and_dims():
     )
 
 
-def test_add_expression_add_expression_raises():
+def test_add_expression_with_add_dim():
     expr = pl.DataFrame({"value": [1]}).to_expr()
     expr_with_dim = pl.DataFrame({"dim1": [1], "value": [1]}).to_expr()
     expr_with_two_dim = pl.DataFrame(
         {"dim1": [1], "dim2": ["a"], "value": [1]}
     ).to_expr()
+
     with pytest.raises(
-        ValueError, match="were found in the right expression but not the left"
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
+        ),
     ):
         expr + expr_with_dim
     with pytest.raises(
-        ValueError, match="were found in the left expression but not the right"
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
+        ),
     ):
         expr_with_dim + expr
     with pytest.raises(
-        ValueError, match="were found in the right expression but not the left"
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
+        ),
     ):
         expr_with_dim + expr_with_two_dim
     with pytest.raises(
-        ValueError, match="were found in the left expression but not the right"
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
+        ),
     ):
         expr_with_two_dim + expr_with_dim
+    expr.add_dim("dim1") + expr_with_dim
+    expr.add_dim("dim1", "dim2") + expr_with_two_dim
+    expr_with_dim.add_dim("dim2") + expr_with_two_dim
 
 
 def test_add_expression_with_vars_and_add_dim():
@@ -232,14 +249,18 @@ def test_add_expression_with_vars_and_add_dim_many():
     rhs = 3 + 4 * Variable(dim3, dim2)
 
     with pytest.raises(
-        ValueError,
-        match="Dimensions {'z'} were found in the right expression but not the left",
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['z']. If this is intentional, use .add_dim()"
+        ),
     ):
         lhs + rhs
     lhs = lhs.add_dim("z")
     with pytest.raises(
-        ValueError,
-        match="Dimensions {'x'} were found in the left expression but not the right",
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['x']. If this is intentional, use .add_dim()"
+        ),
     ):
         lhs + rhs
     rhs = rhs.add_dim("x")
@@ -264,24 +285,24 @@ def test_add_expression_with_missing():
     rhs = 3 + 4 * Variable(dim2_large)
 
     with pytest.raises(
-        ValueError,
+        PyoframeError,
         match=re.escape(
-            "Missing values found in the left expression. Consider using left.drop_unmatched() or right.drop_unmatched()"
+            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         lhs + rhs
-    result = lhs.drop_unmatched() + rhs
+    result = lhs + rhs.keep_unmatched()
     assert (
         result.to_str()
-        == """[a]: 4  +2 x1 +4 x3
-[b]: 4  +2 x2 +4 x4
+        == """[a]: 4  +4 x3 +2 x1
+[b]: 4  +4 x4 +2 x2
 [c]: 3  +4 x5"""
     )
     result = lhs + rhs.drop_unmatched()
     assert (
         result.to_str()
-        == """[a]: 4  +2 x1 +4 x3
-[b]: 4  +2 x2 +4 x4"""
+        == """[a]: 4  +4 x3 +2 x1
+[b]: 4  +4 x4 +2 x2"""
     )
 
 
@@ -293,25 +314,45 @@ def test_add_expressions_with_dims_and_missing():
     lhs = 1 + 2 * Variable(dim, dim2)
     rhs = 3 + 4 * Variable(dim2_large, dim3)
     with pytest.raises(
-        ValueError,
-        match="Dimensions {'z'} were found in the right expression but not the left",
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['z']. If this is intentional, use .add_dim()",
+        ),
     ):
         lhs + rhs
     lhs = lhs.add_dim("z")
     with pytest.raises(
-        ValueError,
-        match="Dimensions {'x'} were found in the left expression but not the right",
+        PyoframeError,
+        match=re.escape(
+            "Dataframe has missing dimensions ['x']. If this is intentional, use .add_dim()",
+        ),
     ):
         lhs + rhs
     rhs = rhs.add_dim("x")
     with pytest.raises(
-        ValueError,
+        PyoframeError,
         match=re.escape(
-            "Missing values found in the left expression. Consider using left.drop_unmatched() or right.drop_unmatched()"
+            "Cannot add dimension ['x'] since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
         ),
     ):
         lhs + rhs
-    result = lhs.drop_unmatched() + rhs
-    assert result.to_str() == """"""
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape(
+            "Cannot add dimension ['x'] since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
+        ),
+    ):
+        lhs.drop_unmatched() + rhs
+
     result = lhs + rhs.drop_unmatched()
-    assert result.to_str() == """"""
+    assert (
+        result.to_str()
+        == """[1,a,4]: 4  +2 x1 +4 x5
+[1,a,5]: 4  +2 x1 +4 x6
+[1,b,4]: 4  +2 x2 +4 x7
+[1,b,5]: 4  +2 x2 +4 x8
+[2,a,4]: 4  +2 x3 +4 x5
+[2,a,5]: 4  +2 x3 +4 x6
+[2,b,4]: 4  +2 x4 +4 x7
+[2,b,5]: 4  +2 x4 +4 x8"""
+    )

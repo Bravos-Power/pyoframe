@@ -55,7 +55,11 @@ class SupportsMath(ABC, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
     def __init__(self):
-        self.unmatched_strategy = UnmatchedStrategy.KEEP if Config.disable_unmatched_checks else UnmatchedStrategy.ERROR
+        self.unmatched_strategy = (
+            UnmatchedStrategy.KEEP
+            if Config.disable_unmatched_checks
+            else UnmatchedStrategy.ERROR
+        )
         self.allowed_new_dims: List[str] = []
 
     def keep_unmatched(self):
@@ -79,7 +83,9 @@ class SupportsMath(ABC, SupportsToExpr):
     sum = _forward_to_expression("sum")
 
     def __neg__(self):
-        return self.to_expr() * -1
+        res = self.to_expr() * -1
+        res.unmatched_strategy = self.unmatched_strategy
+        return res
 
     def __sub__(self, other):
         """
@@ -95,7 +101,7 @@ class SupportsMath(ABC, SupportsToExpr):
         """
         if not isinstance(other, (int, float)):
             other = other.to_expr()
-        return self.to_expr() + (other * -1)
+        return self.to_expr() + (-other)
 
     def __rmul__(self, other):
         return self.to_expr() * other
@@ -123,7 +129,7 @@ class SupportsMath(ABC, SupportsToExpr):
         """
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, __value: object):
+    def __eq__(self, value: object):
         """Equality constraint.
         Examples
         >>> from pyoframe import Variable
@@ -131,7 +137,7 @@ class SupportsMath(ABC, SupportsToExpr):
         <Constraint sense='=' size=1 dimensions={} terms=2>
         x1 = 1
         """
-        return Constraint(self - __value, ConstraintSense.EQ)
+        return Constraint(self - value, ConstraintSense.EQ)
 
 
 SetTypes = Union[
@@ -423,55 +429,34 @@ class Expression(ModelElement, SupportsMath):
         --------
         >>> import pandas as pd
         >>> from pyoframe import Variable
-        >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).set_index("dim1")["add"]
-        >>> var = Variable(add.index)
-        >>> expr = var + add
-        >>> expr.data
-        shape: (6, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 1.0     ┆ 3             │
-        │ 1    ┆ 10.0    ┆ 0             │
-        │ 2    ┆ 20.0    ┆ 0             │
-        │ 3    ┆ 30.0    ┆ 0             │
-        └──────┴─────────┴───────────────┘
-        >>> expr += 2
-        >>> expr.data
-        shape: (6, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 1.0     ┆ 3             │
-        │ 1    ┆ 12.0    ┆ 0             │
-        │ 2    ┆ 22.0    ┆ 0             │
-        │ 3    ┆ 32.0    ┆ 0             │
-        └──────┴─────────┴───────────────┘
-        >>> expr += pd.DataFrame({"dim1": [1,2], "add": [10, 20]}).set_index("dim1")["add"]
-        >>> expr.data
-        shape: (6, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 1.0     ┆ 3             │
-        │ 1    ┆ 22.0    ┆ 0             │
-        │ 2    ┆ 42.0    ┆ 0             │
-        │ 3    ┆ 32.0    ┆ 0             │
-        └──────┴─────────┴───────────────┘
-        >>> expr = 5 + 2 * Variable()
-        >>> expr
+        >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
+        >>> var = Variable(add)
+        >>> var + add
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: x1 +10
+        [2]: x2 +20
+        [3]: x3 +30
+        >>> var + add + 2
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: x1 +12
+        [2]: x2 +22
+        [3]: x3 +32
+        >>> var + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
+        Traceback (most recent call last):
+        ...
+        pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+        <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
+        Due to error:
+        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+        shape: (1, 2)
+        ┌──────┬────────────┐
+        │ dim1 ┆ dim1_right │
+        │ ---  ┆ ---        │
+        │ i64  ┆ i64        │
+        ╞══════╪════════════╡
+        │ 3    ┆ null       │
+        └──────┴────────────┘
+        >>> 5 + 2 * Variable()
         <Expression size=1 dimensions={} terms=2>
         2 x4 +5
         """
@@ -568,7 +553,9 @@ class Expression(ModelElement, SupportsMath):
         constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
         if dims is not None:
             return constant_terms.join(
-                self.data.select(dims).unique(maintain_order=True), on=dims, how="outer_coalesce"
+                self.data.select(dims).unique(maintain_order=True),
+                on=dims,
+                how="outer_coalesce",
             ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
@@ -654,26 +641,30 @@ class Expression(ModelElement, SupportsMath):
         include_const_term=True,
         var_map=None,
         include_name=True,
+        include_header=False,
+        include_footer=True,
     ):
-        str_table = self.to_str_table(
-            max_line_len=max_line_len,
-            max_rows=max_rows,
-            include_const_term=include_const_term,
-            var_map=var_map,
-            include_name=include_name,
-        )
-        result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
+        result = ""
+        if include_header:
+            result += get_obj_repr(
+                self, size=len(self), dimensions=self.shape, terms=len(self.data)
+            )
+        if include_header and include_footer:
+            result += "\n"
+        if include_footer:
+            str_table = self.to_str_table(
+                max_line_len=max_line_len,
+                max_rows=max_rows,
+                include_const_term=include_const_term,
+                var_map=var_map,
+                include_name=include_name,
+            )
+            result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
         return result
 
     def __repr__(self) -> str:
-        return (
-            get_obj_repr(
-                self, size=len(self), dimensions=self.shape, terms=len(self.data)
-            )
-            + "\n"
-            + self.to_str(max_line_len=80, max_rows=15)
-        )
+        return self.to_str(max_line_len=80, max_rows=15, include_header=True)
 
 
 @overload
@@ -707,7 +698,9 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> "Expression":
         by = [by]
     expr = expr.to_expr()
     dimensions = expr.dimensions
-    assert dimensions is not None, "Cannot sum by dimensions with an expression with no dimensions."
+    assert (
+        dimensions is not None
+    ), "Cannot sum by dimensions with an expression with no dimensions."
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
 

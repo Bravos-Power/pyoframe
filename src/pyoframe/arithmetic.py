@@ -7,37 +7,61 @@ if TYPE_CHECKING:
     from pyoframe.constraints import Expression
 
 
-def add_expressions(expressions: List["Expression"]) -> "Expression":
+class PyoframeError(Exception):
+    pass
+
+
+def add_expressions(*expressions: "Expression") -> "Expression":
+    try:
+        return add_expressions_internal(*expressions)
+    except PyoframeError as error:
+        raise PyoframeError(
+            "Failed to add expressions:\n"
+            + " + ".join(
+                e.to_str(include_header=True, include_footer=False) for e in expressions
+            )
+            + "\nDue to error:\n"
+            + str(error)
+        ) from error
+
+
+def add_expressions_internal(*expressions: "Expression") -> "Expression":
     assert len(expressions) > 1, "Need at least two expressions to add together."
 
     dims = expressions[0].dimensions_unsafe
-    has_dimension_conflict = any(
-        sorted(expr.dimensions_unsafe) != sorted(dims) for expr in expressions[1:]
+    has_dim_conflict = any(
+        sorted(dims) != sorted(expr.dimensions_unsafe) for expr in expressions[1:]
     )
     requires_join = dims and any(
         expr.unmatched_strategy != UnmatchedStrategy.KEEP for expr in expressions
     )
 
     # If we cannot use .concat compute the sum in a pairwise manner
-    if len(expressions) > 2 and (has_dimension_conflict or requires_join):
-        return sum(expressions)  # type: ignore
+    if len(expressions) > 2 and (has_dim_conflict or requires_join):
+        result = expressions[0]
+        for expr in expressions[1:]:
+            result = add_expressions_internal(result, expr)
+        return result
 
-    if has_dimension_conflict:
+    if has_dim_conflict:
         assert len(expressions) == 2
-        expressions = [
+        expressions = (
             _add_dimension(expressions[0], expressions[1]),
             _add_dimension(expressions[1], expressions[0]),
-        ]
+        )
         assert sorted(expressions[0].dimensions_unsafe) == sorted(
             expressions[1].dimensions_unsafe
         )
 
+    dims = expressions[0].dimensions_unsafe
+    # Check no dims conflict
+    assert all(
+        sorted(dims) == sorted(expr.dimensions_unsafe) for expr in expressions[1:]
+    )
     if requires_join:
         assert len(expressions) == 2
+        assert dims != []
         left, right = expressions[0], expressions[1]
-        dims = left.dimensions
-        assert dims is not None
-        assert sorted(dims) == sorted(right.dimensions_unsafe)
 
         # Order so that drop always comes before keep, and keep always comes before error
         if (left.unmatched_strategy, right.unmatched_strategy) in (
@@ -60,27 +84,49 @@ def add_expressions(expressions: List["Expression"]) -> "Expression":
                 outer_join = get_indices(left).join(
                     get_indices(right), how="outer", on=dims
                 )
-                if (
-                    outer_join.get_column(dims[0]).null_count() > 0
-                    or outer_join.get_column(dims[0] + "_right").null_count() > 0
-                ):
-                    raise ValueError(
-                        "Dataframe has unmatched values. If this is intentional, consider using .drop_unmatched() or .keep_unmatched()"
+                if outer_join.get_column(dims[0]).null_count() > 0:
+                    raise PyoframeError(
+                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                        + str(
+                            outer_join.filter(outer_join.get_column(dims[0]).is_null())
+                        )
+                    )
+                if outer_join.get_column(dims[0] + "_right").null_count() > 0:
+                    raise PyoframeError(
+                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                        + str(
+                            outer_join.filter(
+                                outer_join.get_column(dims[0] + "_right").is_null()
+                            )
+                        )
                     )
             case (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
                 left_data = get_indices(right).join(left.data, how="left", on=dims)
             case (UnmatchedStrategy.DROP, UnmatchedStrategy.ERROR):
                 left_data = get_indices(right).join(left.data, how="left", on=dims)
                 if left_data.get_column(COEF_KEY).null_count() > 0:
-                    raise ValueError(
-                        "Cannot add expressions with unmatched values. Consider using .drop_unmatched() or .keep_unmatched()"
+                    raise PyoframeError(
+                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                        + str(
+                            left_data.filter(left_data.get_column(COEF_KEY).is_null())
+                        )
+                    )
+            case (UnmatchedStrategy.KEEP, UnmatchedStrategy.ERROR):
+                unmatched = right.data.join(get_indices(left), how="anti", on=dims)
+                if len(unmatched) > 0:
+                    raise PyoframeError(
+                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                        + str(unmatched)
                     )
             case _:
                 assert False, "This code should've never been reached!"
 
-        expr_data = (left_data, right_data)
+        expr_data = [left_data, right_data]
     else:
-        expr_data = (expr.data for expr in expressions)
+        expr_data = [expr.data for expr in expressions]
+
+    # Sort columns to allow for concat
+    expr_data = [e.select(sorted(e.columns)) for e in expr_data]
 
     data = pl.concat(expr_data, how="vertical_relaxed")
     data = data.group_by(dims + [VAR_KEY], maintain_order=True).sum()
@@ -88,18 +134,24 @@ def add_expressions(expressions: List["Expression"]) -> "Expression":
 
 
 def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
-    target_dims = target.dimensions_unsafe
-    dims = self.dimensions_unsafe
-    dims_in_common = [dim for dim in dims if dim in target_dims]
-    missing_dims = set(target_dims) - set(dims)
+    target_dims = target.dimensions
+    if target_dims is None:
+        return self
+    dims = self.dimensions
+    if dims is None:
+        dims_in_common = []
+        missing_dims = target_dims
+    else:
+        dims_in_common = [dim for dim in dims if dim in target_dims]
+        missing_dims = [dim for dim in target_dims if dim not in dims]
 
     # We're already at the size of our target
     if not missing_dims:
         return self
 
     if not set(missing_dims) <= set(self.allowed_new_dims):
-        raise ValueError(
-            f"Dimensions {missing_dims} cannot be added to the expression with dimensions {dims}. Consider using .add_dim() if this is intentional."
+        raise PyoframeError(
+            f"Dataframe has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
         )
 
     target_data = target.data.select(target_dims).unique(maintain_order=True)
@@ -107,22 +159,16 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
     if not dims_in_common:
         return self._new(self.data.join(target_data, how="cross"))
 
-    # If both are drop, we only care about the inner join
-    if (self.unmatched_strategy, target.unmatched_strategy) == (
-        UnmatchedStrategy.DROP,
-        UnmatchedStrategy.DROP,
-    ):
+    # If drop, we just do an inner join to get into the shape of the other
+    if self.unmatched_strategy == UnmatchedStrategy.DROP:
         return self._new(self.data.join(target_data, on=dims_in_common, how="inner"))
 
     result = self.data.join(target_data, on=dims_in_common, how="left")
-    right_has_missing = result.get_column(dims_in_common[0] + "_right").null_count() > 0
+    right_has_missing = result.get_column(missing_dims[0]).null_count() > 0
     if right_has_missing:
-        if self.unmatched_strategy == UnmatchedStrategy.DROP:
-            result = result.drop_nulls(dims_in_common[0] + "_right")
-        else:
-            raise ValueError(
-                f"Cannot add dimension {missing_dims} since it contains unmatched values. Consider using .drop_unmatched()"
-            )
+        raise PyoframeError(
+            f"Cannot add dimension {missing_dims} since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
+        )
     return self._new(result)
 
 
