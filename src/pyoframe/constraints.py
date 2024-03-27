@@ -1,11 +1,9 @@
 from __future__ import annotations
 from typing import (
     TYPE_CHECKING,
-    Dict,
     Iterable,
     List,
     Mapping,
-    Optional,
     Protocol,
     Sequence,
     overload,
@@ -17,13 +15,14 @@ import pandas as pd
 import polars as pl
 
 from pyoframe.arithmetic import add_expressions, get_dimensions
+from pyoframe.constants import Config
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     RESERVED_COL_KEYS,
     VAR_KEY,
     ConstraintSense,
-    MissingStrategy,
+    UnmatchedStrategy,
 )
 from pyoframe.util import (
     cast_coef_to_string,
@@ -56,15 +55,15 @@ class SupportsMath(ABC, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
     def __init__(self):
-        self.missing_strategy = MissingStrategy.ERROR
+        self.unmatched_strategy = UnmatchedStrategy.ERROR if Config.default_to_error_on_missing else UnmatchedStrategy.KEEP
         self.allowed_new_dims: List[str] = []
 
-    def fill_missing(self):
-        self.missing_strategy = MissingStrategy.FILL
+    def keep_unmatched(self):
+        self.unmatched_strategy = UnmatchedStrategy.KEEP
         return self
 
-    def drop_missing(self):
-        self.missing_strategy = MissingStrategy.DROP
+    def drop_unmatched(self):
+        self.unmatched_strategy = UnmatchedStrategy.DROP
         return self
 
     def add_dim(self, *dims: str):
@@ -158,7 +157,7 @@ class Set(ModelElement, SupportsMath):
     def _new(self, data: pl.DataFrame):
         s = Set(data)
         s._model = self._model
-        s.missing_strategy = self.missing_strategy
+        s.unmatched_strategy = self.unmatched_strategy
         return s
 
     @staticmethod
@@ -369,7 +368,6 @@ class Expression(ModelElement, SupportsMath):
         [2,1]: 4 quantity[2,1]
         [2,2]: 4 quantity[2,1] +5 quantity[2,2]
         """
-
         dims = self.dimensions
         if dims is None:
             raise ValueError(
@@ -501,12 +499,9 @@ class Expression(ModelElement, SupportsMath):
             )
         multiplier = other.data.drop(VAR_KEY)
 
-        dims = self.dimensions
-        other_dims = other.dimensions
-        if dims is None or other_dims is None:
-            dims_in_common = []
-        else:
-            dims_in_common = [dim for dim in dims if dim in other_dims]
+        dims = self.dimensions_unsafe
+        other_dims = other.dimensions_unsafe
+        dims_in_common = [dim for dim in dims if dim in other_dims]
 
         data = (
             self.data.join(
@@ -530,7 +525,7 @@ class Expression(ModelElement, SupportsMath):
     def _new(self, data: pl.DataFrame) -> Expression:
         e = Expression(data)
         e._model = self._model
-        e.missing_strategy = self.missing_strategy
+        e.unmatched_strategy = self.unmatched_strategy
         e.allowed_new_dims = self.allowed_new_dims
         return e
 
@@ -712,9 +707,56 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> "Expression":
         by = [by]
     expr = expr.to_expr()
     dimensions = expr.dimensions
+    assert dimensions is not None, "Cannot sum by dimensions with an expression with no dimensions."
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
 
+def sum_list(*elist: Iterable[SupportsToExpr] | SupportsToExpr) -> Expression:
+    """
+    Sums a list of expressionable elements. For large elements, this can be
+    significantly faster than creating an explicit sequence of additions
+    e1 + e2 + e3 ...
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import polars as pl
+    >>> from pyoframe import Model, Variable
+    >>> from pyoframe.constraints import sum_list
+    >>> m = Model()
+    >>> p = pl.DataFrame({"p": np.arange(3000)})
+    >>> t = pl.DataFrame({"t": np.arange(200)})
+    >>> for v in "xyzw":
+    ...    setattr(m, v, Variable(p, t))
+    >>> sl = sum_list([m.x, m.y, m.z, m.w])
+    >>> sa = m.x + m.y + m.z + m.w
+    >>> assert sl.data.sort("p", "t").equals(sa.data.sort("p", "t"))
+    >>> sl.filter(p=42, t=42)
+    <Expression size=1 dimensions={'p': 1, 't': 1} terms=4>
+    [42,42]: x[42,42] + y[42,42] + z[42,42] + w[42,42]
+    """
+
+    assert len(elist) > 0, "At least one element must be provided."
+    elist: List[Expression] = [el.to_expr() for el in parse_inputs_as_iterable(*elist)]
+
+    # Check that dimensions are consistent
+    dims = elist[0].dimensions
+    if dims is None:
+        for el in elist[1:]:
+            if el.dimensions is not None:
+                raise ValueError("Cannot sum expressions since an element is being summed when .")
+
+    for el in elist[1:]:
+        dims_other = el.dimensions
+        if ((dims is None) != (dims_other is None)) or dims != set(dims_other):
+            raise ValueError(f"Incompatible dimensions: {dims}, {el.dimensions}")
+
+    return elist[0]._new(
+        pl.concat([
+            el.data for el in elist
+        ],
+        how="vertical_relaxed")
+    )
 
 class Constraint(Expression):
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
