@@ -1,7 +1,8 @@
 from pathlib import Path
+from typing import Optional
 
 
-def solve(m, solver, output_dir: Path | None = None, **kwargs):
+def solve(m, solver, output_dir: Optional[Path] = None, **kwargs):
     if output_dir is not None and not output_dir.exists():
         output_dir.mkdir(parents=True)
 
@@ -11,7 +12,7 @@ def solve(m, solver, output_dir: Path | None = None, **kwargs):
         raise ValueError(f"Solver {solver} not recognized or supported.")
 
 
-def gurobi_solve(model, dir_path: Path | None = None, use_var_names=True):
+def gurobi_solve(model, dir_path: Optional[Path] = None, use_var_names=True):
     import gurobipy as gp
 
     if dir_path is None:

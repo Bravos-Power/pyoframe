@@ -1,12 +1,13 @@
 # pyright: reportAttributeAccessIssue=false
 import os
+from typing import Union
 import pandas as pd
 from pathlib import Path
 
 from pyoframe import Model, Variable, sum
 
 
-def main(input_dir, output_dir: Path | str):
+def main(input_dir, output_dir: Union[Path, str]):
     plants = pd.read_csv(input_dir / "plants.csv").set_index("plant")
     warehouses = pd.read_csv(input_dir / "wharehouses.csv").set_index("wharehouse")
     transport_costs = (

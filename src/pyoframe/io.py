@@ -11,7 +11,7 @@ Module containing all import/export functionalities.
 from io import TextIOWrapper
 from tempfile import NamedTemporaryFile
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, TypeVar
+from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
 from pyoframe.constants import VAR_KEY
 from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
@@ -98,7 +98,7 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
 
 
 def to_file(
-    m: "Model", fn: str | Path | None, integer_label="general", use_var_names=False
+    m: "Model", fn: Optional[Union[str, Path]], integer_label="general", use_var_names=False
 ) -> Path:
     """
     Write out a model to a lp file.

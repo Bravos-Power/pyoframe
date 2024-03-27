@@ -23,7 +23,7 @@ class ModelElement(ABC):
         self,
         data: pl.DataFrame,
         model: Optional["Model"] = None,
-        name: str | None = None,
+        name: Optional[str] = None,
     ) -> None:
         # Sanity checks, no duplicate column names
         assert len(data.columns) == len(

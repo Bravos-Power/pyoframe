@@ -292,7 +292,7 @@ class Expression(Expressionable, ModelElement):
             unique_dims_left.join(unique_dims_right, on=dims)
         )
 
-    def sum(self, over: str | Iterable[str]):
+    def sum(self, over: Union[str, Iterable[str]]):
         """
         Examples
         --------
@@ -663,7 +663,7 @@ class Expression(Expressionable, ModelElement):
 
 
 @overload
-def sum(over: str | Sequence[str], expr: SupportsToExpr): ...
+def sum(over: Union[str, Sequence[str]], expr: SupportsToExpr): ...
 
 
 @overload
@@ -671,8 +671,8 @@ def sum(over: SupportsToExpr): ...
 
 
 def sum(
-    over: str | Sequence[str] | SupportsToExpr,
-    expr: SupportsToExpr | None = None,
+    over: Union[str, Sequence[str], SupportsToExpr],
+    expr: Optional[SupportsToExpr] = None,
 ) -> "Expression":
     if expr is None:
         assert isinstance(over, Expressionable)
@@ -683,7 +683,7 @@ def sum(
         return expr.to_expr().sum(over)
 
 
-def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> "Expression":
+def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     if isinstance(by, str):
         by = [by]
     expr = expr.to_expr()
