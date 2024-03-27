@@ -76,50 +76,51 @@ def add_expressions_internal(*expressions: "Expression") -> "Expression":
 
         left_data, right_data = left.data, right.data
 
-        match (left.unmatched_strategy, right.unmatched_strategy):
-            case (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP):
-                left_data = left.data.join(get_indices(right), how="inner", on=dims)
-                right_data = right.data.join(get_indices(left), how="inner", on=dims)
-            case (UnmatchedStrategy.ERROR, UnmatchedStrategy.ERROR):
-                outer_join = get_indices(left).join(
-                    get_indices(right), how="outer", on=dims
+        strat = (left.unmatched_strategy, right.unmatched_strategy)
+
+        if strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP):
+            left_data = left.data.join(get_indices(right), how="inner", on=dims)
+            right_data = right.data.join(get_indices(left), how="inner", on=dims)
+        elif strat == (UnmatchedStrategy.ERROR, UnmatchedStrategy.ERROR):
+            outer_join = get_indices(left).join(
+                get_indices(right), how="outer", on=dims
+            )
+            if outer_join.get_column(dims[0]).null_count() > 0:
+                raise PyoframeError(
+                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    + str(
+                        outer_join.filter(outer_join.get_column(dims[0]).is_null())
+                    )
                 )
-                if outer_join.get_column(dims[0]).null_count() > 0:
-                    raise PyoframeError(
-                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
-                        + str(
-                            outer_join.filter(outer_join.get_column(dims[0]).is_null())
+            if outer_join.get_column(dims[0] + "_right").null_count() > 0:
+                raise PyoframeError(
+                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    + str(
+                        outer_join.filter(
+                            outer_join.get_column(dims[0] + "_right").is_null()
                         )
                     )
-                if outer_join.get_column(dims[0] + "_right").null_count() > 0:
-                    raise PyoframeError(
-                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
-                        + str(
-                            outer_join.filter(
-                                outer_join.get_column(dims[0] + "_right").is_null()
-                            )
-                        )
+                )
+        elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
+            left_data = get_indices(right).join(left.data, how="left", on=dims)
+        elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.ERROR):
+            left_data = get_indices(right).join(left.data, how="left", on=dims)
+            if left_data.get_column(COEF_KEY).null_count() > 0:
+                raise PyoframeError(
+                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    + str(
+                        left_data.filter(left_data.get_column(COEF_KEY).is_null())
                     )
-            case (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
-                left_data = get_indices(right).join(left.data, how="left", on=dims)
-            case (UnmatchedStrategy.DROP, UnmatchedStrategy.ERROR):
-                left_data = get_indices(right).join(left.data, how="left", on=dims)
-                if left_data.get_column(COEF_KEY).null_count() > 0:
-                    raise PyoframeError(
-                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
-                        + str(
-                            left_data.filter(left_data.get_column(COEF_KEY).is_null())
-                        )
-                    )
-            case (UnmatchedStrategy.KEEP, UnmatchedStrategy.ERROR):
-                unmatched = right.data.join(get_indices(left), how="anti", on=dims)
-                if len(unmatched) > 0:
-                    raise PyoframeError(
-                        "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
-                        + str(unmatched)
-                    )
-            case _:
-                assert False, "This code should've never been reached!"
+                )
+        elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.ERROR):
+            unmatched = right.data.join(get_indices(left), how="anti", on=dims)
+            if len(unmatched) > 0:
+                raise PyoframeError(
+                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    + str(unmatched)
+                )
+        else:
+            assert False, "This code should've never been reached!"
 
         expr_data = [left_data, right_data]
     else:
