@@ -21,11 +21,11 @@ def main(input_dir, output_dir: Path):
     m = Model("diet")
     m.Buy = Variable(food_cost, lb=0)
 
-    m.min_nutrients = min_nutrient <= sum(
-        "food", m.Buy * food_nutrients.within(min_nutrient)
+    m.min_nutrients = (
+        min_nutrient <= sum("food", m.Buy * food_nutrients).drop_unmatched()
     )
     m.max_nutrients = (
-        sum("food", m.Buy * food_nutrients.within(max_nutrient)) <= max_nutrient
+        sum("food", m.Buy * food_nutrients).drop_unmatched() <= max_nutrient
     )
 
     m.minimize = sum(m.Buy * food_cost)

@@ -1,5 +1,7 @@
 # Pyoframe
 
+[![codecov](https://codecov.io/gh/staadecker/pyoframe/graph/badge.svg?token=8258XESRYQ)](https://codecov.io/gh/staadecker/pyoframe)
+
 A library to rapidly formulate large optimization models using Pandas or Polars dataframes.
 
 ## Acknowledgments

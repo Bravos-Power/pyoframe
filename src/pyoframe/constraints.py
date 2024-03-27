@@ -4,7 +4,6 @@ from typing import (
     Iterable,
     List,
     Mapping,
-    Optional,
     Protocol,
     Sequence,
     overload,
@@ -15,17 +14,19 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import polars as pl
 
+from pyoframe.arithmetic import add_expressions, get_dimensions
+from pyoframe.constants import Config
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     RESERVED_COL_KEYS,
     VAR_KEY,
     ConstraintSense,
+    UnmatchedStrategy,
 )
 from pyoframe.util import (
     cast_coef_to_string,
     concat_dimensions,
-    get_dimensions,
     get_obj_repr,
     parse_inputs_as_iterable,
 )
@@ -39,7 +40,7 @@ VAR_TYPE = pl.UInt32
 
 
 def _forward_to_expression(func_name: str):
-    def wrapper(self: "Expressionable", *args, **kwargs) -> "Expression":
+    def wrapper(self: "SupportsMath", *args, **kwargs) -> "Expression":
         expr = self.to_expr()
         return getattr(expr, func_name)(*args, **kwargs)
 
@@ -50,8 +51,28 @@ class SupportsToExpr(Protocol):
     def to_expr(self) -> "Expression": ...
 
 
-class Expressionable(ABC):
+class SupportsMath(ABC, SupportsToExpr):
     """Any object that can be converted into an expression."""
+
+    def __init__(self):
+        self.unmatched_strategy = (
+            UnmatchedStrategy.KEEP
+            if Config.disable_unmatched_checks
+            else UnmatchedStrategy.ERROR
+        )
+        self.allowed_new_dims: List[str] = []
+
+    def keep_unmatched(self):
+        self.unmatched_strategy = UnmatchedStrategy.KEEP
+        return self
+
+    def drop_unmatched(self):
+        self.unmatched_strategy = UnmatchedStrategy.DROP
+        return self
+
+    def add_dim(self, *dims: str):
+        self.allowed_new_dims.extend(dims)
+        return self
 
     @abstractmethod
     def to_expr(self) -> "Expression":
@@ -60,11 +81,11 @@ class Expressionable(ABC):
     __add__ = _forward_to_expression("__add__")
     __mul__ = _forward_to_expression("__mul__")
     sum = _forward_to_expression("sum")
-    fill_missing = _forward_to_expression("fill_missing")
-    drop_missing = _forward_to_expression("drop_missing")
 
     def __neg__(self):
-        return self.to_expr() * -1
+        res = self.to_expr() * -1
+        res.unmatched_strategy = self.unmatched_strategy
+        return res
 
     def __sub__(self, other):
         """
@@ -80,7 +101,7 @@ class Expressionable(ABC):
         """
         if not isinstance(other, (int, float)):
             other = other.to_expr()
-        return self.to_expr() + (other * -1)
+        return self.to_expr() + (-other)
 
     def __rmul__(self, other):
         return self.to_expr() * other
@@ -108,7 +129,7 @@ class Expressionable(ABC):
         """
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, __value: object):
+    def __eq__(self, value: object):
         """Equality constraint.
         Examples
         >>> from pyoframe import Variable
@@ -116,20 +137,20 @@ class Expressionable(ABC):
         <Constraint sense='=' size=1 dimensions={} terms=2>
         x1 = 1
         """
-        return Constraint(self - __value, ConstraintSense.EQ)
+        return Constraint(self - value, ConstraintSense.EQ)
 
 
 SetTypes = Union[
     pl.DataFrame,
     pd.Index,
     pd.DataFrame,
-    Expressionable,
+    SupportsMath,
     Mapping[str, Sequence[object]],
     "Set",
 ]
 
 
-class Set(ModelElement, Expressionable):
+class Set(ModelElement, SupportsMath):
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
         data_list = list(data)
         for name, set in named_data.items():
@@ -142,6 +163,7 @@ class Set(ModelElement, Expressionable):
     def _new(self, data: pl.DataFrame):
         s = Set(data)
         s._model = self._model
+        s.unmatched_strategy = self.unmatched_strategy
         return s
 
     @staticmethod
@@ -217,7 +239,7 @@ class Set(ModelElement, Expressionable):
     def _set_to_polars(set: "SetTypes") -> pl.DataFrame:
         if isinstance(set, dict):
             df = pl.DataFrame(set)
-        elif isinstance(set, Expressionable):
+        elif isinstance(set, SupportsMath):
             df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
@@ -246,10 +268,10 @@ class Set(ModelElement, Expressionable):
         return df
 
 
-class Expression(Expressionable, ModelElement):
+class Expression(ModelElement, SupportsMath):
     """A linear expression."""
 
-    def __init__(self, data: pl.DataFrame, model: Optional["Model"] = None):
+    def __init__(self, data: pl.DataFrame):
         """
         >>> import pandas as pd
         >>> from pyoframe import Variable, Model
@@ -275,22 +297,7 @@ class Expression(Expressionable, ModelElement):
             duplicated_data = data.filter(data.drop(COEF_KEY).is_duplicated())
             raise ValueError(f"Duplicate indices found:\n{duplicated_data}.")
 
-        super().__init__(data, model=model)
-
-    def indices_match(self, other: Expression):
-        # Check that the indices match
-        dims = self.dimensions
-        assert set(dims) == set(
-            other.dimensions
-        ), f"Dimensions do not match: {dims} != {other.dimensions}"
-        if len(dims) == 0:
-            return  # No indices
-
-        unique_dims_left = self.data.select(dims).unique()
-        unique_dims_right = other.data.select(dims).unique()
-        return len(unique_dims_left) == len(
-            unique_dims_left.join(unique_dims_right, on=dims)
-        )
+        super().__init__(data)
 
     def sum(self, over: Union[str, Iterable[str]]):
         """
@@ -315,6 +322,10 @@ class Expression(Expressionable, ModelElement):
         if isinstance(over, str):
             over = [over]
         dims = self.dimensions
+        if not dims:
+            raise ValueError(
+                f"Cannot sum over dimensions {over} since the current expression has no dimensions."
+            )
         assert set(over) <= set(dims), f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
@@ -363,8 +374,11 @@ class Expression(Expressionable, ModelElement):
         [2,1]: 4 quantity[2,1]
         [2,2]: 4 quantity[2,1] +5 quantity[2,2]
         """
-
         dims = self.dimensions
+        if dims is None:
+            raise ValueError(
+                "Cannot use rolling_sum() with an expression with no dimensions."
+            )
         assert over in dims, f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
@@ -398,9 +412,15 @@ class Expression(Expressionable, ModelElement):
         """
         df: pl.DataFrame = Set(set).data
         set_dims = get_dimensions(df)
+        assert (
+            set_dims is not None
+        ), "Cannot use .within() with a set with no dimensions."
         dims = self.dimensions
+        assert (
+            dims is not None
+        ), "Cannot use .within() with an expression with no dimensions."
         dims_in_common = [dim for dim in dims if dim in set_dims]
-        by_dims = df.select(dims_in_common).unique()
+        by_dims = df.select(dims_in_common).unique(maintain_order=True)
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
     def __add__(self, other):
@@ -409,75 +429,42 @@ class Expression(Expressionable, ModelElement):
         --------
         >>> import pandas as pd
         >>> from pyoframe import Variable
-        >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).set_index("dim1")["add"]
-        >>> var = Variable(add.index)
-        >>> expr = var + add
-        >>> expr.data
-        shape: (6, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 1.0     ┆ 3             │
-        │ 1    ┆ 10.0    ┆ 0             │
-        │ 2    ┆ 20.0    ┆ 0             │
-        │ 3    ┆ 30.0    ┆ 0             │
-        └──────┴─────────┴───────────────┘
-        >>> expr += 2
-        >>> expr.data
-        shape: (6, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 1.0     ┆ 3             │
-        │ 1    ┆ 12.0    ┆ 0             │
-        │ 2    ┆ 22.0    ┆ 0             │
-        │ 3    ┆ 32.0    ┆ 0             │
-        └──────┴─────────┴───────────────┘
-        >>> expr += pd.DataFrame({"dim1": [1,2], "add": [10, 20]}).set_index("dim1")["add"]
-        >>> expr.data
-        shape: (6, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 1             │
-        │ 2    ┆ 1.0     ┆ 2             │
-        │ 3    ┆ 1.0     ┆ 3             │
-        │ 1    ┆ 22.0    ┆ 0             │
-        │ 2    ┆ 42.0    ┆ 0             │
-        │ 3    ┆ 32.0    ┆ 0             │
-        └──────┴─────────┴───────────────┘
-        >>> expr = 5 + 2 * Variable()
-        >>> expr
+        >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
+        >>> var = Variable(add)
+        >>> var + add
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: x1 +10
+        [2]: x2 +20
+        [3]: x3 +30
+        >>> var + add + 2
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: x1 +12
+        [2]: x2 +22
+        [3]: x3 +32
+        >>> var + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
+        Traceback (most recent call last):
+        ...
+        pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+        <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
+        Due to error:
+        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+        shape: (1, 2)
+        ┌──────┬────────────┐
+        │ dim1 ┆ dim1_right │
+        │ ---  ┆ ---        │
+        │ i64  ┆ i64        │
+        ╞══════╪════════════╡
+        │ 3    ┆ null       │
+        └──────┴────────────┘
+        >>> 5 + 2 * Variable()
         <Expression size=1 dimensions={} terms=2>
         2 x4 +5
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
-
         other = other.to_expr()
-        dims = self.dimensions
-        assert set(dims) == set(
-            other.dimensions
-        ), f"Adding expressions with different dimensions, {dims} != {other.dimensions}"
-
-        data, other_data = self.data, other.data
-
-        assert sorted(data.columns) == sorted(other_data.columns)
-        other_data = other_data.select(data.columns)
-        data = pl.concat([data, other_data], how="vertical_relaxed")
-        data = data.group_by(dims + [VAR_KEY], maintain_order=True).sum()
-
-        return self._new(data)
+        self._learn_from_other(other)
+        return add_expressions(self, other)
 
     def __mul__(
         self: "Expression", other: int | float | SupportsToExpr
@@ -486,6 +473,7 @@ class Expression(Expressionable, ModelElement):
             return self.with_columns(pl.col(COEF_KEY) * other)
 
         other = other.to_expr()
+        self._learn_from_other(other)
 
         if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
             self, other = other, self
@@ -496,7 +484,9 @@ class Expression(Expressionable, ModelElement):
             )
         multiplier = other.data.drop(VAR_KEY)
 
-        dims_in_common = [dim for dim in self.dimensions if dim in other.dimensions]
+        dims = self.dimensions_unsafe
+        other_dims = other.dimensions_unsafe
+        dims_in_common = [dim for dim in dims if dim in other_dims]
 
         data = (
             self.data.join(
@@ -507,13 +497,22 @@ class Expression(Expressionable, ModelElement):
             .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
             .drop(COEF_KEY + "_right")
         )
+
         return self._new(data)
 
     def to_expr(self) -> Expression:
         return self
 
+    def _learn_from_other(self, other: Expression):
+        if self._model is None and other._model is not None:
+            self._model = other._model
+
     def _new(self, data: pl.DataFrame) -> Expression:
-        return Expression(data, model=self._model)
+        e = Expression(data)
+        e._model = self._model
+        e.unmatched_strategy = self.unmatched_strategy
+        e.allowed_new_dims = self.allowed_new_dims
+        return e
 
     def _add_const(self, const: int | float) -> Expression:
         dim = self.dimensions
@@ -534,7 +533,7 @@ class Expression(Expressionable, ModelElement):
         else:
             keys = (
                 data.select(dim)
-                .unique()
+                .unique(maintain_order=True)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
             )
             data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
@@ -552,9 +551,11 @@ class Expression(Expressionable, ModelElement):
     def constant_terms(self):
         dims = self.dimensions
         constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
-        if dims:
+        if dims is not None:
             return constant_terms.join(
-                self.data.select(dims).unique(), on=dims, how="outer_coalesce"
+                self.data.select(dims).unique(maintain_order=True),
+                on=dims,
+                how="outer_coalesce",
             ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
@@ -593,7 +594,7 @@ class Expression(Expressionable, ModelElement):
         ).drop(COEF_KEY, VAR_KEY)
 
         # Combine terms into one string
-        if dimensions:
+        if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
                 pl.col("expr").str.concat(delimiter=" ")
             )
@@ -640,26 +641,30 @@ class Expression(Expressionable, ModelElement):
         include_const_term=True,
         var_map=None,
         include_name=True,
+        include_header=False,
+        include_footer=True,
     ):
-        str_table = self.to_str_table(
-            max_line_len=max_line_len,
-            max_rows=max_rows,
-            include_const_term=include_const_term,
-            var_map=var_map,
-            include_name=include_name,
-        )
-        result = str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
+        result = ""
+        if include_header:
+            result += get_obj_repr(
+                self, size=len(self), dimensions=self.shape, terms=len(self.data)
+            )
+        if include_header and include_footer:
+            result += "\n"
+        if include_footer:
+            str_table = self.to_str_table(
+                max_line_len=max_line_len,
+                max_rows=max_rows,
+                include_const_term=include_const_term,
+                var_map=var_map,
+                include_name=include_name,
+            )
+            result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
         return result
 
     def __repr__(self) -> str:
-        return (
-            get_obj_repr(
-                self, size=len(self), dimensions=self.shape, terms=len(self.data)
-            )
-            + "\n"
-            + self.to_str(max_line_len=80, max_rows=15)
-        )
+        return self.to_str(max_line_len=80, max_rows=15, include_header=True)
 
 
 @overload
@@ -675,9 +680,14 @@ def sum(
     expr: Optional[SupportsToExpr] = None,
 ) -> "Expression":
     if expr is None:
-        assert isinstance(over, Expressionable)
+        assert isinstance(over, SupportsMath)
         over = over.to_expr()
-        return over.sum(over.dimensions)
+        all_dims = over.dimensions
+        if all_dims is None:
+            raise ValueError(
+                "Cannot sum over dimensions with an expression with no dimensions."
+            )
+        return over.sum(all_dims)
     else:
         assert isinstance(over, (str, Sequence))
         return expr.to_expr().sum(over)
@@ -688,68 +698,15 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
         by = [by]
     expr = expr.to_expr()
     dimensions = expr.dimensions
+    assert (
+        dimensions is not None
+    ), "Cannot sum by dimensions with an expression with no dimensions."
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
 
-    # lhs = lhs.to_expr()
-    # if not isinstance(rhs, (int, float)):
-    #     rhs = rhs.to_expr()
-    #     if not lhs.indices_match(rhs):
-    #         raise ValueError(
-    #             "LHS and RHS values have different indices"
-    #             + str(lhs)
-    #             + "\nvs\n"
-    #             + str(rhs)
-    #         )
-
-def sum_list(*elist: Iterable[SupportsToExpr] | SupportsToExpr) -> Expression:
-    """
-    Sums a list of expressionable elements. For large elements, this can be
-    significantly faster than creating an explicit sequence of additions
-    e1 + e2 + e3 ...
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> import polars as pl
-    >>> from pyoframe import Model, Variable
-    >>> from pyoframe.constraints import sum_list
-    >>> m = Model()
-    >>> p = pl.DataFrame({"p": np.arange(3000)})
-    >>> t = pl.DataFrame({"t": np.arange(200)})
-    >>> for v in "xyzw":
-    ...    setattr(m, v, Variable(p, t))
-    >>> sl = sum_list([m.x, m.y, m.z, m.w])
-    >>> sa = m.x + m.y + m.z + m.w
-    >>> assert sl.data.sort("p", "t").equals(sa.data.sort("p", "t"))
-    >>> sl.filter(p=42, t=42)
-    <Expression size=1 dimensions={'p': 1, 't': 1} terms=4>
-    [42,42]: x[42,42] + y[42,42] + z[42,42] + w[42,42]
-    """
-
-    assert len(elist) > 0, "At least one element must be provided."
-    elist = [el.to_expr() for el in parse_inputs_as_iterable(*elist)]
-
-    # Check that dimensions are consistent
-    dims = set(elist[0].dimensions)
-    for el in elist[1:]:
-        if set(el.dimensions) != dims:
-            raise ValueError(f"Incompatible dimensions: {dims}, {el.dimensions}")
-
-    return elist[0]._new(
-        pl.concat([
-            el.data for el in elist
-        ],
-        how="vertical_relaxed")
-    )
 
 class Constraint(Expression):
-    def __init__(
-        self,
-        lhs: Expression | pl.DataFrame,
-        sense: ConstraintSense,
-        model: Optional["Model"] = None,
-    ):
+    def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
         """Adds a constraint to the model.
 
         Parameters
@@ -762,12 +719,13 @@ class Constraint(Expression):
             The right hand side of the constraint.
         """
         if isinstance(lhs, Expression):
-            if model is None:
-                model = lhs._model
-            lhs = lhs.data
-        super().__init__(lhs)
+            data = lhs.data
+        else:
+            data = lhs
+        super().__init__(data)
+        if isinstance(lhs, Expression):
+            self._model = lhs._model
         self.sense = sense
-        self._model = model
 
     def to_str(self, max_line_len=None, max_rows=None, var_map=None):
         dims = self.dimensions
@@ -807,4 +765,6 @@ class Constraint(Expression):
         )
 
     def _new(self, data: pl.DataFrame):
-        return Constraint(data, self.sense, model=self._model)
+        c = Constraint(data, self.sense)
+        c._model = self._model
+        return c

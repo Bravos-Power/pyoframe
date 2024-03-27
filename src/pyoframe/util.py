@@ -2,7 +2,7 @@
 File containing utility functions.
 """
 
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Iterable, Optional, Union
 import polars as pl
 import pandas as pd
 
@@ -154,19 +154,6 @@ def concat_dimensions(
         df = df.drop(*dimensions)
 
     return df
-
-
-def get_dimensions(df: pl.DataFrame) -> List[str]:
-    """
-    Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
-
-    Examples
-    --------
-    >>> import pandas as pd
-    >>> get_dimensions(pd.DataFrame({"x": [1, 2, 3], "y": [1, 2, 3]}))
-    ['x', 'y']
-    """
-    return [col for col in df.columns if col not in RESERVED_COL_KEYS]
 
 
 def cast_coef_to_string(

@@ -13,6 +13,9 @@ CONST_TERM = 0
 
 RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY)
 
+class Config:
+    disable_unmatched_checks = False
+
 
 class ConstraintSense(Enum):
     LE = "<="
@@ -29,6 +32,12 @@ class VType(Enum):
     CONTINUOUS = "continuous"
     BINARY = "binary"
     INTEGER = "integer"
+
+
+class UnmatchedStrategy(Enum):
+    ERROR = "error"
+    DROP = "drop"
+    KEEP = "keep"
 
 
 # This is a hack to get the Literal type for VType

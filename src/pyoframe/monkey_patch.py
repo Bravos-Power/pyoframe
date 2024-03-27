@@ -1,6 +1,6 @@
 import pandas as pd
 import polars as pl
-from pyoframe.constraints import Expressionable
+from pyoframe.constraints import SupportsMath
 from pyoframe.constraints import Expression
 from functools import wraps
 
@@ -13,7 +13,7 @@ def _patch_class(cls):
     def _patch_method(func):
         @wraps(func)
         def wrapper(self, other):
-            if isinstance(other, Expressionable):
+            if isinstance(other, SupportsMath):
                 return NotImplemented
             return func(self, other)
 
