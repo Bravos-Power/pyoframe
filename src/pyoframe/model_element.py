@@ -49,7 +49,7 @@ class ModelElement(ABC):
         return self._data
 
     @property
-    def dimensions(self) -> List[str] | None:
+    def dimensions(self) -> Optional[List[str]]:
         """
         The names of the data's dimensions.
 

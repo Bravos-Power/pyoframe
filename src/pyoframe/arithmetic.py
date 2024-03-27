@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 import polars as pl
 
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY, UnmatchedStrategy
@@ -173,7 +173,7 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
     return self._new(result)
 
 
-def get_dimensions(df: pl.DataFrame) -> List[str] | None:
+def get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
     """
     Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
     If there are no dimensions, returns None to force caller to handle this special case.
