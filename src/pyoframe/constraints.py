@@ -299,7 +299,7 @@ class Expression(ModelElement, SupportsMath):
 
         super().__init__(data)
 
-    def sum(self, over: str | Iterable[str]):
+    def sum(self, over: Union[str, Iterable[str]]):
         """
         Examples
         --------
@@ -668,7 +668,7 @@ class Expression(ModelElement, SupportsMath):
 
 
 @overload
-def sum(over: str | Sequence[str], expr: SupportsToExpr): ...
+def sum(over: Union[str, Sequence[str]], expr: SupportsToExpr): ...
 
 
 @overload
@@ -676,8 +676,8 @@ def sum(over: SupportsToExpr): ...
 
 
 def sum(
-    over: str | Sequence[str] | SupportsToExpr,
-    expr: SupportsToExpr | None = None,
+    over: Union[str, Sequence[str], SupportsToExpr],
+    expr: Optional[SupportsToExpr] = None,
 ) -> "Expression":
     if expr is None:
         assert isinstance(over, SupportsMath)
@@ -693,7 +693,7 @@ def sum(
         return expr.to_expr().sum(over)
 
 
-def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> "Expression":
+def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     if isinstance(by, str):
         by = [by]
     expr = expr.to_expr()

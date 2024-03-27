@@ -2,7 +2,7 @@
 File containing utility functions.
 """
 
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional, Union
 import polars as pl
 import pandas as pd
 
@@ -22,7 +22,7 @@ def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
 
 
 def parse_inputs_as_iterable(
-    *inputs: Any | Iterable[Any],
+    *inputs: Union[Any, Iterable[Any]],
 ) -> Iterable[Any]:
     """
     Converts a parameter *x: Any | Iteraable[Any] to a single Iterable[Any] object.
@@ -42,7 +42,7 @@ def parse_inputs_as_iterable(
     return inputs
 
 
-def _is_iterable(input: Any | Iterable[Any]) -> bool:
+def _is_iterable(input: Union[Any, Iterable[Any]]) -> bool:
     # Inspired from the polars library
     return isinstance(input, Iterable) and not isinstance(
         input,
@@ -52,7 +52,7 @@ def _is_iterable(input: Any | Iterable[Any]) -> bool:
 
 def concat_dimensions(
     df: pl.DataFrame,
-    prefix: str | None = None,
+    prefix: Optional[str] = None,
     keep_dims: bool = True,
     ignore_columns=RESERVED_COL_KEYS,
     replace_spaces: bool = True,

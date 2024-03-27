@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List
+from typing import Any, Iterable, List, Optional
 from pyoframe.constants import ObjSense, VType
 from pyoframe.constraints import SupportsMath
 from pyoframe.model_element import ModelElement
@@ -18,7 +18,7 @@ class Model:
     def __init__(self, name="model"):
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
-        self._objective: Objective | None = None
+        self._objective: Optional[Objective] = None
         self.var_map = NamedVariables(self)
         self.name = name
 

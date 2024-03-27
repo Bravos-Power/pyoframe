@@ -1,9 +1,10 @@
+from typing import Union
 from pyoframe.constants import ObjSense, ObjSenseValue
 from pyoframe.constraints import SupportsMath, Expression
 
 
 class Objective(Expression):
-    def __init__(self, expr: SupportsMath, sense: ObjSense | ObjSenseValue) -> None:
+    def __init__(self, expr: SupportsMath, sense: Union[ObjSense, ObjSenseValue]) -> None:
         """
         Examples
         --------
