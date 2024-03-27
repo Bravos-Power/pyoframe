@@ -266,18 +266,18 @@ def test_add_expression_with_missing():
     with pytest.raises(
         ValueError,
         match=re.escape(
-            "Missing values found in the left expression. Consider using left.fill_missing() or right.drop_missing()"
+            "Missing values found in the left expression. Consider using left.drop_unmatched() or right.drop_unmatched()"
         ),
     ):
         lhs + rhs
-    result = lhs.fill_missing() + rhs
+    result = lhs.drop_unmatched() + rhs
     assert (
         result.to_str()
         == """[a]: 4  +2 x1 +4 x3
 [b]: 4  +2 x2 +4 x4
 [c]: 3  +4 x5"""
     )
-    result = lhs + rhs.drop_missing()
+    result = lhs + rhs.drop_unmatched()
     assert (
         result.to_str()
         == """[a]: 4  +2 x1 +4 x3
@@ -307,11 +307,11 @@ def test_add_expressions_with_dims_and_missing():
     with pytest.raises(
         ValueError,
         match=re.escape(
-            "Missing values found in the left expression. Consider using left.fill_missing() or right.drop_missing()"
+            "Missing values found in the left expression. Consider using left.drop_unmatched() or right.drop_unmatched()"
         ),
     ):
         lhs + rhs
-    result = lhs.fill_missing() + rhs
+    result = lhs.drop_unmatched() + rhs
     assert result.to_str() == """"""
-    result = lhs + rhs.drop_missing()
+    result = lhs + rhs.drop_unmatched()
     assert result.to_str() == """"""

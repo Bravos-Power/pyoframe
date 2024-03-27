@@ -64,6 +64,17 @@ class ModelElement(ABC):
         ['hour', 'city']
         """
         return get_dimensions(self.data)
+    
+    @property
+    def dimensions_unsafe(self) -> List[str]:
+        """
+        Same as `dimensions` but returns an empty list if there are no dimensions instead of None.
+        When unsure, use `dimensions` instead since the type checker forces users to handle the None case (no dimensions).
+        """
+        dims = self.dimensions
+        if dims is None:
+            return []
+        return dims
 
     @property
     def shape(self) -> Dict[str, int] | None:

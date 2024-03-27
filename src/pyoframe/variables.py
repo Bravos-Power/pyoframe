@@ -102,7 +102,7 @@ class Variable(ModelElement, SupportsMath):
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
         e._model = self._model
-        e.missing_strategy = self.missing_strategy
+        e.unmatched_strategy = self.unmatched_strategy
         e.allowed_new_dims = self.allowed_new_dims
         return e
 
@@ -122,7 +122,7 @@ class Variable(ModelElement, SupportsMath):
         Traceback (most recent call last):
         ...
         ValueError: ...
-        >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time").drop_missing()
+        >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time").drop_unmatched()
         <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
         [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
         [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
