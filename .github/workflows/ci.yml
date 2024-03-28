@@ -1,4 +1,4 @@
-name: Workflow for Codecov
+name: Build
 on:
   push:
     branches: [ main ]
