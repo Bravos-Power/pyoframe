@@ -26,7 +26,7 @@ dev = [
     "pre-commit",
     "gurobipy",
 ]
-doc = [
+docs = [
     "mkdocs-material==9.*",
     "mkdocstrings[python]",
     "mkdocs-git-revision-date-localized-plugin",
