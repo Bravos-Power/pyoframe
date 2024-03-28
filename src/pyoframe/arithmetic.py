@@ -119,7 +119,7 @@ def add_expressions_internal(*expressions: "Expression") -> "Expression":
                     "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(unmatched)
                 )
-        else:
+        else: # pragma: no cover
             assert False, "This code should've never been reached!"
 
         expr_data = [left_data, right_data]
