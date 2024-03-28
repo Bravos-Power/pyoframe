@@ -1,5 +1,11 @@
 name: Workflow for Codecov
-on: [pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '*' ]
+  schedule:
+  - cron: "0 5 * * WED"
 jobs:
   run:
     runs-on: ubuntu-latest
