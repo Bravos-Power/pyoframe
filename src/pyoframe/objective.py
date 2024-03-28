@@ -6,7 +6,7 @@ from pyoframe.constraints import SupportsMath, Expression
 class Objective(Expression):
     r"""
     Examples:
-        >>> from pyoframe import Objective, Variable, Model, sum
+        >>> from pyoframe import Variable, Model, sum
         >>> m = Model()
         >>> m.a = Variable()
         >>> m.b = Variable({"dim1": [1, 2, 3]})
