@@ -1,3 +1,51 @@
-site_name: My Docs
+site_name: Pyoframe
+site_url: https://staadecker.github.io/pyoframe/
+repo_url: https://github.com/staadecker/pyoframe
+edit_uri: edit/main/docs/
 theme:
   name: material
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.tabs
+    - toc.follow
+    - navigation.top
+    - content.action.edit
+    - content.action.view
+    - content.code.copy
+    - content.code.annotate
+
+nav:
+  - Reference: reference/
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            merge_init_into_class: true
+            docstring_options:
+              ignore_init_summary: true
+              trim_doctest_flags: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - git-committers:
+      repository: staadecker/pyoframe
+      branch: main
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
+  - section-index

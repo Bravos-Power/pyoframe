@@ -26,7 +26,15 @@ dev = [
     "pre-commit",
     "gurobipy",
 ]
-doc = ["mkdocs-material==9.*"]
+doc = [
+    "mkdocs-material==9.*",
+    "mkdocstrings[python]",
+    "mkdocs-git-revision-date-localized-plugin",
+    "mkdocs-git-committers-plugin-2",
+    "mkdocs-gen-files",
+    "mkdocs-section-index",
+    "mkdocs-literate-nav"
+]
 
 [tool.isort]
 profile = "black"

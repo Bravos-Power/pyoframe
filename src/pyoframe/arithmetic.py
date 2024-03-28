@@ -178,13 +178,11 @@ def get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
     Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
     If there are no dimensions, returns None to force caller to handle this special case.
 
-    Examples
-    --------
-    >>> import polars as pl
-    >>> get_dimensions(pl.DataFrame({"x": [1, 2, 3], "y": [1, 2, 3]}))
-    ['x', 'y']
-    >>> get_dimensions(pl.DataFrame({"__variable_id": [1, 2, 3]}))
-
+    Examples:
+        >>> import polars as pl
+        >>> get_dimensions(pl.DataFrame({"x": [1, 2, 3], "y": [1, 2, 3]}))
+        ['x', 'y']
+        >>> get_dimensions(pl.DataFrame({"__variable_id": [1, 2, 3]}))
     """
     result = [col for col in df.columns if col not in RESERVED_COL_KEYS]
     return result if result else None

@@ -53,15 +53,14 @@ class ModelElement(ABC):
         """
         The names of the data's dimensions.
 
-        Examples
-        --------
-        >>> from pyoframe.variables import Variable
-        >>> # A variable with no dimensions
-        >>> Variable().dimensions
+        Examples:
+            >>> from pyoframe.variables import Variable
+            >>> # A variable with no dimensions
+            >>> Variable().dimensions
 
-        >>> # A variable with dimensions of "hour" and "city"
-        >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
-        ['hour', 'city']
+            >>> # A variable with dimensions of "hour" and "city"
+            >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
+            ['hour', 'city']
         """
         return get_dimensions(self.data)
     
@@ -81,15 +80,14 @@ class ModelElement(ABC):
         """
         The number of indices in each dimension.
 
-        Examples
-        --------
-        >>> from pyoframe.variables import Variable
-        >>> # A variable with no dimensions
-        >>> Variable().shape
-        {}
-        >>> # A variable with dimensions of "hour" and "city"
-        >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
-        {'hour': 4, 'city': 3}
+        Examples:
+            >>> from pyoframe.variables import Variable
+            >>> # A variable with no dimensions
+            >>> Variable().shape
+            {}
+            >>> # A variable with dimensions of "hour" and "city"
+            >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
+            {'hour': 4, 'city': 3}
         """
         dims = self.dimensions
         if dims is None:

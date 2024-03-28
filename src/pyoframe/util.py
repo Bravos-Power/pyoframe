@@ -60,78 +60,76 @@ def concat_dimensions(
     """
     Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
 
-    Parameters
-    ----------
-    df : pl.DataFrame
-        The input DataFrame.
-    prefix : str, optional
-        The prefix to be added to the concated dimension.
-    keep_dims : bool, optional
-        If True, the original dimensions are kept in the new DataFrame.
+    Parameters:
+        df : pl.DataFrame
+            The input DataFrame.
+        prefix : str, optional
+            The prefix to be added to the concated dimension.
+        keep_dims : bool, optional
+            If True, the original dimensions are kept in the new DataFrame.
 
-    Examples
-    --------
-    >>> import polars as pl
-    >>> df = pl.DataFrame(
-    ...     {
-    ...         "dim1": [1, 2, 3, 1, 2, 3],
-    ...         "dim2": ["Y", "Y", "Y", "N", "N", "N"],
-    ...     }
-    ... )
-    >>> concat_dimensions(df)
-    shape: (6, 3)
-    ┌──────┬──────┬──────────────┐
-    │ dim1 ┆ dim2 ┆ concated_dim │
-    │ ---  ┆ ---  ┆ ---          │
-    │ i64  ┆ str  ┆ str          │
-    ╞══════╪══════╪══════════════╡
-    │ 1    ┆ Y    ┆ [1,Y]        │
-    │ 2    ┆ Y    ┆ [2,Y]        │
-    │ 3    ┆ Y    ┆ [3,Y]        │
-    │ 1    ┆ N    ┆ [1,N]        │
-    │ 2    ┆ N    ┆ [2,N]        │
-    │ 3    ┆ N    ┆ [3,N]        │
-    └──────┴──────┴──────────────┘
-    >>> concat_dimensions(df, prefix="x")
-    shape: (6, 3)
-    ┌──────┬──────┬──────────────┐
-    │ dim1 ┆ dim2 ┆ concated_dim │
-    │ ---  ┆ ---  ┆ ---          │
-    │ i64  ┆ str  ┆ str          │
-    ╞══════╪══════╪══════════════╡
-    │ 1    ┆ Y    ┆ x[1,Y]       │
-    │ 2    ┆ Y    ┆ x[2,Y]       │
-    │ 3    ┆ Y    ┆ x[3,Y]       │
-    │ 1    ┆ N    ┆ x[1,N]       │
-    │ 2    ┆ N    ┆ x[2,N]       │
-    │ 3    ┆ N    ┆ x[3,N]       │
-    └──────┴──────┴──────────────┘
-    >>> concat_dimensions(df, keep_dims=False)
-    shape: (6, 1)
-    ┌──────────────┐
-    │ concated_dim │
-    │ ---          │
-    │ str          │
-    ╞══════════════╡
-    │ [1,Y]        │
-    │ [2,Y]        │
-    │ [3,Y]        │
-    │ [1,N]        │
-    │ [2,N]        │
-    │ [3,N]        │
-    └──────────────┘
-    >>> # Properly handles cases with no dimensions and ignores reserved columns
-    >>> df = pl.DataFrame({VAR_KEY: [1, 2]})
-    >>> concat_dimensions(df, prefix="x")
-    shape: (2, 2)
-    ┌───────────────┬──────────────┐
-    │ __variable_id ┆ concated_dim │
-    │ ---           ┆ ---          │
-    │ i64           ┆ str          │
-    ╞═══════════════╪══════════════╡
-    │ 1             ┆ x            │
-    │ 2             ┆ x            │
-    └───────────────┴──────────────┘
+    Examples:
+        >>> import polars as pl
+        >>> df = pl.DataFrame(
+        ...     {
+        ...         "dim1": [1, 2, 3, 1, 2, 3],
+        ...         "dim2": ["Y", "Y", "Y", "N", "N", "N"],
+        ...     }
+        ... )
+        >>> concat_dimensions(df)
+        shape: (6, 3)
+        ┌──────┬──────┬──────────────┐
+        │ dim1 ┆ dim2 ┆ concated_dim │
+        │ ---  ┆ ---  ┆ ---          │
+        │ i64  ┆ str  ┆ str          │
+        ╞══════╪══════╪══════════════╡
+        │ 1    ┆ Y    ┆ [1,Y]        │
+        │ 2    ┆ Y    ┆ [2,Y]        │
+        │ 3    ┆ Y    ┆ [3,Y]        │
+        │ 1    ┆ N    ┆ [1,N]        │
+        │ 2    ┆ N    ┆ [2,N]        │
+        │ 3    ┆ N    ┆ [3,N]        │
+        └──────┴──────┴──────────────┘
+        >>> concat_dimensions(df, prefix="x")
+        shape: (6, 3)
+        ┌──────┬──────┬──────────────┐
+        │ dim1 ┆ dim2 ┆ concated_dim │
+        │ ---  ┆ ---  ┆ ---          │
+        │ i64  ┆ str  ┆ str          │
+        ╞══════╪══════╪══════════════╡
+        │ 1    ┆ Y    ┆ x[1,Y]       │
+        │ 2    ┆ Y    ┆ x[2,Y]       │
+        │ 3    ┆ Y    ┆ x[3,Y]       │
+        │ 1    ┆ N    ┆ x[1,N]       │
+        │ 2    ┆ N    ┆ x[2,N]       │
+        │ 3    ┆ N    ┆ x[3,N]       │
+        └──────┴──────┴──────────────┘
+        >>> concat_dimensions(df, keep_dims=False)
+        shape: (6, 1)
+        ┌──────────────┐
+        │ concated_dim │
+        │ ---          │
+        │ str          │
+        ╞══════════════╡
+        │ [1,Y]        │
+        │ [2,Y]        │
+        │ [3,Y]        │
+        │ [1,N]        │
+        │ [2,N]        │
+        │ [3,N]        │
+        └──────────────┘
+        >>> # Properly handles cases with no dimensions and ignores reserved columns
+        >>> df = pl.DataFrame({VAR_KEY: [1, 2]})
+        >>> concat_dimensions(df, prefix="x")
+        shape: (2, 2)
+        ┌───────────────┬──────────────┐
+        │ __variable_id ┆ concated_dim │
+        │ ---           ┆ ---          │
+        │ i64           ┆ str          │
+        ╞═══════════════╪══════════════╡
+        │ 1             ┆ x            │
+        │ 2             ┆ x            │
+        └───────────────┴──────────────┘
     """
     if prefix is None:
         prefix = ""
@@ -160,22 +158,21 @@ def cast_coef_to_string(
     df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True
 ) -> pl.DataFrame:
     """
-    Examples
-    --------
-    >>> import polars as pl
-    >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
-    >>> cast_coef_to_string(df, "x")
-    shape: (4, 2)
-    ┌─────┬───────────────┐
-    │ x   ┆ __variable_id │
-    │ --- ┆ ---           │
-    │ str ┆ i64           │
-    ╞═════╪═══════════════╡
-    │ +   ┆ 1             │
-    │ -2  ┆ 2             │
-    │ +1  ┆ 0             │
-    │ +4  ┆ 4             │
-    └─────┴───────────────┘
+    Examples:
+        >>> import polars as pl
+        >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
+        >>> cast_coef_to_string(df, "x")
+        shape: (4, 2)
+        ┌─────┬───────────────┐
+        │ x   ┆ __variable_id │
+        │ --- ┆ ---           │
+        │ str ┆ i64           │
+        ╞═════╪═══════════════╡
+        │ +   ┆ 1             │
+        │ -2  ┆ 2             │
+        │ +1  ┆ 0             │
+        │ +4  ┆ 4             │
+        └─────┴───────────────┘
     """
     df = df.with_columns(
         pl.col(column_name).abs(),

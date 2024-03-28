@@ -301,23 +301,22 @@ class Expression(ModelElement, SupportsMath):
 
     def sum(self, over: Union[str, Iterable[str]]):
         """
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from pyoframe import Variable
-        >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-        >>> quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
-        >>> expr = (quantity * df["cost"]).sum("time")
-        >>> expr.data
-        shape: (2, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ item ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 6.0     ┆ 1             │
-        │ 2    ┆ 9.0     ┆ 2             │
-        └──────┴─────────┴───────────────┘
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable
+            >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
+            >>> quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
+            >>> expr = (quantity * df["cost"]).sum("time")
+            >>> expr.data
+            shape: (2, 3)
+            ┌──────┬─────────┬───────────────┐
+            │ item ┆ __coeff ┆ __variable_id │
+            │ ---  ┆ ---     ┆ ---           │
+            │ i64  ┆ f64     ┆ u32           │
+            ╞══════╪═════════╪═══════════════╡
+            │ 1    ┆ 6.0     ┆ 1             │
+            │ 2    ┆ 9.0     ┆ 2             │
+            └──────┴─────────┴───────────────┘
         """
         if isinstance(over, str):
             over = [over]
@@ -343,36 +342,33 @@ class Expression(ModelElement, SupportsMath):
         using a window defined by `window_size`.
 
 
-        Parameters
-        ----------
-        over : str
-               The name of the dimension (column) over which the rolling sum is calculated.
-               This dimension must exist within the Expression's dimensions.
-        window_size : int
-               The size of the moving window in terms of number of records.
-               The rolling sum is calculated over this many consecutive elements.
+        Parameters:
+            over : str
+                The name of the dimension (column) over which the rolling sum is calculated.
+                This dimension must exist within the Expression's dimensions.
+            window_size : int
+                The size of the moving window in terms of number of records.
+                The rolling sum is calculated over this many consecutive elements.
 
-        Returns
-        -------
-        Expression
-               A new Expression instance containing the result of the rolling sum operation.
-               This new Expression retains all dimensions (columns) of the original data,
-               with the rolling sum applied over the specified dimension.
+        Returns:
+            Expression
+                A new Expression instance containing the result of the rolling sum operation.
+                This new Expression retains all dimensions (columns) of the original data,
+                with the rolling sum applied over the specified dimension.
 
-        Examples
-        --------
-        >>> import polars as pl
-        >>> from pyoframe import Variable, Model
-        >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
-        >>> m = Model()
-        >>> m.quantity = Variable(cost[["item", "time"]])
-        >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
-        <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
-        [1,1]: quantity[1,1]
-        [1,2]: quantity[1,1] +2 quantity[1,2]
-        [1,3]: 2 quantity[1,2] +3 quantity[1,3]
-        [2,1]: 4 quantity[2,1]
-        [2,2]: 4 quantity[2,1] +5 quantity[2,2]
+        Examples:
+            >>> import polars as pl
+            >>> from pyoframe import Variable, Model
+            >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
+            >>> m = Model()
+            >>> m.quantity = Variable(cost[["item", "time"]])
+            >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
+            <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
+            [1,1]: quantity[1,1]
+            [1,2]: quantity[1,1] +2 quantity[1,2]
+            [1,3]: 2 quantity[1,2] +3 quantity[1,3]
+            [2,1]: 4 quantity[2,1]
+            [2,2]: 4 quantity[2,1] +5 quantity[2,2]
         """
         dims = self.dimensions
         if dims is None:
@@ -425,40 +421,39 @@ class Expression(ModelElement, SupportsMath):
 
     def __add__(self, other):
         """
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from pyoframe import Variable
-        >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
-        >>> var = Variable(add)
-        >>> var + add
-        <Expression size=3 dimensions={'dim1': 3} terms=6>
-        [1]: x1 +10
-        [2]: x2 +20
-        [3]: x3 +30
-        >>> var + add + 2
-        <Expression size=3 dimensions={'dim1': 3} terms=6>
-        [1]: x1 +12
-        [2]: x2 +22
-        [3]: x3 +32
-        >>> var + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
-        Traceback (most recent call last):
-        ...
-        pyoframe.arithmetic.PyoframeError: Failed to add expressions:
-        <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
-        Due to error:
-        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
-        shape: (1, 2)
-        ┌──────┬────────────┐
-        │ dim1 ┆ dim1_right │
-        │ ---  ┆ ---        │
-        │ i64  ┆ i64        │
-        ╞══════╪════════════╡
-        │ 3    ┆ null       │
-        └──────┴────────────┘
-        >>> 5 + 2 * Variable()
-        <Expression size=1 dimensions={} terms=2>
-        2 x4 +5
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable
+            >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
+            >>> var = Variable(add)
+            >>> var + add
+            <Expression size=3 dimensions={'dim1': 3} terms=6>
+            [1]: x1 +10
+            [2]: x2 +20
+            [3]: x3 +30
+            >>> var + add + 2
+            <Expression size=3 dimensions={'dim1': 3} terms=6>
+            [1]: x1 +12
+            [2]: x2 +22
+            [3]: x3 +32
+            >>> var + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
+            Traceback (most recent call last):
+            ...
+            pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+            <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
+            Due to error:
+            Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            shape: (1, 2)
+            ┌──────┬────────────┐
+            │ dim1 ┆ dim1_right │
+            │ ---  ┆ ---        │
+            │ i64  ┆ i64        │
+            ╞══════╪════════════╡
+            │ 3    ┆ null       │
+            └──────┴────────────┘
+            >>> 5 + 2 * Variable()
+            <Expression size=1 dimensions={} terms=2>
+            2 x4 +5
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
@@ -706,17 +701,15 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
 
 
 class Constraint(Expression):
+    """A linear programming constraint."""
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
-        """Adds a constraint to the model.
+        """Initialize a constraint.
 
-        Parameters
-        ----------
-        data: Expression
-            The left hand side of the constraint.
-        sense: Sense
-            The sense of the constraint.
-        rhs: Expression
-            The right hand side of the constraint.
+        Parameters:
+            lhs: Expression
+                The left hand side of the constraint.
+            sense: Sense
+                The sense of the constraint.
         """
         if isinstance(lhs, Expression):
             data = lhs.data

@@ -20,46 +20,44 @@ class Variable(ModelElement, SupportsMath):
     """
     Represents one or many decision variable in an optimization model.
 
-    Parameters
-    ----------
-    *indexing_sets: SetTypes (typically a DataFrame or Set)
-        If no indexing_sets are provided, a single variable with no dimensions is created.
-        Otherwise, a variable is created for each element in the Cartesian product of the indexing_sets (see Set for details on behaviour).
-    lb: float
-        The lower bound for all variables.
-    ub: float
-        The upper bound for all variables.
-    vtype: VType | VTypeValue
-        The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
+    Parameters:
+        *indexing_sets: SetTypes (typically a DataFrame or Set)
+            If no indexing_sets are provided, a single variable with no dimensions is created.
+            Otherwise, a variable is created for each element in the Cartesian product of the indexing_sets (see Set for details on behaviour).
+        lb: float
+            The lower bound for all variables.
+        ub: float
+            The upper bound for all variables.
+        vtype: VType | VTypeValue
+            The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
 
-    Examples
-    --------
-    >>> import pandas as pd
-    >>> from pyoframe import Variable
-    >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
-    >>> Variable(df)
-    <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
-    [1,a]: x1
-    [1,b]: x2
-    [2,a]: x3
-    [2,b]: x4
-    [3,a]: x5
-    [3,b]: x6
-    >>> Variable(df[["dim1"]])
-    Traceback (most recent call last):
-    ...
-    ValueError: Duplicate rows found in input data.
-    >>> Variable(df[["dim1"]].drop_duplicates())
-    <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
-    [1]: x7
-    [2]: x8
-    [3]: x9
+    Examples:
+        >>> import pandas as pd
+        >>> from pyoframe import Variable
+        >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
+        >>> Variable(df)
+        <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
+        [1,a]: x1
+        [1,b]: x2
+        [2,a]: x3
+        [2,b]: x4
+        [3,a]: x5
+        [3,b]: x6
+        >>> Variable(df[["dim1"]])
+        Traceback (most recent call last):
+        ...
+        ValueError: Duplicate rows found in input data.
+        >>> Variable(df[["dim1"]].drop_duplicates())
+        <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
+        [1]: x7
+        [2]: x8
+        [3]: x9
     """
 
     _var_count = 1  # Must start at 1 since 0 is reserved for constant terms
 
     @classmethod
-    def reset_var_count(cls):
+    def _reset_var_count(cls):
         """Resets the variable count. Useful to ensure consistency in unit tests."""
         cls._var_count = 1
 
@@ -106,53 +104,61 @@ class Variable(ModelElement, SupportsMath):
         e.allowed_new_dims = self.allowed_new_dims
         return e
 
-    def next(self, dim: str, wrap_around=False) -> Expression:
+    def next(self, dim: str, wrap_around: bool=False) -> Expression:
         """
-        TODO add documentation
+        Creates an expression where the variable at each index is the next variable in the specified dimension.
 
-        >>> import pandas as pd
-        >>> from pyoframe import Variable, Model
-        >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
-        >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
-        >>> m = Model()
-        >>> m.bat_charge = Variable(time_dim, space_dim)
-        >>> m.bat_flow = Variable(time_dim, space_dim)
-        >>> # Fails because the dimensions are not the same
-        >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
-        Traceback (most recent call last):
-        ...
-        pyoframe.arithmetic.PyoframeError: Failed to add expressions:
-        <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
-        Due to error:
-        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
-        shape: (2, 4)
-        ┌───────┬─────────┬────────────┬────────────┐
-        │ time  ┆ city    ┆ time_right ┆ city_right │
-        │ ---   ┆ ---     ┆ ---        ┆ ---        │
-        │ str   ┆ str     ┆ str        ┆ str        │
-        ╞═══════╪═════════╪════════════╪════════════╡
-        │ 18:00 ┆ Toronto ┆ null       ┆ null       │
-        │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
-        └───────┴─────────┴────────────┴────────────┘
-        >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next("time")
-        <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
-        [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
-        [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
-        [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
-        [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
-        [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
-        [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+        Parameters:
+            dim:
+                The dimension over which to shift the variable.
+            wrap_around:
+                If True, the last index in the dimension is connected to the first index.
 
-        >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
-        <Constraint sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
-        [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
-        [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
-        [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
-        [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
-        [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
-        [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
-        [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
-        [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable, Model
+            >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
+            >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
+            >>> m = Model()
+            >>> m.bat_charge = Variable(time_dim, space_dim)
+            >>> m.bat_flow = Variable(time_dim, space_dim)
+            >>> # Fails because the dimensions are not the same
+            >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
+            Traceback (most recent call last):
+            ...
+            pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+            <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
+            Due to error:
+            Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            shape: (2, 4)
+            ┌───────┬─────────┬────────────┬────────────┐
+            │ time  ┆ city    ┆ time_right ┆ city_right │
+            │ ---   ┆ ---     ┆ ---        ┆ ---        │
+            │ str   ┆ str     ┆ str        ┆ str        │
+            ╞═══════╪═════════╪════════════╪════════════╡
+            │ 18:00 ┆ Toronto ┆ null       ┆ null       │
+            │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
+            └───────┴─────────┴────────────┴────────────┘
+
+            >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next("time")
+            <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
+            [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+            [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+            [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+            [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+            [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+            [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+
+            >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
+            <Constraint sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
+            [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+            [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+            [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+            [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+            [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+            [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+            [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
+            [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
 
         wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)

@@ -4,10 +4,8 @@ from pyoframe.constraints import SupportsMath, Expression
 
 
 class Objective(Expression):
-    def __init__(self, expr: SupportsMath, sense: Union[ObjSense, ObjSenseValue]) -> None:
-        """
-        Examples
-        --------
+    r"""
+    Examples:
         >>> from pyoframe import Objective, Variable, Model, sum
         >>> m = Model()
         >>> m.a = Variable()
@@ -16,7 +14,9 @@ class Objective(Expression):
         >>> m.maximize
         <Objective size=1 dimensions={} terms=4>
         maximize: a + b[1] + b[2] + b[3]
-        """
+    """
+
+    def __init__(self, expr: SupportsMath, sense: Union[ObjSense, ObjSenseValue]) -> None:
         self.sense = ObjSense(sense)
 
         expr = expr.to_expr()
