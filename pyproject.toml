@@ -40,5 +40,5 @@ docs = [
 profile = "black"
 
 [project.urls]
-Homepage = "https://github.com/staadecker/pyoframe"
-Issues = "https://github.com/staadecker/pyoframe/issues"
+Homepage = "https://github.com/Bravos-Power/pyoframe"
+Issues = "https://github.com/Bravos-Power/pyoframe/issues"

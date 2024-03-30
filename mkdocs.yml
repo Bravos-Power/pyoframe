@@ -1,6 +1,6 @@
 site_name: Pyoframe
-site_url: https://staadecker.github.io/pyoframe/
-repo_url: https://github.com/staadecker/pyoframe
+site_url: https://Bravos-Power.github.io/pyoframe/
+repo_url: https://github.com/Bravos-Power/pyoframe
 edit_uri: edit/main/docs/
 theme:
   name: material
@@ -41,7 +41,7 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
   - git-committers:
-      repository: staadecker/pyoframe
+      repository: Bravos-Power/pyoframe
       branch: main
   - literate-nav:
       nav_file: SUMMARY.md
