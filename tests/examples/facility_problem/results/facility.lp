@@ -19,11 +19,11 @@ con_meet_demand[3]: transport[3,0] + transport[3,1] + transport[3,2] + transport
 
 bounds
 
--inf <= open[0] <= +inf
--inf <= open[1] <= +inf
--inf <= open[2] <= +inf
--inf <= open[3] <= +inf
--inf <= open[4] <= +inf
++0 <= open[0] <= +1
++0 <= open[1] <= +1
++0 <= open[2] <= +1
++0 <= open[3] <= +1
++0 <= open[4] <= +1
 +0 <= transport[0,0] <= +inf
 +0 <= transport[0,1] <= +inf
 +0 <= transport[0,2] <= +inf

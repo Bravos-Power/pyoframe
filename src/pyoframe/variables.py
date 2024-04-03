@@ -81,9 +81,14 @@ class Variable(ModelElement, SupportsMath):
 
         Variable._var_count += data.height
 
+        self.vtype: VType = VType(vtype)
+
+        # Tightening the bounds is not strictly necessary, but it adds clarity
+        if self.vtype == VType.BINARY:
+            lb, ub = 0, 1
+
         self.lb = lb
         self.ub = ub
-        self.vtype: VType = VType(vtype)
 
     def __repr__(self):
         return (
@@ -104,7 +109,7 @@ class Variable(ModelElement, SupportsMath):
         e.allowed_new_dims = self.allowed_new_dims
         return e
 
-    def next(self, dim: str, wrap_around: bool=False) -> Expression:
+    def next(self, dim: str, wrap_around: bool = False) -> Expression:
         """
         Creates an expression where the variable at each index is the next variable in the specified dimension.
 
