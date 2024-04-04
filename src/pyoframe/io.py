@@ -105,7 +105,7 @@ def to_file(
     """
     if fn is None:
         with NamedTemporaryFile(
-            prefix="linoframe-problem-", suffix=".lp", mode="w", delete=False
+            prefix="pyoframe-problem-", suffix=".lp", mode="w", delete=False
         ) as f:
             fn = f.name
 
