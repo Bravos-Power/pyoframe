@@ -577,15 +577,11 @@ class Expression(ModelElement, SupportsMath):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
             var_map = self._model.var_map if self._model is not None else DEFAULT_MAP
-        data = cast_coef_to_string(data)
+        data = cast_coef_to_string(data, float_format=float_format)
         data = var_map.map_vars(data)
         dimensions = self.dimensions
 
         # Create a string for each term
-        if float_format is not None:
-            data = data.with_columns(
-            pl.col(COEF_KEY).map_batches(lambda x: sprintf(x, float_format), return_dtype=str)
-            )
 
         data = (
             data
@@ -666,10 +662,9 @@ class Expression(ModelElement, SupportsMath):
         [1]: 3.141592653589793 x1
         [2]: 3.141592653589793 x2
         [3]: 3.141592653589793 x3
-        >>> print((x*np.pi >= 0).to_str(float_format="%0.4f"))
-        [1]: 3.1416 x1 >= 0
-        [2]: 3.1416 x2 >= 0
-        [3]: 3.1416 x3 >= 0
+        >>> print((np.pi*x.drop_unmatched() -  2*x.next("t") >= 0).to_str(float_format="%0.4f"))
+        [1]: 3.1416 x1 -2 x2 >= 0
+        [2]: 3.1416 x2 -2 x3 >= 0
         """
         result = ""
         if include_header:

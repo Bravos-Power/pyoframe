@@ -156,7 +156,7 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True
+    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True, float_format=None
 ) -> pl.DataFrame:
     """
     Examples:
@@ -183,7 +183,8 @@ def cast_coef_to_string(
     df = df.with_columns(
         pl.when(pl.col(column_name) == pl.col(column_name).floor())
         .then(pl.col(column_name).cast(pl.Int64).cast(pl.String))
-        .otherwise(pl.col(column_name).cast(pl.String))
+        #.otherwise(pl.col(column_name).cast(pl.String))
+        .otherwise(pl.col(column_name).map_batches(lambda x: sprintf(x, float_format), str))
         .alias(column_name)
     )
 
@@ -203,9 +204,22 @@ def cast_coef_to_string(
         "_sign"
     )
 
+def to_string_with_precision(s: pl.Series, float_precision: int):
+    """
+    Examples
+    --------
+    >>> import polars as pl
+    >>> s = pl.Series([1, 2, 3.4, 5.6789])
+    >>> print(to_string_with_precision(s,2).to_list())
+    ['1.00', '2.00', '3.40', '5.68']
+
+    """
+    return sprintf(s, f"%0.{float_precision}f")
+
+
 
 # Function by mcrumiller (https://github.com/mcrumiller). See https://github.com/pola-rs/polars/issues/7133
-def sprintf(s, fmt):
+def sprintf(s: pl.Series, fmt: str):
     """
     Formats each element of a Polars Series `s` according to the format specifier `fmt`,
     similarly to sprintf in C or format in Python. It supports basic formatting for
@@ -243,6 +257,9 @@ def sprintf(s, fmt):
     >>> print(sprintf(s, "%0.2f").to_list())
     ['1.00', '2.00', '3.40', '5.68']
     """
+
+    if fmt is None:
+        return s.cast(pl.String)
 
     # parse format
     parser = re.compile(r"^%(?P<pct>%?)(?P<align>[\<\>|]?)(?P<head>\d*)(?P<dot>\.?)(?P<dec>\d*)(?P<char>[dfs])$")
