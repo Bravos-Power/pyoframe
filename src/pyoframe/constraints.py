@@ -666,6 +666,10 @@ class Expression(ModelElement, SupportsMath):
         [1]: 3.141592653589793 x1
         [2]: 3.141592653589793 x2
         [3]: 3.141592653589793 x3
+        >>> print((x*np.pi >= 0).to_str(float_format="%0.4f"))
+        [1]: 3.1416 x1 >= 0
+        [2]: 3.1416 x2 >= 0
+        [3]: 3.1416 x3 >= 0
         """
         result = ""
         if include_header:
@@ -749,13 +753,14 @@ class Constraint(Expression):
             self._model = lhs._model
         self.sense = sense
 
-    def to_str(self, max_line_len=None, max_rows=None, var_map=None):
+    def to_str(self, max_line_len=None, max_rows=None, var_map=None, float_format=None):
         dims = self.dimensions
         str_table = self.to_str_table(
             max_line_len=max_line_len,
             max_rows=max_rows,
             include_const_term=False,
             var_map=var_map,
+            float_format=float_format
         )
         rhs = self.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False)
