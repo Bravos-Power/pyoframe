@@ -29,6 +29,7 @@ from pyoframe.util import (
     concat_dimensions,
     get_obj_repr,
     parse_inputs_as_iterable,
+    sprintf,
 )
 from pyoframe.var_mapping import DEFAULT_MAP
 from pyoframe.model_element import ModelElement
@@ -571,6 +572,7 @@ class Expression(ModelElement, SupportsMath):
         include_const_term=True,
         var_map=None,
         include_name=True,
+        float_format="%0.8f",
     ):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
@@ -580,13 +582,17 @@ class Expression(ModelElement, SupportsMath):
         dimensions = self.dimensions
 
         # Create a string for each term
-        data = data.with_columns(
+        data = (
+            data
+            .with_columns(pl.col(COEF_KEY).map_batches(lambda x: sprintf(x, float_format), return_dtype=str))
+            .with_columns(
             expr=pl.concat_str(
                 COEF_KEY,
                 pl.lit(" "),
                 VAR_KEY,
             )
         ).drop(COEF_KEY, VAR_KEY)
+        )
 
         # Combine terms into one string
         if dimensions is not None:
@@ -638,7 +644,21 @@ class Expression(ModelElement, SupportsMath):
         include_name=True,
         include_header=False,
         include_footer=True,
+        float_format="%0.8f",
     ):
+        """
+        Examples
+        --------
+        >>> # Formatting floats
+        >>> import numpy as np
+        >>> import polars as pl
+        >>> from pyoframe import Variable
+        >>> x = Variable(pl.DataFrame({"t": [1,2,3]}))
+        >>> print((x*np.pi).to_str(float_format="%0.2f"))
+        [1]: 3.14 x1
+        [2]: 3.14 x2
+        [3]: 3.14 x3
+        """
         result = ""
         if include_header:
             result += get_obj_repr(
@@ -653,6 +673,7 @@ class Expression(ModelElement, SupportsMath):
                 include_const_term=include_const_term,
                 var_map=var_map,
                 include_name=include_name,
+                float_format=float_format,
             )
             result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
@@ -761,3 +782,5 @@ class Constraint(Expression):
         c = Constraint(data, self.sense)
         c._model = self._model
         return c
+
+    

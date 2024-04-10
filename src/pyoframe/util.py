@@ -3,6 +3,7 @@ File containing utility functions.
 """
 
 from typing import Any, Iterable, Optional, Union
+import re
 import polars as pl
 import pandas as pd
 
@@ -201,3 +202,102 @@ def cast_coef_to_string(
     return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
         "_sign"
     )
+
+
+# Function by mcrumiller (https://github.com/mcrumiller). See https://github.com/pola-rs/polars/issues/7133
+def sprintf(s, fmt):
+    """
+    Formats each element of a Polars Series `s` according to the format specifier `fmt`,
+    similarly to sprintf in C or format in Python. It supports basic formatting for
+    strings, integers, and floating-point numbers. This is particularly useful for data
+    presentation and reporting purposes within a Polars DataFrame.
+
+    Parameters
+    ----------
+    s : pl.Series or pl.Expr
+        The Polars Series or Expression to format. This can be a series of any data type
+        that the formatting specifiers support (string, integer, float).
+    fmt : str
+        The format specifier, using a subset of the sprintf specification. Supported specifiers:
+          - '%s' for strings, with optional '<' (left-align) or '>' (right-align) and width.
+          - '%d' for integers.
+          - '%f' for floating-point numbers, with optional width and precision (e.g., '%0.2f').
+        Alignment is only applicable to string formatting. For numerical values, leading zeros
+        and precision can be specified.
+
+    Returns
+    -------
+    pl.Series or pl.Expr
+        A Polars Series or Expression where each element has been formatted according to `fmt`.
+        The type of the returned object matches the input `s` (either Series or Expression).
+
+    Raises
+    ------
+    ValueError
+        If `fmt` is an invalid format specifier.
+
+    Examples
+    --------
+    >>> import polars as pl
+    >>> s = pl.Series([1, 2, 3.4, 5.6789])
+    >>> print(sprintf(s, "%0.2f").to_list())
+    ['1.00', '2.00', '3.40', '5.68']
+    """
+
+    # parse format
+    parser = re.compile(r"^%(?P<pct>%?)(?P<align>[\<\>|]?)(?P<head>\d*)(?P<dot>\.?)(?P<dec>\d*)(?P<char>[dfs])$")
+    result = parser.match(fmt)
+    if not result:
+        raise ValueError(f"Invalid format {fmt} specified.")
+
+    # determine total width & leading zeros
+    head = result.group("head")
+    if head != '':
+        total_width = int(head)
+        lead_zeros = head[0] == '0'
+    else:
+        total_width = 0
+        lead_zeros = False
+
+    # determine # of decimals
+    if result.group("char") == 's':
+        # string requested: return immediately
+        expr = s.str.ljust(total_width) if result.group("align") == '<' else s.str.rjust(total_width)
+        return pl.select(expr).to_series() if isinstance(s, pl.Series) else expr
+
+    elif result.group("char") == 'd' or result.group("dot") != '.':
+        num_decimals = 0
+    else:
+        num_decimals = int(result.group("dec"))
+
+    # determine whether to display as percent
+    if result.group("pct") == '%':
+        s, pct = (s*100, [pl.lit('%')])
+    else:
+        s, pct = (s, [])
+
+    # we require float dtype to perform any rounding
+    s = s.cast(pl.Float32).round(num_decimals)
+
+    if num_decimals > 0:
+        # compute head portion
+        head_width = max(0, total_width - num_decimals - 1)
+        head = pl.when(s < 0).then(s.ceil()).otherwise(s.floor())
+
+        # compute decimal portion
+        decimal = (s-head)
+        tail = [
+            pl.lit('.'),
+            (decimal*(10**num_decimals)).round(0).cast(pl.UInt16).cast(pl.Utf8).str.rjust(num_decimals, '0')
+        ]
+        head = head.cast(pl.Int32).cast(pl.Utf8)
+    else:
+        # we only have head portion
+        head_width = total_width
+        head = s.cast(pl.Int32).cast(pl.Utf8)
+        tail = []
+
+    head = head.str.zfill(head_width) if lead_zeros else head.str.rjust(head_width)
+    expr = pl.concat_str([head, *tail, *pct])
+
+    return pl.select(expr).to_series() if isinstance(s, pl.Series) else expr
