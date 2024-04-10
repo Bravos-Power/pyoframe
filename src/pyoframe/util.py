@@ -256,6 +256,12 @@ def sprintf(s: pl.Series, fmt: str):
     >>> s = pl.Series([1, 2, 3.4, 5.6789])
     >>> print(sprintf(s, "%0.2f").to_list())
     ['1.00', '2.00', '3.40', '5.68']
+    >>> print(sprintf(s, None).to_list())
+    ['1.0', '2.0', '3.4', '5.6789']
+    >>> sprintf(s, "oops")
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid format oops specified.
     """
 
     if fmt is None:
