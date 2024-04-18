@@ -40,7 +40,7 @@ class ModelElement(ABC):
             data = data.cast({VAR_KEY: pl.UInt32})
 
         self._data = data
-        self._model = None
+        self._model: Optional[Model] = None
         self.name = None
         super().__init__(**kwargs)
 

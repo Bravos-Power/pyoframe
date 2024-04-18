@@ -1,14 +1,5 @@
 from __future__ import annotations
-from typing import (
-    TYPE_CHECKING,
-    Iterable,
-    List,
-    Mapping,
-    Protocol,
-    Sequence,
-    overload,
-    Union,
-)
+from typing import Iterable, List, Mapping, Protocol, Sequence, overload, Union
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -32,9 +23,6 @@ from pyoframe.util import (
 )
 from pyoframe.var_mapping import DEFAULT_MAP
 from pyoframe.model_element import ModelElement
-
-if TYPE_CHECKING:
-    from pyoframe.model import Model
 
 VAR_TYPE = pl.UInt32
 
@@ -702,6 +690,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
 
 class Constraint(Expression):
     """A linear programming constraint."""
+
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
         """Initialize a constraint.
 
