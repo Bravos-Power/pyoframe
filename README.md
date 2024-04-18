@@ -1,4 +1,4 @@
-# PyoFrame: Fast and low-memory linear programming models 
+# Pyoframe: Fast and low-memory linear programming models 
 
 [![codecov](https://codecov.io/gh/Bravos-Power/pyoframe/graph/badge.svg?token=8258XESRYQ)](https://codecov.io/gh/Bravos-Power/pyoframe)
 [![Build](https://github.com/Bravos-Power/pyoframe/actions/workflows/ci.yml/badge.svg)](https://github.com/Bravos-Power/pyoframe/actions/workflows/ci.yml)
@@ -8,7 +8,7 @@
 [![Open Bugs](https://img.shields.io/github/issues-search/Bravos-Power/pyoframe?query=label%3Abug%20is%3Aopen&label=Open%20Bugs)](https://github.com/Bravos-Power/pyoframe/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
 
 
-A library to rapidly formulate large and sparse optimization models using Pandas or Polars dataframes.
+A library to rapidly and memory-efficiently formulate large and sparse optimization models using Pandas or Polars dataframes.
 
 ## Contribute
 
