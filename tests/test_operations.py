@@ -35,7 +35,7 @@ def test_to_str():
 """
     )
 
-    assert expr.to_str() == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
+    assert str(expr) == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
     # str() is the same as to_str()
     assert expr.to_str() == str(expr)
     assert expr.to_str(float_precision=6) == "[1]: 2\n[2]: 3\n[3]: 4"

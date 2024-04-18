@@ -13,9 +13,30 @@ CONST_TERM = 0
 
 RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY)
 
-class Config:
-    disable_unmatched_checks = False
-    printing_float_precision: Optional[int] = 6
+
+class _ConfigMeta(type):
+    """Metaclass for Config that stores the default values of all configuration options."""
+
+    def __init__(cls, name, bases, dct):
+        super().__init__(name, bases, dct)
+        cls._defaults = {
+            k: v
+            for k, v in dct.items()
+            if not k.startswith("_") and type(v) != classmethod
+        }
+
+
+class Config(metaclass=_ConfigMeta):
+    disable_unmatched_checks: bool = False
+    printing_float_precision: Optional[int] = 5
+
+    @classmethod
+    def reset_defaults(cls):
+        """
+        Resets all configuration options to their default values.
+        """
+        for key, value in cls._defaults.items():
+            setattr(cls, key, value)
 
 
 class ConstraintSense(Enum):

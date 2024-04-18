@@ -1,4 +1,3 @@
-from math import exp
 import re
 import pandas as pd
 import numpy as np
@@ -8,7 +7,7 @@ from pyoframe.constraints import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY, Config
 from pyoframe import Variable
 from pyoframe.constraints import Expression, sum
 from .util import csvs_to_expr
@@ -267,7 +266,7 @@ def test_add_expression_with_vars_and_add_dim_many():
     rhs = rhs.add_dim("x")
     result = lhs + rhs
     assert (
-        result.to_str()
+        str(result)
         == """[1,a,4]: 4  +2 x1 +4 x5
 [1,a,5]: 4  +2 x1 +4 x7
 [1,b,4]: 4  +2 x2 +4 x6
@@ -292,19 +291,25 @@ def test_add_expression_with_missing():
         ),
     ):
         lhs + rhs
-    result = lhs + rhs.keep_unmatched()
-    assert (
-        result.to_str()
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2
-[c]: 3  +4 x5"""
-    )
+
     result = lhs + rhs.drop_unmatched()
     assert (
-        result.to_str()
+        str(result)
         == """[a]: 4  +4 x3 +2 x1
 [b]: 4  +4 x4 +2 x2"""
     )
+    result = lhs + rhs.keep_unmatched()
+    assert str(result) ==  """[a]: 4  +4 x3 +2 x1
+[b]: 4  +4 x4 +2 x2
+[c]: 3  +4 x5"""
+    
+    Config.disable_unmatched_checks = True
+    result = lhs + rhs
+    assert str(result) == """[a]: 4  +2 x1 +4 x3
+[b]: 4  +2 x2 +4 x4
+[c]: 3  +4 x5"""
+
+    
 
 
 def test_add_expressions_with_dims_and_missing():
@@ -347,7 +352,7 @@ def test_add_expressions_with_dims_and_missing():
 
     result = lhs + rhs.drop_unmatched()
     assert (
-        result.to_str()
+        str(result)
         == """[1,a,4]: 4  +2 x1 +4 x5
 [1,a,5]: 4  +2 x1 +4 x6
 [1,b,4]: 4  +2 x2 +4 x7
@@ -417,13 +422,17 @@ def test_no_propogate():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"),
+        match=re.escape(
+            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+        ),
     ):
         sum("dim1", expr1 + expr2) + expr3
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"),
+        match=re.escape(
+            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+        ),
     ):
         sum("dim1", expr1 + expr2.keep_unmatched()) + expr3
 
