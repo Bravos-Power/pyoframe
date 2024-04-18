@@ -43,8 +43,8 @@ def bounds_to_file(m: "Model", f, var_map):
     Write out variables of a model to a lp file.
     """
     for variable in create_section(m.variables, f, "bounds"):
-        lb = f"{variable.lb:+.12g}"
-        ub = f"{variable.ub:+.12g}"
+        lb = f"{variable.lb:.12g}"
+        ub = f"{variable.ub:.12g}"
 
         df = (
             var_map.map_vars(variable.data)
@@ -98,7 +98,7 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
 
 
 def to_file(
-    m: "Model", fn: Optional[Union[str, Path]], integer_label="general", use_var_names=False
+    m: "Model", fn: Optional[Union[str, Path]], use_var_names=False
 ) -> Path:
     """
     Write out a model to a lp file.
