@@ -69,6 +69,7 @@ class SupportsMath(ABC, SupportsToExpr):
     __add__ = _forward_to_expression("__add__")
     __mul__ = _forward_to_expression("__mul__")
     sum = _forward_to_expression("sum")
+    map = _forward_to_expression("map")
 
     def __neg__(self):
         res = self.to_expr() * -1
@@ -321,6 +322,67 @@ class Expression(ModelElement, SupportsMath):
             .group_by(remaining_dims + [VAR_KEY], maintain_order=True)
             .sum()
         )
+
+    def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True):
+        """
+        Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
+        
+        This is particularly useful to go from one type of dimensions to another. For example, to convert data that
+        is indexed by city to data indexed by country (see example).
+
+        Parameters:
+            mapping_set : SetTypes
+                The set to map the expression to. This can be a DataFrame, Index, or another Set.
+            drop_shared_dims : bool, default True
+                If True, the dimensions shared between the expression and the mapping set are dropped from the resulting expression and
+                    repeated rows are summed.
+                If False, the shared dimensions are kept in the resulting expression.
+
+        Returns:
+            Expression
+                A new Expression containing the result of the mapping operation.
+
+        Examples:
+
+        >>> import polars as pl
+        >>> from pyoframe import Variable, Model
+        >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "population": [10, 2, 8]}).to_expr()
+        >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
+        >>> pop_data.map(cities_and_countries)
+        <Expression size=2 dimensions={'country': 2} terms=2>
+        [Canada]: 12
+        [USA]: 8
+        
+        >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
+        <Expression size=3 dimensions={'city': 3, 'country': 2} terms=3>
+        [Toronto,Canada]: 10
+        [Vancouver,Canada]: 2
+        [Boston,USA]: 8
+        """
+        mapping_set = Set(mapping_set)
+
+        dims = self.dimensions
+        if dims is None:
+            raise ValueError("Cannot use .map() on an expression with no dimensions.")
+
+        mapping_dims = mapping_set.dimensions
+        if mapping_dims is None:
+            raise ValueError(
+                "Cannot use .map() with a mapping set containing no dimensions."
+            )
+
+        shared_dims = [dim for dim in dims if dim in mapping_dims]
+        if not shared_dims:
+            raise ValueError(
+                f"Cannot apply .map() as there are no shared dimensions between the expression (dims={self.dimensions}) and the mapping set (dims={mapping_set.dimensions})."
+            )
+
+        mapped_expression = self * mapping_set
+
+        if drop_shared_dims:
+            return sum(shared_dims, mapped_expression)
+
+        return mapped_expression
 
     def rolling_sum(self, over: str, window_size: int):
         """
