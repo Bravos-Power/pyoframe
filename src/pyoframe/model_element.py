@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
 from pyoframe._arithmetic import _get_dimensions
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from pyoframe.model import Model
 
 

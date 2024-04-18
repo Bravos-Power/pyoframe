@@ -9,7 +9,7 @@ from pyoframe.constants import (
     Config,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from pyoframe.constraints import Expression
 
 
