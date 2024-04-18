@@ -1,8 +1,9 @@
 import pytest
 
-from pyoframe.variables import Variable
+import pyoframe as pf
 
 
 @pytest.fixture(autouse=True)
 def setup_before_each_test():
-    Variable._reset_var_count()
+    pf.Variable._reset_var_count()
+    pf.Config.reset_defaults()

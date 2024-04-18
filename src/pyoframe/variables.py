@@ -105,6 +105,7 @@ class Variable(ModelElement, SupportsMath):
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
         e._model = self._model
+        # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
         e.unmatched_strategy = self.unmatched_strategy
         e.allowed_new_dims = self.allowed_new_dims
         return e

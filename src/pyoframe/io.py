@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 from pyoframe.constants import VAR_KEY
 from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from pyoframe.model import Model
 
 import polars as pl

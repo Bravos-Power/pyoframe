@@ -4,7 +4,7 @@ from pyoframe.constants import CONST_TERM
 from pyoframe.constants import VAR_KEY
 from pyoframe.util import concat_dimensions
 
-if TYPE_CHECKING:
+if TYPE_CHECKING: # pragma: no cover
     from pyoframe.model import Model, Variable
 
 
