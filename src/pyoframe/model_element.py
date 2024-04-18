@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 
 
 def _pass_polars_method(method_name: str):
+    """
+    Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute.
+    """
     def method(self, *args, **kwargs):
         return self._new(getattr(self.data, method_name)(*args, **kwargs))
 
@@ -102,6 +105,9 @@ class ModelElement(ABC):
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
+        """
+        Used to create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.).
+        """
         raise NotImplementedError
 
     rename = _pass_polars_method("rename")

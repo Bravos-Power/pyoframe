@@ -4,7 +4,7 @@ File containing shared constants used across the package.
 
 from enum import Enum
 import typing
-from typing import Literal
+from typing import Literal, Optional
 
 
 COEF_KEY = "__coeff"
@@ -15,6 +15,7 @@ RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY)
 
 class Config:
     disable_unmatched_checks = False
+    printing_float_precision: Optional[int] = 6
 
 
 class ConstraintSense(Enum):
@@ -35,7 +36,7 @@ class VType(Enum):
 
 
 class UnmatchedStrategy(Enum):
-    ERROR = "error"
+    UNSET = "not_set"
     DROP = "drop"
     KEEP = "keep"
 

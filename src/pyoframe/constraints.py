@@ -1,17 +1,17 @@
 from __future__ import annotations
-from typing import Iterable, List, Mapping, Protocol, Sequence, overload, Union
+from typing import Iterable, List, Mapping, Protocol, Sequence, overload, Union, Optional
 from abc import ABC, abstractmethod
 
 import pandas as pd
 import polars as pl
 
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
-from pyoframe.constants import Config
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     RESERVED_COL_KEYS,
     VAR_KEY,
+    Config,
     ConstraintSense,
     UnmatchedStrategy,
 )
@@ -43,11 +43,7 @@ class SupportsMath(ABC, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
     def __init__(self):
-        self.unmatched_strategy = (
-            UnmatchedStrategy.KEEP
-            if Config.disable_unmatched_checks
-            else UnmatchedStrategy.ERROR
-        )
+        self.unmatched_strategy = UnmatchedStrategy.UNSET
         self.allowed_new_dims: List[str] = []
 
     def keep_unmatched(self):
@@ -73,6 +69,7 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __neg__(self):
         res = self.to_expr() * -1
+        # Negating a constant term should keep the unmatched strategy
         res.unmatched_strategy = self.unmatched_strategy
         return res
 
@@ -152,6 +149,7 @@ class Set(ModelElement, SupportsMath):
     def _new(self, data: pl.DataFrame):
         s = Set(data)
         s._model = self._model
+        # Copy over the unmatched strategy on operations like .rename(), .with_columns(), etc.
         s.unmatched_strategy = self.unmatched_strategy
         return s
 
@@ -199,7 +197,7 @@ class Set(ModelElement, SupportsMath):
 
     def to_expr(self) -> Expression:
         return Expression(
-            data=self.data.with_columns(
+            self.data.with_columns(
                 pl.lit(1).alias(COEF_KEY), pl.lit(CONST_TERM).alias(VAR_KEY)
             )
         )
@@ -284,7 +282,7 @@ class Expression(ModelElement, SupportsMath):
         # Sanity check no duplicates indices
         if data.drop(COEF_KEY).is_duplicated().any():
             duplicated_data = data.filter(data.drop(COEF_KEY).is_duplicated())
-            raise ValueError(f"Duplicate indices found:\n{duplicated_data}.")
+            raise ValueError(f"Cannot create an expression with duplicate indices:\n{duplicated_data}.")
 
         super().__init__(data)
 
@@ -326,7 +324,7 @@ class Expression(ModelElement, SupportsMath):
     def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True):
         """
         Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
-        
+
         This is particularly useful to go from one type of dimensions to another. For example, to convert data that
         is indexed by city to data indexed by country (see example).
 
@@ -352,7 +350,7 @@ class Expression(ModelElement, SupportsMath):
         <Expression size=2 dimensions={'country': 2} terms=2>
         [Canada]: 12
         [USA]: 8
-        
+
         >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
         <Expression size=3 dimensions={'city': 3, 'country': 2} terms=3>
         [Toronto,Canada]: 10
@@ -505,6 +503,8 @@ class Expression(ModelElement, SupportsMath):
             <Expression size=1 dimensions={} terms=2>
             2 x4 +5
         """
+        if isinstance(other, str):
+            raise ValueError("Cannot add a string to an expression. Perhaps you meant to use pf.sum() instead of sum()?")
         if isinstance(other, (int, float)):
             return self._add_const(other)
         other = other.to_expr()
@@ -555,7 +555,7 @@ class Expression(ModelElement, SupportsMath):
     def _new(self, data: pl.DataFrame) -> Expression:
         e = Expression(data)
         e._model = self._model
-        e.unmatched_strategy = self.unmatched_strategy
+        # Note: We intentionally don't propogate the unmatched strategy to the new expression
         e.allowed_new_dims = self.allowed_new_dims
         return e
 
@@ -621,11 +621,12 @@ class Expression(ModelElement, SupportsMath):
         include_const_term=True,
         var_map=None,
         include_name=True,
+        float_precision=None,
     ):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
             var_map = self._model.var_map if self._model is not None else DEFAULT_MAP
-        data = cast_coef_to_string(data)
+        data = cast_coef_to_string(data, float_precision=float_precision)
         data = var_map.map_vars(data)
         dimensions = self.dimensions
 
@@ -687,29 +688,34 @@ class Expression(ModelElement, SupportsMath):
         var_map=None,
         include_name=True,
         include_header=False,
-        include_footer=True,
+        include_data=True,
+        float_precision=None,
     ):
         result = ""
         if include_header:
             result += get_obj_repr(
                 self, size=len(self), dimensions=self.shape, terms=len(self.data)
             )
-        if include_header and include_footer:
+        if include_header and include_data:
             result += "\n"
-        if include_footer:
+        if include_data:
             str_table = self.to_str_table(
                 max_line_len=max_line_len,
                 max_rows=max_rows,
                 include_const_term=include_const_term,
                 var_map=var_map,
                 include_name=include_name,
+                float_precision=float_precision,
             )
             result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
         return result
 
     def __repr__(self) -> str:
-        return self.to_str(max_line_len=80, max_rows=15, include_header=True)
+        return self.to_str(max_line_len=80, max_rows=15, include_header=True, float_precision=Config.printing_float_precision)
+    
+    def __str__(self) -> str:
+        return self.to_str()
 
 
 @overload
@@ -771,7 +777,7 @@ class Constraint(Expression):
             self._model = lhs._model
         self.sense = sense
 
-    def to_str(self, max_line_len=None, max_rows=None, var_map=None):
+    def to_str(self, max_line_len=None, max_rows=None, var_map=None, float_precision=None):
         dims = self.dimensions
         str_table = self.to_str_table(
             max_line_len=max_line_len,
@@ -780,7 +786,7 @@ class Constraint(Expression):
             var_map=var_map,
         )
         rhs = self.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
-        rhs = cast_coef_to_string(rhs, drop_ones=False)
+        rhs = cast_coef_to_string(rhs, drop_ones=False, float_precision=float_precision)
         # Remove leading +
         rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters=" +"))
         rhs = rhs.rename({COEF_KEY: "rhs"})
