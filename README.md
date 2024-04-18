@@ -6,6 +6,10 @@
 
 A library to rapidly formulate large and sparse optimization models using Pandas or Polars dataframes.
 
+## Contribute
+
+Contributions are welcome! See [`CONTRIBUTE.md`](./CONTRIBUTE.md).
+
 ## Acknowledgments
 
 Martin Staadecker first created this library while working for [Bravos Power](https://www.bravospower.com/) The library takes inspiration from Linopy and Pyomo, two prior libraries for optimization for which we are thankful.
