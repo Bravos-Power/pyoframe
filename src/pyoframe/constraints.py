@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import polars as pl
 
-from pyoframe.arithmetic import add_expressions, get_dimensions
+from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import Config
 from pyoframe.constants import (
     COEF_KEY,
@@ -407,7 +407,7 @@ class Expression(ModelElement, SupportsMath):
         └──────┴─────────┴───────────────┘
         """
         df: pl.DataFrame = Set(set).data
-        set_dims = get_dimensions(df)
+        set_dims = _get_dimensions(df)
         assert (
             set_dims is not None
         ), "Cannot use .within() with a set with no dimensions."
@@ -459,7 +459,7 @@ class Expression(ModelElement, SupportsMath):
             return self._add_const(other)
         other = other.to_expr()
         self._learn_from_other(other)
-        return add_expressions(self, other)
+        return _add_expressions(self, other)
 
     def __mul__(
         self: "Expression", other: int | float | SupportsToExpr

@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import numpy as np
 import pytest
-from pyoframe.arithmetic import PyoframeError
+from pyoframe._arithmetic import PyoframeError
 from pyoframe.constraints import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl

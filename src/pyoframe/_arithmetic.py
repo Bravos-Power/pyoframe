@@ -11,9 +11,9 @@ class PyoframeError(Exception):
     pass
 
 
-def add_expressions(*expressions: "Expression") -> "Expression":
+def _add_expressions(*expressions: "Expression") -> "Expression":
     try:
-        return add_expressions_internal(*expressions)
+        return _add_expressions_core(*expressions)
     except PyoframeError as error:
         raise PyoframeError(
             "Failed to add expressions:\n"
@@ -25,7 +25,7 @@ def add_expressions(*expressions: "Expression") -> "Expression":
         ) from error
 
 
-def add_expressions_internal(*expressions: "Expression") -> "Expression":
+def _add_expressions_core(*expressions: "Expression") -> "Expression":
     assert len(expressions) > 1, "Need at least two expressions to add together."
 
     dims = expressions[0].dimensions_unsafe
@@ -40,7 +40,7 @@ def add_expressions_internal(*expressions: "Expression") -> "Expression":
     if len(expressions) > 2 and (has_dim_conflict or requires_join):
         result = expressions[0]
         for expr in expressions[1:]:
-            result = add_expressions_internal(result, expr)
+            result = _add_expressions_core(result, expr)
         return result
 
     if has_dim_conflict:
@@ -173,7 +173,7 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
     return self._new(result)
 
 
-def get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
+def _get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
     """
     Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
     If there are no dimensions, returns None to force caller to handle this special case.

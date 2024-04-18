@@ -5,7 +5,7 @@ import polars as pl
 from typing import TYPE_CHECKING
 
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
-from pyoframe.arithmetic import get_dimensions
+from pyoframe._arithmetic import _get_dimensions
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
@@ -25,7 +25,7 @@ class ModelElement(ABC):
             set(data.columns)
         ), "Duplicate column names found."
 
-        cols = get_dimensions(data)
+        cols = _get_dimensions(data)
         if cols is None:
             cols = []
         cols += [col for col in RESERVED_COL_KEYS if col in data.columns]
@@ -62,7 +62,7 @@ class ModelElement(ABC):
             >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
             ['hour', 'city']
         """
-        return get_dimensions(self.data)
+        return _get_dimensions(self.data)
     
     @property
     def dimensions_unsafe(self) -> List[str]:
