@@ -131,7 +131,7 @@ class Variable(ModelElement, SupportsMath):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+            pyoframe._arithmetic.PyoframeError: Failed to add expressions:
             <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
             Due to error:
             Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()

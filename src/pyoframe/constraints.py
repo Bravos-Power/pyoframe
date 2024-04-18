@@ -427,7 +427,7 @@ class Expression(ModelElement, SupportsMath):
             >>> var + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe.arithmetic.PyoframeError: Failed to add expressions:
+            pyoframe._arithmetic.PyoframeError: Failed to add expressions:
             <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
             Due to error:
             Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()

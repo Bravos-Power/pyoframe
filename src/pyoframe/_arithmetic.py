@@ -180,9 +180,9 @@ def _get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
 
     Examples:
         >>> import polars as pl
-        >>> get_dimensions(pl.DataFrame({"x": [1, 2, 3], "y": [1, 2, 3]}))
+        >>> _get_dimensions(pl.DataFrame({"x": [1, 2, 3], "y": [1, 2, 3]}))
         ['x', 'y']
-        >>> get_dimensions(pl.DataFrame({"__variable_id": [1, 2, 3]}))
+        >>> _get_dimensions(pl.DataFrame({"__variable_id": [1, 2, 3]}))
     """
     result = [col for col in df.columns if col not in RESERVED_COL_KEYS]
     return result if result else None
