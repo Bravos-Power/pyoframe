@@ -3,6 +3,10 @@ File containing utility functions.
 """
 
 from typing import Any, Iterable, Optional, Union
+import math
+import string
+import itertools
+
 import polars as pl
 import pandas as pd
 
@@ -213,3 +217,57 @@ def cast_coef_to_string(
     return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
         "_sign"
     )
+
+
+BASE52_CHAR_TABLE = pl.DataFrame(
+    {"code": range(52), "char": list(string.ascii_letters)},
+    schema={"code": pl.UInt32, "char": str}
+) # Not quite ascii
+
+def to_base52(int_col: pl.Series) -> pl.Series:
+    """Returns a series of dtype str with a 52-base representation of the integers in int_col.
+    The letters a-zA-Z are used as symbols for the representation.
+
+    The purpose of this function is to create a very compact string representation of the integers, on a
+    form that is also a valid variable name in an lp-file.
+
+    Examples
+    --------
+    >>> import polars as pl
+    >>> s = pl.Series([0,1,2,50,53,52**2+1,52**4], dtype=pl.UInt32)
+    >>> print(to_base52(s).to_list())
+    ['', 'b', 'c', 'Y', 'bb', 'bab', 'baaaa']
+    """
+
+    assert isinstance(int_col.dtype, pl.UInt32) # Only thought to work for variable ids
+    def digits_in_base52(N):
+        if N == 0:
+            return 1
+        return math.floor(math.log(N, 52)) + 1
+
+
+    digits = []
+
+    for i in range(digits_in_base52(int_col.max())):
+        remainder = int_col % 52
+
+        digits.append(
+            remainder
+            .to_frame(name="code")
+            .join(BASE52_CHAR_TABLE, on="code", how="left")
+            .select("char")
+            .rename({"char": f"digit{i}"})
+        )
+        int_col //= 52
+
+
+    digits = pl.concat(digits[::-1], how="horizontal")
+
+    return (
+        digits.with_columns(
+            pl.concat_str(
+                pl.all()
+            ).alias("base52repr")
+        )["base52repr"].str.strip_chars_start('a')
+    )
+

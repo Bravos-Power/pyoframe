@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 from pyoframe.constants import CONST_TERM
 from pyoframe.constants import VAR_KEY
-from pyoframe.util import concat_dimensions
+from pyoframe.util import concat_dimensions, to_base52
 
 if TYPE_CHECKING: # pragma: no cover
     from pyoframe.model import Model, Variable
@@ -56,5 +56,23 @@ class NumberedVariables(VariableMapping):
             .alias(VAR_KEY)
         )
 
+class Base52EncodedVariables(VariableMapping):
+    def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
+        """
+        Examples
+        --------
+        >>> import polars as pl
+        >>> from pyoframe import Model, Variable
+        >>> m = Model()
+        >>> m.x = Variable(pl.DataFrame({"t": [1,2,3]}))
+        >>> (m.x+1).to_str(var_map=DEFAULT_MAP).splitlines()
+        ['[1]: 1  + b', '[2]: 1  + c', '[3]: 1  + d']
+        >>> (m.x+1).to_str().splitlines()
+        ['[1]: 1  + x[1]', '[2]: 1  + x[2]', '[3]: 1  + x[3]']
+        """
+        return df.with_columns(
+            pl.col(VAR_KEY).map_batches(to_base52, return_dtype=str, is_elementwise=True)
+        )
 
-DEFAULT_MAP = NumberedVariables()
+
+DEFAULT_MAP = Base52EncodedVariables()
