@@ -66,12 +66,16 @@ class Base52EncodedVariables(VariableMapping):
         >>> m = Model()
         >>> m.x = Variable(pl.DataFrame({"t": [1,2,3]}))
         >>> (m.x+1).to_str(var_map=DEFAULT_MAP).splitlines()
-        ['[1]: 1  + b', '[2]: 1  + c', '[3]: 1  + d']
+        ['[1]: 1  + xb', '[2]: 1  + xc', '[3]: 1  + xd']
         >>> (m.x+1).to_str().splitlines()
         ['[1]: 1  + x[1]', '[2]: 1  + x[2]', '[3]: 1  + x[3]']
         """
         return df.with_columns(
-            pl.col(VAR_KEY).map_batches(to_base52, return_dtype=str, is_elementwise=True)
+            pl.when(pl.col(VAR_KEY) == pl.lit(CONST_TERM))
+            .then(pl.lit(""))
+            .otherwise(
+                pl.concat_str(pl.lit("x"), pl.col(VAR_KEY).map_batches(to_base52, return_dtype=str, is_elementwise=True)))
+            .alias(VAR_KEY)
         )
 
 
