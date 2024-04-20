@@ -70,6 +70,10 @@ class Base52EncodedVariables(VariableMapping):
         >>> (m.x+1).to_str().splitlines()
         ['[1]: 1  + x[1]', '[2]: 1  + x[2]', '[3]: 1  + x[3]']
         """
+
+        if df.height == 0:
+            return df
+
         return df.with_columns(
             pl.when(pl.col(VAR_KEY) == pl.lit(CONST_TERM))
             .then(pl.lit(""))
