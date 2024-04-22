@@ -3,9 +3,6 @@ File containing utility functions.
 """
 
 from typing import Any, Iterable, Optional, Union
-import math
-import string
-import itertools
 
 import polars as pl
 import pandas as pd
@@ -217,54 +214,3 @@ def cast_coef_to_string(
     return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
         "_sign"
     )
-
-
-BASE62_CHAR_TABLE = pl.DataFrame(
-    {"code": range(62), "char": list(string.digits + string.ascii_letters)},
-    schema={"code": pl.UInt32, "char": str}
-) # Not quite ascii
-
-def to_base62(int_col: pl.Series) -> pl.Series:
-    """Returns a series of dtype str with a base 62 representation of the integers in int_col.
-    The letters 0-9a-zA-Z are used as symbols for the representation.
-
-    Examples
-    --------
-    >>> import polars as pl
-    >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
-    >>> print(to_base62(s).to_list())
-    ['', 'a', 'k', 'Y', 'R', '14']
-    """
-
-    assert isinstance(int_col.dtype, pl.UInt32) # Only thought to work for variable ids
-    def digits_in_base62(N):
-        if N == 0:
-            return 1
-        return math.floor(math.log(N, 62)) + 1
-
-
-    digits = []
-
-    for i in range(digits_in_base62(int_col.max())):
-        remainder = int_col % 62
-
-        digits.append(
-            remainder
-            .to_frame(name="code")
-            .join(BASE62_CHAR_TABLE, on="code", how="left")
-            .select("char")
-            .rename({"char": f"digit{i}"})
-        )
-        int_col //= 62
-
-
-    digits = pl.concat(digits[::-1], how="horizontal")
-
-    return (
-        digits.with_columns(
-            pl.concat_str(
-                pl.all()
-            ).alias("base62repr")
-        )["base62repr"].str.strip_chars_start('0')
-    )
-
