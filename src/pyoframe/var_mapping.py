@@ -4,7 +4,7 @@ from pyoframe.constants import CONST_TERM
 from pyoframe.constants import VAR_KEY
 from pyoframe.util import concat_dimensions
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model, Variable
 
 
@@ -29,7 +29,9 @@ class NamedVariables(VariableMapping):
             self.add_var(var)
 
     def add_var(self, var: "Variable") -> None:
-        assert var.name is not None, "Variable must have a name to be used in a NamedVariables mapping."
+        assert (
+            var.name is not None
+        ), "Variable must have a name to be used in a NamedVariables mapping."
         self.map = pl.concat(
             [
                 self.map,

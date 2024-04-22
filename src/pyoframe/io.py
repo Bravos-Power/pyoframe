@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 from pyoframe.constants import VAR_KEY
 from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 import polars as pl
@@ -97,9 +97,7 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
         yield item
 
 
-def to_file(
-    m: "Model", fn: Optional[Union[str, Path]], use_var_names=False
-) -> Path:
+def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=False) -> Path:
     """
     Write out a model to a lp file.
     """

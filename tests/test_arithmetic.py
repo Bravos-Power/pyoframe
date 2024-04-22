@@ -299,17 +299,21 @@ def test_add_expression_with_missing():
 [b]: 4  +4 x4 +2 x2"""
     )
     result = lhs + rhs.keep_unmatched()
-    assert str(result) ==  """[a]: 4  +4 x3 +2 x1
+    assert (
+        str(result)
+        == """[a]: 4  +4 x3 +2 x1
 [b]: 4  +4 x4 +2 x2
 [c]: 3  +4 x5"""
-    
+    )
+
     Config.disable_unmatched_checks = True
     result = lhs + rhs
-    assert str(result) == """[a]: 4  +2 x1 +4 x3
+    assert (
+        str(result)
+        == """[a]: 4  +2 x1 +4 x3
 [b]: 4  +2 x2 +4 x4
 [c]: 3  +4 x5"""
-
-    
+    )
 
 
 def test_add_expressions_with_dims_and_missing():

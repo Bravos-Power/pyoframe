@@ -2,7 +2,7 @@ import polars as pl
 from typing import Tuple, Union, TYPE_CHECKING, overload
 import io
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.constraints import Expression
 
 

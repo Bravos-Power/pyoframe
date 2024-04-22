@@ -16,7 +16,9 @@ class Objective(Expression):
         maximize: a + b[1] + b[2] + b[3]
     """
 
-    def __init__(self, expr: SupportsMath, sense: Union[ObjSense, ObjSenseValue]) -> None:
+    def __init__(
+        self, expr: SupportsMath, sense: Union[ObjSense, ObjSenseValue]
+    ) -> None:
         self.sense = ObjSense(sense)
 
         expr = expr.to_expr()
