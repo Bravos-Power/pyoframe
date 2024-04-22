@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
 from pyoframe._arithmetic import _get_dimensions
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 
@@ -15,6 +15,7 @@ def _pass_polars_method(method_name: str):
     """
     Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute.
     """
+
     def method(self, *args, **kwargs):
         return self._new(getattr(self.data, method_name)(*args, **kwargs))
 
@@ -66,7 +67,7 @@ class ModelElement(ABC):
             ['hour', 'city']
         """
         return _get_dimensions(self.data)
-    
+
     @property
     def dimensions_unsafe(self) -> List[str]:
         """

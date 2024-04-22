@@ -1,5 +1,14 @@
 from __future__ import annotations
-from typing import Iterable, List, Mapping, Protocol, Sequence, overload, Union, Optional
+from typing import (
+    Iterable,
+    List,
+    Mapping,
+    Protocol,
+    Sequence,
+    overload,
+    Union,
+    Optional,
+)
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -282,7 +291,9 @@ class Expression(ModelElement, SupportsMath):
         # Sanity check no duplicates indices
         if data.drop(COEF_KEY).is_duplicated().any():
             duplicated_data = data.filter(data.drop(COEF_KEY).is_duplicated())
-            raise ValueError(f"Cannot create an expression with duplicate indices:\n{duplicated_data}.")
+            raise ValueError(
+                f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
+            )
 
         super().__init__(data)
 
@@ -504,7 +515,9 @@ class Expression(ModelElement, SupportsMath):
             2 x4 +5
         """
         if isinstance(other, str):
-            raise ValueError("Cannot add a string to an expression. Perhaps you meant to use pf.sum() instead of sum()?")
+            raise ValueError(
+                "Cannot add a string to an expression. Perhaps you meant to use pf.sum() instead of sum()?"
+            )
         if isinstance(other, (int, float)):
             return self._add_const(other)
         other = other.to_expr()
@@ -712,8 +725,13 @@ class Expression(ModelElement, SupportsMath):
         return result
 
     def __repr__(self) -> str:
-        return self.to_str(max_line_len=80, max_rows=15, include_header=True, float_precision=Config.printing_float_precision)
-    
+        return self.to_str(
+            max_line_len=80,
+            max_rows=15,
+            include_header=True,
+            float_precision=Config.printing_float_precision,
+        )
+
     def __str__(self) -> str:
         return self.to_str()
 
@@ -777,7 +795,9 @@ class Constraint(Expression):
             self._model = lhs._model
         self.sense = sense
 
-    def to_str(self, max_line_len=None, max_rows=None, var_map=None, float_precision=None):
+    def to_str(
+        self, max_line_len=None, max_rows=None, var_map=None, float_precision=None
+    ):
         dims = self.dimensions
         str_table = self.to_str_table(
             max_line_len=max_line_len,
