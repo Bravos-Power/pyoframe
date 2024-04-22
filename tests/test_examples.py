@@ -1,58 +1,67 @@
+import importlib
+import shutil
+import pytest
 from pathlib import Path
 from typing import List, Tuple
 
-from tests.examples.diet_problem.model import main as main_diet
-from tests.examples.diet_problem.model_gurobipy import main as main_diet_gurobipy
-from tests.examples.facility_problem.model import main as main_facility
-from tests.examples.facility_problem.model_gurobipy import (
-    main as main_facility_gurobipy,
+import pyoframe as pf
+
+
+@pytest.mark.parametrize(
+    "example_folder_name,integers_only",
+    [
+        ("diet_problem", False),
+        ("facility_problem", False),
+        ("cutting_stock_problem", True),
+    ],
 )
-from tests.examples.cutting_stock_problem.model import main as main_cutting_stock
+def test_examples(example_folder_name, integers_only):
+    example_dir = Path("tests/examples") / example_folder_name
+    input_dir = example_dir / "input_data"
+    expected_output_dir = example_dir / "results"
+    working_dir = Path("tmp") / example_folder_name
+    symbolic_output_dir = working_dir / "results"
+    dense_output_dir = working_dir / "results_dense"
 
+    if working_dir.exists():
+        shutil.rmtree(working_dir)
+    working_dir.mkdir(parents=True)
 
-def test_diet_example():
-    input_dir = Path("tests/examples/diet_problem/input_data/")
-    output_dir = Path("tmp/diet_problem/")
-    expected_output = Path("tests/examples/diet_problem/results/")
-    delete_dir(output_dir)
+    # Dynamically import the main function of the example
+    main_module = importlib.import_module(f"tests.examples.{example_folder_name}.model")
+    dense_obj = main_module.main(input_dir, dense_output_dir)
+    pf.Config.preserve_full_names = True
+    symbolic_obj = main_module.main(input_dir, symbolic_output_dir)
+    assert dense_obj == symbolic_obj, f"Solving with full names should give the same result"
 
-    main_diet(input_dir, output_dir)
-    main_diet_gurobipy(input_dir, output_dir)
+    gurobi_module = None
+    try:
+        gurobi_module = importlib.import_module(
+            f"tests.examples.{example_folder_name}.model_gurobipy"
+        )
+    except ImportError:
+        pass
 
-    check_files_equal(expected_output / "diet.lp", output_dir / "diet.lp")
-    check_files_equal(expected_output / "diet.sol", output_dir / "diet.sol")
-    check_sol_equal(expected_output / "diet-gurobipy.sol", output_dir / "diet.sol")
-
-
-def test_facility_example():
-    input_dir = Path("tests/examples/facility_problem/input_data/")
-    output_dir = Path("tmp/facility_problem/")
-    expected_output = Path("tests/examples/facility_problem/results/")
-
-    delete_dir(output_dir)
-
-    main_facility(input_dir, output_dir)
-    main_facility_gurobipy(input_dir, output_dir)
-
-    # Check that two files results are equal
-    check_files_equal(expected_output / "facility.lp", output_dir / "facility.lp")
-    check_files_equal(expected_output / "facility.sol", output_dir / "facility.sol")
-    check_sol_equal(
-        expected_output / "facility-gurobipy.sol", output_dir / "facility.sol"
-    )
-
-
-def test_cutting_stock_example():
-    input_dir = Path("tests/examples/cutting_stock_problem/input_data/")
-    output_dir = Path("tmp/cutting_stock/")
-    expected_output = Path("tests/examples/cutting_stock_problem/results/")
-
-    main_cutting_stock(input_dir, output_dir)
+    if gurobi_module is not None:
+        gurobi_module.main(input_dir, symbolic_output_dir)
 
     check_files_equal(
-        expected_output / "cutting_stock.lp", output_dir / "cutting_stock.lp"
+        expected_output_dir / "pyoframe-problem.lp",
+        symbolic_output_dir / "pyoframe-problem.lp",
     )
-    check_integer_solutions_only(output_dir / "cutting_stock.sol")
+    check_files_equal(
+        expected_output_dir / "pyoframe-problem.sol",
+        symbolic_output_dir / "pyoframe-problem.sol",
+    )
+    if gurobi_module is not None:
+        check_sol_equal(
+            expected_output_dir / "gurobipy.sol",
+            symbolic_output_dir / "pyoframe-problem.sol",
+        )
+
+    if integers_only:
+        check_integer_solutions_only(symbolic_output_dir / "pyoframe-problem.sol")
+        check_integer_solutions_only(dense_output_dir / "pyoframe-problem.sol")
 
 
 def check_files_equal(file_expected: Path, file_actual: Path):
@@ -93,8 +102,3 @@ def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = [(name, float(value)) for name, _, value in sol]
     return sol
 
-
-def delete_dir(dir: Path):
-    if dir.exists():
-        for file in dir.iterdir():
-            file.unlink()

@@ -13,7 +13,7 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
-from pyoframe.constants import VAR_KEY
+from pyoframe.constants import VAR_KEY, Config
 from pyoframe.var_mapping import Base62EncodedVariables, VariableMapping
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -97,7 +97,7 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
         yield item
 
 
-def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=False) -> Path:
+def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> Path:
     """
     Write out a model to a lp file.
     """
@@ -113,6 +113,8 @@ def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=False) -> 
     if fn.exists():
         fn.unlink()
 
+    if use_var_names is None:
+        use_var_names = Config.preserve_full_names
     var_map = m.var_map if use_var_names else Base62EncodedVariables()
 
     with open(fn, mode="w") as f:

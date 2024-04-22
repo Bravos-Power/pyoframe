@@ -18,7 +18,7 @@ def main(input_dir, output_dir: Path):
     max_nutrient = nutrients.select(["category", "max"]).to_expr()
     food_nutrients = pl.read_csv(input_dir / "foods_to_nutrients.csv").to_expr()
 
-    m = Model("diet")
+    m = Model()
     m.Buy = Variable(food_cost, lb=0)
 
     m.min_nutrients = (
@@ -30,7 +30,8 @@ def main(input_dir, output_dir: Path):
 
     m.minimize = sum(m.Buy * food_cost)
 
-    m.solve("gurobi", output_dir)
+    gurobi_model = m.solve("gurobi", output_dir)
+    return gurobi_model.getObjective().getValue()
 
 
 if __name__ == "__main__":

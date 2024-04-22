@@ -15,7 +15,7 @@ class Model:
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
     """
 
-    def __init__(self, name="model"):
+    def __init__(self, name=None):
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self._objective: Optional[Objective] = None

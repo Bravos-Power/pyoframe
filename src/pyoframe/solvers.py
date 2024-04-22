@@ -12,7 +12,7 @@ def solve(m, solver, output_dir: Optional[Path] = None, **kwargs):
         raise ValueError(f"Solver {solver} not recognized or supported.")
 
 
-def gurobi_solve(model, dir_path: Optional[Path] = None, use_var_names=True):
+def gurobi_solve(model, dir_path: Optional[Path] = None, use_var_names=None):
     import gurobipy as gp
 
     if dir_path is None:
@@ -21,12 +21,13 @@ def gurobi_solve(model, dir_path: Optional[Path] = None, use_var_names=True):
     if not dir_path.exists():
         dir_path.mkdir(parents=True)
 
-    problem_file = dir_path / f"{model.name}.lp"
+    filename = model.name if model.name is not None else "pyoframe-problem"
+    problem_file = dir_path / f"{filename}.lp"
     model.to_file(problem_file, use_var_names=use_var_names)
     gurobi_model = gp.read(str(problem_file))
     gurobi_model.optimize()
     if gurobi_model.status != gp.GRB.OPTIMAL:
         raise Exception(f"Optimization failed with status {gurobi_model.status}")
 
-    gurobi_model.write(str(dir_path / f"{model.name}.sol"))
+    gurobi_model.write(str(dir_path / f"{filename}.sol"))
     return gurobi_model

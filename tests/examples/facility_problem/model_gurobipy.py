@@ -39,7 +39,7 @@ def main(input_dir, output_dir: Path):
     warehouses = range(len(demand))
 
     # Model
-    m = gp.Model("facility")
+    m = gp.Model()
 
     # Plant open decision variables: open[p] == 1 if plant p is open.
     open = m.addVars(plants, vtype=GRB.BINARY, obj=fixedCosts, name="open")
@@ -64,9 +64,10 @@ def main(input_dir, output_dir: Path):
     # Use barrier to solve root relaxation
     m.Params.Method = 2
 
-    m.write(str(output_dir / "facility-gurobipy.lp"))
+    m.write(str(output_dir / "gurobipy.lp"))
     m.optimize()
-    m.write(str(output_dir / "facility-gurobipy.sol"))
+    m.write(str(output_dir / "gurobipy.sol"))
+    return m.getObjective().getValue()
 
 
 if __name__ == "__main__":

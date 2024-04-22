@@ -9,9 +9,12 @@ from typing import Literal, Optional
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
+CONSTRAINT_KEY = "__constraint_id"
+SOLUTION_KEY = "__solution"
+DUAL_KEY = "__dual"
 CONST_TERM = 0
 
-RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY)
+RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY, CONSTRAINT_KEY, SOLUTION_KEY, DUAL_KEY)
 
 
 class _ConfigMeta(type):
@@ -29,6 +32,7 @@ class _ConfigMeta(type):
 class Config(metaclass=_ConfigMeta):
     disable_unmatched_checks: bool = False
     printing_float_precision: Optional[int] = 5
+    preserve_full_names: bool = False
 
     @classmethod
     def reset_defaults(cls):

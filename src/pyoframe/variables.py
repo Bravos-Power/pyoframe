@@ -9,7 +9,7 @@ import polars as pl
 
 from pyoframe.constraints import SupportsMath, Set
 
-from pyoframe.constants import COEF_KEY, VAR_KEY, VType, VTypeValue
+from pyoframe.constants import COEF_KEY, SOLUTION_KEY, VAR_KEY, VType, VTypeValue
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
@@ -54,12 +54,12 @@ class Variable(ModelElement, SupportsMath):
         [3]: x9
     """
 
-    _var_count = 1  # Must start at 1 since 0 is reserved for constant terms
+    _counter = 1  # Must start at 1 since 0 is reserved for constant terms
 
     @classmethod
-    def _reset_var_count(cls):
+    def _reset_counter(cls):
         """Resets the variable count. Useful to ensure consistency in unit tests."""
-        cls._var_count = 1
+        cls._counter = 1
 
     # TODO: Breaking change, remove support for Iterable[AcceptableSets]
     def __init__(
@@ -70,16 +70,17 @@ class Variable(ModelElement, SupportsMath):
         vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
         if len(indexing_sets) == 0:
-            data = pl.DataFrame({VAR_KEY: [Variable._var_count]})
+            data = pl.DataFrame({VAR_KEY: [Variable._counter]})
         else:
             data = Set(*indexing_sets).data.with_columns(
-                pl.int_range(Variable._var_count, Variable._var_count + pl.len()).alias(
+                pl.int_range(Variable._counter, Variable._counter + pl.len()).alias(
                     VAR_KEY
                 )
             )
+        data = data.with_columns(pl.lit(None).cast(pl.Float64).alias(SOLUTION_KEY))
         super().__init__(data)
 
-        Variable._var_count += data.height
+        Variable._counter += data.height
 
         self.vtype: VType = VType(vtype)
 
@@ -89,6 +90,10 @@ class Variable(ModelElement, SupportsMath):
 
         self.lb = lb
         self.ub = ub
+
+    @property
+    def id(self):
+        return self.data.select(self.dimensions_unsafe + [VAR_KEY])
 
     def __repr__(self):
         return (
@@ -100,7 +105,7 @@ class Variable(ModelElement, SupportsMath):
         )
 
     def to_expr(self) -> Expression:
-        return self._new(self.data)
+        return self._new(self.data.drop(SOLUTION_KEY))
 
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))

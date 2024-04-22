@@ -17,7 +17,7 @@ def main(input_dir, output_dir: Union[Path, str]):
         .set_index(["wharehouse", "plant"])["cost"]
     )
 
-    m = Model("facility")
+    m = Model()
     m.open = Variable(plants.index, vtype="binary")
     m.transport = Variable(warehouses.index, plants.index, lb=0)
 
@@ -26,7 +26,8 @@ def main(input_dir, output_dir: Union[Path, str]):
 
     m.minimize = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
 
-    m.solve("gurobi", output_dir)
+    gurobi_model = m.solve("gurobi", output_dir)
+    return gurobi_model.getObjective().getValue()
 
 
 if __name__ == "__main__":

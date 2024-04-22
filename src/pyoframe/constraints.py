@@ -18,6 +18,8 @@ from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
+    CONSTRAINT_KEY,
+    DUAL_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
     Config,
@@ -779,6 +781,13 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
 class Constraint(Expression):
     """A linear programming constraint."""
 
+    _counter = 1  # Start at 1 to be consistent with variables
+
+    @classmethod
+    def _reset_counter(cls):
+        """Resets the variable count. Useful to ensure consistency in unit tests."""
+        cls._counter = 1
+
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
         """Initialize a constraint.
 
@@ -796,6 +805,29 @@ class Constraint(Expression):
         if isinstance(lhs, Expression):
             self._model = lhs._model
         self.sense = sense
+
+        dims = self.dimensions
+        if dims is None:
+            self.data_per_constraint = pl.DataFrame()
+        else:
+            self.data_per_constraint = self.data.select(dims).unique()
+
+        self.data_per_constraint = self.data_per_constraint.with_columns(
+            pl.lit(None).cast(pl.Float64).alias(DUAL_KEY)
+        ).with_columns(
+            pl.int_range(Constraint._counter, Constraint._counter + pl.len()).alias(
+                CONSTRAINT_KEY
+            )
+        )
+
+        Constraint._counter += len(self.data_per_constraint)
+
+    @property
+    def dual(self) -> pl.DataFrame | float:
+        result = self.data_per_constraint.select(self.dimensions_unsafe + ["dual"])
+        if result.shape == (1, 1):
+            return result.item()
+        return result
 
     def to_str(
         self, max_line_len=None, max_rows=None, var_map=None, float_precision=None

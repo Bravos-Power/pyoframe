@@ -39,7 +39,7 @@ class NamedVariables(VariableMapping):
         self.map = pl.concat(
             [
                 self.map,
-                concat_dimensions(var.data, keep_dims=False, prefix=var.name).rename(
+                concat_dimensions(var.id, keep_dims=False, prefix=var.name).rename(
                     {"concated_dim": self.VAR_NAME_KEY}
                 ),
             ]

@@ -14,7 +14,7 @@ def main(input_dir, output_dir):
     stock_width = params.loc["stock_width"]
     stock_available = params.loc["stock_available"]
 
-    m = Model("cutting_stock")
+    m = Model()
     m.orders_in_stock = Variable(
         {"stock": range(stock_available)}, orders.index, vtype="integer", lb=0
     )
@@ -28,7 +28,9 @@ def main(input_dir, output_dir):
     m.minimize = sum(m.is_used)
 
     gurobi_model = m.solve("gurobi", output_dir)
-    assert gurobi_model.getObjective().getValue() == 73
+    objective = gurobi_model.getObjective().getValue()
+    assert objective == 73
+    return objective
 
 
 if __name__ == "__main__":
