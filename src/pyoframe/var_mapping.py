@@ -69,9 +69,8 @@ class Base62EncodedVariables(VariableMapping):
         {"char": list(string.digits + string.ascii_letters)},
     ).with_columns(pl.int_range(pl.len()).cast(pl.UInt32).alias("code"))
 
-    
-    _BASE = _CHAR_TABLE.height # _BASE = 62
-    _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item() # _ZERO = "0"
+    _BASE = _CHAR_TABLE.height  # _BASE = 62
+    _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item()  # _ZERO = "0"
 
     def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
         """
@@ -84,7 +83,7 @@ class Base62EncodedVariables(VariableMapping):
             '[11]: 1  + x[11]'
             >>> (m.x.filter(t=11)+1).to_str(var_map=Base62EncodedVariables())
             '[11]: 1  + xb'
-            
+
             >>> Base62EncodedVariables().map_vars(pl.DataFrame({VAR_KEY: []}))
             shape: (0, 1)
             ┌───────────────┐
