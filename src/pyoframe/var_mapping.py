@@ -122,16 +122,16 @@ class Base62EncodedVariables(VariableMapping):
 
             >>> import polars as pl
             >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
-            >>> Base62EncodedVariables.to_base62(s).to_list()
+            >>> Base62EncodedVariables._to_base62(s).to_list()
             ['0', 'a', 'k', 'Y', 'R', '14']
 
             >>> s = pl.Series([0], dtype=pl.UInt32)
-            >>> Base62EncodedVariables.to_base62(s).to_list()
+            >>> Base62EncodedVariables._to_base62(s).to_list()
             ['0']
         """
         assert isinstance(
             int_col.dtype, pl.UInt32
-        ), "to_base62() only works for UInt32 id columns"
+        ), "_to_base62() only works for UInt32 id columns"
 
         largest_id = int_col.max()
         if largest_id == 0:
