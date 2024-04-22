@@ -69,10 +69,9 @@ class Base62EncodedVariables(VariableMapping):
         {"char": list(string.digits + string.ascii_letters)},
     ).with_columns(pl.int_range(pl.len()).cast(pl.UInt32).alias("code"))
 
-    # _BASE = 62
-    _BASE = _CHAR_TABLE.height
-    # _ZERO = "0"
-    _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item()
+    
+    _BASE = _CHAR_TABLE.height # _BASE = 62
+    _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item() # _ZERO = "0"
 
     def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
         """
@@ -85,6 +84,15 @@ class Base62EncodedVariables(VariableMapping):
             '[11]: 1  + x[11]'
             >>> (m.x.filter(t=11)+1).to_str(var_map=Base62EncodedVariables())
             '[11]: 1  + xb'
+            
+            >>> Base62EncodedVariables().map_vars(pl.DataFrame({VAR_KEY: []}))
+            shape: (0, 1)
+            ┌───────────────┐
+            │ __variable_id │
+            │ ---           │
+            │ null          │
+            ╞═══════════════╡
+            └───────────────┘
         """
         if df.height == 0:
             return df
@@ -96,7 +104,7 @@ class Base62EncodedVariables(VariableMapping):
                 pl.concat_str(
                     pl.lit("x"),
                     pl.col(VAR_KEY).map_batches(
-                        Base62EncodedVariables.to_base62,
+                        Base62EncodedVariables._to_base62,
                         return_dtype=pl.String,
                         is_elementwise=True,
                     ),
@@ -106,16 +114,20 @@ class Base62EncodedVariables(VariableMapping):
         )
 
     @classmethod
-    def to_base62(cls, int_col: pl.Series) -> pl.Series:
+    def _to_base62(cls, int_col: pl.Series) -> pl.Series:
         """Returns a series of dtype str with a base 62 representation of the integers in int_col.
         The letters 0-9a-zA-Z are used as symbols for the representation.
 
-        Examples
-        --------
-        >>> import polars as pl
-        >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
-        >>> Base62EncodedVariables.to_base62(s).to_list()
-        ['0', 'a', 'k', 'Y', 'R', '14']
+        Examples:
+
+            >>> import polars as pl
+            >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
+            >>> Base62EncodedVariables.to_base62(s).to_list()
+            ['0', 'a', 'k', 'Y', 'R', '14']
+
+            >>> s = pl.Series([0], dtype=pl.UInt32)
+            >>> Base62EncodedVariables.to_base62(s).to_list()
+            ['0']
         """
         assert isinstance(
             int_col.dtype, pl.UInt32
