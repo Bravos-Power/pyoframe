@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 import polars as pl
 from pyoframe.constants import CONST_TERM
 from pyoframe.constants import VAR_KEY
-from pyoframe.util import concat_dimensions, to_base52
+from pyoframe.util import concat_dimensions, to_base62
 
 if TYPE_CHECKING: # pragma: no cover
     from pyoframe.model import Model, Variable
@@ -56,7 +56,7 @@ class NumberedVariables(VariableMapping):
             .alias(VAR_KEY)
         )
 
-class Base52EncodedVariables(VariableMapping):
+class Base62EncodedVariables(VariableMapping):
     def map_vars(self, df: pl.DataFrame) -> pl.DataFrame:
         """
         Examples
@@ -64,11 +64,11 @@ class Base52EncodedVariables(VariableMapping):
         >>> import polars as pl
         >>> from pyoframe import Model, Variable
         >>> m = Model()
-        >>> m.x = Variable(pl.DataFrame({"t": [1,2,3]}))
-        >>> (m.x+1).to_str(var_map=DEFAULT_MAP).splitlines()
-        ['[1]: 1  + xb', '[2]: 1  + xc', '[3]: 1  + xd']
-        >>> (m.x+1).to_str().splitlines()
-        ['[1]: 1  + x[1]', '[2]: 1  + x[2]', '[3]: 1  + x[3]']
+        >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
+        >>> (m.x.filter(t=11)+1).to_str(var_map=DEFAULT_MAP).splitlines()
+        ['[11]: 1  + xb']
+        >>> (m.x.filter(t=11)+1).to_str().splitlines()
+        ['[11]: 1  + x[11]']
         """
 
         if df.height == 0:
@@ -78,9 +78,9 @@ class Base52EncodedVariables(VariableMapping):
             pl.when(pl.col(VAR_KEY) == pl.lit(CONST_TERM))
             .then(pl.lit(""))
             .otherwise(
-                pl.concat_str(pl.lit("x"), pl.col(VAR_KEY).map_batches(to_base52, return_dtype=str, is_elementwise=True)))
+                pl.concat_str(pl.lit("x"), pl.col(VAR_KEY).map_batches(to_base62, return_dtype=str, is_elementwise=True)))
             .alias(VAR_KEY)
         )
 
 
-DEFAULT_MAP = Base52EncodedVariables()
+DEFAULT_MAP = Base62EncodedVariables()
