@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
 from pyoframe.constants import VAR_KEY
-from pyoframe.var_mapping import DEFAULT_MAP, VariableMapping
+from pyoframe.var_mapping import Base62EncodedVariables, VariableMapping
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -113,7 +113,7 @@ def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=False) -> 
     if fn.exists():
         fn.unlink()
 
-    var_map = m.var_map if use_var_names else DEFAULT_MAP
+    var_map = m.var_map if use_var_names else Base62EncodedVariables()
 
     with open(fn, mode="w") as f:
         objective_to_file(m, f, var_map)

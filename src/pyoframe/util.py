@@ -3,6 +3,7 @@ File containing utility functions.
 """
 
 from typing import Any, Iterable, Optional, Union
+
 import polars as pl
 import pandas as pd
 
