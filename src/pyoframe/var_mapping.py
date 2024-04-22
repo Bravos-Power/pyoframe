@@ -65,7 +65,7 @@ class Base62EncodedVariables(VariableMapping):
         >>> from pyoframe import Model, Variable
         >>> m = Model()
         >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
-        >>> (m.x.filter(t=11)+1).to_str(var_map=DEFAULT_MAP).splitlines()
+        >>> (m.x.filter(t=11)+1).to_str(var_map=Base62EncodedVariables()).splitlines()
         ['[11]: 1  + xb']
         >>> (m.x.filter(t=11)+1).to_str().splitlines()
         ['[11]: 1  + x[11]']
@@ -82,5 +82,3 @@ class Base62EncodedVariables(VariableMapping):
             .alias(VAR_KEY)
         )
 
-
-DEFAULT_MAP = Base62EncodedVariables()
