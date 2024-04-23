@@ -32,7 +32,12 @@ class _ConfigMeta(type):
 class Config(metaclass=_ConfigMeta):
     disable_unmatched_checks: bool = False
     printing_float_precision: Optional[int] = 5
-    preserve_full_names: bool = False
+    shorten_names_in_lp_file: bool = True
+    shorten_names_everywhere: bool = False
+
+    assert (
+        not shorten_names_everywhere or shorten_names_in_lp_file
+    ), "Cannot shorten names everywhere without shortening names in the lp file."
 
     @classmethod
     def reset_defaults(cls):

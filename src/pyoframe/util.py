@@ -57,6 +57,7 @@ def concat_dimensions(
     keep_dims: bool = True,
     ignore_columns=RESERVED_COL_KEYS,
     replace_spaces: bool = True,
+    to_col: str = "concated_dim",
 ) -> pl.DataFrame:
     """
     Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
@@ -136,18 +137,18 @@ def concat_dimensions(
         prefix = ""
     dimensions = [col for col in df.columns if col not in ignore_columns]
     if dimensions:
-        pl_expr = pl.concat_str(
+        query = pl.concat_str(
             pl.lit(prefix + "["),
             pl.concat_str(*dimensions, separator=","),
             pl.lit("]"),
         )
     else:
-        pl_expr = pl.lit(prefix)
+        query = pl.lit(prefix)
 
-    df = df.with_columns(concated_dim=pl_expr)
+    df = df.with_columns(query.alias(to_col))
 
     if replace_spaces:
-        df = df.with_columns(pl.col("concated_dim").str.replace_all(" ", "_"))
+        df = df.with_columns(pl.col(to_col).str.replace_all(" ", "_"))
 
     if not keep_dims:
         df = df.drop(*dimensions)

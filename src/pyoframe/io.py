@@ -13,8 +13,10 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
+from numpy import var
+
 from pyoframe.constants import VAR_KEY, Config
-from pyoframe.var_mapping import Base62EncodedVariables, VariableMapping
+from pyoframe.io_mappers import Base62Mapper, Mapper
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -47,7 +49,7 @@ def bounds_to_file(m: "Model", f, var_map):
         ub = f"{variable.ub:.12g}"
 
         df = (
-            var_map.map_vars(variable.data)
+            var_map.map_vars(variable.data, to_col=None)
             .select(
                 pl.concat_str(
                     pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n")
@@ -59,26 +61,26 @@ def bounds_to_file(m: "Model", f, var_map):
         f.writelines(df)
 
 
-def binaries_to_file(m: "Model", f, var_map: VariableMapping):
+def binaries_to_file(m: "Model", f, var_map: Mapper):
     """
     Write out binaries of a model to a lp file.
     """
     for variable in create_section(m.binary_variables, f, "binary"):
         lines = (
-            var_map.map_vars(variable.data)
+            var_map.map_vars(variable.data, to_col=None)
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
         f.writelines(lines + "\n")
 
 
-def integers_to_file(m: "Model", f, var_map: VariableMapping):
+def integers_to_file(m: "Model", f, var_map: Mapper):
     """
     Write out integers of a model to a lp file.
     """
     for variable in create_section(m.integer_variables, f, "general"):
         lines = (
-            var_map.map_vars(variable.data)
+            var_map.map_vars(variable.data, to_col=None)
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
@@ -114,8 +116,9 @@ def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> P
         fn.unlink()
 
     if use_var_names is None:
-        use_var_names = Config.preserve_full_names
-    var_map = m.var_map if use_var_names else Base62EncodedVariables()
+        use_var_names = not Config.shorten_names_in_lp_file
+    var_map = m.var_map if use_var_names else Base62Mapper()
+    assert var_map is not None
 
     with open(fn, mode="w") as f:
         objective_to_file(m, f, var_map)

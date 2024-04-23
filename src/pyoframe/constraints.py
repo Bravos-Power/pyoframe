@@ -32,7 +32,7 @@ from pyoframe.util import (
     get_obj_repr,
     parse_inputs_as_iterable,
 )
-from pyoframe.var_mapping import NumberedVariables
+from pyoframe.io_mappers import NumberedMapper
 from pyoframe.model_element import ModelElement
 
 VAR_TYPE = pl.UInt32
@@ -640,11 +640,12 @@ class Expression(ModelElement, SupportsMath):
     ):
         data = self.data if include_const_term else self.variable_terms
         if var_map is None:
-            var_map = (
-                self._model.var_map if self._model is not None else NumberedVariables()
-            )
+            if self._model is not None and self._model.var_map is not None:
+                var_map = self._model.var_map
+            else:
+                var_map = NumberedMapper()
         data = cast_coef_to_string(data, float_precision=float_precision)
-        data = var_map.map_vars(data)
+        data = var_map.map_vars(data, to_col=None)
         dimensions = self.dimensions
 
         # Create a string for each term

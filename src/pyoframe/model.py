@@ -1,10 +1,10 @@
 from typing import Any, Iterable, List, Optional
-from pyoframe.constants import ObjSense, VType
+from pyoframe.constants import ObjSense, VType, Config
 from pyoframe.constraints import SupportsMath
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
-from pyoframe.var_mapping import NamedVariables
+from pyoframe.io_mappers import PersistentNamedVarMapper
 from pyoframe.variables import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve
@@ -19,7 +19,10 @@ class Model:
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self._objective: Optional[Objective] = None
-        self.var_map = NamedVariables(self)
+        if Config.shorten_names_everywhere:
+            self.var_map = None
+        else:
+            self.var_map = PersistentNamedVarMapper()
         self.name = name
 
     @property
@@ -75,7 +78,8 @@ class Model:
                 self._objective = __value
             if isinstance(__value, Variable):
                 self._variables.append(__value)
-                self.var_map.add_var(__value)
+                if self.var_map is not None:
+                    self.var_map.add_var(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
 
