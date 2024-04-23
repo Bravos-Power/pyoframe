@@ -2,6 +2,7 @@
 Defines various methods for mapping a variable or constraint to its string representation.
 """
 
+from dataclasses import dataclass
 import math
 import string
 from abc import ABC, abstractmethod
@@ -18,51 +19,63 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.constraints import Constraint
 
 
+@dataclass
+class IOMappers:
+    var_map: "Mapper"
+    const_map: "Mapper"
+
+
+class VarMixin:
+    @property
+    def _ID_COL(self) -> str:
+        return VAR_KEY
+
+
+class ConstMixin:
+    @property
+    def _ID_COL(self) -> str:
+        return CONSTRAINT_KEY
+
+
 class Mapper(ABC):
+    _NAME_COL = "_name"
+
+    def __init__(self, prefix=None) -> None:
+        self.prefix = prefix
+        self.mapping_registry = pl.DataFrame(
+            {self._ID_COL: [], self._NAME_COL: []},
+            schema={self._ID_COL: pl.UInt32, self._NAME_COL: pl.String},
+        )
+
+    @property
+    def _ID_COL(self) -> str:
+        raise NotImplementedError
+
+    def add(self, element: Union["Variable", "Constraint"]) -> None:
+        self.mapping_registry = pl.concat(
+            [self.mapping_registry, self._element_to_map(element)]
+        )
+
     @abstractmethod
-    def _map(
-        self,
-        df: pl.DataFrame,
-        from_col: str,
-        to_col: Optional[str],
-        prefix: str,
-        empty_string: Optional[int],
+    def _element_to_map(
+        self, element: Union["Variable", "Constraint"]
     ) -> pl.DataFrame: ...
 
-    def map_vars(
-        self, df: Union[pl.DataFrame, "Variable"], to_col="_var_name"
-    ) -> pl.DataFrame:
-        return self._map(
-            df, VAR_KEY, to_col=to_col, prefix="x", empty_string=CONST_TERM
-        )
-
-    def map_consts(
-        self, df: Union[pl.DataFrame, "Constraint"], to_col="_const_name"
-    ) -> pl.DataFrame:
-        return self._map(
-            df, CONSTRAINT_KEY, to_col=to_col, prefix="c", empty_string=None
-        )
-
-
-class NamedConstraintMapper(Mapper):
-    def _map(
+    def apply(
         self,
         df: pl.DataFrame,
-        from_col: str,
-        to_col: str,
-        prefix: str,
-        empty_string: Optional[int],
+        to_col: Optional[str],
     ) -> pl.DataFrame:
-        assert empty_string is None
+        result = df.join(
+            self.mapping_registry, on=self._ID_COL, how="left", validate="m:1"
+        )
         if to_col is None:
-            to_col = from_col
-            keep_dims = False
-        else:
-            keep_dims = True
-        return concat_dimensions(df, prefix=prefix, to_col=to_col, keep_dims=keep_dims)
+            result = result.drop(self._ID_COL)
+            to_col = self._ID_COL
+        return result.rename({self._NAME_COL: to_col})
 
 
-class PersistentNamedVarMapper(Mapper):
+class PersistentNamedVarMapper(VarMixin, Mapper):
     """
     Maps constraints or variables to a string representation using the object's name and dimensions.
 
@@ -77,60 +90,36 @@ class PersistentNamedVarMapper(Mapper):
         foo[0] + foo[1] + foo[2] + foo[3]
     """
 
-    _VAR_NAME_KEY = "_var_name"
-
     def __init__(self) -> None:
+        super().__init__()
         self.mapping_registry = pl.DataFrame(
             {
-                VAR_KEY: [CONST_TERM],
-                self._VAR_NAME_KEY: [""],
-            },  # Constant value is variable 0
-            schema={VAR_KEY: pl.UInt32, self._VAR_NAME_KEY: pl.String},
+                self._ID_COL: [CONST_TERM],
+                self._NAME_COL: [""],
+            },
+            schema={self._ID_COL: pl.UInt32, self._NAME_COL: pl.String},
         )
 
-    def add_var(self, var: "Variable") -> None:
+    def _element_to_map(self, var: "Variable") -> pl.DataFrame:
         assert (
             var.name is not None
         ), "Variable must have a name to be used in a NamedVariables mapping."
-        self.mapping_registry = pl.concat(
-            [
-                self.mapping_registry,
-                concat_dimensions(var.id, keep_dims=False, prefix=var.name).rename(
-                    {"concated_dim": self._VAR_NAME_KEY}
-                ),
-            ]
+        return concat_dimensions(
+            var.ids, keep_dims=False, prefix=var.name, to_col=self._NAME_COL
         )
 
-    def _map(
-        self,
-        df: pl.DataFrame,
-        from_col: str,
-        to_col: str,
-        prefix: str,
-        empty_string: Optional[int],
-    ) -> pl.DataFrame:
-        result = df.join(self.mapping_registry, on=from_col, how="left", validate="m:1")
-        if to_col is None:
-            result = result.drop(from_col)
-            to_col = from_col
-        return result.rename({self._VAR_NAME_KEY: to_col})
 
-
-class NumberedMapper(Mapper):
-    def _map(
-        self,
-        df: pl.DataFrame,
-        from_col: str,
-        to_col: str,
-        prefix: str,
-        empty_string: Optional[int],
-    ) -> pl.DataFrame:
-        query = pl.concat_str(pl.lit(prefix), from_col)
-        if empty_string is not None:
-            query = query.replace(pl.lit(prefix + str(empty_string)), pl.lit(""))
-        if to_col is None:
-            to_col = from_col
-        return df.with_columns(query.alias(to_col))
+class NamedConstraintMapper(ConstMixin, Mapper):
+    def _element_to_map(self, element: "Constraint") -> pl.DataFrame:
+        assert (
+            element.name is not None
+        ), "Constraint must have a name to be used in a NamedConstraintMapper."
+        return concat_dimensions(
+            element.ids,
+            keep_dims=False,
+            prefix=element.name,
+            to_col=self._NAME_COL,
+        )
 
 
 class Base62Mapper(Mapper):
@@ -142,54 +131,29 @@ class Base62Mapper(Mapper):
     _BASE = _CHAR_TABLE.height  # _BASE = 62
     _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item()  # _ZERO = "0"
 
-    def _map(
+    @abstractmethod
+    def _get_prefix(self) -> "str": ...
+
+    def apply(
         self,
         df: pl.DataFrame,
-        from_col: str,
-        to_col: str,
-        prefix: str,
-        empty_string: Optional[int],
+        to_col: Optional[str] = None,
     ) -> pl.DataFrame:
-        """
-        Examples:
-            >>> import polars as pl
-            >>> from pyoframe import Model, Variable
-            >>> m = Model()
-            >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
-            >>> (m.x.filter(t=11)+1).to_str()
-            '[11]: 1  + x[11]'
-            >>> (m.x.filter(t=11)+1).to_str(var_map=Base62Mapper())
-            '[11]: 1  + xb'
-
-            >>> Base62Mapper().map_vars(pl.DataFrame({VAR_KEY: []}))
-            shape: (0, 1)
-            ┌───────────────┐
-            │ __variable_id │
-            │ ---           │
-            │ null          │
-            ╞═══════════════╡
-            └───────────────┘
-        """
         if df.height == 0:
             return df
 
         query = pl.concat_str(
-            pl.lit(prefix),
-            pl.col(from_col).map_batches(
+            pl.lit(self._get_prefix()),
+            pl.col(self._ID_COL).map_batches(
                 Base62Mapper._to_base62,
                 return_dtype=pl.String,
                 is_elementwise=True,
             ),
         )
-        if empty_string is not None:
-            query = (
-                pl.when(pl.col(from_col) == pl.lit(empty_string))
-                .then(pl.lit(""))
-                .otherwise(query)
-            )
 
         if to_col is None:
-            to_col = from_col
+            to_col = self._ID_COL
+
         return df.with_columns(query.alias(to_col))
 
     @classmethod
@@ -237,4 +201,43 @@ class Base62Mapper(Mapper):
             .to_series()
             .str.strip_chars_start(cls._ZERO)
             .replace("", cls._ZERO)
+        )
+
+
+class Base62VarMapper(VarMixin, Base62Mapper):
+    """
+    Examples:
+        >>> import polars as pl
+        >>> from pyoframe import Model, Variable
+        >>> m = Model()
+        >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
+        >>> (m.x.filter(t=11)+1).to_str()
+        '[11]: 1  + x[11]'
+        >>> (m.x.filter(t=11)+1).to_str(var_map=Base62VarMapper())
+        '[11]: 1  + xb'
+
+        >>> Base62VarMapper().apply(pl.DataFrame({VAR_KEY: []}))
+        shape: (0, 1)
+        ┌───────────────┐
+        │ __variable_id │
+        │ ---           │
+        │ null          │
+        ╞═══════════════╡
+        └───────────────┘
+    """
+
+    def _get_prefix(self) -> "str":
+        return "x"
+
+    def _element_to_map(self, element) -> pl.DataFrame:
+        return self.apply(element.data.select(VAR_KEY), to_col=self._NAME_COL)
+
+
+class Base62ConstMapper(ConstMixin, Base62Mapper):
+    def _get_prefix(self) -> "str":
+        return "c"
+
+    def _element_to_map(self, element) -> pl.DataFrame:
+        return self.apply(
+            element.data_per_constraint.select(CONSTRAINT_KEY), to_col=self._NAME_COL
         )

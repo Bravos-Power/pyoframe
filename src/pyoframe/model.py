@@ -4,7 +4,7 @@ from pyoframe.constraints import SupportsMath
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
-from pyoframe.io_mappers import PersistentNamedVarMapper
+from pyoframe.io_mappers import IOMappers, PersistentNamedVarMapper
 from pyoframe.variables import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve
@@ -23,6 +23,7 @@ class Model:
             self.var_map = None
         else:
             self.var_map = PersistentNamedVarMapper()
+        self.io_mappers: Optional[IOMappers] = None
         self.name = name
 
     @property
@@ -79,7 +80,7 @@ class Model:
             if isinstance(__value, Variable):
                 self._variables.append(__value)
                 if self.var_map is not None:
-                    self.var_map.add_var(__value)
+                    self.var_map.add(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
 

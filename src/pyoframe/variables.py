@@ -92,7 +92,7 @@ class Variable(ModelElement, SupportsMath):
         self.ub = ub
 
     @property
-    def id(self):
+    def ids(self):
         return self.data.select(self.dimensions_unsafe + [VAR_KEY])
 
     def __repr__(self):
