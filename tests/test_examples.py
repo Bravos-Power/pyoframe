@@ -32,7 +32,9 @@ def test_examples(example_folder_name, integers_only):
     dense_obj = main_module.main(input_dir, dense_output_dir)
     pf.Config.shorten_names_in_lp_file = False
     symbolic_obj = main_module.main(input_dir, symbolic_output_dir)
-    assert dense_obj == symbolic_obj, f"Solving with full names should give the same result"
+    assert (
+        dense_obj == symbolic_obj
+    ), f"Solving with full names should give the same result"
 
     gurobi_module = None
     try:
@@ -101,4 +103,3 @@ def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = [line.partition(" ") for line in sol]
     sol = [(name, float(value)) for name, _, value in sol]
     return sol
-

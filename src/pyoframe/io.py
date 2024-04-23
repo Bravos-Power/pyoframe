@@ -14,7 +14,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
 from pyoframe.constants import VAR_KEY, Config
-from pyoframe.io_mappers import Base62ConstMapper, Base62VarMapper, IOMappers, Mapper, NamedConstMapper, NamedVarMapper
+from pyoframe.io_mappers import (
+    Base62ConstMapper,
+    Base62VarMapper,
+    IOMappers,
+    Mapper,
+    NamedConstMapper,
+    NamedVarMapper,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -111,6 +118,7 @@ def get_var_map(m: "Model", use_var_names):
     for v in m.variables:
         var_map.add(v)
     return var_map
+
 
 def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> Path:
     """
