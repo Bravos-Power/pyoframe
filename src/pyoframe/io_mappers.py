@@ -75,7 +75,7 @@ class Mapper(ABC):
         return result.rename({self._NAME_COL: to_col})
 
 
-class PersistentNamedVarMapper(VarMixin, Mapper):
+class NamedVarMapper(VarMixin, Mapper):
     """
     Maps constraints or variables to a string representation using the object's name and dimensions.
 
@@ -109,7 +109,7 @@ class PersistentNamedVarMapper(VarMixin, Mapper):
         )
 
 
-class NamedConstraintMapper(ConstMixin, Mapper):
+class NamedConstMapper(ConstMixin, Mapper):
     def _element_to_map(self, element: "Constraint") -> pl.DataFrame:
         assert (
             element.name is not None
