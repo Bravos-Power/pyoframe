@@ -9,14 +9,7 @@ import polars as pl
 
 from pyoframe.constraints import SupportsMath, Set
 
-from pyoframe.constants import (
-    COEF_KEY,
-    NAME_COL,
-    SOLUTION_KEY,
-    VAR_KEY,
-    VType,
-    VTypeValue,
-)
+from pyoframe.constants import COEF_KEY, SOLUTION_KEY, VAR_KEY, VType, VTypeValue
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
@@ -70,7 +63,6 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
         vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
-        data = data.with_columns(pl.lit(None).cast(pl.Float64).alias(SOLUTION_KEY))
         data = self._assign_ids(data)
 
         super().__init__(data)
@@ -89,15 +81,21 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
         return VAR_KEY
 
     @property
-    def value(self):
-        return self.data.with_columns(self.dimensions_unsafe + [SOLUTION_KEY])
+    def solution(self):
+        if SOLUTION_KEY not in self.data.columns:
+            return None
+        df = self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
+        if df.shape == (1, 1):
+            return df.item()
+        return df
 
-    @value.setter
-    def value(self, value):
+    @solution.setter
+    def solution(self, value):
         assert sorted(value.columns) == sorted([SOLUTION_KEY, VAR_KEY])
-        self._data = self.data.drop(SOLUTION_KEY).join(
-            value, on=VAR_KEY, how="left", validate="1:1"
-        )
+        df = self.data
+        if SOLUTION_KEY in self.data.columns:
+            df = df.drop(SOLUTION_KEY)
+        self._data = df.join(value, on=VAR_KEY, how="left", validate="1:1")
 
     @property
     def ids(self):

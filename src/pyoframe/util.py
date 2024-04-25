@@ -35,15 +35,17 @@ class IdCounterMixin(ABC):
         Adds the column `to_column` to the DataFrame `df` with the next batch
         of unique consecutive IDs.
         """
-        assert df.height > 0, "Cannot assign IDs to an empty DataFrame."
-
         cls_name = self.__class__.__name__
         cur_count = self._id_counters[cls_name]
-        df = df.with_columns(
-            pl.int_range(cur_count, cur_count + pl.len())
-            .alias(self.get_id_column_name())
-            .cast(pl.UInt32)
-        )
+        id_col_name = self.get_id_column_name()
+
+        if df.height == 0:
+            df = df.with_columns(pl.lit(cur_count).alias(id_col_name))
+        else:
+            df = df.with_columns(
+                pl.int_range(cur_count, cur_count + pl.len()).alias(id_col_name)
+            )
+        df = df.with_columns(pl.col(id_col_name).cast(pl.UInt32))
         self._id_counters[cls_name] += df.height
         return df
 

@@ -34,7 +34,7 @@ def solve(m: "Model", solver, **kwargs):
 
     if result.solution is not None:
         for variable in m.variables:
-            variable.value = result.solution.primal
+            variable.solution = result.solution.primal
 
         if result.solution.dual is not None:
             for constraint in m.constraints:

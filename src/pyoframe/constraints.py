@@ -811,14 +811,12 @@ class Constraint(Expression, IdCounterMixin):
         data_per_constraint = (
             pl.DataFrame() if dims is None else self.data.select(dims).unique()
         )
-        data_per_constraint = data_per_constraint.with_columns(
-            pl.lit(None).cast(pl.Float64).alias(DUAL_KEY)
-        )
-
         self.data_per_constraint = self._assign_ids(data_per_constraint)
 
     @property
-    def dual(self) -> pl.DataFrame | float:
+    def dual(self) -> Union[None, pl.DataFrame, float]:
+        if DUAL_KEY not in self.data_per_constraint.columns:
+            return None
         result = self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
         if result.shape == (1, 1):
             return result.item()
@@ -827,7 +825,10 @@ class Constraint(Expression, IdCounterMixin):
     @dual.setter
     def dual(self, value):
         assert sorted(value.columns) == sorted([DUAL_KEY, CONSTRAINT_KEY])
-        self.data_per_constraint = self.data_per_constraint.drop(DUAL_KEY).join(
+        df = self.data_per_constraint
+        if DUAL_KEY in df.columns:
+            df = df.drop(DUAL_KEY)
+        self.data_per_constraint = df.join(
             value, on=CONSTRAINT_KEY, how="left", validate="1:1"
         )
 
