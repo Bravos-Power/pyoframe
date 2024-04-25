@@ -12,6 +12,9 @@ requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
 ]
 dependencies = ["polars==0.20.13", "numpy", "pyarrow", "pandas"]
 
@@ -33,12 +36,14 @@ docs = [
     "mkdocs-git-committers-plugin-2",
     "mkdocs-gen-files",
     "mkdocs-section-index",
-    "mkdocs-literate-nav"
+    "mkdocs-literate-nav",
 ]
 
 [tool.isort]
 profile = "black"
 
 [project.urls]
-Homepage = "https://github.com/Bravos-Power/pyoframe"
+Homepage = "https://bravos-power.github.io/pyoframe/"
+documentation = "https://bravos-power.github.io/pyoframe/"
+repository = "https://github.com/Bravos-Power/pyoframe/"
 Issues = "https://github.com/Bravos-Power/pyoframe/issues"
