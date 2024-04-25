@@ -9,3 +9,4 @@ tmp
 .coverage
 .cache
 docs/reference
+dist
