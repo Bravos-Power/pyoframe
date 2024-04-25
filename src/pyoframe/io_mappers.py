@@ -9,12 +9,14 @@ from abc import ABC, abstractmethod
 
 from typing import TYPE_CHECKING, Optional, Type, Union
 import polars as pl
+from pyoframe.constants import NAME_COL
 from pyoframe.util import concat_dimensions
 
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Variable
     from pyoframe.constraints import Constraint
+    from pyoframe.util import IdCounterMixin
 
 
 @dataclass
@@ -24,13 +26,11 @@ class IOMappers:
 
 
 class Mapper(ABC):
-    _NAME_COL = "_name"
-
     def __init__(self, cls: Type["IdCounterMixin"]) -> None:
         self._ID_COL = cls.get_id_column_name()
         self.mapping_registry = pl.DataFrame(
-            {self._ID_COL: [], self._NAME_COL: []},
-            schema={self._ID_COL: pl.UInt32, self._NAME_COL: pl.String},
+            {self._ID_COL: [], NAME_COL: []},
+            schema={self._ID_COL: pl.UInt32, NAME_COL: pl.String},
         )
 
     def add(self, element: Union["Variable", "Constraint"]) -> None:
@@ -52,7 +52,12 @@ class Mapper(ABC):
         if to_col is None:
             result = result.drop(self._ID_COL)
             to_col = self._ID_COL
-        return result.rename({self._NAME_COL: to_col})
+        return result.rename({NAME_COL: to_col})
+
+    def undo(self, df: pl.DataFrame) -> pl.DataFrame:
+        return df.join(
+            self.mapping_registry, on=NAME_COL, how="left", validate="m:1"
+        ).drop(NAME_COL)
 
 
 class NamedMapper(Mapper):
@@ -76,11 +81,11 @@ class NamedMapper(Mapper):
             element_name is not None
         ), "Element must have a name to be used in a named mapping."
         return concat_dimensions(
-            element.ids, keep_dims=False, prefix=element_name, to_col=self._NAME_COL
+            element.ids, keep_dims=False, prefix=element_name, to_col=NAME_COL
         )
 
 
-class Base62Mapper(Mapper):
+class Base62Mapper(Mapper, ABC):
     # Mapping between a base 62 character and its integer value
     _CHAR_TABLE = pl.DataFrame(
         {"char": list(string.digits + string.ascii_letters)},
@@ -163,7 +168,7 @@ class Base62Mapper(Mapper):
         )
 
     def _element_to_map(self, element) -> pl.DataFrame:
-        return self.apply(element.ids.select(self._ID_COL), to_col=self._NAME_COL)
+        return self.apply(element.ids.select(self._ID_COL), to_col=NAME_COL)
 
 
 class Base62VarMapper(Base62Mapper):
@@ -188,6 +193,7 @@ class Base62VarMapper(Base62Mapper):
         ╞═══════════════╡
         └───────────────┘
     """
+
     @property
     def _prefix(self) -> "str":
         return "x"

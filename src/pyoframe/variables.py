@@ -9,7 +9,14 @@ import polars as pl
 
 from pyoframe.constraints import SupportsMath, Set
 
-from pyoframe.constants import COEF_KEY, SOLUTION_KEY, VAR_KEY, VType, VTypeValue
+from pyoframe.constants import (
+    COEF_KEY,
+    NAME_COL,
+    SOLUTION_KEY,
+    VAR_KEY,
+    VType,
+    VTypeValue,
+)
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
@@ -80,6 +87,17 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
     @classmethod
     def get_id_column_name(cls):
         return VAR_KEY
+
+    @property
+    def value(self):
+        return self.data.with_columns(self.dimensions_unsafe + [SOLUTION_KEY])
+
+    @value.setter
+    def value(self, value):
+        assert sorted(value.columns) == sorted([SOLUTION_KEY, VAR_KEY])
+        self._data = self.data.drop(SOLUTION_KEY).join(
+            value, on=VAR_KEY, how="left", validate="1:1"
+        )
 
     @property
     def ids(self):

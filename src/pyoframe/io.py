@@ -115,21 +115,21 @@ def get_var_map(m: "Model", use_var_names):
     return var_map
 
 
-def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> Path:
+def to_file(m: "Model", file_path: Optional[Union[str, Path]], use_var_names=None) -> Path:
     """
     Write out a model to a lp file.
     """
-    if fn is None:
+    if file_path is None:
         with NamedTemporaryFile(
             prefix="pyoframe-problem-", suffix=".lp", mode="w", delete=False
         ) as f:
-            fn = f.name
+            file_path = f.name
 
-    fn = Path(fn)
-    assert fn.suffix == ".lp", f"File format `{fn.suffix}` not supported."
+    file_path = Path(file_path)
+    assert file_path.suffix == ".lp", f"File format `{file_path.suffix}` not supported."
 
-    if fn.exists():
-        fn.unlink()
+    if file_path.exists():
+        file_path.unlink()
 
     if use_var_names is None:
         use_var_names = not Config.shorten_names_in_lp_file
@@ -142,7 +142,7 @@ def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> P
     var_map = get_var_map(m, use_var_names)
     m.io_mappers = IOMappers(var_map, const_map)
 
-    with open(fn, mode="w") as f:
+    with open(file_path, mode="w") as f:
         objective_to_file(m, f, var_map)
         constraints_to_file(m, f, var_map, const_map)
         bounds_to_file(m, f, var_map)
@@ -150,4 +150,4 @@ def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> P
         integers_to_file(m, f, var_map)
         f.write("end\n")
 
-    return fn
+    return file_path

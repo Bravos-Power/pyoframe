@@ -7,7 +7,7 @@ from pathlib import Path
 from pyoframe import Model, Variable, sum
 
 
-def main(input_dir, output_dir: Union[Path, str]):
+def main(input_dir, **kwargs):
     plants = pd.read_csv(input_dir / "plants.csv").set_index("plant")
     warehouses = pd.read_csv(input_dir / "wharehouses.csv").set_index("wharehouse")
     transport_costs = (
@@ -26,10 +26,9 @@ def main(input_dir, output_dir: Union[Path, str]):
 
     m.minimize = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
 
-    gurobi_model = m.solve("gurobi", output_dir)
-    return gurobi_model.getObjective().getValue()
+    return m.solve("gurobi", **kwargs)
 
 
 if __name__ == "__main__":
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", working_dir / "results")
+    main(working_dir / "input_data", directory=working_dir / "results")

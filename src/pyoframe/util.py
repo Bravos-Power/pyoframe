@@ -2,7 +2,7 @@
 File containing utility functions and classes.
 """
 
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from collections import defaultdict
 from typing import Any, Dict, Iterable, Optional, Union
 
@@ -12,7 +12,7 @@ import pandas as pd
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
 
 
-class IdCounterMixin:
+class IdCounterMixin(ABC):
     """
     Provides a method that assigns a unique ID to each row in a DataFrame.
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.

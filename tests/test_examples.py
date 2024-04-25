@@ -29,12 +29,18 @@ def test_examples(example_folder_name, integers_only):
 
     # Dynamically import the main function of the example
     main_module = importlib.import_module(f"tests.examples.{example_folder_name}.model")
-    dense_obj = main_module.main(input_dir, dense_output_dir)
+
+    symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
+    dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
+
+    dense_result = main_module.main(
+        input_dir, directory=dense_output_dir, solution_file=dense_solution_file
+    )
     pf.Config.shorten_names_in_lp_file = False
-    symbolic_obj = main_module.main(input_dir, symbolic_output_dir)
-    assert (
-        dense_obj == symbolic_obj
-    ), f"Solving with full names should give the same result"
+    symbolic_result = main_module.main(
+        input_dir, directory=symbolic_output_dir, solution_file=symbolic_solution_file
+    )
+    check_results_equal(dense_result, symbolic_result)
 
     gurobi_module = None
     try:
@@ -52,18 +58,19 @@ def test_examples(example_folder_name, integers_only):
         symbolic_output_dir / "pyoframe-problem.lp",
     )
     check_files_equal(
-        expected_output_dir / "pyoframe-problem.sol",
-        symbolic_output_dir / "pyoframe-problem.sol",
+        expected_output_dir / "pyoframe-problem.sol", symbolic_solution_file
     )
     if gurobi_module is not None:
-        check_sol_equal(
-            expected_output_dir / "gurobipy.sol",
-            symbolic_output_dir / "pyoframe-problem.sol",
-        )
+        check_sol_equal(expected_output_dir / "gurobipy.sol", symbolic_solution_file)
 
     if integers_only:
-        check_integer_solutions_only(symbolic_output_dir / "pyoframe-problem.sol")
-        check_integer_solutions_only(dense_output_dir / "pyoframe-problem.sol")
+        check_integer_solutions_only(symbolic_solution_file)
+        check_integer_solutions_only(dense_solution_file)
+
+
+def check_results_equal(result1, result2):
+    assert result1.status == result2.status
+    assert result1.solution.objective == result2.solution.objective
 
 
 def check_files_equal(file_expected: Path, file_actual: Path):

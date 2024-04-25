@@ -824,6 +824,13 @@ class Constraint(Expression, IdCounterMixin):
             return result.item()
         return result
 
+    @dual.setter
+    def dual(self, value):
+        assert sorted(value.columns) == sorted([DUAL_KEY, CONSTRAINT_KEY])
+        self.data_per_constraint = self.data_per_constraint.drop(DUAL_KEY).join(
+            value, on=CONSTRAINT_KEY, how="left", validate="1:1"
+        )
+
     @classmethod
     def get_id_column_name(cls):
         return CONSTRAINT_KEY
