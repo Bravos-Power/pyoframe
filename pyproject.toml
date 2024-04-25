@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyoframe"
 version = "0.0.1"
-authors = [{ name = "Martin Staadecker", email = "machstg@gmail.com" }]
+authors = [{ name = "Bravos Power", email = "dev@bravospower.com" }]
 description = "Blazing fast linear program interface"
 readme = "README.md"
 requires-python = ">=3.8"
