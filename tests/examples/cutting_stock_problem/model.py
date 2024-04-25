@@ -35,4 +35,8 @@ def main(input_dir, **kwargs):
 
 if __name__ == "__main__":
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", directory=working_dir / "results")
+    main(
+        working_dir / "input_data",
+        directory=working_dir / "results",
+        use_var_names=True,
+    )

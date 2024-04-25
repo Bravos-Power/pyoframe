@@ -10,7 +10,13 @@ from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 from pyoframe.constants import VAR_KEY, Config
 from pyoframe.constraints import Constraint
 from pyoframe.variables import Variable
-from pyoframe.io_mappers import Base62ConstMapper, Base62VarMapper, IOMappers, Mapper, NamedMapper
+from pyoframe.io_mappers import (
+    Base62ConstMapper,
+    Base62VarMapper,
+    IOMappers,
+    Mapper,
+    NamedMapper,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -109,7 +115,9 @@ def get_var_map(m: "Model", use_var_names):
     return var_map
 
 
-def to_file(m: "Model", file_path: Optional[Union[str, Path]], use_var_names=None) -> Path:
+def to_file(
+    m: "Model", file_path: Optional[Union[str, Path]], use_var_names=None
+) -> Path:
     """
     Write out a model to a lp file.
     """

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import importlib
 import shutil
 import pytest
@@ -7,19 +8,31 @@ from typing import List, Tuple
 import pyoframe as pf
 
 
+@dataclass
+class Example:
+    folder_name: str
+    integer_results_only: bool = False
+    many_valid_solutions: bool = False
+
+
+EXAMPLES = [
+    Example("diet_problem"),
+    Example("facility_problem"),
+    Example(
+        "cutting_stock_problem", integer_results_only=True, many_valid_solutions=True
+    ),
+]
+
+
 @pytest.mark.parametrize(
-    "example_folder_name,integers_only",
-    [
-        ("diet_problem", False),
-        ("facility_problem", False),
-        ("cutting_stock_problem", True),
-    ],
+    "example",
+    EXAMPLES,
 )
-def test_examples(example_folder_name, integers_only):
-    example_dir = Path("tests/examples") / example_folder_name
+def test_examples(example: Example):
+    example_dir = Path("tests/examples") / example.folder_name
     input_dir = example_dir / "input_data"
     expected_output_dir = example_dir / "results"
-    working_dir = Path("tmp") / example_folder_name
+    working_dir = Path("tmp") / example.folder_name
     symbolic_output_dir = working_dir / "results"
     dense_output_dir = working_dir / "results_dense"
 
@@ -28,7 +41,7 @@ def test_examples(example_folder_name, integers_only):
     working_dir.mkdir(parents=True)
 
     # Dynamically import the main function of the example
-    main_module = importlib.import_module(f"tests.examples.{example_folder_name}.model")
+    main_module = importlib.import_module(f"tests.examples.{example.folder_name}.model")
 
     symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
     dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
@@ -45,7 +58,7 @@ def test_examples(example_folder_name, integers_only):
     gurobi_module = None
     try:
         gurobi_module = importlib.import_module(
-            f"tests.examples.{example_folder_name}.model_gurobipy"
+            f"tests.examples.{example.folder_name}.model_gurobipy"
         )
     except ImportError:
         pass
@@ -57,13 +70,16 @@ def test_examples(example_folder_name, integers_only):
         expected_output_dir / "pyoframe-problem.lp",
         symbolic_output_dir / "pyoframe-problem.lp",
     )
-    check_files_equal(
-        expected_output_dir / "pyoframe-problem.sol", symbolic_solution_file
-    )
-    if gurobi_module is not None:
-        check_sol_equal(expected_output_dir / "gurobipy.sol", symbolic_solution_file)
+    if not example.many_valid_solutions:
+        check_files_equal(
+            expected_output_dir / "pyoframe-problem.sol", symbolic_solution_file
+        )
+        if gurobi_module is not None:
+            check_sol_equal(
+                expected_output_dir / "gurobipy.sol", symbolic_solution_file
+            )
 
-    if integers_only:
+    if example.integer_results_only:
         check_integer_solutions_only(symbolic_solution_file)
         check_integer_solutions_only(dense_solution_file)
 
