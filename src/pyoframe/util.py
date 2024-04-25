@@ -2,12 +2,48 @@
 File containing utility functions.
 """
 
+from abc import abstractmethod
+from collections import defaultdict
 from typing import Any, Iterable, Optional, Union
 
 import polars as pl
 import pandas as pd
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
+
+
+class IdCounterMixin:
+    """
+    Class that provides a method to assign unique IDs to rows in a DataFrame.
+
+    IDs are unique across all instances of the class (but different subclasses have different counters).
+    """
+
+    _counters = defaultdict(lambda: 1)
+
+    @classmethod
+    def _reset_counters(cls):
+        cls._counters = defaultdict(lambda: 1)
+
+    def assign_ids(self, df: pl.DataFrame, to_column: str):
+        assert df.height > 0, "Cannot assign IDs to an empty DataFrame."
+
+        cls_name = self.__class__.__name__
+        cur_count = self._counters[cls_name]
+        df = df.with_columns(
+            pl.int_range(cur_count, cur_count + pl.len())
+            .alias(to_column)
+            .cast(pl.UInt32)
+        )
+        self._counters[cls_name] += df.height
+        return df
+
+    @property
+    def ids(self):
+        """
+        Should return a dataframe with the IDs of the elements and the dimensions.
+        """
+        raise NotImplementedError
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):

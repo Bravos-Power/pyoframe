@@ -27,6 +27,7 @@ from pyoframe.constants import (
     UnmatchedStrategy,
 )
 from pyoframe.util import (
+    IdCounterMixin,
     cast_coef_to_string,
     concat_dimensions,
     get_obj_repr,
@@ -785,15 +786,8 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     return sum(over=remaining_dims, expr=expr)
 
 
-class Constraint(Expression):
+class Constraint(Expression, IdCounterMixin):
     """A linear programming constraint."""
-
-    _counter = 1  # Start at 1 to be consistent with variables
-
-    @classmethod
-    def _reset_counter(cls):
-        """Resets the variable count. Useful to ensure consistency in unit tests."""
-        cls._counter = 1
 
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
         """Initialize a constraint.
@@ -814,20 +808,16 @@ class Constraint(Expression):
         self.sense = sense
 
         dims = self.dimensions
-        if dims is None:
-            self.data_per_constraint = pl.DataFrame()
-        else:
-            self.data_per_constraint = self.data.select(dims).unique()
-
-        self.data_per_constraint = self.data_per_constraint.with_columns(
+        data_per_constraint = (
+            pl.DataFrame() if dims is None else self.data.select(dims).unique()
+        )
+        data_per_constraint = data_per_constraint.with_columns(
             pl.lit(None).cast(pl.Float64).alias(DUAL_KEY)
-        ).with_columns(
-            pl.int_range(Constraint._counter, Constraint._counter + pl.len())
-            .alias(CONSTRAINT_KEY)
-            .cast(pl.UInt32)
         )
 
-        Constraint._counter += len(self.data_per_constraint)
+        self.data_per_constraint = self.assign_ids(
+            data_per_constraint, to_column=CONSTRAINT_KEY
+        )
 
     @property
     def dual(self) -> pl.DataFrame | float:

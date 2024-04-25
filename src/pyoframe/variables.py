@@ -13,10 +13,10 @@ from pyoframe.constants import COEF_KEY, SOLUTION_KEY, VAR_KEY, VType, VTypeValu
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
-from pyoframe.util import get_obj_repr
+from pyoframe.util import IdCounterMixin, get_obj_repr
 
 
-class Variable(ModelElement, SupportsMath):
+class Variable(ModelElement, SupportsMath, IdCounterMixin):
     """
     Represents one or many decision variable in an optimization model.
 
@@ -54,13 +54,6 @@ class Variable(ModelElement, SupportsMath):
         [3]: x9
     """
 
-    _counter = 1  # Must start at 1 since 0 is reserved for constant terms
-
-    @classmethod
-    def _reset_counter(cls):
-        """Resets the variable count. Useful to ensure consistency in unit tests."""
-        cls._counter = 1
-
     # TODO: Breaking change, remove support for Iterable[AcceptableSets]
     def __init__(
         self,
@@ -69,18 +62,11 @@ class Variable(ModelElement, SupportsMath):
         ub: float = float("inf"),
         vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
-        if len(indexing_sets) == 0:
-            data = pl.DataFrame({VAR_KEY: [Variable._counter]})
-        else:
-            data = Set(*indexing_sets).data.with_columns(
-                pl.int_range(Variable._counter, Variable._counter + pl.len()).alias(
-                    VAR_KEY
-                )
-            )
+        data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
         data = data.with_columns(pl.lit(None).cast(pl.Float64).alias(SOLUTION_KEY))
-        super().__init__(data)
+        data = self.assign_ids(data, to_column=VAR_KEY)
 
-        Variable._counter += data.height
+        super().__init__(data)
 
         self.vtype: VType = VType(vtype)
 
