@@ -64,7 +64,7 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
     ):
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
         data = data.with_columns(pl.lit(None).cast(pl.Float64).alias(SOLUTION_KEY))
-        data = self.assign_ids(data, to_column=VAR_KEY)
+        data = self._assign_ids(data)
 
         super().__init__(data)
 
@@ -76,6 +76,10 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
 
         self.lb = lb
         self.ub = ub
+
+    @classmethod
+    def get_id_column_name(cls):
+        return VAR_KEY
 
     @property
     def ids(self):

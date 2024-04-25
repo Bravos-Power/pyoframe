@@ -14,14 +14,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
 from pyoframe.constants import VAR_KEY, Config
-from pyoframe.io_mappers import (
-    Base62ConstMapper,
-    Base62VarMapper,
-    IOMappers,
-    Mapper,
-    NamedConstMapper,
-    NamedVarMapper,
-)
+from pyoframe.constraints import Constraint
+from pyoframe.variables import Variable
+from pyoframe.io_mappers import Base62ConstMapper, Base62VarMapper, IOMappers, Mapper, NamedMapper
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -111,9 +106,9 @@ def get_var_map(m: "Model", use_var_names):
     if use_var_names:
         if m.var_map is not None:
             return m.var_map
-        var_map = NamedVarMapper()
+        var_map = NamedMapper(Variable)
     else:
-        var_map = Base62VarMapper()
+        var_map = Base62VarMapper(Variable)
 
     for v in m.variables:
         var_map.add(v)
@@ -139,7 +134,9 @@ def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=None) -> P
     if use_var_names is None:
         use_var_names = not Config.shorten_names_in_lp_file
 
-    const_map = NamedConstMapper() if use_var_names else Base62ConstMapper()
+    const_map = (
+        NamedMapper(Constraint) if use_var_names else Base62ConstMapper(Constraint)
+    )
     for c in m.constraints:
         const_map.add(c)
     var_map = get_var_map(m, use_var_names)

@@ -1,10 +1,10 @@
 """
-File containing utility functions.
+File containing utility functions and classes.
 """
 
 from abc import abstractmethod
 from collections import defaultdict
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union
 
 import polars as pl
 import pandas as pd
@@ -14,36 +14,52 @@ from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
 
 class IdCounterMixin:
     """
-    Class that provides a method to assign unique IDs to rows in a DataFrame.
-
-    IDs are unique across all instances of the class (but different subclasses have different counters).
+    Provides a method that assigns a unique ID to each row in a DataFrame.
+    IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
+    IDs are only unique for the subclass since different subclasses have different counters.
     """
 
-    _counters = defaultdict(lambda: 1)
+    # Keys are the subclass names and values are the next unasigned ID.
+    _id_counters: Dict[str, int] = defaultdict(lambda: 1)
 
     @classmethod
     def _reset_counters(cls):
-        cls._counters = defaultdict(lambda: 1)
+        """
+        Resets all the ID counters.
+        This function is called before every unit test to reset the code state.
+        """
+        cls._id_counters = defaultdict(lambda: 1)
 
-    def assign_ids(self, df: pl.DataFrame, to_column: str):
+    def _assign_ids(self, df: pl.DataFrame) -> pl.DataFrame:
+        """
+        Adds the column `to_column` to the DataFrame `df` with the next batch
+        of unique consecutive IDs.
+        """
         assert df.height > 0, "Cannot assign IDs to an empty DataFrame."
 
         cls_name = self.__class__.__name__
-        cur_count = self._counters[cls_name]
+        cur_count = self._id_counters[cls_name]
         df = df.with_columns(
             pl.int_range(cur_count, cur_count + pl.len())
-            .alias(to_column)
+            .alias(self.get_id_column_name())
             .cast(pl.UInt32)
         )
-        self._counters[cls_name] += df.height
+        self._id_counters[cls_name] += df.height
         return df
 
+    @classmethod
+    @abstractmethod
+    def get_id_column_name(cls) -> str:
+        """
+        Returns the name of the column containing the IDs.
+        """
+
     @property
-    def ids(self):
+    @abstractmethod
+    def ids(self) -> pl.DataFrame:
         """
-        Should return a dataframe with the IDs of the elements and the dimensions.
+        Returns a dataframe with the IDs and any other relevant columns (i.e. the dimension columns).
         """
-        raise NotImplementedError
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):

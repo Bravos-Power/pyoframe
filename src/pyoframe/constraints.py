@@ -815,9 +815,7 @@ class Constraint(Expression, IdCounterMixin):
             pl.lit(None).cast(pl.Float64).alias(DUAL_KEY)
         )
 
-        self.data_per_constraint = self.assign_ids(
-            data_per_constraint, to_column=CONSTRAINT_KEY
-        )
+        self.data_per_constraint = self._assign_ids(data_per_constraint)
 
     @property
     def dual(self) -> pl.DataFrame | float:
@@ -825,6 +823,10 @@ class Constraint(Expression, IdCounterMixin):
         if result.shape == (1, 1):
             return result.item()
         return result
+
+    @classmethod
+    def get_id_column_name(cls):
+        return CONSTRAINT_KEY
 
     @property
     def ids(self) -> pl.DataFrame:

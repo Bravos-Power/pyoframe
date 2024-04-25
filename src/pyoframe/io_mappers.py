@@ -7,10 +7,8 @@ import math
 import string
 from abc import ABC, abstractmethod
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Optional, Type, Union
 import polars as pl
-from pyoframe.constants import CONST_TERM, CONSTRAINT_KEY
-from pyoframe.constants import VAR_KEY
 from pyoframe.util import concat_dimensions
 
 
@@ -25,31 +23,15 @@ class IOMappers:
     const_map: "Mapper"
 
 
-class VarMixin:
-    @property
-    def _ID_COL(self) -> str:
-        return VAR_KEY
-
-
-class ConstMixin:
-    @property
-    def _ID_COL(self) -> str:
-        return CONSTRAINT_KEY
-
-
 class Mapper(ABC):
     _NAME_COL = "_name"
 
-    def __init__(self, prefix=None) -> None:
-        self.prefix = prefix
+    def __init__(self, cls: Type["IdCounterMixin"]) -> None:
+        self._ID_COL = cls.get_id_column_name()
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self._NAME_COL: []},
             schema={self._ID_COL: pl.UInt32, self._NAME_COL: pl.String},
         )
-
-    @property
-    def _ID_COL(self) -> str:
-        raise NotImplementedError
 
     def add(self, element: Union["Variable", "Constraint"]) -> None:
         self.mapping_registry = pl.concat(
@@ -57,9 +39,7 @@ class Mapper(ABC):
         )
 
     @abstractmethod
-    def _element_to_map(
-        self, element: Union["Variable", "Constraint"]
-    ) -> pl.DataFrame: ...
+    def _element_to_map(self, element: "IdCounterMixin") -> pl.DataFrame: ...
 
     def apply(
         self,
@@ -75,7 +55,7 @@ class Mapper(ABC):
         return result.rename({self._NAME_COL: to_col})
 
 
-class NamedVarMapper(VarMixin, Mapper):
+class NamedMapper(Mapper):
     """
     Maps constraints or variables to a string representation using the object's name and dimensions.
 
@@ -90,35 +70,13 @@ class NamedVarMapper(VarMixin, Mapper):
         foo[0] + foo[1] + foo[2] + foo[3]
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.mapping_registry = pl.DataFrame(
-            {
-                self._ID_COL: [CONST_TERM],
-                self._NAME_COL: [""],
-            },
-            schema={self._ID_COL: pl.UInt32, self._NAME_COL: pl.String},
-        )
-
-    def _element_to_map(self, var: "Variable") -> pl.DataFrame:
+    def _element_to_map(self, element) -> pl.DataFrame:
+        element_name = element.name  # type: ignore
         assert (
-            var.name is not None
-        ), "Variable must have a name to be used in a NamedVariables mapping."
+            element_name is not None
+        ), "Element must have a name to be used in a named mapping."
         return concat_dimensions(
-            var.ids, keep_dims=False, prefix=var.name, to_col=self._NAME_COL
-        )
-
-
-class NamedConstMapper(ConstMixin, Mapper):
-    def _element_to_map(self, element: "Constraint") -> pl.DataFrame:
-        assert (
-            element.name is not None
-        ), "Constraint must have a name to be used in a NamedConstraintMapper."
-        return concat_dimensions(
-            element.ids,
-            keep_dims=False,
-            prefix=element.name,
-            to_col=self._NAME_COL,
+            element.ids, keep_dims=False, prefix=element_name, to_col=self._NAME_COL
         )
 
 
@@ -131,8 +89,9 @@ class Base62Mapper(Mapper):
     _BASE = _CHAR_TABLE.height  # _BASE = 62
     _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item()  # _ZERO = "0"
 
+    @property
     @abstractmethod
-    def _get_prefix(self) -> "str": ...
+    def _prefix(self) -> "str": ...
 
     def apply(
         self,
@@ -143,7 +102,7 @@ class Base62Mapper(Mapper):
             return df
 
         query = pl.concat_str(
-            pl.lit(self._get_prefix()),
+            pl.lit(self._prefix),
             pl.col(self._ID_COL).map_batches(
                 Base62Mapper._to_base62,
                 return_dtype=pl.String,
@@ -203,20 +162,24 @@ class Base62Mapper(Mapper):
             .replace("", cls._ZERO)
         )
 
+    def _element_to_map(self, element) -> pl.DataFrame:
+        return self.apply(element.ids.select(self._ID_COL), to_col=self._NAME_COL)
 
-class Base62VarMapper(VarMixin, Base62Mapper):
+
+class Base62VarMapper(Base62Mapper):
     """
     Examples:
         >>> import polars as pl
         >>> from pyoframe import Model, Variable
+        >>> from pyoframe.constants import VAR_KEY
         >>> m = Model()
         >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
         >>> (m.x.filter(t=11)+1).to_str()
         '[11]: 1  + x[11]'
-        >>> (m.x.filter(t=11)+1).to_str(var_map=Base62VarMapper())
+        >>> (m.x.filter(t=11)+1).to_str(var_map=Base62VarMapper(Variable))
         '[11]: 1  + xb'
 
-        >>> Base62VarMapper().apply(pl.DataFrame({VAR_KEY: []}))
+        >>> Base62VarMapper(Variable).apply(pl.DataFrame({VAR_KEY: []}))
         shape: (0, 1)
         ┌───────────────┐
         │ __variable_id │
@@ -225,19 +188,13 @@ class Base62VarMapper(VarMixin, Base62Mapper):
         ╞═══════════════╡
         └───────────────┘
     """
-
-    def _get_prefix(self) -> "str":
+    @property
+    def _prefix(self) -> "str":
         return "x"
 
-    def _element_to_map(self, element) -> pl.DataFrame:
-        return self.apply(element.data.select(VAR_KEY), to_col=self._NAME_COL)
 
+class Base62ConstMapper(Base62Mapper):
 
-class Base62ConstMapper(ConstMixin, Base62Mapper):
-    def _get_prefix(self) -> "str":
+    @property
+    def _prefix(self) -> "str":
         return "c"
-
-    def _element_to_map(self, element) -> pl.DataFrame:
-        return self.apply(
-            element.data_per_constraint.select(CONSTRAINT_KEY), to_col=self._NAME_COL
-        )
