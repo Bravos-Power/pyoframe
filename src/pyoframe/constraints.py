@@ -819,7 +819,7 @@ class Constraint(Expression, IdCounterMixin):
 
     @property
     def dual(self) -> pl.DataFrame | float:
-        result = self.data_per_constraint.select(self.dimensions_unsafe + ["dual"])
+        result = self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
         if result.shape == (1, 1):
             return result.item()
         return result

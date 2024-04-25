@@ -169,7 +169,7 @@ class GurobiSolver(FileBasedSolver):
                             NAME_COL: m.getAttr("ConstrName", constraints),
                         }
                     )
-                except gurobipy.GurobiError as e:
+                except gurobipy.GurobiError:
                     print("Dual values couldn't be parsed")
                     dual = None
 
