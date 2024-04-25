@@ -1,10 +1,4 @@
 """
-Source code heavily based on the `linopy` package by Fabian Hofmann.
-Copyright 2015-2021 PyPSA Developers
-Copyright 2021-2023 Fabian Hofmann
-Copyright 2024 Bravos Energía
-MIT License
-
 Module containing all import/export functionalities.
 """
 
