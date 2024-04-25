@@ -741,7 +741,7 @@ class Expression(ModelElement, SupportsMath):
             max_line_len=80,
             max_rows=15,
             include_header=True,
-            float_precision=Config.printing_float_precision,
+            float_precision=Config.print_float_precision,
         )
 
     def __str__(self) -> str:

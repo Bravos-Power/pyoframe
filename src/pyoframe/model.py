@@ -20,7 +20,7 @@ class Model:
         self._constraints: List[Constraint] = []
         self._objective: Optional[Objective] = None
         self.var_map = (
-            None if Config.shorten_names_everywhere else NamedMapper(Variable)
+            NamedMapper(Variable) if Config.print_uses_variable_names else None
         )
         self.io_mappers: Optional[IOMappers] = None
         self.name = name

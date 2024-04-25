@@ -100,9 +100,6 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
 
 
 def get_var_map(m: "Model", use_var_names):
-    if use_var_names is None:
-        use_var_names = not Config.shorten_names_in_lp_file
-
     if use_var_names:
         if m.var_map is not None:
             return m.var_map
@@ -116,7 +113,7 @@ def get_var_map(m: "Model", use_var_names):
 
 
 def to_file(
-    m: "Model", file_path: Optional[Union[str, Path]], use_var_names=None
+    m: "Model", file_path: Optional[Union[str, Path]], use_var_names=False
 ) -> Path:
     """
     Write out a model to a lp file.
@@ -132,9 +129,6 @@ def to_file(
 
     if file_path.exists():
         file_path.unlink()
-
-    if use_var_names is None:
-        use_var_names = not Config.shorten_names_in_lp_file
 
     const_map = (
         NamedMapper(Constraint) if use_var_names else Base62ConstMapper(Constraint)

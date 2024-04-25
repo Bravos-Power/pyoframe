@@ -49,9 +49,11 @@ def test_examples(example: Example):
     dense_result = main_module.main(
         input_dir, directory=dense_output_dir, solution_file=dense_solution_file
     )
-    pf.Config.shorten_names_in_lp_file = False
     symbolic_result = main_module.main(
-        input_dir, directory=symbolic_output_dir, solution_file=symbolic_solution_file
+        input_dir,
+        directory=symbolic_output_dir,
+        solution_file=symbolic_solution_file,
+        use_var_names=True,
     )
     check_results_equal(dense_result, symbolic_result)
 
