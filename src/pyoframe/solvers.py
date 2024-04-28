@@ -20,7 +20,7 @@ import contextlib
 
 from pathlib import Path
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 

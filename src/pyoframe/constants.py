@@ -261,7 +261,7 @@ class Result:
         )
         if self.solution is not None:
             res += (
-                f"Solution: {len(self.solution.primal)} primals, {len(self.solution.dual)} duals\n"
+                f"Solution: {len(self.solution.primal)} primals, {len(self.solution.dual) if self.solution.dual is not None else 0} duals\n"
                 f"Objective: {self.solution.objective:.2e}\n"
             )
         res += f"Solver model: {solver_model_string}\n"
