@@ -31,10 +31,14 @@ def main(input_dir, directory, **kwargs):
     # Write results to CSV files
     m.open.solution.write_csv(directory / "open.csv")  # type: ignore
     m.transport.solution.write_csv(directory / "transport.csv")  # type: ignore
-    
+
     return m
 
 
 if __name__ == "__main__":
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", directory=working_dir / "results", use_var_names=True)
+    main(
+        working_dir / "input_data",
+        directory=working_dir / "results",
+        use_var_names=True,
+    )

@@ -34,7 +34,7 @@ def main(input_dir, directory, **kwargs):
     # Write results to CSV files
     m.orders_in_stock.solution.write_csv(directory / "orders_in_stock.csv")  # type: ignore
     m.is_used.solution.write_csv(directory / "is_used.csv")  # type: ignore
-    
+
     return m
 
 
