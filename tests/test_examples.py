@@ -1,61 +1,115 @@
+from dataclasses import dataclass
+import importlib
+import shutil
+import pytest
 from pathlib import Path
 from typing import List, Tuple
 
-from tests.examples.diet_problem.model import main as main_diet
-from tests.examples.diet_problem.model_gurobipy import main as main_diet_gurobipy
-from tests.examples.facility_problem.model import main as main_facility
-from tests.examples.facility_problem.model_gurobipy import (
-    main as main_facility_gurobipy,
-)
-from tests.examples.cutting_stock_problem.model import main as main_cutting_stock
+import polars as pl
+from polars.testing import assert_frame_equal
 
 
-def test_diet_example():
-    input_dir = Path("tests/examples/diet_problem/input_data/")
-    output_dir = Path("tmp/diet_problem/")
-    expected_output = Path("tests/examples/diet_problem/results/")
-    delete_dir(output_dir)
-
-    main_diet(input_dir, output_dir)
-    main_diet_gurobipy(input_dir, output_dir)
-
-    check_files_equal(expected_output / "diet.lp", output_dir / "diet.lp")
-    check_files_equal(expected_output / "diet.sol", output_dir / "diet.sol")
-    check_sol_equal(expected_output / "diet-gurobipy.sol", output_dir / "diet.sol")
+@dataclass
+class Example:
+    folder_name: str
+    integer_results_only: bool = False
+    many_valid_solutions: bool = False
+    has_gurobi_version: bool = True
 
 
-def test_facility_example():
-    input_dir = Path("tests/examples/facility_problem/input_data/")
-    output_dir = Path("tmp/facility_problem/")
-    expected_output = Path("tests/examples/facility_problem/results/")
+EXAMPLES = [
+    Example("diet_problem"),
+    Example("facility_problem"),
+    Example(
+        "cutting_stock_problem",
+        integer_results_only=True,
+        many_valid_solutions=True,
+        has_gurobi_version=False,
+    ),
+]
 
-    delete_dir(output_dir)
 
-    main_facility(input_dir, output_dir)
-    main_facility_gurobipy(input_dir, output_dir)
+@pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
+def test_examples(example: Example):
+    example_dir = Path("tests/examples") / example.folder_name
+    input_dir = example_dir / "input_data"
+    expected_output_dir = example_dir / "results"
+    working_dir = Path("tmp") / example.folder_name
+    symbolic_output_dir = working_dir / "results"
+    dense_output_dir = working_dir / "results_dense"
 
-    # Check that two files results are equal
-    check_files_equal(expected_output / "facility.lp", output_dir / "facility.lp")
-    check_files_equal(expected_output / "facility.sol", output_dir / "facility.sol")
-    check_sol_equal(
-        expected_output / "facility-gurobipy.sol", output_dir / "facility.sol"
+    if working_dir.exists():
+        shutil.rmtree(working_dir)
+    working_dir.mkdir(parents=True)
+
+    # Dynamically import the main function of the example
+    main_module = importlib.import_module(f"tests.examples.{example.folder_name}.model")
+
+    symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
+    dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
+
+    dense_result = main_module.main(
+        input_dir, directory=dense_output_dir, solution_file=dense_solution_file
+    )
+    symbolic_result = main_module.main(
+        input_dir,
+        directory=symbolic_output_dir,
+        solution_file=symbolic_solution_file,
+        use_var_names=True,
+    )
+    assert dense_result.objective.value == symbolic_result.objective.value
+    check_results_dir_equal(
+        expected_output_dir,
+        symbolic_output_dir,
+        check_solution_equal=not example.many_valid_solutions,
+    )
+    check_results_dir_equal(
+        dense_output_dir,
+        symbolic_output_dir,
+        check_solution_equal=not example.many_valid_solutions,
+        check_lp_sol=False,
     )
 
+    if example.integer_results_only:
+        check_integer_solutions_only(symbolic_solution_file)
+        check_integer_solutions_only(dense_solution_file)
 
-def test_cutting_stock_example():
-    input_dir = Path("tests/examples/cutting_stock_problem/input_data/")
-    output_dir = Path("tmp/cutting_stock/")
-    expected_output = Path("tests/examples/cutting_stock_problem/results/")
+    gurobi_module = None
+    if example.has_gurobi_version:
+        gurobi_module = importlib.import_module(
+            f"tests.examples.{example.folder_name}.model_gurobipy"
+        )
 
-    main_cutting_stock(input_dir, output_dir)
+        gurobi_module.main(input_dir, symbolic_output_dir)
+        if not example.many_valid_solutions:
+            check_sol_equal(
+                expected_output_dir / "gurobipy.sol", symbolic_solution_file
+            )
 
-    check_files_equal(
-        expected_output / "cutting_stock.lp", output_dir / "cutting_stock.lp"
-    )
-    check_integer_solutions_only(output_dir / "cutting_stock.sol")
+
+def check_results_dir_equal(
+    expected_dir, actual_dir, check_solution_equal, check_lp_sol=True
+):
+    for file in actual_dir.iterdir():
+        assert (
+            expected_dir / file.name
+        ).exists(), f"File {file.name} not found in expected directory"
+
+        expected = expected_dir / file.name
+        if file.suffix == ".sol":
+            if check_solution_equal and check_lp_sol:
+                check_sol_equal(expected, file)
+        elif file.suffix == ".lp":
+            if check_lp_sol:
+                check_lp_equal(expected, file)
+        else:
+            if check_solution_equal:
+                df1 = pl.read_csv(expected)
+                df2 = pl.read_csv(file)
+                assert_frame_equal(df1, df2, check_row_order=False)
 
 
-def check_files_equal(file_expected: Path, file_actual: Path):
+def check_lp_equal(file_expected: Path, file_actual: Path):
     with open(file_expected) as f:
         expected = f.readlines()
     with open(file_actual) as f:
@@ -92,9 +146,3 @@ def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = [line.partition(" ") for line in sol]
     sol = [(name, float(value)) for name, _, value in sol]
     return sol
-
-
-def delete_dir(dir: Path):
-    if dir.exists():
-        for file in dir.iterdir():
-            file.unlink()

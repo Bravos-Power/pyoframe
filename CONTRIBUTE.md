@@ -10,6 +10,6 @@ Contributions are welcome! Simply submit a pull request on GitHub with your chan
 
 ### Some helpful commands
 
-- `pytest`: Runs all the tests. Tests are found under `/tests` and also as doc tests.
+- `pytest`: Runs all the tests. Tests are found under `/tests` and also as doc tests. Include the flag `--cov=src/pyoframe` to get test coverage information.
 - `mkdocs serve`: Generates the documentation locally. Navigate to [`http://127.0.0.1:8000/pyoframe/`](http://127.0.0.1:8000/pyoframe/) to check it out.
 

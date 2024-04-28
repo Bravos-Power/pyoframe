@@ -9,14 +9,14 @@ import polars as pl
 
 from pyoframe.constraints import SupportsMath, Set
 
-from pyoframe.constants import COEF_KEY, VAR_KEY, VType, VTypeValue
+from pyoframe.constants import COEF_KEY, SOLUTION_KEY, VAR_KEY, VType, VTypeValue
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
-from pyoframe.util import get_obj_repr
+from pyoframe.util import IdCounterMixin, get_obj_repr
 
 
-class Variable(ModelElement, SupportsMath):
+class Variable(ModelElement, SupportsMath, IdCounterMixin):
     """
     Represents one or many decision variable in an optimization model.
 
@@ -54,13 +54,6 @@ class Variable(ModelElement, SupportsMath):
         [3]: x9
     """
 
-    _var_count = 1  # Must start at 1 since 0 is reserved for constant terms
-
-    @classmethod
-    def _reset_var_count(cls):
-        """Resets the variable count. Useful to ensure consistency in unit tests."""
-        cls._var_count = 1
-
     # TODO: Breaking change, remove support for Iterable[AcceptableSets]
     def __init__(
         self,
@@ -69,17 +62,10 @@ class Variable(ModelElement, SupportsMath):
         ub: float = float("inf"),
         vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
-        if len(indexing_sets) == 0:
-            data = pl.DataFrame({VAR_KEY: [Variable._var_count]})
-        else:
-            data = Set(*indexing_sets).data.with_columns(
-                pl.int_range(Variable._var_count, Variable._var_count + pl.len()).alias(
-                    VAR_KEY
-                )
-            )
-        super().__init__(data)
+        data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
+        data = self._assign_ids(data)
 
-        Variable._var_count += data.height
+        super().__init__(data)
 
         self.vtype: VType = VType(vtype)
 
@@ -89,6 +75,31 @@ class Variable(ModelElement, SupportsMath):
 
         self.lb = lb
         self.ub = ub
+
+    @classmethod
+    def get_id_column_name(cls):
+        return VAR_KEY
+
+    @property
+    def solution(self):
+        if SOLUTION_KEY not in self.data.columns:
+            raise ValueError(f"No solution solution found for Variable '{self.name}'.")
+        df = self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
+        if df.shape == (1, 1):
+            return df.item()
+        return df
+
+    @solution.setter
+    def solution(self, value):
+        assert sorted(value.columns) == sorted([SOLUTION_KEY, VAR_KEY])
+        df = self.data
+        if SOLUTION_KEY in self.data.columns:
+            df = df.drop(SOLUTION_KEY)
+        self._data = df.join(value, on=VAR_KEY, how="left", validate="1:1")
+
+    @property
+    def ids(self):
+        return self.data.select(self.dimensions_unsafe + [VAR_KEY])
 
     def __repr__(self):
         return (
@@ -100,7 +111,7 @@ class Variable(ModelElement, SupportsMath):
         )
 
     def to_expr(self) -> Expression:
-        return self._new(self.data)
+        return self._new(self.data.drop(SOLUTION_KEY))
 
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))

@@ -1,13 +1,67 @@
 """
-File containing utility functions.
+File containing utility functions and classes.
 """
 
-from typing import Any, Iterable, Optional, Union
+from abc import abstractmethod, ABC
+from collections import defaultdict
+from typing import Any, Dict, Iterable, Optional, Union
 
 import polars as pl
 import pandas as pd
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
+
+
+class IdCounterMixin(ABC):
+    """
+    Provides a method that assigns a unique ID to each row in a DataFrame.
+    IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
+    IDs are only unique for the subclass since different subclasses have different counters.
+    """
+
+    # Keys are the subclass names and values are the next unasigned ID.
+    _id_counters: Dict[str, int] = defaultdict(lambda: 1)
+
+    @classmethod
+    def _reset_counters(cls):
+        """
+        Resets all the ID counters.
+        This function is called before every unit test to reset the code state.
+        """
+        cls._id_counters = defaultdict(lambda: 1)
+
+    def _assign_ids(self, df: pl.DataFrame) -> pl.DataFrame:
+        """
+        Adds the column `to_column` to the DataFrame `df` with the next batch
+        of unique consecutive IDs.
+        """
+        cls_name = self.__class__.__name__
+        cur_count = self._id_counters[cls_name]
+        id_col_name = self.get_id_column_name()
+
+        if df.height == 0:
+            df = df.with_columns(pl.lit(cur_count).alias(id_col_name))
+        else:
+            df = df.with_columns(
+                pl.int_range(cur_count, cur_count + pl.len()).alias(id_col_name)
+            )
+        df = df.with_columns(pl.col(id_col_name).cast(pl.UInt32))
+        self._id_counters[cls_name] += df.height
+        return df
+
+    @classmethod
+    @abstractmethod
+    def get_id_column_name(cls) -> str:
+        """
+        Returns the name of the column containing the IDs.
+        """
+
+    @property
+    @abstractmethod
+    def ids(self) -> pl.DataFrame:
+        """
+        Returns a dataframe with the IDs and any other relevant columns (i.e. the dimension columns).
+        """
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
@@ -57,6 +111,7 @@ def concat_dimensions(
     keep_dims: bool = True,
     ignore_columns=RESERVED_COL_KEYS,
     replace_spaces: bool = True,
+    to_col: str = "concated_dim",
 ) -> pl.DataFrame:
     """
     Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
@@ -136,18 +191,18 @@ def concat_dimensions(
         prefix = ""
     dimensions = [col for col in df.columns if col not in ignore_columns]
     if dimensions:
-        pl_expr = pl.concat_str(
+        query = pl.concat_str(
             pl.lit(prefix + "["),
             pl.concat_str(*dimensions, separator=","),
             pl.lit("]"),
         )
     else:
-        pl_expr = pl.lit(prefix)
+        query = pl.lit(prefix)
 
-    df = df.with_columns(concated_dim=pl_expr)
+    df = df.with_columns(query.alias(to_col))
 
     if replace_spaces:
-        df = df.with_columns(pl.col("concated_dim").str.replace_all(" ", "_"))
+        df = df.with_columns(pl.col(to_col).str.replace_all(" ", "_"))
 
     if not keep_dims:
         df = df.drop(*dimensions)

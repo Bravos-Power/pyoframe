@@ -7,8 +7,16 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
-from pyoframe.constants import VAR_KEY
-from pyoframe.var_mapping import Base62EncodedVariables, VariableMapping
+from pyoframe.constants import VAR_KEY, Config
+from pyoframe.constraints import Constraint
+from pyoframe.variables import Variable
+from pyoframe.io_mappers import (
+    Base62ConstMapper,
+    Base62VarMapper,
+    IOMappers,
+    Mapper,
+    NamedMapper,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -23,13 +31,13 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     assert m.objective is not None, "No objective set."
 
     f.write(f"{m.objective.sense.value}\n\nobj:\n\n")
-    result = m.objective.to_str(var_map=var_map, include_name=False)
+    result = m.objective.to_str(var_map=var_map, include_prefix=False)
     f.writelines(result)
 
 
-def constraints_to_file(m: "Model", f: TextIOWrapper, var_map):
+def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
     for constraint in create_section(m.constraints, f, "s.t."):
-        f.writelines(constraint.to_str(var_map=var_map) + "\n")
+        f.writelines(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
 
 
 def bounds_to_file(m: "Model", f, var_map):
@@ -41,7 +49,7 @@ def bounds_to_file(m: "Model", f, var_map):
         ub = f"{variable.ub:.12g}"
 
         df = (
-            var_map.map_vars(variable.data)
+            var_map.apply(variable.data, to_col=None)
             .select(
                 pl.concat_str(
                     pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n")
@@ -53,26 +61,26 @@ def bounds_to_file(m: "Model", f, var_map):
         f.writelines(df)
 
 
-def binaries_to_file(m: "Model", f, var_map: VariableMapping):
+def binaries_to_file(m: "Model", f, var_map: Mapper):
     """
     Write out binaries of a model to a lp file.
     """
     for variable in create_section(m.binary_variables, f, "binary"):
         lines = (
-            var_map.map_vars(variable.data)
+            var_map.apply(variable.data, to_col=None)
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
         f.writelines(lines + "\n")
 
 
-def integers_to_file(m: "Model", f, var_map: VariableMapping):
+def integers_to_file(m: "Model", f, var_map: Mapper):
     """
     Write out integers of a model to a lp file.
     """
     for variable in create_section(m.integer_variables, f, "general"):
         lines = (
-            var_map.map_vars(variable.data)
+            var_map.apply(variable.data, to_col=None)
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
@@ -91,30 +99,51 @@ def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
         yield item
 
 
-def to_file(m: "Model", fn: Optional[Union[str, Path]], use_var_names=False) -> Path:
+def get_var_map(m: "Model", use_var_names):
+    if use_var_names:
+        if m.var_map is not None:
+            return m.var_map
+        var_map = NamedMapper(Variable)
+    else:
+        var_map = Base62VarMapper(Variable)
+
+    for v in m.variables:
+        var_map.add(v)
+    return var_map
+
+
+def to_file(
+    m: "Model", file_path: Optional[Union[str, Path]], use_var_names=False
+) -> Path:
     """
     Write out a model to a lp file.
     """
-    if fn is None:
+    if file_path is None:
         with NamedTemporaryFile(
             prefix="pyoframe-problem-", suffix=".lp", mode="w", delete=False
         ) as f:
-            fn = f.name
+            file_path = f.name
 
-    fn = Path(fn)
-    assert fn.suffix == ".lp", f"File format `{fn.suffix}` not supported."
+    file_path = Path(file_path)
+    assert file_path.suffix == ".lp", f"File format `{file_path.suffix}` not supported."
 
-    if fn.exists():
-        fn.unlink()
+    if file_path.exists():
+        file_path.unlink()
 
-    var_map = m.var_map if use_var_names else Base62EncodedVariables()
+    const_map = (
+        NamedMapper(Constraint) if use_var_names else Base62ConstMapper(Constraint)
+    )
+    for c in m.constraints:
+        const_map.add(c)
+    var_map = get_var_map(m, use_var_names)
+    m.io_mappers = IOMappers(var_map, const_map)
 
-    with open(fn, mode="w") as f:
+    with open(file_path, mode="w") as f:
         objective_to_file(m, f, var_map)
-        constraints_to_file(m, f, var_map)
+        constraints_to_file(m, f, var_map, const_map)
         bounds_to_file(m, f, var_map)
         binaries_to_file(m, f, var_map)
         integers_to_file(m, f, var_map)
         f.write("end\n")
 
-    return fn
+    return file_path

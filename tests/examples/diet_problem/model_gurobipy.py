@@ -23,7 +23,7 @@ def main(input_dir, output_dir):
     categories = nutrients.index.tolist()
 
     # Model
-    m = Model("diet")
+    m = Model()
 
     # Create decision variables for the foods to buy
     buy = m.addVars(foods, name="Buy")
@@ -50,9 +50,10 @@ def main(input_dir, output_dir):
     m.setObjective(buy.prod(cost), GRB.MINIMIZE)
 
     # Solve
-    m.write(str(output_dir / "diet-gurobipy.lp"))
+    m.write(str(output_dir / "gurobipy.lp"))
     m.optimize()
-    m.write(str(output_dir / "diet-gurobipy.sol"))
+    m.write(str(output_dir / "gurobipy.sol"))
+    return m.getObjective().getValue()
 
 
 if __name__ == "__main__":

@@ -95,11 +95,7 @@ def test_filter_variable():
     v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
     result = v.filter(dim1=2)
     assert isinstance(result, Expression)
-    assert_frame_equal(
-        result.data,
-        pl.DataFrame({"dim1": [2], COEF_KEY: [1], VAR_KEY: [2]}),
-        check_dtype=False,
-    )
+    assert str(result) == "[2]: x2"
 
 
 def test_filter_set():

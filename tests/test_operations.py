@@ -44,7 +44,7 @@ def test_to_str():
         repr(expr)
         == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2\n[2]: 3\n[3]: 4"
     )
-    pf.Config.printing_float_precision = None
+    pf.Config.print_float_precision = None
     assert (
         repr(expr)
         == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2.00000000001\n[2]: 3\n[3]: 4"

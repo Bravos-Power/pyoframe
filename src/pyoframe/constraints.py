@@ -18,6 +18,8 @@ from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
+    CONSTRAINT_KEY,
+    DUAL_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
     Config,
@@ -25,12 +27,13 @@ from pyoframe.constants import (
     UnmatchedStrategy,
 )
 from pyoframe.util import (
+    IdCounterMixin,
     cast_coef_to_string,
     concat_dimensions,
     get_obj_repr,
     parse_inputs_as_iterable,
 )
-from pyoframe.var_mapping import NumberedVariables
+
 from pyoframe.model_element import ModelElement
 
 VAR_TYPE = pl.UInt32
@@ -633,16 +636,27 @@ class Expression(ModelElement, SupportsMath):
         max_rows=None,
         include_const_term=True,
         var_map=None,
-        include_name=True,
         float_precision=None,
     ):
         data = self.data if include_const_term else self.variable_terms
-        if var_map is None:
-            var_map = (
-                self._model.var_map if self._model is not None else NumberedVariables()
-            )
         data = cast_coef_to_string(data, float_precision=float_precision)
-        data = var_map.map_vars(data)
+
+        if var_map is not None:
+            data = var_map.apply(data, to_col="str_var")
+        elif self._model is not None and self._model.var_map is not None:
+            var_map = self._model.var_map
+            data = var_map.apply(data, to_col="str_var")
+        else:
+            data = data.with_columns(
+                pl.concat_str(pl.lit("x"), VAR_KEY).alias("str_var")
+            )
+        data = data.with_columns(
+            pl.when(pl.col(VAR_KEY) == CONST_TERM)
+            .then(pl.lit(""))
+            .otherwise("str_var")
+            .alias(VAR_KEY)
+        ).drop("str_var")
+
         dimensions = self.dimensions
 
         # Create a string for each term
@@ -680,19 +694,14 @@ class Expression(ModelElement, SupportsMath):
                 )
                 .otherwise(pl.col("expr"))
             )
+        return data
 
-        # Prefix with the dimensions
-        prefix = (
-            getattr(self, "name") if hasattr(self, "name") and include_name else None
-        )
-        if prefix or dimensions:
-            data = concat_dimensions(data, prefix=prefix, ignore_columns=["expr"])
+    def to_str_create_prefix(self, data):
+        if self.name is not None or self.dimensions:
+            data = concat_dimensions(data, prefix=self.name, ignore_columns=["expr"])
             data = data.with_columns(
-                pl.concat_str(
-                    pl.col("concated_dim"), pl.lit(": "), pl.col("expr")
-                ).alias("expr")
+                pl.concat_str("concated_dim", pl.lit(": "), "expr").alias("expr")
             ).drop("concated_dim")
-
         return data
 
     def to_str(
@@ -701,7 +710,7 @@ class Expression(ModelElement, SupportsMath):
         max_rows=None,
         include_const_term=True,
         var_map=None,
-        include_name=True,
+        include_prefix=True,
         include_header=False,
         include_data=True,
         float_precision=None,
@@ -719,9 +728,10 @@ class Expression(ModelElement, SupportsMath):
                 max_rows=max_rows,
                 include_const_term=include_const_term,
                 var_map=var_map,
-                include_name=include_name,
                 float_precision=float_precision,
             )
+            if include_prefix:
+                str_table = self.to_str_create_prefix(str_table)
             result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
         return result
@@ -731,7 +741,7 @@ class Expression(ModelElement, SupportsMath):
             max_line_len=80,
             max_rows=15,
             include_header=True,
-            float_precision=Config.printing_float_precision,
+            float_precision=Config.print_float_precision,
         )
 
     def __str__(self) -> str:
@@ -776,7 +786,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     return sum(over=remaining_dims, expr=expr)
 
 
-class Constraint(Expression):
+class Constraint(Expression, IdCounterMixin):
     """A linear programming constraint."""
 
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
@@ -797,8 +807,66 @@ class Constraint(Expression):
             self._model = lhs._model
         self.sense = sense
 
+        dims = self.dimensions
+        data_per_constraint = (
+            pl.DataFrame() if dims is None else self.data.select(dims).unique()
+        )
+        self.data_per_constraint = self._assign_ids(data_per_constraint)
+
+    @property
+    def dual(self) -> Union[pl.DataFrame, float]:
+        if DUAL_KEY not in self.data_per_constraint.columns:
+            raise ValueError(f"No dual values founds for constraint '{self.name}'")
+        result = self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
+        if result.shape == (1, 1):
+            return result.item()
+        return result
+
+    @dual.setter
+    def dual(self, value):
+        assert sorted(value.columns) == sorted([DUAL_KEY, CONSTRAINT_KEY])
+        df = self.data_per_constraint
+        if DUAL_KEY in df.columns:
+            df = df.drop(DUAL_KEY)
+        self.data_per_constraint = df.join(
+            value, on=CONSTRAINT_KEY, how="left", validate="1:1"
+        )
+
+    @classmethod
+    def get_id_column_name(cls):
+        return CONSTRAINT_KEY
+
+    @property
+    def ids(self) -> pl.DataFrame:
+        return self.data_per_constraint.select(
+            self.dimensions_unsafe + [CONSTRAINT_KEY]
+        )
+
+    def to_str_create_prefix(self, data, const_map=None):
+        if const_map is None:
+            return super().to_str_create_prefix(data)
+
+        data_map = const_map.apply(self.ids, to_col=None)
+
+        if self.dimensions is None:
+            assert data.height == 1
+            prefix = data_map.select(pl.col(CONSTRAINT_KEY)).item()
+            return data.select(
+                pl.concat_str(pl.lit(f"{prefix}: "), "expr").alias("expr")
+            )
+
+        data = data.join(data_map, on=self.dimensions)
+        return data.with_columns(
+            pl.concat_str(CONSTRAINT_KEY, pl.lit(": "), "expr").alias("expr")
+        ).drop(CONSTRAINT_KEY)
+
     def to_str(
-        self, max_line_len=None, max_rows=None, var_map=None, float_precision=None
+        self,
+        max_line_len=None,
+        max_rows=None,
+        var_map=None,
+        float_precision=None,
+        const_map=None,
     ):
         dims = self.dimensions
         str_table = self.to_str_table(
@@ -807,6 +875,7 @@ class Constraint(Expression):
             include_const_term=False,
             var_map=var_map,
         )
+        str_table = self.to_str_create_prefix(str_table, const_map=const_map)
         rhs = self.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False, float_precision=float_precision)
         # Remove leading +

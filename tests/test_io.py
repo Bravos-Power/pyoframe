@@ -34,22 +34,16 @@ def test_variables_to_string():
 
 
 def test_variables_to_string_with_dimensions(expression_with_dimensions: Expression):
-    result = expression_with_dimensions.to_str_table()
-    expected_result = pl.DataFrame(
-        {
-            "x": [1, 2, 1, 2],
-            "y": [1, 1, 2, 2],
-            "expr": [
-                "[1,1]: 5 x1 +3.4 x5 -2.1 x9 +1.1231237019273 x13",
-                "[2,1]: 5 x2 +3.4 x6 -2.1 x10 +1.1231237019273 x14",
-                "[1,2]: 5 x3 +3.4 x7 -2.1 x11 +1.1231237019273 x15",
-                "[2,2]: 5 x4 +3.4 x8 -2.1 x12 +1.1231237019273 x16",
-            ],
-        }
+    result = expression_with_dimensions.to_str(include_header=False)
+    expected_result = "\n".join(
+        [
+            "[1,1]: 5 x1 +3.4 x5 -2.1 x9 +1.1231237019273 x13",
+            "[2,1]: 5 x2 +3.4 x6 -2.1 x10 +1.1231237019273 x14",
+            "[1,2]: 5 x3 +3.4 x7 -2.1 x11 +1.1231237019273 x15",
+            "[2,2]: 5 x4 +3.4 x8 -2.1 x12 +1.1231237019273 x16",
+        ]
     )
-    assert_frame_equal(
-        result, expected_result, check_row_order=False, check_column_order=False
-    )
+    assert result == expected_result
 
 
 def test_expression_with_const_to_str():
