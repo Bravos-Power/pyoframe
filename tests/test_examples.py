@@ -103,7 +103,7 @@ def check_results_dir_equal(
             if check_lp_sol:
                 check_lp_equal(expected, file)
         else:
-            if check_sol_equal:
+            if check_solution_equal:
                 df1 = pl.read_csv(expected)
                 df2 = pl.read_csv(file)
                 assert_frame_equal(df1, df2, check_row_order=False)
