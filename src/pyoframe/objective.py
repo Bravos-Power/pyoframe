@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 from pyoframe.constants import ObjSense, ObjSenseValue
 from pyoframe.constraints import SupportsMath, Expression
 
@@ -27,3 +27,16 @@ class Objective(Expression):
         assert (
             self.dimensions is None
         ), "Objective cannot have dimensions as it must be a single expression"
+        self._value: Optional[float] = None
+
+    @property
+    def value(self):
+        if self._value is None:
+            raise ValueError(
+                "Objective value is not available before solving the model"
+            )
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value

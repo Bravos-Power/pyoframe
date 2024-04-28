@@ -30,9 +30,9 @@ def solve(m: "Model", solver, **kwargs):
     else:
         raise ValueError(f"Solver {solver} not recognized or supported.")
 
-    # TODO load in results to model
-
     if result.solution is not None:
+        m.objective.value = result.solution.objective
+
         for variable in m.variables:
             variable.solution = result.solution.primal
 
@@ -170,7 +170,6 @@ class GurobiSolver(FileBasedSolver):
                         }
                     )
                 except gurobipy.GurobiError:
-                    print("Dual values couldn't be parsed")
                     dual = None
 
                 solution = Solution(sol, dual, objective)

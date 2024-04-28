@@ -5,7 +5,8 @@ import pytest
 from pathlib import Path
 from typing import List, Tuple
 
-import pyoframe as pf
+import polars as pl
+from polars.testing import assert_frame_equal
 
 
 @dataclass
@@ -13,21 +14,22 @@ class Example:
     folder_name: str
     integer_results_only: bool = False
     many_valid_solutions: bool = False
+    has_gurobi_version: bool = True
 
 
 EXAMPLES = [
     Example("diet_problem"),
     Example("facility_problem"),
     Example(
-        "cutting_stock_problem", integer_results_only=True, many_valid_solutions=True
+        "cutting_stock_problem",
+        integer_results_only=True,
+        many_valid_solutions=True,
+        has_gurobi_version=False,
     ),
 ]
 
 
-@pytest.mark.parametrize(
-    "example",
-    EXAMPLES,
-)
+@pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
 def test_examples(example: Example):
     example_dir = Path("tests/examples") / example.folder_name
     input_dir = example_dir / "input_data"
@@ -55,43 +57,59 @@ def test_examples(example: Example):
         solution_file=symbolic_solution_file,
         use_var_names=True,
     )
-    check_results_equal(dense_result, symbolic_result)
-
-    gurobi_module = None
-    try:
-        gurobi_module = importlib.import_module(
-            f"tests.examples.{example.folder_name}.model_gurobipy"
-        )
-    except ImportError:
-        pass
-
-    if gurobi_module is not None:
-        gurobi_module.main(input_dir, symbolic_output_dir)
-
-    check_files_equal(
-        expected_output_dir / "pyoframe-problem.lp",
-        symbolic_output_dir / "pyoframe-problem.lp",
+    assert dense_result.objective.value == symbolic_result.objective.value
+    check_results_dir_equal(
+        expected_output_dir,
+        symbolic_output_dir,
+        check_solution_equal=not example.many_valid_solutions,
     )
-    if not example.many_valid_solutions:
-        check_files_equal(
-            expected_output_dir / "pyoframe-problem.sol", symbolic_solution_file
-        )
-        if gurobi_module is not None:
-            check_sol_equal(
-                expected_output_dir / "gurobipy.sol", symbolic_solution_file
-            )
+    check_results_dir_equal(
+        dense_output_dir,
+        symbolic_output_dir,
+        check_solution_equal=not example.many_valid_solutions,
+        check_lp_sol=False,
+    )
 
     if example.integer_results_only:
         check_integer_solutions_only(symbolic_solution_file)
         check_integer_solutions_only(dense_solution_file)
 
+    gurobi_module = None
+    if example.has_gurobi_version:
+        gurobi_module = importlib.import_module(
+            f"tests.examples.{example.folder_name}.model_gurobipy"
+        )
 
-def check_results_equal(result1, result2):
-    assert result1.status == result2.status
-    assert result1.solution.objective == result2.solution.objective
+        gurobi_module.main(input_dir, symbolic_output_dir)
+        if not example.many_valid_solutions:
+            check_sol_equal(
+                expected_output_dir / "gurobipy.sol", symbolic_solution_file
+            )
 
 
-def check_files_equal(file_expected: Path, file_actual: Path):
+def check_results_dir_equal(
+    expected_dir, actual_dir, check_solution_equal, check_lp_sol=True
+):
+    for file in actual_dir.iterdir():
+        assert (
+            expected_dir / file.name
+        ).exists(), f"File {file.name} not found in expected directory"
+
+        expected = expected_dir / file.name
+        if file.suffix == ".sol":
+            if check_solution_equal and check_lp_sol:
+                check_sol_equal(expected, file)
+        elif file.suffix == ".lp":
+            if check_lp_sol:
+                check_lp_equal(expected, file)
+        else:
+            if check_sol_equal:
+                df1 = pl.read_csv(expected)
+                df2 = pl.read_csv(file)
+                assert_frame_equal(df1, df2, check_row_order=False)
+
+
+def check_lp_equal(file_expected: Path, file_actual: Path):
     with open(file_expected) as f:
         expected = f.readlines()
     with open(file_actual) as f:

@@ -83,7 +83,7 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
     @property
     def solution(self):
         if SOLUTION_KEY not in self.data.columns:
-            return None
+            raise ValueError(f"No solution solution found for Variable '{self.name}'.")
         df = self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
         if df.shape == (1, 1):
             return df.item()

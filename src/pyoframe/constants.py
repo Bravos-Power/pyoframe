@@ -16,8 +16,8 @@ import polars as pl
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
 CONSTRAINT_KEY = "__constraint_id"
-SOLUTION_KEY = "__solution"
-DUAL_KEY = "__dual"
+SOLUTION_KEY = "solution"
+DUAL_KEY = "dual"
 NAME_COL = "__name"
 
 CONST_TERM = 0

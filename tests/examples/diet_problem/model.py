@@ -11,7 +11,7 @@ import polars as pl
 from pyoframe import sum, Model, Variable
 
 
-def main(input_dir, **kwargs):
+def main(input_dir, directory, **kwargs):
     food_cost = pl.read_csv(input_dir / "foods.csv").to_expr()
     nutrients = pl.read_csv(input_dir / "nutrients.csv")
     min_nutrient = nutrients.select(["category", "min"]).to_expr()
@@ -30,9 +30,16 @@ def main(input_dir, **kwargs):
 
     m.minimize = sum(m.Buy * food_cost)
 
-    return m.solve("gurobi", **kwargs)
+    m.solve("gurobi", directory=directory, **kwargs)
+
+    # Write results to CSV files
+    m.Buy.solution.write_csv(directory / "buy.csv")  # type: ignore
+    m.min_nutrients.dual.write_csv(directory / "min_nutrients.csv")  # type: ignore
+    m.max_nutrients.dual.write_csv(directory / "max_nutrients.csv")  # type: ignore
+
+    return m
 
 
 if __name__ == "__main__":
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", directory=working_dir / "results")
+    main(working_dir / "input_data", directory=working_dir / "results", use_var_names=True)

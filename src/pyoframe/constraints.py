@@ -814,9 +814,9 @@ class Constraint(Expression, IdCounterMixin):
         self.data_per_constraint = self._assign_ids(data_per_constraint)
 
     @property
-    def dual(self) -> Union[None, pl.DataFrame, float]:
+    def dual(self) -> Union[pl.DataFrame, float]:
         if DUAL_KEY not in self.data_per_constraint.columns:
-            return None
+            raise ValueError(f"No dual values founds for constraint '{self.name}'")
         result = self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
         if result.shape == (1, 1):
             return result.item()
