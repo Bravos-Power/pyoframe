@@ -19,6 +19,8 @@ CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
 NAME_COL = "__name"
+RC_COL = "rc"
+SLACK_COL = "slack"
 
 CONST_TERM = 0
 
@@ -29,6 +31,8 @@ RESERVED_COL_KEYS = (
     SOLUTION_KEY,
     DUAL_KEY,
     NAME_COL,
+    RC_COL,
+    SLACK_COL,
 )
 
 

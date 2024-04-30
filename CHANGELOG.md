@@ -1,5 +1,3 @@
 # Change Log
 
-## v0.0.4
-
-- Support loading results from Gurobi back into library
+See GitHub's [releases page](https://github.com/Bravos-Power/pyoframe/releases).

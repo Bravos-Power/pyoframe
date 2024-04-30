@@ -21,6 +21,7 @@ from pyoframe.constants import (
     CONSTRAINT_KEY,
     DUAL_KEY,
     RESERVED_COL_KEYS,
+    SLACK_COL,
     VAR_KEY,
     Config,
     ConstraintSense,
@@ -32,6 +33,7 @@ from pyoframe.util import (
     concat_dimensions,
     get_obj_repr,
     parse_inputs_as_iterable,
+    unwrap_single_values,
 )
 
 from pyoframe.model_element import ModelElement
@@ -814,22 +816,36 @@ class Constraint(Expression, IdCounterMixin):
         self.data_per_constraint = self._assign_ids(data_per_constraint)
 
     @property
+    @unwrap_single_values
+    def slack(self):
+        """
+        The slack of the constraint.
+        Will raise an error if the model has not already been solved.
+        The first call to this property will load the slack values from the solver (lazy loading).
+        """
+        if SLACK_COL not in self.data_per_constraint.columns:
+            if self._model.solver is None:
+                raise ValueError("The model has not been solved yet.")
+            self._model.solver.load_slack()
+        return self.data_per_constraint.select(self.dimensions_unsafe + [SLACK_COL])
+
+    @slack.setter
+    def slack(self, value):
+        self.data_per_constraint = self.extend_dataframe(
+            self.data_per_constraint, value
+        )
+
+    @property
+    @unwrap_single_values
     def dual(self) -> Union[pl.DataFrame, float]:
         if DUAL_KEY not in self.data_per_constraint.columns:
             raise ValueError(f"No dual values founds for constraint '{self.name}'")
-        result = self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
-        if result.shape == (1, 1):
-            return result.item()
-        return result
+        return self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
 
     @dual.setter
     def dual(self, value):
-        assert sorted(value.columns) == sorted([DUAL_KEY, CONSTRAINT_KEY])
-        df = self.data_per_constraint
-        if DUAL_KEY in df.columns:
-            df = df.drop(DUAL_KEY)
-        self.data_per_constraint = df.join(
-            value, on=CONSTRAINT_KEY, how="left", validate="1:1"
+        self.data_per_constraint = self.extend_dataframe(
+            self.data_per_constraint, value
         )
 
     @classmethod
