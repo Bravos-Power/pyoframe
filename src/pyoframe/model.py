@@ -7,8 +7,8 @@ from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
 from pyoframe.user_defined import Container, AttrContainerMixin
 from pyoframe.variables import Variable
-from pyoframe.io import to_file
 from pyoframe.solvers import solve, Solver
+from pyoframe.io import to_file, get_var_map
 
 
 class Model(AttrContainerMixin):
