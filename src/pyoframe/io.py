@@ -135,9 +135,8 @@ def to_file(
         NamedMapper(Constraint) if use_var_names else Base62ConstMapper(Constraint)
     )
     for c in m.constraints:
-        # Not adding empty constraints to mapping.
-        if len(c) > 0:
-            const_map.add(c)
+        const_map.add(c)
+
     var_map = get_var_map(m, use_var_names)
     m.io_mappers = IOMappers(var_map, const_map)
 

@@ -34,9 +34,11 @@ class Mapper(ABC):
         )
 
     def add(self, element: Union["Variable", "Constraint"]) -> None:
-        self.mapping_registry = pl.concat(
-            [self.mapping_registry, self._element_to_map(element)]
-        )
+        # Not adding empty variables or constraints to mapping.
+        if len(element) > 0:
+            self.mapping_registry = pl.concat(
+                [self.mapping_registry, self._element_to_map(element)]
+            )
 
     @abstractmethod
     def _element_to_map(self, element: "IdCounterMixin") -> pl.DataFrame: ...
