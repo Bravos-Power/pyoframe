@@ -6,7 +6,7 @@ from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
 from pyoframe.variables import Variable
-from pyoframe.io import to_file
+from pyoframe.io import to_file, get_var_map
 from pyoframe.solvers import solve
 
 
@@ -90,3 +90,4 @@ class Model:
 
     to_file = to_file
     solve = solve
+    get_var_map = get_var_map
