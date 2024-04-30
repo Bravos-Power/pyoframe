@@ -9,11 +9,18 @@ import polars as pl
 
 from pyoframe.constraints import SupportsMath, Set
 
-from pyoframe.constants import COEF_KEY, SOLUTION_KEY, VAR_KEY, VType, VTypeValue
+from pyoframe.constants import (
+    COEF_KEY,
+    RC_COL,
+    SOLUTION_KEY,
+    VAR_KEY,
+    VType,
+    VTypeValue,
+)
 from pyoframe.constraints import Expression
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
-from pyoframe.util import IdCounterMixin, get_obj_repr
+from pyoframe.util import IdCounterMixin, get_obj_repr, unwrap_single_values
 
 
 class Variable(ModelElement, SupportsMath, IdCounterMixin):
@@ -81,21 +88,34 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
         return VAR_KEY
 
     @property
+    @unwrap_single_values
     def solution(self):
         if SOLUTION_KEY not in self.data.columns:
             raise ValueError(f"No solution solution found for Variable '{self.name}'.")
-        df = self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
-        if df.shape == (1, 1):
-            return df.item()
-        return df
+
+        return self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
+
+    @property
+    @unwrap_single_values
+    def RC(self):
+        """
+        The reduced cost of the variable.
+        Will raise an error if the model has not already been solved.
+        The first call to this property will load the reduced costs from the solver (lazy loading).
+        """
+        if RC_COL not in self.data.columns:
+            if self._model.solver is None:
+                raise ValueError("The model has not been solved yet.")
+            self._model.solver.load_rc()
+        return self.data.select(self.dimensions_unsafe + [RC_COL])
+
+    @RC.setter
+    def RC(self, value):
+        self._data = self.extend_dataframe(self.data, value)
 
     @solution.setter
     def solution(self, value):
-        assert sorted(value.columns) == sorted([SOLUTION_KEY, VAR_KEY])
-        df = self.data
-        if SOLUTION_KEY in self.data.columns:
-            df = df.drop(SOLUTION_KEY)
-        self._data = df.join(value, on=VAR_KEY, how="left", validate="1:1")
+        self._data = self.extend_dataframe(self.data, value)
 
     @property
     def ids(self):
