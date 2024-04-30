@@ -12,6 +12,8 @@ from pyoframe.constants import (
     DUAL_KEY,
     NAME_COL,
     SOLUTION_KEY,
+    SLACK_COL,
+    RC_COL,
     Result,
     Solution,
     Status,
@@ -26,9 +28,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def solve(m: "Model", solver, **kwargs):
     if solver == "gurobi":
-        result = GurobiSolver().solve(m, **kwargs)
+        m.solver = GurobiSolver(m)
     else:
         raise ValueError(f"Solver {solver} not recognized or supported.")
+
+    result = m.solver.solve(**kwargs)
+    m.solver_model = result.solver_model
 
     if result.solution is not None:
         m.objective.value = result.solution.objective
@@ -44,14 +49,32 @@ def solve(m: "Model", solver, **kwargs):
 
 
 class Solver(ABC):
+    def __init__(self, model):
+        self._model = model
+
     @abstractmethod
-    def solve(self, model, directory: Optional[Path] = None, **kwargs) -> Result: ...
+    def solve(self, directory: Optional[Path] = None, **kwargs) -> Result: ...
+
+    def load_rc(self):
+        rc = self._get_all_rc()
+        for variable in self._model.variables:
+            variable.RC = rc
+
+    def load_slack(self):
+        slack = self._get_all_slack()
+        for constraint in self._model.constraints:
+            constraint.slack = slack
+
+    @abstractmethod
+    def _get_all_rc(self): ...
+
+    @abstractmethod
+    def _get_all_slack(self): ...
 
 
 class FileBasedSolver(Solver):
     def solve(
         self,
-        model: "Model",
         directory: Optional[Union[Path, str]] = None,
         use_var_names=None,
         **kwargs,
@@ -62,19 +85,21 @@ class FileBasedSolver(Solver):
                 directory = Path(directory)
             if not directory.exists():
                 directory.mkdir(parents=True)
-            filename = model.name if model.name is not None else "pyoframe-problem"
+            filename = (
+                self._model.name if self._model.name is not None else "pyoframe-problem"
+            )
             problem_file = directory / f"{filename}.lp"
-        problem_file = model.to_file(problem_file, use_var_names=use_var_names)
-        assert model.io_mappers is not None
+        problem_file = self._model.to_file(problem_file, use_var_names=use_var_names)
+        assert self._model.io_mappers is not None
 
         results = self.solve_from_lp(problem_file, **kwargs)
 
         if results.solution is not None:
-            results.solution.primal = model.io_mappers.var_map.undo(
+            results.solution.primal = self._model.io_mappers.var_map.undo(
                 results.solution.primal
             )
             if results.solution.dual is not None:
-                results.solution.dual = model.io_mappers.const_map.undo(
+                results.solution.dual = self._model.io_mappers.const_map.undo(
                     results.solution.dual
                 )
 
@@ -82,6 +107,18 @@ class FileBasedSolver(Solver):
 
     @abstractmethod
     def solve_from_lp(self, problem_file: Path, **kwargs) -> Result: ...
+
+    def _get_all_rc(self):
+        return self._model.io_mappers.var_map.undo(self._get_all_rc_unmapped())
+
+    def _get_all_slack(self):
+        return self._model.io_mappers.const_map.undo(self._get_all_slack_unmapped())
+
+    @abstractmethod
+    def _get_all_rc_unmapped(self): ...
+
+    @abstractmethod
+    def _get_all_slack_unmapped(self): ...
 
 
 class GurobiSolver(FileBasedSolver):
@@ -127,20 +164,20 @@ class GurobiSolver(FileBasedSolver):
             if env is None:
                 env = stack.enter_context(gurobipy.Env())
 
-            m = gurobipy.read(path_to_str(problem_fn), env=env)
+            m = gurobipy.read(_path_to_str(problem_fn), env=env)
             if solver_options is not None:
                 for key, value in solver_options.items():
                     m.setParam(key, value)
             if log_fn is not None:
-                m.setParam("logfile", path_to_str(log_fn))
+                m.setParam("logfile", _path_to_str(log_fn))
             if warmstart_fn:
-                m.read(path_to_str(warmstart_fn))
+                m.read(_path_to_str(warmstart_fn))
 
             m.optimize()
 
             if basis_fn:
                 try:
-                    m.write(path_to_str(basis_fn))
+                    m.write(_path_to_str(basis_fn))
                 except gurobipy.GurobiError as err:
                     print("No model basis stored. Raised error: %s", err)
 
@@ -150,7 +187,7 @@ class GurobiSolver(FileBasedSolver):
 
             if status.is_ok:
                 if solution_file:
-                    m.write(path_to_str(solution_file))
+                    m.write(_path_to_str(solution_file))
 
                 objective = m.ObjVal
                 vars = m.getVars()
@@ -178,8 +215,28 @@ class GurobiSolver(FileBasedSolver):
 
         return Result(status, solution, m)
 
+    def _get_all_rc_unmapped(self):
+        m = self._model.solver_model
+        vars = m.getVars()
+        return pl.DataFrame(
+            {
+                RC_COL: m.getAttr("RC", vars),
+                NAME_COL: m.getAttr("VarName", vars),
+            }
+        )
 
-def path_to_str(path: Union[Path, str]) -> str:
+    def _get_all_slack_unmapped(self):
+        m = self._model.solver_model
+        constraints = m.getConstrs()
+        return pl.DataFrame(
+            {
+                SLACK_COL: m.getAttr("Slack", constraints),
+                NAME_COL: m.getAttr("ConstrName", constraints),
+            }
+        )
+
+
+def _path_to_str(path: Union[Path, str]) -> str:
     """
     Convert a pathlib.Path to a string.
     """

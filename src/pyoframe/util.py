@@ -8,6 +8,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 
 import polars as pl
 import pandas as pd
+from functools import wraps
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
 
@@ -62,6 +63,19 @@ class IdCounterMixin(ABC):
         """
         Returns a dataframe with the IDs and any other relevant columns (i.e. the dimension columns).
         """
+
+    @classmethod
+    def extend_dataframe(cls, original: pl.DataFrame, addition: pl.DataFrame):
+        cols = addition.columns
+        assert len(cols) == 2
+        id_col = cls.get_id_column_name()
+        assert id_col in cols
+        cols.remove(id_col)
+        new_col = cols[0]
+
+        if new_col in original.columns:
+            original = original.drop(new_col)
+        return original.join(addition, on=id_col, how="left", validate="1:1")
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
@@ -269,3 +283,16 @@ def cast_coef_to_string(
     return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
         "_sign"
     )
+
+
+def unwrap_single_values(func):
+    """Decorator for functions that return DataFrames. Returned dataframes with a single value will instead return the value."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if isinstance(result, pl.DataFrame) and result.shape == (1, 1):
+            return result.item()
+        return result
+
+    return wrapper

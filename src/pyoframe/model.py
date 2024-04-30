@@ -6,8 +6,8 @@ from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
 from pyoframe.variables import Variable
-from pyoframe.io import to_file, get_var_map
-from pyoframe.solvers import solve
+from pyoframe.io import to_file
+from pyoframe.solvers import solve, Solver
 
 
 class Model:
@@ -24,6 +24,8 @@ class Model:
         )
         self.io_mappers: Optional[IOMappers] = None
         self.name = name
+        self.solver: Optional[Solver] = None
+        self.solver_model: Optional[Any] = None
 
     @property
     def variables(self) -> List[Variable]:
