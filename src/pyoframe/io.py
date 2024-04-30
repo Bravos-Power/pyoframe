@@ -37,7 +37,8 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
     for constraint in create_section(m.constraints, f, "s.t."):
-        f.writelines(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
+        if len(constraint) > 0:
+            f.writelines(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
 
 
 def bounds_to_file(m: "Model", f, var_map):

@@ -650,6 +650,8 @@ class Expression(ModelElement, SupportsMath):
             data = data.with_columns(
                 pl.concat_str(pl.lit("x"), VAR_KEY).alias("str_var")
             )
+
+
         data = data.with_columns(
             pl.when(pl.col(VAR_KEY) == CONST_TERM)
             .then(pl.lit(""))
