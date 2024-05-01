@@ -648,7 +648,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X
             >>> m.expr_2 = pf.sum(m.expr_1)
-            >>> m.maximize = m.expr_2
+            >>> m.maximize = m.expr_2 + 3
             >>> result = m.solve(log_to_console=False)
             >>> m.expr_1.value
             shape: (3, 2)
@@ -664,7 +664,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_2.value
             60.0
             >>> m.objective.value
-            60.0
+            63.0
         """
         if self._model.result is None or self._model.result.solution is None:
             raise ValueError(
