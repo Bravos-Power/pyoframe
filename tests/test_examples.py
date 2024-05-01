@@ -3,7 +3,7 @@ import importlib
 import shutil
 import pytest
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 
 import polars as pl
 from polars.testing import assert_frame_equal
@@ -15,11 +15,12 @@ class Example:
     integer_results_only: bool = False
     many_valid_solutions: bool = False
     has_gurobi_version: bool = True
+    check_params: Optional[Dict[str, Any]] = None
 
 
 EXAMPLES = [
     Example("diet_problem"),
-    Example("facility_problem"),
+    Example("facility_problem", check_params={"Method": 2}),
     Example(
         "cutting_stock_problem",
         integer_results_only=True,
@@ -48,16 +49,22 @@ def test_examples(example: Example):
     symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
     dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
 
-    dense_result = main_module.main(
+    dense_model = main_module.main(
         input_dir, directory=dense_output_dir, solution_file=dense_solution_file
     )
-    symbolic_result = main_module.main(
+    symbolic_model = main_module.main(
         input_dir,
         directory=symbolic_output_dir,
         solution_file=symbolic_solution_file,
         use_var_names=True,
     )
-    assert dense_result.objective.value == symbolic_result.objective.value
+
+    if example.check_params is not None:
+        for param, value in example.check_params.items():
+            assert getattr(dense_model.solver_model.Params, param) == value
+            assert getattr(symbolic_model.solver_model.Params, param) == value
+    
+    assert dense_model.objective.value == symbolic_model.objective.value
     check_results_dir_equal(
         expected_output_dir,
         symbolic_output_dir,

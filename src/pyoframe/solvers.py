@@ -45,7 +45,17 @@ def _register_solver(solver_name):
     return decorator
 
 
-def solve(m: "Model", solver=None, **kwargs):
+def solve(
+    m: "Model",
+    solver=None,
+    directory: Optional[Union[Path, str]] = None,
+    use_var_names=False,
+    env=None,
+    log_fn=None,
+    warmstart_fn=None,
+    basis_fn=None,
+    solution_file=None,
+):
     if solver is None:
         if len(available_solvers) == 0:
             raise ValueError(
@@ -58,7 +68,7 @@ def solve(m: "Model", solver=None, **kwargs):
 
     solver_cls = solver_registry[solver]
     m.solver = solver_cls(m)
-    m.solver_model = m.solver.create_solver_model(**kwargs)
+    m.solver_model = m.solver.create_solver_model(directory, use_var_names, env)
     m.solver.solver_model = m.solver_model
 
     for attr_container in [m.variables, m.constraints, [m]]:
@@ -69,7 +79,7 @@ def solve(m: "Model", solver=None, **kwargs):
     for param, value in m.params:
         m.solver.set_param(param, value)
 
-    result = m.solver.solve(**kwargs)
+    result = m.solver.solve(log_fn, warmstart_fn, basis_fn, solution_file)
     result = m.solver.process_result(result)
 
     if result.solution is not None:
@@ -100,7 +110,7 @@ class Solver(ABC):
     def set_param(self, param_name, param_value): ...
 
     @abstractmethod
-    def solve(self, directory: Optional[Path] = None, **kwargs) -> Result: ...
+    def solve(self, log_fn, warmstart_fn, basis_fn, solution_file) -> Result: ...
 
     @abstractmethod
     def process_result(self, results: Result) -> Result: ...
@@ -124,10 +134,7 @@ class Solver(ABC):
 
 class FileBasedSolver(Solver):
     def create_solver_model(
-        self,
-        directory: Optional[Union[Path, str]] = None,
-        use_var_names=False,
-        **kwargs,
+        self, directory: Optional[Union[Path, str]], use_var_names, env
     ) -> Any:
         problem_file = None
         if directory is not None:
@@ -141,10 +148,10 @@ class FileBasedSolver(Solver):
             problem_file = directory / f"{filename}.lp"
         problem_file = self._model.to_file(problem_file, use_var_names=use_var_names)
         assert self._model.io_mappers is not None
-        return self.create_solver_model_from_lp(problem_file, **kwargs)
+        return self.create_solver_model_from_lp(problem_file, env)
 
     @abstractmethod
-    def create_solver_model_from_lp(self, problem_file: Path) -> Any: ...
+    def create_solver_model_from_lp(self, problem_file: Path, env) -> Any: ...
 
     def set_attr(self, element, param_name, param_value):
         if isinstance(param_value, pl.DataFrame):
@@ -210,7 +217,7 @@ class GurobiSolver(FileBasedSolver):
         self.ordered_var_names: Optional[List] = None
         self.ordered_constraint_names: Optional[List] = None
 
-    def create_solver_model_from_lp(self, problem_fn, env=None, **kwargs) -> Result:
+    def create_solver_model_from_lp(self, problem_fn, env) -> Result:
         """
         Solve a linear problem using the gurobi solver.
 
@@ -269,7 +276,6 @@ class GurobiSolver(FileBasedSolver):
         warmstart_fn=None,
         basis_fn=None,
         solution_file=None,
-        **kwargs,
     ) -> Result:
         m = self.solver_model
         if log_fn is not None:
