@@ -55,6 +55,7 @@ def solve(
     warmstart_fn=None,
     basis_fn=None,
     solution_file=None,
+    log_to_console=True,
 ):
     if solver is None:
         if len(available_solvers) == 0:
@@ -67,7 +68,7 @@ def solve(
         raise ValueError(f"Solver {solver} not recognized or supported.")
 
     solver_cls = solver_registry[solver]
-    m.solver = solver_cls(m)
+    m.solver = solver_cls(m, log_to_console)
     m.solver_model = m.solver.create_solver_model(directory, use_var_names, env)
     m.solver.solver_model = m.solver_model
 
@@ -81,6 +82,7 @@ def solve(
 
     result = m.solver.solve(log_fn, warmstart_fn, basis_fn, solution_file)
     result = m.solver.process_result(result)
+    m.result = result
 
     if result.solution is not None:
         m.objective.value = result.solution.objective
@@ -96,9 +98,10 @@ def solve(
 
 
 class Solver(ABC):
-    def __init__(self, model):
+    def __init__(self, model, log_to_console):
         self._model = model
         self.solver_model: Optional[Any] = None
+        self.log_to_console = log_to_console
 
     @abstractmethod
     def create_solver_model(self) -> Any: ...
@@ -212,11 +215,6 @@ class GurobiSolver(FileBasedSolver):
         17: "internal_solver_error",
     }
 
-    def __init__(self, model):
-        super().__init__(model)
-        self.ordered_var_names: Optional[List] = None
-        self.ordered_constraint_names: Optional[List] = None
-
     def create_solver_model_from_lp(self, problem_fn, env) -> Result:
         """
         Solve a linear problem using the gurobi solver.
@@ -224,12 +222,17 @@ class GurobiSolver(FileBasedSolver):
         This function communicates with gurobi using the gurubipy package.
         """
 
-        with contextlib.ExitStack() as stack:
-            if env is None:
-                env = stack.enter_context(gurobipy.Env())
+        if env is None:
+            if self.log_to_console:
+                env = gurobipy.Env()
+            else:
+                # See https://support.gurobi.com/hc/en-us/articles/360044784552-How-do-I-suppress-all-console-output-from-Gurobi
+                env = gurobipy.Env(empty=True)
+                env.setParam('LogToConsole', 0)
+                env.start()
 
-            m = gurobipy.read(_path_to_str(problem_fn), env=env)
-            return m
+        m = gurobipy.read(_path_to_str(problem_fn), env=env)
+        return m
 
     def set_param(self, param_name, param_value):
         self.solver_model.setParam(param_name, param_value)
@@ -274,10 +277,10 @@ class GurobiSolver(FileBasedSolver):
 
     def solve(
         self,
-        log_fn=None,
-        warmstart_fn=None,
-        basis_fn=None,
-        solution_file=None,
+        log_fn,
+        warmstart_fn,
+        basis_fn,
+        solution_file
     ) -> Result:
         m = self.solver_model
         if log_fn is not None:

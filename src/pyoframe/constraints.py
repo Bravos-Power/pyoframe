@@ -23,6 +23,7 @@ from pyoframe.constants import (
     RESERVED_COL_KEYS,
     SLACK_COL,
     VAR_KEY,
+    SOLUTION_KEY,
     Config,
     ConstraintSense,
     UnmatchedStrategy,
@@ -634,6 +635,53 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     @property
     def variable_terms(self):
         return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
+
+    @property
+    @unwrap_single_values
+    def value(self) -> pl.DataFrame:
+        """
+        The value of the expression. Only available after the model has been solved.
+
+        Examples:
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
+            >>> m.expr_1 = 2 * m.X
+            >>> m.expr_2 = pf.sum(m.expr_1)
+            >>> m.maximize = m.expr_2
+            >>> result = m.solve(log_to_console=False)
+            >>> m.expr_1.value
+            shape: (3, 2)
+            ┌──────┬──────────┐
+            │ dim1 ┆ solution │
+            │ ---  ┆ ---      │
+            │ i64  ┆ f64      │
+            ╞══════╪══════════╡
+            │ 1    ┆ 20.0     │
+            │ 2    ┆ 20.0     │
+            │ 3    ┆ 20.0     │
+            └──────┴──────────┘
+            >>> m.expr_2.value
+            60.0
+            >>> m.objective.value
+            60.0
+        """
+        if self._model.result is None or self._model.result.solution is None:
+            raise ValueError(
+                "Can't obtain value of expression since the model has not been solved."
+            )
+
+        df = (
+            self.data.join(self._model.result.solution.primal, on=VAR_KEY, how="left")
+            .drop(VAR_KEY)
+            .with_columns((pl.col(SOLUTION_KEY) * pl.col(COEF_KEY)))
+            .drop(COEF_KEY)
+        )
+
+        dims = self.dimensions
+        if dims is not None:
+            df = df.group_by(dims, maintain_order=True)
+        return df.sum()
 
     def to_str_table(
         self,
