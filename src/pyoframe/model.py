@@ -5,7 +5,7 @@ from pyoframe.io_mappers import NamedVariableMapper, IOMappers
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
-from pyoframe.util import Container, AttrContainerMixin
+from pyoframe.user_defined import Container, AttrContainerMixin
 from pyoframe.variables import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve, Solver
