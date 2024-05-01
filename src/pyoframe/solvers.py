@@ -261,7 +261,7 @@ class GurobiSolver(FileBasedSolver):
             )
         elif isinstance(element, pf.Constraint):
             c, c_map = self._get_constraint_mapping()
-            param_value = param_value.join(c_map, on=VAR_KEY, how="left").drop(VAR_KEY)
+            param_value = param_value.join(c_map, on=CONSTRAINT_KEY, how="left").drop(CONSTRAINT_KEY)
             self.solver_model.setAttr(
                 param_name,
                 [c[i] for i in param_value["i"]],
