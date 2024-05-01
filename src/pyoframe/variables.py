@@ -3,7 +3,7 @@ File containing Variable class representing decision variables in optimization m
 """
 
 from __future__ import annotations
-from typing import Iterable
+from typing import Any, Iterable
 
 import polars as pl
 
@@ -18,12 +18,12 @@ from pyoframe.constants import (
     VTypeValue,
 )
 from pyoframe.constraints import Expression
-from pyoframe.model_element import ModelElement
 from pyoframe.constraints import SetTypes
-from pyoframe.util import IdCounterMixin, get_obj_repr, unwrap_single_values
+from pyoframe.util import get_obj_repr, unwrap_single_values
+from pyoframe.model_element import CountableModelElement, SupportPolarsMethodMixin
 
 
-class Variable(ModelElement, SupportsMath, IdCounterMixin):
+class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
     """
     Represents one or many decision variable in an optimization model.
 
@@ -70,8 +70,6 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
         vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
-        data = self._assign_ids(data)
-
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
@@ -111,15 +109,11 @@ class Variable(ModelElement, SupportsMath, IdCounterMixin):
 
     @RC.setter
     def RC(self, value):
-        self._data = self.extend_dataframe(self.data, value)
+        self._extend_dataframe_by_id(value)
 
     @solution.setter
     def solution(self, value):
-        self._data = self.extend_dataframe(self.data, value)
-
-    @property
-    def ids(self):
-        return self.data.select(self.dimensions_unsafe + [VAR_KEY])
+        self._extend_dataframe_by_id(value)
 
     def __repr__(self):
         return (

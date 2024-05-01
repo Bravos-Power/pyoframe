@@ -26,7 +26,8 @@ def main(input_dir, directory, **kwargs):
 
     m.minimize = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
 
-    m.solve("gurobi", directory=directory, Method=2, **kwargs)
+    m.params.Method = 2
+    m.solve("gurobi", directory=directory, **kwargs)
 
     # Write results to CSV files
     m.open.solution.write_csv(directory / "open.csv")  # type: ignore

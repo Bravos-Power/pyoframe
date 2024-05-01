@@ -42,6 +42,12 @@ docs = [
 [tool.isort]
 profile = "black"
 
+[tool.coverage.run]
+include = ["src/pyoframe/*"]
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules --ignore=scripts"
+
 [project.urls]
 Homepage = "https://bravos-power.github.io/pyoframe/"
 documentation = "https://bravos-power.github.io/pyoframe/"

@@ -2,9 +2,8 @@
 File containing utility functions and classes.
 """
 
-from abc import abstractmethod, ABC
-from collections import defaultdict
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union
+from abc import ABC, abstractmethod
 
 import polars as pl
 import pandas as pd
@@ -13,69 +12,55 @@ from functools import wraps
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
 
 
-class IdCounterMixin(ABC):
+class Container:
     """
-    Provides a method that assigns a unique ID to each row in a DataFrame.
-    IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
-    IDs are only unique for the subclass since different subclasses have different counters.
+    A container for user-defined attributes or parameters.
+
+    Examples:
+        >>> params = Container()
+        >>> params.a = 1
+        >>> params.b = 2
+        >>> params.a
+        1
+        >>> params.b
+        2
+        >>> for k, v in params:
+        ...     print(k, v)
+        a 1
+        b 2
     """
 
-    # Keys are the subclass names and values are the next unasigned ID.
-    _id_counters: Dict[str, int] = defaultdict(lambda: 1)
+    def __init__(self, preprocess=None):
+        self._preprocess = preprocess
+        self._attributes = {}
 
-    @classmethod
-    def _reset_counters(cls):
-        """
-        Resets all the ID counters.
-        This function is called before every unit test to reset the code state.
-        """
-        cls._id_counters = defaultdict(lambda: 1)
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name.startswith("_"):
+            return super().__setattr__(name, value)
+        if self._preprocess is not None:
+            value = self._preprocess(name, value)
+        self._attributes[name] = value
 
-    def _assign_ids(self, df: pl.DataFrame) -> pl.DataFrame:
-        """
-        Adds the column `to_column` to the DataFrame `df` with the next batch
-        of unique consecutive IDs.
-        """
-        cls_name = self.__class__.__name__
-        cur_count = self._id_counters[cls_name]
-        id_col_name = self.get_id_column_name()
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("_"):
+            return super().__getattribute__(name)
+        return self._attributes[name]
 
-        if df.height == 0:
-            df = df.with_columns(pl.lit(cur_count).alias(id_col_name))
-        else:
-            df = df.with_columns(
-                pl.int_range(cur_count, cur_count + pl.len()).alias(id_col_name)
-            )
-        df = df.with_columns(pl.col(id_col_name).cast(pl.UInt32))
-        self._id_counters[cls_name] += df.height
-        return df
+    def __iter__(self):
+        return iter(self._attributes.items())
 
-    @classmethod
-    @abstractmethod
-    def get_id_column_name(cls) -> str:
-        """
-        Returns the name of the column containing the IDs.
-        """
 
-    @property
-    @abstractmethod
-    def ids(self) -> pl.DataFrame:
-        """
-        Returns a dataframe with the IDs and any other relevant columns (i.e. the dimension columns).
-        """
+class AttrContainerMixin(ABC):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.attr = Container(preprocess=self._preprocess_attr)
 
-    @classmethod
-    def extend_dataframe(cls, original: pl.DataFrame, addition: pl.DataFrame):
-        cols = addition.columns
-        assert len(cols) == 2
-        id_col = cls.get_id_column_name()
-        assert id_col in cols
-        cols.remove(id_col)
-        new_col = cols[0]
-
-        if new_col in original.columns:
-            original = original.drop(new_col)
-        return original.join(addition, on=id_col, how="left", validate="1:1")
+    def _preprocess_attr(self, name: str, value: Any) -> Any:
+        """
+        Preprocesses user-defined values before adding them to the Params container.
+        By default this function does nothing but subclasses can override it.
+        """
+        return value
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
