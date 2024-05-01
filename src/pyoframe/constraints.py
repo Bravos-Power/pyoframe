@@ -794,7 +794,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
 class Constraint(CountableModelElement):
     """A linear programming constraint."""
 
-    def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
+    def __init__(self, lhs: Expression, sense: ConstraintSense):
         """Initialize a constraint.
 
         Parameters:
@@ -803,11 +803,8 @@ class Constraint(CountableModelElement):
             sense: Sense
                 The sense of the constraint.
         """
-        if not isinstance(lhs, Expression):
-            lhs = Expression(lhs)
         self.lhs = lhs
-        if isinstance(lhs, Expression):
-            self._model = lhs._model
+        self._model = lhs._model
         self.sense = sense
 
         dims = self.lhs.dimensions

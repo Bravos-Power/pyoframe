@@ -48,6 +48,8 @@ class Mapper(ABC):
         df: pl.DataFrame,
         to_col: Optional[str],
     ) -> pl.DataFrame:
+        if df.height == 0:
+            return df
         result = df.join(
             self.mapping_registry, on=self._ID_COL, how="left", validate="m:1"
         )
@@ -57,6 +59,8 @@ class Mapper(ABC):
         return result.rename({Mapper.NAME_COL: to_col})
 
     def undo(self, df: pl.DataFrame) -> pl.DataFrame:
+        if df.height == 0:
+            return df
         df = df.rename({self._ID_COL: Mapper.NAME_COL})
         return df.join(
             self.mapping_registry, on=Mapper.NAME_COL, how="left", validate="m:1"

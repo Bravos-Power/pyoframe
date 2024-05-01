@@ -129,3 +129,20 @@ def test_setting_constraint_attr():
     # Now the model should be bounded
     result = m.solve()
     assert result.status.is_ok
+
+def test_setting_model_attr():
+    # Build an unbounded model
+    m = pf.Model()
+    m.A = pf.Variable(lb=0)
+    m.maximize = m.A
+
+    # Solving it should return unbounded
+    result = m.solve()
+    assert not result.status.is_ok
+
+    # Now we make the model a minimization problem
+    m.attr.ModelSense = 1
+
+    # Now the model should be bounded
+    result = m.solve()
+    assert result.status.is_ok

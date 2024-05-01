@@ -55,12 +55,12 @@ class AttrContainerMixin(ABC):
         super().__init__(*args, **kwargs)
         self.attr = Container(preprocess=self._preprocess_attr)
 
-    @abstractmethod
     def _preprocess_attr(self, name: str, value: Any) -> Any:
         """
         Preprocesses user-defined values before adding them to the Params container.
         By default this function does nothing but subclasses can override it.
         """
+        return value
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
