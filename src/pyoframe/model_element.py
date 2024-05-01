@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
 from pyoframe._arithmetic import _get_dimensions
-from pyoframe.util import AttrContainerMixin
+from pyoframe.user_defined import AttrContainerMixin
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -198,7 +198,9 @@ class CountableModelElement(ModelElement, AttrContainerMixin):
                 assert (
                     dims is not None
                 ), "Attribute must be a scalar since there are no dimensions"
-                result = value.join(ids, on=dims, validate="1:1", how="left").drop(dims)
+                result = value.join(ids, on=dims, validate="1:1", how="inner").drop(
+                    dims
+                )
                 assert len(result.columns) == 2, "Attribute has too many columns"
                 value_col = [c for c in result.columns if c != id_col][0]
                 return result.rename({value_col: name})
