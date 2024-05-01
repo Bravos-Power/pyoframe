@@ -83,9 +83,8 @@ def test_filter_expression():
 def test_filter_constraint():
     const = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr() >= 0
     result = const.filter(dim1=2)
-    assert isinstance(result, Constraint)
     assert_frame_equal(
-        result.data,
+        result,
         pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
         check_dtype=False,
     )
@@ -115,7 +114,7 @@ def test_drops_na():
             "value"
         ]
         expected_constraint = 5 <= expected_df.to_expr()
-        assert constraint == expected_constraint
+        assert str(constraint) == str(expected_constraint)
 
 
 if __name__ == "__main__":

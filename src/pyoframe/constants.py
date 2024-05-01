@@ -9,7 +9,7 @@ MIT License
 from dataclasses import dataclass
 from enum import Enum
 import typing
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional, Union
 import polars as pl
 
 
@@ -18,8 +18,7 @@ VAR_KEY = "__variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
-NAME_COL = "__name"
-RC_COL = "rc"
+RC_COL = "RC"
 SLACK_COL = "slack"
 
 CONST_TERM = 0
@@ -30,7 +29,6 @@ RESERVED_COL_KEYS = (
     CONSTRAINT_KEY,
     SOLUTION_KEY,
     DUAL_KEY,
-    NAME_COL,
     RC_COL,
     SLACK_COL,
 )
@@ -252,13 +250,8 @@ class Result:
 
     status: Status
     solution: Optional[Solution] = None
-    solver_model: Optional[Any] = None
 
     def __repr__(self) -> str:
-        solver_model_string = (
-            "not available" if self.solver_model is None else "available"
-        )
-
         res = (
             f"Status: {self.status.status.value}\n"
             f"Termination condition: {self.status.termination_condition.value}\n"
@@ -268,7 +261,6 @@ class Result:
                 f"Solution: {len(self.solution.primal)} primals, {len(self.solution.dual) if self.solution.dual is not None else 0} duals\n"
                 f"Objective: {self.solution.objective:.2e}\n"
             )
-        res += f"Solver model: {solver_model_string}\n"
 
         return res
 
