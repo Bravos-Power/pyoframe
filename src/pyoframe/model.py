@@ -1,5 +1,5 @@
 from typing import Any, Iterable, List, Optional
-from pyoframe.constants import ObjSense, VType, Config
+from pyoframe.constants import ObjSense, VType, Config, Result
 from pyoframe.constraints import SupportsMath
 from pyoframe.io_mappers import NamedMapper, IOMappers
 from pyoframe.model_element import ModelElement
@@ -29,6 +29,7 @@ class Model(AttrContainerMixin):
         self.solver: Optional[Solver] = None
         self.solver_model: Optional[Any] = None
         self.params = Container()
+        self.result: Optional[Result] = None
 
     @property
     def variables(self) -> List[Variable]:
