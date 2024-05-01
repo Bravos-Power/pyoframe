@@ -108,6 +108,7 @@ def test_support_variable_attributes():
         check_row_order=False,
     )
 
+
 def test_setting_constraint_attr():
     # Build an unbounded model
     m = pf.Model()
@@ -124,7 +125,7 @@ def test_setting_constraint_attr():
     # Now we make the model bounded by setting the Sense attribute
     m.A_con.attr.Sense = "<"
     m.B_con.attr.Sense = pl.DataFrame({"y": [1, 2, 3], "Sense": ["<", "<", "="]})
-    
+
     # Now the model should be bounded
     result = m.solve()
     assert result.status.is_ok

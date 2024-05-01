@@ -3,6 +3,7 @@ File containing utility functions and classes.
 """
 
 from typing import Any, Iterable, Optional, Union
+from abc import ABC, abstractmethod
 
 import polars as pl
 import pandas as pd
@@ -14,6 +15,19 @@ from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
 class Container:
     """
     A container for user-defined attributes or parameters.
+
+    Examples:
+        >>> params = Container()
+        >>> params.a = 1
+        >>> params.b = 2
+        >>> params.a
+        1
+        >>> params.b
+        2
+        >>> for k, v in params:
+        ...     print(k, v)
+        a 1
+        b 2
     """
 
     def __init__(self, preprocess=None):
@@ -36,17 +50,17 @@ class Container:
         return iter(self._attributes.items())
 
 
-class AttrContainerMixin:
+class AttrContainerMixin(ABC):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.attr = Container(preprocess=self._preprocess_attr)
 
+    @abstractmethod
     def _preprocess_attr(self, name: str, value: Any) -> Any:
         """
         Preprocesses user-defined values before adding them to the Params container.
         By default this function does nothing but subclasses can override it.
         """
-        return value
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):

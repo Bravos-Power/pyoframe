@@ -63,7 +63,7 @@ def test_examples(example: Example):
         for param, value in example.check_params.items():
             assert getattr(dense_model.solver_model.Params, param) == value
             assert getattr(symbolic_model.solver_model.Params, param) == value
-    
+
     assert dense_model.objective.value == symbolic_model.objective.value
     check_results_dir_equal(
         expected_output_dir,
