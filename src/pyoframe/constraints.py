@@ -77,8 +77,7 @@ class SupportsMath(ABC, SupportsToExpr):
         return self
 
     @abstractmethod
-    def to_expr(self) -> "Expression":
-        raise NotImplementedError
+    def to_expr(self) -> "Expression": ...
 
     __add__ = _forward_to_expression("__add__")
     __mul__ = _forward_to_expression("__mul__")

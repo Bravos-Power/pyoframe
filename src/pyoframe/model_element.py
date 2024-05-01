@@ -117,7 +117,6 @@ class SupportPolarsMethodMixin:
         """
         Used to create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.).
         """
-        raise NotImplementedError
 
 
 class CountableModelElement(ModelElement, AttrContainerMixin):
