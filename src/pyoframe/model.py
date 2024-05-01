@@ -5,17 +5,19 @@ from pyoframe.io_mappers import NamedMapper, IOMappers
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
+from pyoframe.util import Container, AttrContainerMixin
 from pyoframe.variables import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve, Solver
 
 
-class Model:
+class Model(AttrContainerMixin):
     """
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self._objective: Optional[Objective] = None
@@ -26,6 +28,7 @@ class Model:
         self.name = name
         self.solver: Optional[Solver] = None
         self.solver_model: Optional[Any] = None
+        self.params = Container()
 
     @property
     def variables(self) -> List[Variable]:

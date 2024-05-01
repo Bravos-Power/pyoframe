@@ -28,7 +28,6 @@ from pyoframe.constants import (
     UnmatchedStrategy,
 )
 from pyoframe.util import (
-    IdCounterMixin,
     cast_coef_to_string,
     concat_dimensions,
     get_obj_repr,
@@ -36,7 +35,7 @@ from pyoframe.util import (
     unwrap_single_values,
 )
 
-from pyoframe.model_element import ModelElement
+from pyoframe.model_element import ModelElement, CountableModelElement, SupportPolarsMethodMixin
 
 VAR_TYPE = pl.UInt32
 
@@ -56,9 +55,10 @@ class SupportsToExpr(Protocol):
 class SupportsMath(ABC, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.unmatched_strategy = UnmatchedStrategy.UNSET
         self.allowed_new_dims: List[str] = []
+        super().__init__(**kwargs)
 
     def keep_unmatched(self):
         self.unmatched_strategy = UnmatchedStrategy.KEEP
@@ -150,7 +150,7 @@ SetTypes = Union[
 ]
 
 
-class Set(ModelElement, SupportsMath):
+class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
         data_list = list(data)
         for name, set in named_data.items():
@@ -269,7 +269,7 @@ class Set(ModelElement, SupportsMath):
         return df
 
 
-class Expression(ModelElement, SupportsMath):
+class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     """A linear expression."""
 
     def __init__(self, data: pl.DataFrame):
@@ -788,7 +788,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     return sum(over=remaining_dims, expr=expr)
 
 
-class Constraint(Expression, IdCounterMixin):
+class Constraint(CountableModelElement):
     """A linear programming constraint."""
 
     def __init__(self, lhs: Expression | pl.DataFrame, sense: ConstraintSense):
@@ -800,20 +800,16 @@ class Constraint(Expression, IdCounterMixin):
             sense: Sense
                 The sense of the constraint.
         """
-        if isinstance(lhs, Expression):
-            data = lhs.data
-        else:
-            data = lhs
-        super().__init__(data)
+        if not isinstance(lhs, Expression):
+            lhs = Expression(lhs)
+        self.lhs = lhs
         if isinstance(lhs, Expression):
             self._model = lhs._model
         self.sense = sense
 
-        dims = self.dimensions
-        data_per_constraint = (
-            pl.DataFrame() if dims is None else self.data.select(dims).unique()
-        )
-        self.data_per_constraint = self._assign_ids(data_per_constraint)
+        dims = self.lhs.dimensions
+        data = pl.DataFrame() if dims is None else self.lhs.data.select(dims).unique()
+        super().__init__(data)
 
     @property
     @unwrap_single_values
@@ -823,44 +819,34 @@ class Constraint(Expression, IdCounterMixin):
         Will raise an error if the model has not already been solved.
         The first call to this property will load the slack values from the solver (lazy loading).
         """
-        if SLACK_COL not in self.data_per_constraint.columns:
+        if SLACK_COL not in self.data.columns:
             if self._model.solver is None:
                 raise ValueError("The model has not been solved yet.")
             self._model.solver.load_slack()
-        return self.data_per_constraint.select(self.dimensions_unsafe + [SLACK_COL])
+        return self.data.select(self.dimensions_unsafe + [SLACK_COL])
 
     @slack.setter
     def slack(self, value):
-        self.data_per_constraint = self.extend_dataframe(
-            self.data_per_constraint, value
-        )
+        self._extend_dataframe_by_id(value)
 
     @property
     @unwrap_single_values
     def dual(self) -> Union[pl.DataFrame, float]:
-        if DUAL_KEY not in self.data_per_constraint.columns:
+        if DUAL_KEY not in self.data.columns:
             raise ValueError(f"No dual values founds for constraint '{self.name}'")
-        return self.data_per_constraint.select(self.dimensions_unsafe + [DUAL_KEY])
+        return self.data.select(self.dimensions_unsafe + [DUAL_KEY])
 
     @dual.setter
     def dual(self, value):
-        self.data_per_constraint = self.extend_dataframe(
-            self.data_per_constraint, value
-        )
+        self._extend_dataframe_by_id(value)
 
     @classmethod
     def get_id_column_name(cls):
         return CONSTRAINT_KEY
 
-    @property
-    def ids(self) -> pl.DataFrame:
-        return self.data_per_constraint.select(
-            self.dimensions_unsafe + [CONSTRAINT_KEY]
-        )
-
     def to_str_create_prefix(self, data, const_map=None):
         if const_map is None:
-            return super().to_str_create_prefix(data)
+            return self.lhs.to_str_create_prefix(data)
 
         data_map = const_map.apply(self.ids, to_col=None)
 
@@ -875,6 +861,9 @@ class Constraint(Expression, IdCounterMixin):
         return data.with_columns(
             pl.concat_str(CONSTRAINT_KEY, pl.lit(": "), "expr").alias("expr")
         ).drop(CONSTRAINT_KEY)
+    
+    def filter(self, *args, **kwargs) -> pl.DataFrame:
+        return self.lhs.data.filter(*args, **kwargs)
 
     def to_str(
         self,
@@ -885,14 +874,14 @@ class Constraint(Expression, IdCounterMixin):
         const_map=None,
     ):
         dims = self.dimensions
-        str_table = self.to_str_table(
+        str_table = self.lhs.to_str_table(
             max_line_len=max_line_len,
             max_rows=max_rows,
             include_const_term=False,
             var_map=var_map,
         )
         str_table = self.to_str_create_prefix(str_table, const_map=const_map)
-        rhs = self.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
+        rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False, float_precision=float_precision)
         # Remove leading +
         rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters=" +"))
@@ -915,13 +904,8 @@ class Constraint(Expression, IdCounterMixin):
                 sense=f"'{self.sense.value}'",
                 size=len(self),
                 dimensions=self.shape,
-                terms=len(self.data),
+                terms=len(self.lhs.data),
             )
             + "\n"
             + self.to_str(max_line_len=80, max_rows=15)
         )
-
-    def _new(self, data: pl.DataFrame):
-        c = Constraint(data, self.sense)
-        c._model = self._model
-        return c

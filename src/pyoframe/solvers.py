@@ -3,37 +3,68 @@ Code to interface with various solvers
 """
 
 from abc import abstractmethod, ABC
+from functools import lru_cache
 from pathlib import Path
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Any, List, Optional, Union, TYPE_CHECKING
 
 import polars as pl
 
 from pyoframe.constants import (
     DUAL_KEY,
-    NAME_COL,
     SOLUTION_KEY,
     SLACK_COL,
     RC_COL,
+    VAR_KEY,
+    CONSTRAINT_KEY,
     Result,
     Solution,
     Status,
 )
 import contextlib
+import pyoframe as pf
 
 from pathlib import Path
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
+available_solvers = []
+solver_registry = {}
 
-def solve(m: "Model", solver, **kwargs):
-    if solver == "gurobi":
-        m.solver = GurobiSolver(m)
-    else:
+with contextlib.suppress(ImportError):
+    import gurobipy
+    available_solvers.append("gurobi")
+
+def _register_solver(solver_name):
+    def decorator(cls):
+        solver_registry[solver_name] = cls
+        return cls
+    return decorator
+
+def solve(m: "Model", solver=None, **kwargs):
+    if solver is None:
+        if len(available_solvers) == 0:
+            raise ValueError("No solvers available. Please install a solving library like gurobipy.")
+        solver = available_solvers[0]
+    
+    if solver not in solver_registry:
         raise ValueError(f"Solver {solver} not recognized or supported.")
+    
+    solver_cls = solver_registry[solver]
+    m.solver = solver_cls(m)
+    m.solver_model = m.solver.create_solver_model(**kwargs)
+    m.solver.solver_model = m.solver_model
+
+    for attr_container in [m.variables, m.constraints, [m]]:
+        for container in attr_container:
+            for param_name, param_value in container.attr:
+                m.solver.set_attr(container, param_name, param_value)
+
+    for param, value in m.params:
+        m.solver.set_param(param, value)
 
     result = m.solver.solve(**kwargs)
-    m.solver_model = result.solver_model
+    result = m.solver.process_result(result)
 
     if result.solution is not None:
         m.objective.value = result.solution.objective
@@ -51,9 +82,22 @@ def solve(m: "Model", solver, **kwargs):
 class Solver(ABC):
     def __init__(self, model):
         self._model = model
+        self.solver_model: Optional[Any] = None
+
+    @abstractmethod
+    def create_solver_model(self) -> Any: ...
+
+    @abstractmethod
+    def set_attr(self, element, param_name, param_value): ...
+
+    @abstractmethod
+    def set_param(self, param_name, param_value): ...
 
     @abstractmethod
     def solve(self, directory: Optional[Path] = None, **kwargs) -> Result: ...
+
+    @abstractmethod
+    def process_result(self, results: Result) -> Result: ...
 
     def load_rc(self):
         rc = self._get_all_rc()
@@ -73,12 +117,12 @@ class Solver(ABC):
 
 
 class FileBasedSolver(Solver):
-    def solve(
+    def create_solver_model(
         self,
         directory: Optional[Union[Path, str]] = None,
-        use_var_names=None,
+        use_var_names=False,
         **kwargs,
-    ) -> Result:
+    ) -> Any:
         problem_file = None
         if directory is not None:
             if isinstance(directory, str):
@@ -91,9 +135,23 @@ class FileBasedSolver(Solver):
             problem_file = directory / f"{filename}.lp"
         problem_file = self._model.to_file(problem_file, use_var_names=use_var_names)
         assert self._model.io_mappers is not None
+        return self.create_solver_model_from_lp(problem_file, **kwargs)
 
-        results = self.solve_from_lp(problem_file, **kwargs)
+    @abstractmethod
+    def create_solver_model_from_lp(self, problem_file: Path) -> Any: ...
 
+    def set_attr(self, element, param_name, param_value):
+        if isinstance(param_value, pl.DataFrame):
+            if isinstance(element, pf.Variable):
+                param_value = self._model.io_mappers.var_map.apply(param_value)
+            elif isinstance(element, pf.Constraint):
+                param_value = self._model.io_mappers.const_map.apply(param_value)
+        return self.set_attr_unmapped(element, param_name, param_value)
+
+    @abstractmethod
+    def set_attr_unmapped(self, element, param_name, param_value): ...
+
+    def process_result(self, results: Result) -> Result:
         if results.solution is not None:
             results.solution.primal = self._model.io_mappers.var_map.undo(
                 results.solution.primal
@@ -104,9 +162,6 @@ class FileBasedSolver(Solver):
                 )
 
         return results
-
-    @abstractmethod
-    def solve_from_lp(self, problem_file: Path, **kwargs) -> Result: ...
 
     def _get_all_rc(self):
         return self._model.io_mappers.var_map.undo(self._get_all_rc_unmapped())
@@ -120,100 +175,147 @@ class FileBasedSolver(Solver):
     @abstractmethod
     def _get_all_slack_unmapped(self): ...
 
-
+@_register_solver("gurobi")
 class GurobiSolver(FileBasedSolver):
-    def solve_from_lp(
+    # see https://www.gurobi.com/documentation/10.0/refman/optimization_status_codes.html
+    CONDITION_MAP = {
+        1: "unknown",
+        2: "optimal",
+        3: "infeasible",
+        4: "infeasible_or_unbounded",
+        5: "unbounded",
+        6: "other",
+        7: "iteration_limit",
+        8: "terminated_by_limit",
+        9: "time_limit",
+        10: "optimal",
+        11: "user_interrupt",
+        12: "other",
+        13: "suboptimal",
+        14: "unknown",
+        15: "terminated_by_limit",
+        16: "internal_solver_error",
+        17: "internal_solver_error",
+    }
+
+    def __init__(self, model):
+        super().__init__(model)
+        self.ordered_var_names: Optional[List] = None
+        self.ordered_constraint_names: Optional[List] = None
+
+    def create_solver_model_from_lp(
         self,
         problem_fn,
-        log_fn=None,
-        warmstart_fn=None,
-        basis_fn=None,
-        solution_file=None,
         env=None,
-        **solver_options,
+        **kwargs
     ) -> Result:
         """
         Solve a linear problem using the gurobi solver.
 
         This function communicates with gurobi using the gurubipy package.
         """
-        import gurobipy
-
-        # see https://www.gurobi.com/documentation/10.0/refman/optimization_status_codes.html
-        CONDITION_MAP = {
-            1: "unknown",
-            2: "optimal",
-            3: "infeasible",
-            4: "infeasible_or_unbounded",
-            5: "unbounded",
-            6: "other",
-            7: "iteration_limit",
-            8: "terminated_by_limit",
-            9: "time_limit",
-            10: "optimal",
-            11: "user_interrupt",
-            12: "other",
-            13: "suboptimal",
-            14: "unknown",
-            15: "terminated_by_limit",
-            16: "internal_solver_error",
-            17: "internal_solver_error",
-        }
 
         with contextlib.ExitStack() as stack:
             if env is None:
                 env = stack.enter_context(gurobipy.Env())
 
             m = gurobipy.read(_path_to_str(problem_fn), env=env)
-            if solver_options is not None:
-                for key, value in solver_options.items():
-                    m.setParam(key, value)
-            if log_fn is not None:
-                m.setParam("logfile", _path_to_str(log_fn))
-            if warmstart_fn:
-                m.read(_path_to_str(warmstart_fn))
+            return m
 
-            m.optimize()
+    def set_param(self, param_name, param_value):
+        self.solver_model.setParam(param_name, param_value)
 
-            if basis_fn:
-                try:
-                    m.write(_path_to_str(basis_fn))
-                except gurobipy.GurobiError as err:
-                    print("No model basis stored. Raised error: %s", err)
+    @lru_cache
+    def _get_var_mapping(self):
+        vars = self.solver_model.getVars()
+        return vars, pl.DataFrame(
+            {VAR_KEY: self.solver_model.getAttr("VarName", vars)}
+        ).with_columns(i=pl.int_range(pl.len()))
 
-            condition = m.status
-            termination_condition = CONDITION_MAP.get(condition, condition)
-            status = Status.from_termination_condition(termination_condition)
+    @lru_cache
+    def _get_constraint_mapping(self):
+        constraints = self.solver_model.getConstrs()
+        return constraints, pl.DataFrame(
+            {CONSTRAINT_KEY: self.solver_model.getAttr("ConstrName", constraints)}
+        ).with_columns(i=pl.int_range(pl.len()))
 
-            if status.is_ok:
-                if solution_file:
-                    m.write(_path_to_str(solution_file))
+    def set_attr_unmapped(self, element, param_name, param_value):
+        if isinstance(element, pf.Model):
+            self.solver_model.setAttr(param_name, param_value)
+        elif isinstance(element, pf.Variable):
+            v, v_map = self._get_var_mapping()
+            param_value = param_value.join(v_map, on=VAR_KEY, how="left").drop(VAR_KEY)
+            self.solver_model.setAttr(
+                param_name,
+                [v[i] for i in param_value["i"]],
+                param_value[param_name],
+            )
+        elif isinstance(element, pf.Constraint):
+            c, c_map = self._get_constraint_mapping()
+            param_value = param_value.join(c_map, on=VAR_KEY, how="left").drop(VAR_KEY)
+            self.solver_model.setAttr(
+                param_name,
+                [c[i] for i in param_value["i"]],
+                param_value[param_name],
+            )
+        else:
+            raise ValueError(f"Element type {type(element)} not recognized.")
 
-                objective = m.ObjVal
-                vars = m.getVars()
-                sol = pl.DataFrame(
+    def solve(
+        self,
+        log_fn=None,
+        warmstart_fn=None,
+        basis_fn=None,
+        solution_file=None,
+        **kwargs
+    ) -> Result:
+        m = self.solver_model
+        if log_fn is not None:
+            m.setParam("logfile", _path_to_str(log_fn))
+        if warmstart_fn:
+            m.read(_path_to_str(warmstart_fn))
+
+        m.optimize()
+
+        if basis_fn:
+            try:
+                m.write(_path_to_str(basis_fn))
+            except gurobipy.GurobiError as err:
+                print("No model basis stored. Raised error: %s", err)
+
+        condition = m.status
+        termination_condition = GurobiSolver.CONDITION_MAP.get(condition, condition)
+        status = Status.from_termination_condition(termination_condition)
+
+        if status.is_ok:
+            if solution_file:
+                m.write(_path_to_str(solution_file))
+
+            objective = m.ObjVal
+            vars = m.getVars()
+            sol = pl.DataFrame(
+                {
+                    VAR_KEY: m.getAttr("VarName", vars),
+                    SOLUTION_KEY: m.getAttr("X", vars),
+                }
+            )
+
+            constraints = m.getConstrs()
+            try:
+                dual = pl.DataFrame(
                     {
-                        NAME_COL: m.getAttr("VarName", vars),
-                        SOLUTION_KEY: m.getAttr("X", vars),
+                        DUAL_KEY: m.getAttr("Pi", constraints),
+                        CONSTRAINT_KEY: m.getAttr("ConstrName", constraints),
                     }
                 )
+            except gurobipy.GurobiError:
+                dual = None
 
-                constraints = m.getConstrs()
-                try:
-                    dual = pl.DataFrame(
-                        {
-                            DUAL_KEY: m.getAttr("Pi", constraints),
-                            NAME_COL: m.getAttr("ConstrName", constraints),
-                        }
-                    )
-                except gurobipy.GurobiError:
-                    dual = None
+            solution = Solution(sol, dual, objective)
+        else:
+            solution = None
 
-                solution = Solution(sol, dual, objective)
-            else:
-                solution = None
-
-        return Result(status, solution, m)
+        return Result(status, solution)
 
     def _get_all_rc_unmapped(self):
         m = self._model.solver_model
@@ -221,7 +323,7 @@ class GurobiSolver(FileBasedSolver):
         return pl.DataFrame(
             {
                 RC_COL: m.getAttr("RC", vars),
-                NAME_COL: m.getAttr("VarName", vars),
+                VAR_KEY: m.getAttr("VarName", vars),
             }
         )
 
@@ -231,7 +333,7 @@ class GurobiSolver(FileBasedSolver):
         return pl.DataFrame(
             {
                 SLACK_COL: m.getAttr("Slack", constraints),
-                NAME_COL: m.getAttr("ConstrName", constraints),
+                CONSTRAINT_KEY: m.getAttr("ConstrName", constraints),
             }
         )
 
