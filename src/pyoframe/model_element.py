@@ -198,7 +198,9 @@ class CountableModelElement(ModelElement, AttrContainerMixin):
                 assert (
                     dims is not None
                 ), "Attribute must be a scalar since there are no dimensions"
-                result = value.join(ids, on=dims, validate="1:1", how="inner").drop(dims)
+                result = value.join(ids, on=dims, validate="1:1", how="inner").drop(
+                    dims
+                )
                 assert len(result.columns) == 2, "Attribute has too many columns"
                 value_col = [c for c in result.columns if c != id_col][0]
                 return result.rename({value_col: name})
