@@ -228,7 +228,7 @@ class GurobiSolver(FileBasedSolver):
             else:
                 # See https://support.gurobi.com/hc/en-us/articles/360044784552-How-do-I-suppress-all-console-output-from-Gurobi
                 env = gurobipy.Env(empty=True)
-                env.setParam("LogToConsole", 0)
+                env.setParam('LogToConsole', 0)
                 env.start()
 
         m = gurobipy.read(_path_to_str(problem_fn), env=env)
