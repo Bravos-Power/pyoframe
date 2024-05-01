@@ -648,7 +648,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X
             >>> m.expr_2 = pf.sum(m.expr_1)
-            >>> m.maximize = m.expr_2
+            >>> m.maximize = m.expr_2 + 3
             >>> result = m.solve(log_to_console=False)
             >>> m.expr_1.value
             shape: (3, 2)
@@ -664,7 +664,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_2.value
             60.0
             >>> m.objective.value
-            60.0
+            63.0
         """
         if self._model.result is None or self._model.result.solution is None:
             raise ValueError(
@@ -688,6 +688,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         max_line_len=None,
         max_rows=None,
         include_const_term=True,
+        include_const_variable=False,
         var_map=None,
         float_precision=None,
     ):
@@ -703,14 +704,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             data = data.with_columns(
                 pl.concat_str(pl.lit("x"), VAR_KEY).alias("str_var")
             )
-
-
-        data = data.with_columns(
-            pl.when(pl.col(VAR_KEY) == CONST_TERM)
-            .then(pl.lit(""))
-            .otherwise("str_var")
-            .alias(VAR_KEY)
-        ).drop("str_var")
+        if include_const_variable:
+            data = data.drop(VAR_KEY).rename({"str_var": VAR_KEY})
+        else:
+            data = data.with_columns(
+                pl.when(pl.col(VAR_KEY) == CONST_TERM)
+                .then(pl.lit(""))
+                .otherwise("str_var")
+                .alias(VAR_KEY)
+            ).drop("str_var")
 
         dimensions = self.dimensions
 
@@ -764,6 +766,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         max_line_len=None,
         max_rows=None,
         include_const_term=True,
+        include_const_variable=False,
         var_map=None,
         include_prefix=True,
         include_header=False,
@@ -782,6 +785,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 max_line_len=max_line_len,
                 max_rows=max_rows,
                 include_const_term=include_const_term,
+                include_const_variable=include_const_variable,
                 var_map=var_map,
                 float_precision=float_precision,
             )

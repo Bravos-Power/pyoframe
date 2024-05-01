@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from pyoframe.constants import ObjSense, ObjSenseValue
+from pyoframe.constants import ObjSense, ObjSenseValue, COEF_KEY
 from pyoframe.constraints import SupportsMath, Expression
 
 
@@ -40,3 +40,10 @@ class Objective(Expression):
     @value.setter
     def value(self, value):
         self._value = value
+
+    @property
+    def has_constant(self):
+        constant_terms = self.constant_terms
+        if len(constant_terms) == 0:
+            return False
+        return constant_terms.get_column(COEF_KEY).item() != 0

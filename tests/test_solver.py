@@ -1,6 +1,7 @@
 import pyoframe as pf
 import polars as pl
 from polars.testing import assert_frame_equal
+import pytest
 
 
 def test_retrieving_duals():
@@ -147,3 +148,15 @@ def test_setting_model_attr():
     # Now the model should be bounded
     result = m.solve()
     assert result.status.is_ok
+
+
+@pytest.mark.parametrize("use_var_names", [True, False])
+def test_const_term_in_objective(use_var_names):
+    m = pf.Model()
+    m.A = pf.Variable(ub=10)
+    m.maximize = 10 + m.A
+
+    result = m.solve(use_var_names=use_var_names)
+    assert result.status.is_ok
+    assert m.A.solution == 10
+    assert m.objective.value == 20

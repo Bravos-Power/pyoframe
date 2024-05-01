@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, Type, Union
 import polars as pl
 from pyoframe.util import concat_dimensions
+from pyoframe.constants import CONST_TERM
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -36,11 +37,11 @@ class Mapper(ABC):
         )
 
     def add(self, element: Union["Variable", "Constraint"]) -> None:
-        # Not adding empty variables or constraints to mapping.
-        if len(element) > 0:
-            self.mapping_registry = pl.concat(
-                [self.mapping_registry, self._element_to_map(element)]
-            )
+        self._extend_registry(self._element_to_map(element))
+
+    def _extend_registry(self, df: pl.DataFrame) -> None:
+        self.mapping_registry = pl.concat([self.mapping_registry, df])
+
 
     @abstractmethod
     def _element_to_map(self, element: "CountableModelElement") -> pl.DataFrame: ...
@@ -48,7 +49,7 @@ class Mapper(ABC):
     def apply(
         self,
         df: pl.DataFrame,
-        to_col: Optional[str],
+        to_col: Optional[str] = None,
     ) -> pl.DataFrame:
         if df.height == 0:
             return df
@@ -91,6 +92,19 @@ class NamedMapper(Mapper):
         ), "Element must have a name to be used in a named mapping."
         return concat_dimensions(
             element.ids, keep_dims=False, prefix=element_name, to_col=Mapper.NAME_COL
+        )
+
+
+class NamedVariableMapper(NamedMapper):
+    CONST_TERM_NAME = "_ONE"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._extend_registry(
+            pl.DataFrame(
+                {self._ID_COL: [CONST_TERM], self.NAME_COL: [self.CONST_TERM_NAME]},
+                schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+            )
         )
 
 
@@ -202,6 +216,15 @@ class Base62VarMapper(Base62Mapper):
         ╞═══════════════╡
         └───────────────┘
     """
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        df = pl.DataFrame(
+            {self._ID_COL: [CONST_TERM]},
+            schema={self._ID_COL: pl.UInt32},
+        )
+        df = self.apply(df, to_col=Mapper.NAME_COL)
+        self._extend_registry(df)
 
     @property
     def _prefix(self) -> "str":
