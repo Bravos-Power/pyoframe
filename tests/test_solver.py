@@ -91,9 +91,7 @@ def test_support_variable_attributes():
     )
     assert_frame_equal(
         m.X.RC,
-        pl.DataFrame(
-            {"t": [1, 2], "RC": [0, 1.9]}
-        ),
+        pl.DataFrame({"t": [1, 2], "RC": [0, 1.9]}),
         check_dtype=False,
         check_row_order=False,
     )

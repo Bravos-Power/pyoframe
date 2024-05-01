@@ -31,7 +31,7 @@ class Container:
         if name.startswith("_"):
             return super().__getattribute__(name)
         return self._attributes[name]
-    
+
     def __iter__(self):
         return iter(self._attributes.items())
 

@@ -35,7 +35,11 @@ from pyoframe.util import (
     unwrap_single_values,
 )
 
-from pyoframe.model_element import ModelElement, CountableModelElement, SupportPolarsMethodMixin
+from pyoframe.model_element import (
+    ModelElement,
+    CountableModelElement,
+    SupportPolarsMethodMixin,
+)
 
 VAR_TYPE = pl.UInt32
 
@@ -861,7 +865,7 @@ class Constraint(CountableModelElement):
         return data.with_columns(
             pl.concat_str(CONSTRAINT_KEY, pl.lit(": "), "expr").alias("expr")
         ).drop(CONSTRAINT_KEY)
-    
+
     def filter(self, *args, **kwargs) -> pl.DataFrame:
         return self.lhs.data.filter(*args, **kwargs)
 

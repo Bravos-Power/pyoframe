@@ -25,9 +25,9 @@ class IOMappers:
 
 
 class Mapper(ABC):
-    
+
     NAME_COL = "__name"
-    
+
     def __init__(self, cls: Type["CountableModelElement"]) -> None:
         self._ID_COL = cls.get_id_column_name()
         self.mapping_registry = pl.DataFrame(

@@ -33,23 +33,29 @@ solver_registry = {}
 
 with contextlib.suppress(ImportError):
     import gurobipy
+
     available_solvers.append("gurobi")
+
 
 def _register_solver(solver_name):
     def decorator(cls):
         solver_registry[solver_name] = cls
         return cls
+
     return decorator
+
 
 def solve(m: "Model", solver=None, **kwargs):
     if solver is None:
         if len(available_solvers) == 0:
-            raise ValueError("No solvers available. Please install a solving library like gurobipy.")
+            raise ValueError(
+                "No solvers available. Please install a solving library like gurobipy."
+            )
         solver = available_solvers[0]
-    
+
     if solver not in solver_registry:
         raise ValueError(f"Solver {solver} not recognized or supported.")
-    
+
     solver_cls = solver_registry[solver]
     m.solver = solver_cls(m)
     m.solver_model = m.solver.create_solver_model(**kwargs)
@@ -175,6 +181,7 @@ class FileBasedSolver(Solver):
     @abstractmethod
     def _get_all_slack_unmapped(self): ...
 
+
 @_register_solver("gurobi")
 class GurobiSolver(FileBasedSolver):
     # see https://www.gurobi.com/documentation/10.0/refman/optimization_status_codes.html
@@ -203,12 +210,7 @@ class GurobiSolver(FileBasedSolver):
         self.ordered_var_names: Optional[List] = None
         self.ordered_constraint_names: Optional[List] = None
 
-    def create_solver_model_from_lp(
-        self,
-        problem_fn,
-        env=None,
-        **kwargs
-    ) -> Result:
+    def create_solver_model_from_lp(self, problem_fn, env=None, **kwargs) -> Result:
         """
         Solve a linear problem using the gurobi solver.
 
@@ -267,7 +269,7 @@ class GurobiSolver(FileBasedSolver):
         warmstart_fn=None,
         basis_fn=None,
         solution_file=None,
-        **kwargs
+        **kwargs,
     ) -> Result:
         m = self.solver_model
         if log_fn is not None:
