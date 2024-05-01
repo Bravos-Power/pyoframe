@@ -1,7 +1,7 @@
 from typing import Any, Iterable, List, Optional
 from pyoframe.constants import ObjSense, VType, Config, Result
 from pyoframe.constraints import SupportsMath
-from pyoframe.io_mappers import NamedMapper, IOMappers
+from pyoframe.io_mappers import NamedVariableMapper, IOMappers
 from pyoframe.model_element import ModelElement
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
@@ -22,7 +22,7 @@ class Model(AttrContainerMixin):
         self._constraints: List[Constraint] = []
         self._objective: Optional[Objective] = None
         self.var_map = (
-            NamedMapper(Variable) if Config.print_uses_variable_names else None
+            NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
         )
         self.io_mappers: Optional[IOMappers] = None
         self.name = name

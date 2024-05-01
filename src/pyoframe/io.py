@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 
-from pyoframe.constants import VAR_KEY, Config
+from pyoframe.constants import CONST_TERM, VAR_KEY
 from pyoframe.constraints import Constraint
 from pyoframe.variables import Variable
 from pyoframe.io_mappers import (
@@ -16,6 +16,7 @@ from pyoframe.io_mappers import (
     IOMappers,
     Mapper,
     NamedMapper,
+    NamedVariableMapper,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -31,7 +32,9 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     assert m.objective is not None, "No objective set."
 
     f.write(f"{m.objective.sense.value}\n\nobj:\n\n")
-    result = m.objective.to_str(var_map=var_map, include_prefix=False)
+    result = m.objective.to_str(
+        var_map=var_map, include_prefix=False, include_const_variable=True
+    )
     f.writelines(result)
 
 
@@ -44,7 +47,15 @@ def bounds_to_file(m: "Model", f, var_map):
     """
     Write out variables of a model to a lp file.
     """
-    for variable in create_section(m.variables, f, "bounds"):
+    if m.objective.has_constant or len(m.variables) != 0:
+        f.write("\n\nbounds\n\n")
+    if m.objective.has_constant:
+        const_term_df = pl.DataFrame(
+            {VAR_KEY: [CONST_TERM]}, schema={VAR_KEY: pl.UInt32}
+        )
+        f.write(f"{var_map.apply(const_term_df).item()} = 1\n")
+
+    for variable in m.variables:
         lb = f"{variable.lb:.12g}"
         ub = f"{variable.ub:.12g}"
 
@@ -103,7 +114,7 @@ def get_var_map(m: "Model", use_var_names):
     if use_var_names:
         if m.var_map is not None:
             return m.var_map
-        var_map = NamedMapper(Variable)
+        var_map = NamedVariableMapper(Variable)
     else:
         var_map = Base62VarMapper(Variable)
 
