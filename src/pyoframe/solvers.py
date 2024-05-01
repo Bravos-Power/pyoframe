@@ -228,7 +228,7 @@ class GurobiSolver(FileBasedSolver):
             else:
                 # See https://support.gurobi.com/hc/en-us/articles/360044784552-How-do-I-suppress-all-console-output-from-Gurobi
                 env = gurobipy.Env(empty=True)
-                env.setParam('LogToConsole', 0)
+                env.setParam("LogToConsole", 0)
                 env.start()
 
         m = gurobipy.read(_path_to_str(problem_fn), env=env)
@@ -275,13 +275,7 @@ class GurobiSolver(FileBasedSolver):
         else:
             raise ValueError(f"Element type {type(element)} not recognized.")
 
-    def solve(
-        self,
-        log_fn,
-        warmstart_fn,
-        basis_fn,
-        solution_file
-    ) -> Result:
+    def solve(self, log_fn, warmstart_fn, basis_fn, solution_file) -> Result:
         m = self.solver_model
         if log_fn is not None:
             m.setParam("logfile", _path_to_str(log_fn))
