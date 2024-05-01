@@ -130,6 +130,7 @@ def test_setting_constraint_attr():
     result = m.solve()
     assert result.status.is_ok
 
+
 def test_setting_model_attr():
     # Build an unbounded model
     m = pf.Model()
