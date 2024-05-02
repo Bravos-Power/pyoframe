@@ -40,7 +40,8 @@ class Mapper(ABC):
         self._extend_registry(self._element_to_map(element))
 
     def _extend_registry(self, df: pl.DataFrame) -> None:
-        self.mapping_registry = pl.concat([self.mapping_registry, df])
+        if len(df) > 0:
+            self.mapping_registry = pl.concat([self.mapping_registry, df])
 
 
     @abstractmethod

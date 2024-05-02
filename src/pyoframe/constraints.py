@@ -886,6 +886,16 @@ class Constraint(CountableModelElement):
     @property
     @unwrap_single_values
     def dual(self) -> Union[pl.DataFrame, float]:
+        """
+        >>> import polars as pl
+        >>> from pyoframe import Model, Variable
+        >>> from pyoframe.constants import DUAL_KEY, CONSTRAINT_KEY
+        >>> x = Variable(pl.DataFrame({"t": range(3)}))
+        >>> y = Variable(pl.DataFrame({"t": range(3)}))
+        >>> c = x + y <= 2
+        >>> c.dual = pl.DataFrame({CONSTRAINT_KEY: range(1,4), DUAL_KEY: [0.0, 1.1, 1.2]}, schema={CONSTRAINT_KEY: pl.UInt32, DUAL_KEY: pl.Float64})
+        >>> c.dual
+        """
         if DUAL_KEY not in self.data.columns:
             raise ValueError(f"No dual values founds for constraint '{self.name}'")
         return self.data.select(self.dimensions_unsafe + [DUAL_KEY])

@@ -295,6 +295,11 @@ class GurobiSolver(FileBasedSolver):
         status = Status.from_termination_condition(termination_condition)
 
         if status.is_ok:
+            if hasattr(m, "IsMIP") and m.IsMIP == 1:
+                m = m.fixed() # Solve fixed model to get slack and dual variables
+                m.optimize()
+                self.solver_model = m
+
             if solution_file:
                 m.write(_path_to_str(solution_file))
 
@@ -317,7 +322,7 @@ class GurobiSolver(FileBasedSolver):
                 )
             except gurobipy.GurobiError:
                 dual = None
-
+                breakpoint()
             solution = Solution(sol, dual, objective)
         else:
             solution = None
