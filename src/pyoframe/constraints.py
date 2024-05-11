@@ -375,18 +375,18 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         >>> import polars as pl
         >>> from pyoframe import Variable, Model
-        >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "population": [10, 2, 8]}).to_expr()
+        >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "year": [2024, 2024, 2024], "population": [10, 2, 8]}).to_expr()
         >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
         >>> pop_data.map(cities_and_countries)
-        <Expression size=2 dimensions={'country': 2} terms=2>
-        [Canada]: 12
-        [USA]: 8
+        <Expression size=2 dimensions={'year': 1, 'country': 2} terms=2>
+        [2024,Canada]: 12
+        [2024,USA]: 8
 
         >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
-        <Expression size=3 dimensions={'city': 3, 'country': 2} terms=3>
-        [Toronto,Canada]: 10
-        [Vancouver,Canada]: 2
-        [Boston,USA]: 8
+        <Expression size=3 dimensions={'city': 3, 'year': 1, 'country': 2} terms=3>
+        [Toronto,2024,Canada]: 10
+        [Vancouver,2024,Canada]: 2
+        [Boston,2024,USA]: 8
         """
         mapping_set = Set(mapping_set)
 
