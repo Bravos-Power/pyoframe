@@ -3,7 +3,7 @@ File containing Variable class representing decision variables in optimization m
 """
 
 from __future__ import annotations
-from typing import Any, Iterable
+from typing import Any, Iterable, TYPE_CHECKING
 
 import polars as pl
 
@@ -17,10 +17,13 @@ from pyoframe.constants import (
     VType,
     VTypeValue,
 )
-from pyoframe.constraints import Expression
+from pyoframe.constraints import Expression, SupportsToExpr
 from pyoframe.constraints import SetTypes
 from pyoframe.util import get_obj_repr, unwrap_single_values
 from pyoframe.model_element import CountableModelElement, SupportPolarsMethodMixin
+
+if TYPE_CHECKING:
+    from pyoframe.model import Model
 
 
 class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
@@ -65,8 +68,8 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
     def __init__(
         self,
         *indexing_sets: SetTypes | Iterable[SetTypes],
-        lb: float = float("-inf"),
-        ub: float = float("inf"),
+        lb: float | int | SupportsToExpr = float("-inf"),
+        ub: float | int | SupportsToExpr = float("inf"),
         vtype: VType | VTypeValue = VType.CONTINUOUS,
     ):
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -78,8 +81,22 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
         if self.vtype == VType.BINARY:
             lb, ub = 0, 1
 
-        self.lb = lb
-        self.ub = ub
+        if isinstance(lb, (float, int)):
+            self.lb, self.lb_constraint = lb, None
+        else:
+            self.lb, self.lb_constraint = float("-inf"), lb <= self
+
+        if isinstance(ub, (float, int)):
+            self.ub, self.ub_constraint = ub, None
+        else:
+            self.ub, self.ub_constraint = float("inf"), self <= ub
+
+    def on_add_to_model(self, model: "Model", name: str):
+        super().on_add_to_model(model, name)
+        if self.lb_constraint is not None:
+            setattr(model, f"{name}_lb", self.lb_constraint)
+        if self.ub_constraint is not None:
+            setattr(model, f"{name}_ub", self.ub_constraint)
 
     @classmethod
     def get_id_column_name(cls):

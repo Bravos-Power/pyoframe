@@ -10,3 +10,4 @@ tmp
 .cache
 docs/reference
 dist
+*.log

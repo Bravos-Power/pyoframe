@@ -26,7 +26,7 @@ def main(input_dir, output_dir):
     m = Model()
 
     # Create decision variables for the foods to buy
-    buy = m.addVars(foods, name="Buy")
+    buy = m.addVars(foods, name="Buy", ub=df["stock"])
 
     # Nutrition constraints
     m.addConstrs(

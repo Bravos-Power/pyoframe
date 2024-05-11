@@ -39,6 +39,10 @@ class ModelElement(ABC):
         self.name = None
         super().__init__(**kwargs)
 
+    def on_add_to_model(self, model: "Model", name: str):
+        self.name = name
+        self._model = model
+
     @property
     def data(self) -> pl.DataFrame:
         return self._data

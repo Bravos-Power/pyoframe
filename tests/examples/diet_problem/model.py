@@ -12,14 +12,14 @@ from pyoframe import sum, Model, Variable
 
 
 def main(input_dir, directory, **kwargs):
-    food_cost = pl.read_csv(input_dir / "foods.csv").to_expr()
+    food = pl.read_csv(input_dir / "foods.csv")
     nutrients = pl.read_csv(input_dir / "nutrients.csv")
     min_nutrient = nutrients.select(["category", "min"]).to_expr()
     max_nutrient = nutrients.select(["category", "max"]).to_expr()
     food_nutrients = pl.read_csv(input_dir / "foods_to_nutrients.csv").to_expr()
 
     m = Model()
-    m.Buy = Variable(food_cost, lb=0)
+    m.Buy = Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
 
     m.min_nutrients = (
         min_nutrient <= sum("food", m.Buy * food_nutrients).drop_unmatched()
@@ -28,7 +28,7 @@ def main(input_dir, directory, **kwargs):
         sum("food", m.Buy * food_nutrients).drop_unmatched() <= max_nutrient
     )
 
-    m.minimize = sum(m.Buy * food_cost)
+    m.minimize = sum(m.Buy * food[["food", "cost"]])
 
     m.solve("gurobi", directory=directory, **kwargs)
 

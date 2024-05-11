@@ -49,14 +49,14 @@ def test_examples(example: Example):
     symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
     dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
 
-    dense_model = main_module.main(
-        input_dir, directory=dense_output_dir, solution_file=dense_solution_file
-    )
     symbolic_model = main_module.main(
         input_dir,
         directory=symbolic_output_dir,
         solution_file=symbolic_solution_file,
         use_var_names=True,
+    )
+    dense_model = main_module.main(
+        input_dir, directory=dense_output_dir, solution_file=dense_solution_file
     )
 
     if example.check_params is not None:
@@ -141,7 +141,9 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
         expected_result, actual_result
     ):
         assert expected_name == actual_name
-        assert expected_value - tol <= actual_value <= expected_value + tol
+        assert (
+            expected_value - tol <= actual_value <= expected_value + tol
+        ), f"Solution file does not match expected values {expected_sol_file}"
 
 
 def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:

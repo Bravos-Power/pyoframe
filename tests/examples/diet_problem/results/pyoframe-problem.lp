@@ -6,6 +6,15 @@ obj:
 
 s.t.
 
+Buy_ub[chicken]: Buy[chicken] <= 30
+Buy_ub[fries]: Buy[fries] <= 20
+Buy_ub[hamburger]: Buy[hamburger] <= 40
+Buy_ub[hot_dog]: Buy[hot_dog] <= 20
+Buy_ub[ice_cream]: Buy[ice_cream] <= 80
+Buy_ub[macaroni]: Buy[macaroni] <= 40
+Buy_ub[milk]: Buy[milk] <= 6.8
+Buy_ub[pizza]: Buy[pizza] <= 50
+Buy_ub[salad]: Buy[salad] <= 60
 min_nutrients[calories]: -410 Buy[hamburger] -420 Buy[chicken] -560 Buy[hot_dog] -380 Buy[fries] -320 Buy[macaroni] -320 Buy[pizza] -320 Buy[salad] -100 Buy[milk] -330 Buy[ice_cream] <= -1800
 min_nutrients[protein]: -24 Buy[hamburger] -32 Buy[chicken] -20 Buy[hot_dog] -4 Buy[fries] -12 Buy[macaroni] -15 Buy[pizza] -31 Buy[salad] -8 Buy[milk] -8 Buy[ice_cream] <= -91
 max_nutrients[calories]: 410 Buy[hamburger] +420 Buy[chicken] +560 Buy[hot_dog] +380 Buy[fries] +320 Buy[macaroni] +320 Buy[pizza] +320 Buy[salad] +100 Buy[milk] +330 Buy[ice_cream] <= 2200
