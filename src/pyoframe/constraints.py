@@ -232,7 +232,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def __add__(self, other):
         if isinstance(other, Set):
             try:
-                return self._new(pl.concat([self.data, other.data]).unique(maintain_order=True))
+                return self._new(
+                    pl.concat([self.data, other.data]).unique(maintain_order=True)
+                )
             except pl.ShapeError as e:
                 if "unable to vstack, column names don't match" in str(e):
                     raise PyoframeError(
