@@ -7,14 +7,11 @@ from pyoframe.constants import (
     VAR_KEY,
     UnmatchedStrategy,
     Config,
+    PyoframeError,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.constraints import Expression
-
-
-class PyoframeError(Exception):
-    pass
 
 
 def _add_expressions(*expressions: "Expression") -> "Expression":

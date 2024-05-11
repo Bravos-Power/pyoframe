@@ -44,6 +44,10 @@ class ModelElement(ABC):
         return self._data
 
     @property
+    def friendly_name(self) -> str:
+        return self.name if self.name is not None else "unnamed"
+
+    @property
     def dimensions(self) -> Optional[List[str]]:
         """
         The names of the data's dimensions.

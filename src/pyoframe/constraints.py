@@ -27,6 +27,7 @@ from pyoframe.constants import (
     Config,
     ConstraintSense,
     UnmatchedStrategy,
+    PyoframeError,
 )
 from pyoframe.util import (
     cast_coef_to_string,
@@ -230,7 +231,15 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __add__(self, other):
         if isinstance(other, Set):
-            raise ValueError("Cannot add two sets.")
+            try:
+                return self._new(pl.concat([self.data, other.data]).unique())
+            except pl.ShapeError as e:
+                if "unable to vstack, column names don't match" in str(e):
+                    raise PyoframeError(
+                        f"Failed to add sets '{self.friendly_name}' and '{other.friendly_name}' because dimensions do not match ({self.dimensions} != {other.dimensions}) "
+                    ) from e
+                raise e
+
         return super().__add__(other)
 
     def __repr__(self):
