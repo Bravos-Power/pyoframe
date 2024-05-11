@@ -274,3 +274,7 @@ class Result:
                 print(f" Optimization successful: \n{self}\n")
         else:
             print(f"Optimization failed: \n{self}\n")
+
+
+class PyoframeError(Exception):
+    pass

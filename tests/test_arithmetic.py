@@ -27,8 +27,16 @@ def test_set_multiplication_same_name():
 
 
 def test_set_addition():
-    with pytest.raises(ValueError, match="Cannot add two sets"):
-        Set(x=[1, 2, 3]) + Set(x=[1, 2, 3])
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape(
+            "Failed to add sets 'unnamed' and 'unnamed' because dimensions do not match (['x'] != ['y'])"
+        ),
+    ):
+        Set(x=[1, 2, 3]) + Set(y=[2, 3, 4])
+
+    added_set = Set(x=[1, 2, 3]) + Set(x=[2, 3, 4])
+    assert added_set.data.to_dict(as_series=False) == {"x": [1, 2, 3, 4]}
 
 
 def test_multiplication_no_common_dimensions():
