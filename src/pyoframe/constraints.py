@@ -35,6 +35,7 @@ from pyoframe.util import (
     get_obj_repr,
     parse_inputs_as_iterable,
     unwrap_single_values,
+    dataframe_to_tupled_list,
 )
 
 from pyoframe.model_element import (
@@ -248,7 +249,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return (
             get_obj_repr(self, ("name",), size=self.data.height, dimensions=self.shape)
             + "\n"
-            + self.to_expr().to_str(max_line_len=80, max_rows=10)
+            + dataframe_to_tupled_list(
+                self.data, num_max_elements=Config.print_max_set_elements
+            )
         )
 
     @staticmethod

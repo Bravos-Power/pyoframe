@@ -229,3 +229,36 @@ def unwrap_single_values(func):
         return result
 
     return wrapper
+
+
+def dataframe_to_tupled_list(
+    df: pl.DataFrame, num_max_elements: Optional[int] = None
+) -> str:
+    """
+    Converts a dataframe into a list of tuples. Used to print a Set to the console. See examples for behaviour.
+
+    Examples:
+        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5]})
+        >>> dataframe_to_tupled_list(df)
+        '[1, 2, 3, 4, 5]'
+        >>> dataframe_to_tupled_list(df, 3)
+        '[1, 2, 3, ...]'
+
+        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 3, 4, 5, 6]})
+        >>> dataframe_to_tupled_list(df, 3)
+        '[(1, 2), (2, 3), (3, 4), ...]'
+    """
+    elipse = False
+    if num_max_elements is not None:
+        if len(df) > num_max_elements:
+            elipse = True
+            df = df.head(num_max_elements)
+
+    res = (row for row in df.iter_rows())
+    if len(df.columns) == 1:
+        res = (row[0] for row in res)
+
+    res = str(list(res))
+    if elipse:
+        res = res[:-1] + ", ...]"
+    return res

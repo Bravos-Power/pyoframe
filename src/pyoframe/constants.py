@@ -50,6 +50,7 @@ class Config(metaclass=_ConfigMeta):
     disable_unmatched_checks: bool = False
     print_float_precision: Optional[int] = 5
     print_uses_variable_names: bool = True
+    print_max_set_elements: int = 100  # When printing a Set to console, how many elements to display before elipsing.
 
     @classmethod
     def reset_defaults(cls):
