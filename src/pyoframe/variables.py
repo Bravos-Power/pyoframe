@@ -3,7 +3,7 @@ File containing Variable class representing decision variables in optimization m
 """
 
 from __future__ import annotations
-from typing import Any, Iterable, TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
 import polars as pl
 
@@ -76,6 +76,7 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
+        self._fixed_to = None
 
         # Tightening the bounds is not strictly necessary, but it adds clarity
         if self.vtype == VType.BINARY:
@@ -97,6 +98,14 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
             setattr(model, f"{name}_lb", self.lb_constraint)
         if self.ub_constraint is not None:
             setattr(model, f"{name}_ub", self.ub_constraint)
+        if self._fixed_to is not None:
+            setattr(model, f"{name}_fixed", self == self._fixed_to)
+
+    @classmethod
+    def fixed_to_expr(cls, expr: SupportsToExpr):
+        v = Variable(expr)
+        v._fixed_to = expr
+        return v
 
     @classmethod
     def get_id_column_name(cls):
