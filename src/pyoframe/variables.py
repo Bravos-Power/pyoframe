@@ -102,7 +102,7 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
             setattr(model, f"{name}_fixed", self == self._fixed_to)
 
     @classmethod
-    def fixed_to_expr(cls, expr: SupportsToExpr):
+    def create_fixed(cls, expr: SupportsToExpr):
         v = Variable(expr)
         v._fixed_to = expr
         return v
