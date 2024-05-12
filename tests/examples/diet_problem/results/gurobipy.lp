@@ -30,4 +30,6 @@ Bounds
  Buy[salad] <= 60
  Buy[milk] <= 6.8
  Buy[ice_cream] <= 80
+
+
 End
