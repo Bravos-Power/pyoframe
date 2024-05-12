@@ -1,5 +1,5 @@
 from typing import Any, Iterable, List, Optional
-from pyoframe.constants import ObjSense, VType, Config, Result
+from pyoframe.constants import ObjSense, VType, Config, Result, PyoframeError
 from pyoframe.constraints import SupportsMath
 from pyoframe.io_mappers import NamedVariableMapper, IOMappers
 from pyoframe.model_element import ModelElement
@@ -9,12 +9,28 @@ from pyoframe.user_defined import Container, AttrContainerMixin
 from pyoframe.variables import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve, Solver
+import polars as pl
+import pandas as pd
 
 
 class Model(AttrContainerMixin):
     """
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
     """
+
+    _reserved_attributes = [
+        "_variables",
+        "_constraints",
+        "_objective",
+        "var_map",
+        "io_mappers",
+        "name",
+        "solver",
+        "solver_model",
+        "params",
+        "result",
+        "attr",
+    ]
 
     def __init__(self, name=None, **kwargs):
         super().__init__(**kwargs)
@@ -62,6 +78,13 @@ class Model(AttrContainerMixin):
         return self.objective
 
     def __setattr__(self, __name: str, __value: Any) -> None:
+        if __name not in Model._reserved_attributes and not isinstance(
+            __value, (ModelElement, pl.DataFrame, pd.DataFrame)
+        ):
+            raise PyoframeError(
+                f"Cannot set attribute '{__name}' on the model because it isn't of type ModelElement (e.g. Variable, Constraint, ...)"
+            )
+
         if __name in ("maximize", "minimize"):
             assert isinstance(
                 __value, SupportsMath
@@ -71,24 +94,25 @@ class Model(AttrContainerMixin):
             self._objective._model = self
             return
 
-        if isinstance(__value, ModelElement) and not __name.startswith("_"):
+        if (
+            isinstance(__value, ModelElement)
+            and __name not in Model._reserved_attributes
+        ):
             assert not hasattr(
                 self, __name
             ), f"Cannot create {__name} since it was already created."
 
-            __value.name = __name
-            __value._model = self
+            __value.on_add_to_model(self, __name)
 
             if isinstance(__value, Objective):
                 assert self.objective is None, "Cannot create more than one objective."
                 self._objective = __value
-            if isinstance(__value, Variable):
+            elif isinstance(__value, Variable):
                 self._variables.append(__value)
                 if self.var_map is not None:
                     self.var_map.add(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
-
         return super().__setattr__(__name, __value)
 
     def __repr__(self) -> str:

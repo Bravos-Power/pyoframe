@@ -17,3 +17,9 @@ Contributions are welcome! See [`CONTRIBUTE.md`](./CONTRIBUTE.md).
 ## Acknowledgments
 
 Martin Staadecker first created this library while working for [Bravos Power](https://www.bravospower.com/) The library takes inspiration from Linopy and Pyomo, two prior libraries for optimization for which we are thankful.
+
+## Troubleshooting Common Errors
+
+### `datatypes of join keys don't match`
+
+Often, this error indicates that two dataframes in your inputs representing the same dimension have different datatypes (e.g. 16bit integer and 64bit integer). This is not allowed and you should ensure for the same dimensions, datatypes are identical.

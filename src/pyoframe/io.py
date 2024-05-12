@@ -6,6 +6,7 @@ from io import TextIOWrapper
 from tempfile import NamedTemporaryFile
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
+from tqdm import tqdm
 
 from pyoframe.constants import CONST_TERM, VAR_KEY
 from pyoframe.constraints import Constraint
@@ -39,7 +40,9 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
 
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
-    for constraint in create_section(m.constraints, f, "s.t."):
+    for constraint in create_section(
+        tqdm(m.constraints, desc="Writing constraints to file"), f, "s.t."
+    ):
         f.writelines(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
 
 
@@ -55,17 +58,25 @@ def bounds_to_file(m: "Model", f, var_map):
         )
         f.write(f"{var_map.apply(const_term_df).item()} = 1\n")
 
-    for variable in m.variables:
-        lb = f"{variable.lb:.12g}"
-        ub = f"{variable.ub:.12g}"
+    for variable in tqdm(m.variables, desc="Writing bounds to file"):
+        terms = []
+
+        if variable.lb != 0:
+            terms.append(pl.lit(f"{variable.lb:.12g} <= "))
+
+        terms.append(VAR_KEY)
+
+        if variable.ub != float("inf"):
+            terms.append(pl.lit(f" <= {variable.ub:.12g}"))
+
+        terms.append(pl.lit("\n"))
+
+        if len(terms) < 3:
+            continue
 
         df = (
             var_map.apply(variable.data, to_col=None)
-            .select(
-                pl.concat_str(
-                    pl.lit(f"{lb} <= "), VAR_KEY, pl.lit(f" <= {ub}\n")
-                ).str.concat("")
-            )
+            .select(pl.concat_str(terms).str.concat(""))
             .item()
         )
 
@@ -76,7 +87,9 @@ def binaries_to_file(m: "Model", f, var_map: Mapper):
     """
     Write out binaries of a model to a lp file.
     """
-    for variable in create_section(m.binary_variables, f, "binary"):
+    for variable in create_section(
+        tqdm(m.binary_variables, "Writing binary variables to file"), f, "binary"
+    ):
         lines = (
             var_map.apply(variable.data, to_col=None)
             .select(pl.col(VAR_KEY).str.concat("\n"))
@@ -89,7 +102,9 @@ def integers_to_file(m: "Model", f, var_map: Mapper):
     """
     Write out integers of a model to a lp file.
     """
-    for variable in create_section(m.integer_variables, f, "general"):
+    for variable in create_section(
+        tqdm(m.integer_variables, "Writing integer variables to file"), f, "general"
+    ):
         lines = (
             var_map.apply(variable.data, to_col=None)
             .select(pl.col(VAR_KEY).str.concat("\n"))
@@ -155,6 +170,6 @@ def to_file(
         bounds_to_file(m, f, var_map)
         binaries_to_file(m, f, var_map)
         integers_to_file(m, f, var_map)
-        f.write("end\n")
+        f.write("\nend\n")
 
     return file_path

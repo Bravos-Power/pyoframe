@@ -39,6 +39,10 @@ class ModelElement(ABC):
         self.name = None
         super().__init__(**kwargs)
 
+    def on_add_to_model(self, model: "Model", name: str):
+        self.name = name
+        self._model = model
+
     @property
     def data(self) -> pl.DataFrame:
         return self._data
@@ -106,7 +110,11 @@ def _support_polars_method(method_name: str):
     """
 
     def method(self: "SupportPolarsMethodMixin", *args, **kwargs):
-        return self._new(getattr(self.data, method_name)(*args, **kwargs))
+        result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
+        if isinstance(result_from_polars, pl.DataFrame):
+            return self._new(result_from_polars)
+        else:
+            return result_from_polars
 
     return method
 
@@ -115,6 +123,7 @@ class SupportPolarsMethodMixin:
     rename = _support_polars_method("rename")
     with_columns = _support_polars_method("with_columns")
     filter = _support_polars_method("filter")
+    estimated_size = _support_polars_method("estimated_size")
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):

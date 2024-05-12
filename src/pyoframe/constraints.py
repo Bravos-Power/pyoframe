@@ -35,6 +35,7 @@ from pyoframe.util import (
     get_obj_repr,
     parse_inputs_as_iterable,
     unwrap_single_values,
+    dataframe_to_tupled_list,
 )
 
 from pyoframe.model_element import (
@@ -248,7 +249,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return (
             get_obj_repr(self, ("name",), size=self.data.height, dimensions=self.shape)
             + "\n"
-            + self.to_expr().to_str(max_line_len=80, max_rows=10)
+            + dataframe_to_tupled_list(
+                self.data, num_max_elements=Config.print_max_set_elements
+            )
         )
 
     @staticmethod
@@ -375,18 +378,18 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         >>> import polars as pl
         >>> from pyoframe import Variable, Model
-        >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "population": [10, 2, 8]}).to_expr()
+        >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "year": [2024, 2024, 2024], "population": [10, 2, 8]}).to_expr()
         >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
         >>> pop_data.map(cities_and_countries)
-        <Expression size=2 dimensions={'country': 2} terms=2>
-        [Canada]: 12
-        [USA]: 8
+        <Expression size=2 dimensions={'year': 1, 'country': 2} terms=2>
+        [2024,Canada]: 12
+        [2024,USA]: 8
 
         >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
-        <Expression size=3 dimensions={'city': 3, 'country': 2} terms=3>
-        [Toronto,Canada]: 10
-        [Vancouver,Canada]: 2
-        [Boston,USA]: 8
+        <Expression size=3 dimensions={'city': 3, 'year': 1, 'country': 2} terms=3>
+        [Toronto,2024,Canada]: 10
+        [Vancouver,2024,Canada]: 2
+        [Boston,2024,USA]: 8
         """
         mapping_set = Set(mapping_set)
 

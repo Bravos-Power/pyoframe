@@ -1,11 +1,10 @@
-# Solution for model diet
-# Objective value = 1.1828861111111111e+01
-Buy[hamburger] 6.0451388888888880e-01
+# Objective value = 12.06025
+Buy[hamburger] 5.5526315789473679e-01
 Buy[chicken] 0
 Buy[hot_dog] 0
 Buy[fries] 0
 Buy[macaroni] 0
 Buy[pizza] 0
 Buy[salad] 0
-Buy[milk] 6.9701388888888891e+00
-Buy[ice_cream] 2.5913194444444447e+00
+Buy[milk] 6.8
+Buy[ice_cream] 2.90921052631579

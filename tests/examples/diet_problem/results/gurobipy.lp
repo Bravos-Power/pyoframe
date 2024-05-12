@@ -1,4 +1,3 @@
-\ Model diet
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 Minimize
   2.49 Buy[hamburger] + 2.89 Buy[chicken] + 1.5 Buy[hot_dog]
@@ -22,4 +21,15 @@ Subject To
    + 820 Buy[pizza] + 1230 Buy[salad] + 125 Buy[milk] + 180 Buy[ice_cream]
    <= 1779
 Bounds
+ Buy[hamburger] <= 40
+ Buy[chicken] <= 30
+ Buy[hot_dog] <= 20
+ Buy[fries] <= 20
+ Buy[macaroni] <= 40
+ Buy[pizza] <= 50
+ Buy[salad] <= 60
+ Buy[milk] <= 6.8
+ Buy[ice_cream] <= 80
+
+
 End
