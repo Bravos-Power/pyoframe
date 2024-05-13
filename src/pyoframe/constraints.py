@@ -320,6 +320,19 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         super().__init__(data)
 
+    @classmethod
+    def empty(cls, dimensions=[], type=None):
+        data = {COEF_KEY: [], VAR_KEY: []}
+        data.update({d: [] for d in dimensions})
+        schema = {COEF_KEY: pl.Float64, VAR_KEY: pl.UInt32}
+        if type is not None:
+            schema.update({d: t for d, t in zip(dimensions, type)})
+        return Expression(
+            pl.DataFrame(data).with_columns(
+                *[pl.col(c).cast(t) for c, t in schema.items()]
+            )
+        )
+
     def sum(self, over: Union[str, Iterable[str]]):
         """
         Examples:
