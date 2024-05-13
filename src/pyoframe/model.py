@@ -2,7 +2,7 @@ from typing import Any, Iterable, List, Optional
 from pyoframe.constants import ObjSense, VType, Config, Result, PyoframeError
 from pyoframe.constraints import SupportsMath
 from pyoframe.io_mappers import NamedVariableMapper, IOMappers
-from pyoframe.model_element import ModelElement, CountableModelElement
+from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.constraints import Constraint
 from pyoframe.objective import Objective
 from pyoframe.user_defined import Container, AttrContainerMixin
@@ -98,7 +98,7 @@ class Model(AttrContainerMixin):
             isinstance(__value, ModelElement)
             and __name not in Model._reserved_attributes
         ):
-            if isinstance(__value, CountableModelElement):
+            if isinstance(__value, ModelElementWithId):
                 assert not hasattr(
                     self, __name
                 ), f"Cannot create {__name} since it was already created."

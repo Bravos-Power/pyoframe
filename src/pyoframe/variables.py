@@ -20,13 +20,13 @@ from pyoframe.constants import (
 from pyoframe.constraints import Expression, SupportsToExpr
 from pyoframe.constraints import SetTypes
 from pyoframe.util import get_obj_repr, unwrap_single_values
-from pyoframe.model_element import CountableModelElement, SupportPolarsMethodMixin
+from pyoframe.model_element import ModelElementWithId, SupportPolarsMethodMixin
 
 if TYPE_CHECKING:
     from pyoframe.model import Model
 
 
-class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
+class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     """
     Represents one or many decision variable in an optimization model.
 
@@ -40,6 +40,8 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
             The upper bound for all variables.
         vtype: VType | VTypeValue
             The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
+        equals: SupportsToExpr
+            When specified, a variable is created and a constraint is added to make the variable equal to the provided expression.
 
     Examples:
         >>> import pandas as pd
@@ -71,12 +73,17 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
         lb: float | int | SupportsToExpr = float("-inf"),
         ub: float | int | SupportsToExpr = float("inf"),
         vtype: VType | VTypeValue = VType.CONTINUOUS,
+        equals: SupportsToExpr = None,
     ):
+        if equals is not None:
+            assert len(indexing_sets) == 0, "Cannot specify both 'equals' and 'indexing_sets'"
+            indexing_sets = (equals,)
+
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
-        self._fixed_to = None
+        self._equals = equals
 
         # Tightening the bounds is not strictly necessary, but it adds clarity
         if self.vtype == VType.BINARY:
@@ -98,14 +105,8 @@ class Variable(CountableModelElement, SupportsMath, SupportPolarsMethodMixin):
             setattr(model, f"{name}_lb", self.lb_constraint)
         if self.ub_constraint is not None:
             setattr(model, f"{name}_ub", self.ub_constraint)
-        if self._fixed_to is not None:
-            setattr(model, f"{name}_fixed", self == self._fixed_to)
-
-    @classmethod
-    def create_fixed(cls, expr: SupportsToExpr):
-        v = Variable(expr)
-        v._fixed_to = expr
-        return v
+        if self._equals is not None:
+            setattr(model, f"{name}_equals", self == self._equals)
 
     @classmethod
     def get_id_column_name(cls):

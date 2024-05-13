@@ -132,7 +132,7 @@ class SupportPolarsMethodMixin:
         """
 
 
-class CountableModelElement(ModelElement, AttrContainerMixin):
+class ModelElementWithId(ModelElement, AttrContainerMixin):
     """
     Provides a method that assigns a unique ID to each row in a DataFrame.
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.

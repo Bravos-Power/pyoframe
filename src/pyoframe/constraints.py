@@ -40,7 +40,7 @@ from pyoframe.util import (
 
 from pyoframe.model_element import (
     ModelElement,
-    CountableModelElement,
+    ModelElementWithId,
     SupportPolarsMethodMixin,
 )
 
@@ -872,7 +872,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     return sum(over=remaining_dims, expr=expr)
 
 
-class Constraint(CountableModelElement):
+class Constraint(ModelElementWithId):
     """A linear programming constraint."""
 
     def __init__(self, lhs: Expression, sense: ConstraintSense):
