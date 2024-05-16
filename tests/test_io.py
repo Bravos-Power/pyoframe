@@ -1,9 +1,7 @@
 import pytest
 import polars as pl
-from polars.testing import assert_frame_equal
 
-from pyoframe.variables import Variable
-from pyoframe.constraints import Expression
+from pyoframe.core import Expression, Variable
 
 
 @pytest.fixture

@@ -1,11 +1,18 @@
 from typing import Any, Iterable, List, Optional, Union
-from pyoframe.constants import ObjSense, VType, Config, Result, PyoframeError, ObjSenseValue
+from pyoframe.constants import (
+    ObjSense,
+    VType,
+    Config,
+    Result,
+    PyoframeError,
+    ObjSenseValue,
+)
 from pyoframe.io_mappers import NamedVariableMapper, IOMappers
 from pyoframe.model_element import ModelElement, ModelElementWithId
-from pyoframe.constraints import Constraint
+from pyoframe.core import Constraint
 from pyoframe.objective import Objective
 from pyoframe.user_defined import Container, AttrContainerMixin
-from pyoframe.variables import Variable
+from pyoframe.core import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve, Solver
 import polars as pl
@@ -29,7 +36,7 @@ class Model(AttrContainerMixin):
         "params",
         "result",
         "attr",
-        "sense"
+        "sense",
     ]
 
     def __init__(self, min_or_max: Union[ObjSense, ObjSenseValue], name=None, **kwargs):
@@ -63,7 +70,7 @@ class Model(AttrContainerMixin):
     @property
     def constraints(self):
         return self._constraints
-    
+
     @property
     def objective(self):
         return self._objective

@@ -85,7 +85,8 @@ def solve(
     m.result = result
 
     if result.solution is not None:
-        m.objective.value = result.solution.objective
+        if m.objective is not None:
+            m.objective.value = result.solution.objective
 
         for variable in m.variables:
             variable.solution = result.solution.primal

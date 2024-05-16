@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 import pytest
 from pyoframe._arithmetic import PyoframeError
-from pyoframe.constraints import Constraint, Set
+from pyoframe.core import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY, Config
 from pyoframe import Variable
-from pyoframe.constraints import Expression, sum
+from pyoframe.core import Expression, sum
 from .util import csvs_to_expr
 
 

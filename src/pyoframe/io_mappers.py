@@ -15,7 +15,7 @@ from pyoframe.constants import CONST_TERM
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Variable
-    from pyoframe.constraints import Constraint
+    from pyoframe.core import Constraint
     from pyoframe.util import CountableModelElement
 
 

@@ -72,6 +72,7 @@ class ObjSense(Enum):
     MIN = "min"
     MAX = "max"
 
+
 class VType(Enum):
     CONTINUOUS = "continuous"
     BINARY = "binary"

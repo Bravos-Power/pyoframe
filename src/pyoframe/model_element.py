@@ -57,7 +57,7 @@ class ModelElement(ABC):
         The names of the data's dimensions.
 
         Examples:
-            >>> from pyoframe.variables import Variable
+            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
             >>> Variable().dimensions
 
@@ -84,7 +84,7 @@ class ModelElement(ABC):
         The number of indices in each dimension.
 
         Examples:
-            >>> from pyoframe.variables import Variable
+            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
             >>> Variable().shape
             {}

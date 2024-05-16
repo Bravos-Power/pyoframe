@@ -24,10 +24,14 @@ from pyoframe.constants import (
     SLACK_COL,
     VAR_KEY,
     SOLUTION_KEY,
+    RC_COL,
+    VType,
+    VTypeValue,
     Config,
     ConstraintSense,
     UnmatchedStrategy,
     PyoframeError,
+    ObjSense,
 )
 from pyoframe.util import (
     cast_coef_to_string,
@@ -258,6 +262,12 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def _set_to_polars(set: "SetTypes") -> pl.DataFrame:
         if isinstance(set, dict):
             df = pl.DataFrame(set)
+        elif isinstance(set, Constraint):
+            if set.dimensions is None:
+                raise ValueError(
+                    "Cannot convert a constraint with no dimensions to a set."
+                )
+            df = set.data.select(set.dimensions)
         elif isinstance(set, SupportsMath):
             df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
         elif isinstance(set, pd.Index):
@@ -946,6 +956,78 @@ class Constraint(ModelElementWithId):
     def filter(self, *args, **kwargs) -> pl.DataFrame:
         return self.lhs.data.filter(*args, **kwargs)
 
+    def relax(self, cost: SupportsToExpr, max: SupportsToExpr = None):
+        """
+        Relaxes the constraint by adding a variable to the constraint that can be non-zero at a cost.
+
+        Parameters:
+            cost: SupportsToExpr
+                The cost of relaxing the constraint. Costs should be positives as they will automatically
+                become negative for maximization problems.
+            max: SupportsToExpr, default None
+                The maximum value of the relaxation variable.
+
+        Returns:
+            The same constraint
+
+        Examples:
+            >>> import pyoframe as pf
+            >>> m = pf.Model("max")
+            >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
+            >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
+            >>> m.must_finish_project = m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]
+            >>> m.only_one_day = sum("project", m.hours_spent) <= 24
+            >>> m.solve(log_to_console=False)
+            Status: warning
+            Termination condition: infeasible
+            <BLANKLINE>
+
+            >>> m.must_finish_project.relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
+            >>> result = m.solve(log_to_console=False)
+            >>> m.hours_spent.solution
+            shape: (3, 2)
+            ┌─────────┬──────────┐
+            │ project ┆ solution │
+            │ ---     ┆ ---      │
+            │ str     ┆ f64      │
+            ╞═════════╪══════════╡
+            │ A       ┆ 8.0      │
+            │ B       ┆ 7.0      │
+            │ C       ┆ 9.0      │
+            └─────────┴──────────┘
+        """
+        m = self._model
+        if m is None:
+            # TODO support .relax earlier
+            raise NotImplementedError(
+                "Can only relax a constraint after it has been added to the model."
+            )
+
+        var_name = f"{self.name}_relaxation"
+        assert not hasattr(
+            m, var_name
+        ), "Conflicting names, relaxation variable already exists on the model."
+        var = Variable(self, lb=0, ub=max)
+
+        if self.sense == ConstraintSense.LE:
+            self.lhs -= var
+        elif self.sense == ConstraintSense.GE:
+            self.lhs += var
+        else:
+            # TODO
+            raise NotImplementedError(
+                "Relaxation for equalities has not yet been implemented. Submit a pull request!"
+            )
+
+        setattr(m, var_name, var)
+        penalty = sum(self.dimensions, var * cost)
+        if m.sense == ObjSense.MAX:
+            penalty *= -1
+        if m.objective is None:
+            m.objective = penalty
+        else:
+            m.objective += penalty
+
     def to_str(
         self,
         max_line_len=None,
@@ -990,3 +1072,217 @@ class Constraint(ModelElementWithId):
             + "\n"
             + self.to_str(max_line_len=80, max_rows=15)
         )
+
+
+class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
+    """
+    Represents one or many decision variable in an optimization model.
+
+    Parameters:
+        *indexing_sets: SetTypes (typically a DataFrame or Set)
+            If no indexing_sets are provided, a single variable with no dimensions is created.
+            Otherwise, a variable is created for each element in the Cartesian product of the indexing_sets (see Set for details on behaviour).
+        lb: float
+            The lower bound for all variables.
+        ub: float
+            The upper bound for all variables.
+        vtype: VType | VTypeValue
+            The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
+        equals: SupportsToExpr
+            When specified, a variable is created and a constraint is added to make the variable equal to the provided expression.
+
+    Examples:
+        >>> import pandas as pd
+        >>> from pyoframe import Variable
+        >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
+        >>> Variable(df)
+        <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
+        [1,a]: x1
+        [1,b]: x2
+        [2,a]: x3
+        [2,b]: x4
+        [3,a]: x5
+        [3,b]: x6
+        >>> Variable(df[["dim1"]])
+        Traceback (most recent call last):
+        ...
+        ValueError: Duplicate rows found in input data.
+        >>> Variable(df[["dim1"]].drop_duplicates())
+        <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
+        [1]: x7
+        [2]: x8
+        [3]: x9
+    """
+
+    # TODO: Breaking change, remove support for Iterable[AcceptableSets]
+    def __init__(
+        self,
+        *indexing_sets: SetTypes | Iterable[SetTypes],
+        lb: float | int | SupportsToExpr | None = None,
+        ub: float | int | SupportsToExpr | None = None,
+        vtype: VType | VTypeValue = VType.CONTINUOUS,
+        equals: SupportsToExpr = None,
+    ):
+        if lb is None:
+            lb = float("-inf")
+        if ub is None:
+            ub = float("inf")
+        if equals is not None:
+            assert (
+                len(indexing_sets) == 0
+            ), "Cannot specify both 'equals' and 'indexing_sets'"
+            indexing_sets = (equals,)
+
+        data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
+        super().__init__(data)
+
+        self.vtype: VType = VType(vtype)
+        self._equals = equals
+
+        # Tightening the bounds is not strictly necessary, but it adds clarity
+        if self.vtype == VType.BINARY:
+            lb, ub = 0, 1
+
+        if isinstance(lb, (float, int)):
+            self.lb, self.lb_constraint = lb, None
+        else:
+            self.lb, self.lb_constraint = float("-inf"), lb <= self
+
+        if isinstance(ub, (float, int)):
+            self.ub, self.ub_constraint = ub, None
+        else:
+            self.ub, self.ub_constraint = float("inf"), self <= ub
+
+    def on_add_to_model(self, model: "Model", name: str):
+        super().on_add_to_model(model, name)
+        if self.lb_constraint is not None:
+            setattr(model, f"{name}_lb", self.lb_constraint)
+        if self.ub_constraint is not None:
+            setattr(model, f"{name}_ub", self.ub_constraint)
+        if self._equals is not None:
+            setattr(model, f"{name}_equals", self == self._equals)
+
+    @classmethod
+    def get_id_column_name(cls):
+        return VAR_KEY
+
+    @property
+    @unwrap_single_values
+    def solution(self):
+        if SOLUTION_KEY not in self.data.columns:
+            raise ValueError(f"No solution solution found for Variable '{self.name}'.")
+
+        return self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
+
+    @property
+    @unwrap_single_values
+    def RC(self):
+        """
+        The reduced cost of the variable.
+        Will raise an error if the model has not already been solved.
+        The first call to this property will load the reduced costs from the solver (lazy loading).
+        """
+        if RC_COL not in self.data.columns:
+            if self._model.solver is None:
+                raise ValueError("The model has not been solved yet.")
+            self._model.solver.load_rc()
+        return self.data.select(self.dimensions_unsafe + [RC_COL])
+
+    @RC.setter
+    def RC(self, value):
+        self._extend_dataframe_by_id(value)
+
+    @solution.setter
+    def solution(self, value):
+        self._extend_dataframe_by_id(value)
+
+    def __repr__(self):
+        return (
+            get_obj_repr(
+                self, ("name", "lb", "ub"), size=self.data.height, dimensions=self.shape
+            )
+            + "\n"
+            + self.to_expr().to_str(max_line_len=80, max_rows=10)
+        )
+
+    def to_expr(self) -> Expression:
+        return self._new(self.data.drop(SOLUTION_KEY))
+
+    def _new(self, data: pl.DataFrame):
+        e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
+        e._model = self._model
+        # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
+        e.unmatched_strategy = self.unmatched_strategy
+        e.allowed_new_dims = self.allowed_new_dims
+        return e
+
+    def next(self, dim: str, wrap_around: bool = False) -> Expression:
+        """
+        Creates an expression where the variable at each index is the next variable in the specified dimension.
+
+        Parameters:
+            dim:
+                The dimension over which to shift the variable.
+            wrap_around:
+                If True, the last index in the dimension is connected to the first index.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable, Model
+            >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
+            >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
+            >>> m = Model("min")
+            >>> m.bat_charge = Variable(time_dim, space_dim)
+            >>> m.bat_flow = Variable(time_dim, space_dim)
+            >>> # Fails because the dimensions are not the same
+            >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
+            Traceback (most recent call last):
+            ...
+            pyoframe.constants.PyoframeError: Failed to add expressions:
+            <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
+            Due to error:
+            Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            shape: (2, 4)
+            ┌───────┬─────────┬────────────┬────────────┐
+            │ time  ┆ city    ┆ time_right ┆ city_right │
+            │ ---   ┆ ---     ┆ ---        ┆ ---        │
+            │ str   ┆ str     ┆ str        ┆ str        │
+            ╞═══════╪═════════╪════════════╪════════════╡
+            │ 18:00 ┆ Toronto ┆ null       ┆ null       │
+            │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
+            └───────┴─────────┴────────────┴────────────┘
+
+            >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next("time")
+            <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
+            [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+            [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+            [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+            [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+            [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+            [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+
+            >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
+            <Constraint sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
+            [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
+            [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
+            [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
+            [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
+            [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
+            [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+            [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
+            [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
+        """
+
+        wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)
+        wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))
+        if wrap_around:
+            wrapped = wrapped.with_columns(pl.col("__next").fill_null(pl.first(dim)))
+        else:
+            wrapped = wrapped.drop_nulls(dim)
+
+        expr = self.to_expr()
+        data = expr.data.rename({dim: "__prev"})
+        data = data.join(
+            wrapped, left_on="__prev", right_on="__next", how="inner"
+        ).drop(["__prev", "__next"])
+        return expr._new(data)

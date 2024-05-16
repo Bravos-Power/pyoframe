@@ -1,6 +1,7 @@
 from typing import Optional
 from pyoframe.constants import COEF_KEY
-from pyoframe.constraints import SupportsMath, Expression
+from pyoframe.core import SupportsMath, Expression
+
 
 class Objective(Expression):
     r"""
