@@ -1,8 +1,9 @@
 """
 File containing utility functions and classes.
 """
+from typing import Any, Iterable, Optional, Union, List, Dict
 
-from typing import Any, Iterable, Optional, Union
+from dataclasses import dataclass, field
 
 import polars as pl
 import pandas as pd
@@ -262,3 +263,9 @@ def dataframe_to_tupled_list(
     if elipse:
         res = res[:-1] + ", ...]"
     return res
+
+
+@dataclass
+class FuncArgs:
+    args: List
+    kwargs: Dict = field(default_factory=dict)

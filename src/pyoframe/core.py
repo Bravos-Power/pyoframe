@@ -40,6 +40,7 @@ from pyoframe.util import (
     parse_inputs_as_iterable,
     unwrap_single_values,
     dataframe_to_tupled_list,
+    FuncArgs,
 )
 
 from pyoframe.model_element import (
@@ -157,6 +158,7 @@ SetTypes = Union[
     SupportsMath,
     Mapping[str, Sequence[object]],
     "Set",
+    "Constraint",
 ]
 
 
@@ -897,10 +899,17 @@ class Constraint(ModelElementWithId):
         self.lhs = lhs
         self._model = lhs._model
         self.sense = sense
+        self.to_relax: Optional[FuncArgs] = None
 
         dims = self.lhs.dimensions
         data = pl.DataFrame() if dims is None else self.lhs.data.select(dims).unique()
+
         super().__init__(data)
+
+    def on_add_to_model(self, model: "Model", name: str):
+        super().on_add_to_model(model, name)
+        if self.to_relax is not None:
+            self.relax(*self.to_relax.args, **self.to_relax.kwargs)
 
     @property
     @unwrap_single_values
@@ -956,7 +965,9 @@ class Constraint(ModelElementWithId):
     def filter(self, *args, **kwargs) -> pl.DataFrame:
         return self.lhs.data.filter(*args, **kwargs)
 
-    def relax(self, cost: SupportsToExpr, max: SupportsToExpr = None):
+    def relax(
+        self, cost: SupportsToExpr, max: Optional[SupportsToExpr] = None
+    ) -> Constraint:
         """
         Relaxes the constraint by adding a variable to the constraint that can be non-zero at a cost.
 
@@ -982,7 +993,7 @@ class Constraint(ModelElementWithId):
             Termination condition: infeasible
             <BLANKLINE>
 
-            >>> m.must_finish_project.relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
+            >>> _ = m.must_finish_project.relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
             >>> result = m.solve(log_to_console=False)
             >>> m.hours_spent.solution
             shape: (3, 2)
@@ -997,11 +1008,8 @@ class Constraint(ModelElementWithId):
             └─────────┴──────────┘
         """
         m = self._model
-        if m is None:
-            # TODO support .relax earlier
-            raise NotImplementedError(
-                "Can only relax a constraint after it has been added to the model."
-            )
+        if m is None or self.name is None:
+            self.to_relax = FuncArgs(args=[cost, max])
 
         var_name = f"{self.name}_relaxation"
         assert not hasattr(
@@ -1027,6 +1035,8 @@ class Constraint(ModelElementWithId):
             m.objective = penalty
         else:
             m.objective += penalty
+
+        return self
 
     def to_str(
         self,
