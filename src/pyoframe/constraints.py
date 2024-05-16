@@ -295,7 +295,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         >>> import pandas as pd
         >>> from pyoframe import Variable, Model
         >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-        >>> m = Model()
+        >>> m = Model("min")
         >>> m.Time = Variable(df.index)
         >>> m.Size = Variable(df.index)
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
@@ -455,7 +455,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> import polars as pl
             >>> from pyoframe import Variable, Model
             >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
-            >>> m = Model()
+            >>> m = Model("min")
             >>> m.quantity = Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
             <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
@@ -671,11 +671,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import pyoframe as pf
-            >>> m = pf.Model()
+            >>> m = pf.Model("max")
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X
             >>> m.expr_2 = pf.sum(m.expr_1)
-            >>> m.maximize = m.expr_2 + 3
+            >>> m.objective = m.expr_2 + 3
             >>> result = m.solve(log_to_console=False)
             >>> m.expr_1.value
             shape: (3, 2)

@@ -77,7 +77,7 @@ class NamedMapper(Mapper):
 
         >>> import polars as pl
         >>> import pyoframe as pf
-        >>> m = pf.Model()
+        >>> m = pf.Model("min")
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)
         <Expression size=1 dimensions={} terms=4>
@@ -199,7 +199,7 @@ class Base62VarMapper(Base62Mapper):
         >>> import polars as pl
         >>> from pyoframe import Model, Variable
         >>> from pyoframe.constants import VAR_KEY
-        >>> m = Model()
+        >>> m = Model("min")
         >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
         >>> (m.x.filter(t=11)+1).to_str()
         '[11]: 1  + x[11]'

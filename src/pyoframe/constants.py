@@ -69,9 +69,8 @@ class ConstraintSense(Enum):
 
 
 class ObjSense(Enum):
-    MIN = "minimize"
-    MAX = "maximize"
-
+    MIN = "min"
+    MAX = "max"
 
 class VType(Enum):
     CONTINUOUS = "continuous"
@@ -87,7 +86,7 @@ class UnmatchedStrategy(Enum):
 
 # This is a hack to get the Literal type for VType
 # See: https://stackoverflow.com/questions/67292470/type-hinting-enum-member-value-in-python
-ObjSenseValue = Literal["minimize", "maximize"]
+ObjSenseValue = Literal["min", "max"]
 VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}

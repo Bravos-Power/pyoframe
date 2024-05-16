@@ -1,28 +1,23 @@
-from typing import Optional, Union
-from pyoframe.constants import ObjSense, ObjSenseValue, COEF_KEY
+from typing import Optional
+from pyoframe.constants import COEF_KEY
 from pyoframe.constraints import SupportsMath, Expression
-
 
 class Objective(Expression):
     r"""
     Examples:
         >>> from pyoframe import Variable, Model, sum
-        >>> m = Model()
+        >>> m = Model("max")
         >>> m.a = Variable()
         >>> m.b = Variable({"dim1": [1, 2, 3]})
-        >>> m.maximize = m.a + sum("dim1", m.b)
-        >>> m.maximize
+        >>> m.objective = m.a + sum("dim1", m.b)
+        >>> m.objective
         <Objective size=1 dimensions={} terms=4>
-        maximize: a + b[1] + b[2] + b[3]
+        objective: a + b[1] + b[2] + b[3]
     """
 
-    def __init__(
-        self, expr: SupportsMath, sense: Union[ObjSense, ObjSenseValue]
-    ) -> None:
-        self.sense = ObjSense(sense)
-
+    def __init__(self, expr: SupportsMath) -> None:
         expr = expr.to_expr()
-        super().__init__(expr.to_expr().data)
+        super().__init__(expr.data)
         self._model = expr._model
         assert (
             self.dimensions is None

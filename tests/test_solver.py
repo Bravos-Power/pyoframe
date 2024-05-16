@@ -5,13 +5,13 @@ import pytest
 
 
 def test_retrieving_duals():
-    m = pf.Model()
+    m = pf.Model("max")
 
     m.A = pf.Variable(ub=100)
     m.B = pf.Variable(ub=10)
     m.max_AB = 2 * m.A + m.B <= 100
     m.extra_slack_constraint = 2 * m.A + m.B <= 150
-    m.maximize = 0.2 * m.A + 2 * m.B
+    m.objective = 0.2 * m.A + 2 * m.B
 
     m.solve("gurobi")
 
@@ -27,7 +27,7 @@ def test_retrieving_duals():
 
 
 def test_retrieving_duals_vectorized():
-    m = pf.Model()
+    m = pf.Model("max")
     data = pl.DataFrame(
         {"t": [1, 2], "ub": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -36,7 +36,7 @@ def test_retrieving_duals_vectorized():
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
 
     m.solve("gurobi")
 
@@ -70,7 +70,7 @@ def test_retrieving_duals_vectorized():
 
 
 def test_support_variable_attributes():
-    m = pf.Model()
+    m = pf.Model("max")
     data = pl.DataFrame(
         {"t": [1, 2], "ub": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -79,7 +79,7 @@ def test_support_variable_attributes():
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
 
     m.solve("gurobi")
 
@@ -112,12 +112,12 @@ def test_support_variable_attributes():
 
 def test_setting_constraint_attr():
     # Build an unbounded model
-    m = pf.Model()
+    m = pf.Model("max")
     m.A = pf.Variable()
     m.B = pf.Variable(pf.Set(y=[1, 2, 3]))
     m.A_con = m.A >= 10
     m.B_con = m.B >= 5
-    m.maximize = m.A + pf.sum(m.B)
+    m.objective = m.A + pf.sum(m.B)
 
     # Solving it should return unbounded
     result = m.solve()
@@ -134,9 +134,9 @@ def test_setting_constraint_attr():
 
 def test_setting_model_attr():
     # Build an unbounded model
-    m = pf.Model()
+    m = pf.Model("max")
     m.A = pf.Variable(lb=0)
-    m.maximize = m.A
+    m.objective = m.A
 
     # Solving it should return unbounded
     result = m.solve()
@@ -152,9 +152,9 @@ def test_setting_model_attr():
 
 @pytest.mark.parametrize("use_var_names", [True, False])
 def test_const_term_in_objective(use_var_names):
-    m = pf.Model()
+    m = pf.Model("max")
     m.A = pf.Variable(ub=10)
-    m.maximize = 10 + m.A
+    m.objective = 10 + m.A
 
     result = m.solve(use_var_names=use_var_names)
     assert result.status.is_ok

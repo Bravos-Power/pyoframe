@@ -177,7 +177,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> from pyoframe import Variable, Model
             >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
             >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
-            >>> m = Model()
+            >>> m = Model("min")
             >>> m.bat_charge = Variable(time_dim, space_dim)
             >>> m.bat_flow = Variable(time_dim, space_dim)
             >>> # Fails because the dimensions are not the same

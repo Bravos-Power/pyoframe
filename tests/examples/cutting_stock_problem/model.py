@@ -14,7 +14,7 @@ def main(input_dir, directory, **kwargs):
     stock_width = params.loc["stock_width"]
     stock_available = params.loc["stock_available"]
 
-    m = Model()
+    m = Model("min")
     m.orders_in_stock = Variable(
         {"stock": range(stock_available)}, orders.index, vtype="integer", lb=0
     )
@@ -25,7 +25,7 @@ def main(input_dir, directory, **kwargs):
     )
     m.con_meet_orders = sum_by("order", m.orders_in_stock) >= orders["quantity"]
 
-    m.minimize = sum(m.is_used)
+    m.objective = sum(m.is_used)
 
     result = m.solve("gurobi", directory=directory, **kwargs)
     assert result.status.is_ok
