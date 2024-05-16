@@ -8,6 +8,7 @@ from typing import (
     overload,
     Union,
     Optional,
+    TYPE_CHECKING
 )
 from abc import ABC, abstractmethod
 
@@ -48,6 +49,9 @@ from pyoframe.model_element import (
     ModelElementWithId,
     SupportPolarsMethodMixin,
 )
+
+if TYPE_CHECKING:
+    from pyoframe.model import Model
 
 VAR_TYPE = pl.UInt32
 
@@ -168,7 +172,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         for name, set in named_data.items():
             data_list.append({name: set})
         df = self._parse_acceptable_sets(*data_list)
-        if df.is_duplicated().any():
+        if not df.is_empty() and df.is_duplicated().any():
             raise ValueError("Duplicate rows found in input data.")
         super().__init__(df)
 
@@ -265,11 +269,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if isinstance(set, dict):
             df = pl.DataFrame(set)
         elif isinstance(set, Constraint):
-            if set.dimensions is None:
-                raise ValueError(
-                    "Cannot convert a constraint with no dimensions to a set."
-                )
-            df = set.data.select(set.dimensions)
+                df = set.data.select(set.dimensions_unsafe)
         elif isinstance(set, SupportsMath):
             df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
         elif isinstance(set, pd.Index):
@@ -847,11 +847,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
 @overload
-def sum(over: Union[str, Sequence[str]], expr: SupportsToExpr): ...
+def sum(over: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression": ...
 
 
 @overload
-def sum(over: SupportsToExpr): ...
+def sum(over: SupportsToExpr) -> "Expression": ...
 
 
 def sum(
@@ -1006,17 +1006,40 @@ class Constraint(ModelElementWithId):
             │ B       ┆ 7.0      │
             │ C       ┆ 9.0      │
             └─────────┴──────────┘
+
+
+            >>> # It can also be done all in one go!
+            >>> m = pf.Model("max")
+            >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
+            >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
+            >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(5)
+            >>> m.only_one_day = (sum("project", m.hours_spent) <= 24).relax(1)
+            >>> _ = m.solve(log_to_console=False)
+            >>> m.objective.value
+            -3.0
+            >>> m.hours_spent.solution
+            shape: (3, 2)
+            ┌─────────┬──────────┐
+            │ project ┆ solution │
+            │ ---     ┆ ---      │
+            │ str     ┆ f64      │
+            ╞═════════╪══════════╡
+            │ A       ┆ 9.0      │
+            │ B       ┆ 9.0      │
+            │ C       ┆ 9.0      │
+            └─────────┴──────────┘
         """
         m = self._model
         if m is None or self.name is None:
             self.to_relax = FuncArgs(args=[cost, max])
+            return self
 
         var_name = f"{self.name}_relaxation"
         assert not hasattr(
             m, var_name
         ), "Conflicting names, relaxation variable already exists on the model."
         var = Variable(self, lb=0, ub=max)
-
+ 
         if self.sense == ConstraintSense.LE:
             self.lhs -= var
         elif self.sense == ConstraintSense.GE:
@@ -1028,7 +1051,9 @@ class Constraint(ModelElementWithId):
             )
 
         setattr(m, var_name, var)
-        penalty = sum(self.dimensions, var * cost)
+        penalty = var * cost
+        if self.dimensions:
+            penalty = sum(self.dimensions, penalty)
         if m.sense == ObjSense.MAX:
             penalty *= -1
         if m.objective is None:
