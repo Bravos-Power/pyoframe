@@ -326,7 +326,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         # Sanity check no duplicates indices
         if Config.enable_is_duplicated_expression_safety_check:
             duplicated_mask = data.drop(COEF_KEY).is_duplicated()
-            if duplicated_mask.any():
+            # In theory this should never happen unless there's a bug in the library
+            if duplicated_mask.any():  # pragma: no cover
                 duplicated_data = data.filter(duplicated_mask)
                 raise ValueError(
                     f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
@@ -334,18 +335,19 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         super().__init__(data)
 
-    @classmethod
-    def empty(cls, dimensions=[], type=None):
-        data = {COEF_KEY: [], VAR_KEY: []}
-        data.update({d: [] for d in dimensions})
-        schema = {COEF_KEY: pl.Float64, VAR_KEY: pl.UInt32}
-        if type is not None:
-            schema.update({d: t for d, t in zip(dimensions, type)})
-        return Expression(
-            pl.DataFrame(data).with_columns(
-                *[pl.col(c).cast(t) for c, t in schema.items()]
-            )
-        )
+    # Might add this in later
+    # @classmethod
+    # def empty(cls, dimensions=[], type=None):
+    #     data = {COEF_KEY: [], VAR_KEY: []}
+    #     data.update({d: [] for d in dimensions})
+    #     schema = {COEF_KEY: pl.Float64, VAR_KEY: pl.UInt32}
+    #     if type is not None:
+    #         schema.update({d: t for d, t in zip(dimensions, type)})
+    #     return Expression(
+    #         pl.DataFrame(data).with_columns(
+    #             *[pl.col(c).cast(t) for c, t in schema.items()]
+    #         )
+    #     )
 
     def sum(self, over: Union[str, Iterable[str]]):
         """
