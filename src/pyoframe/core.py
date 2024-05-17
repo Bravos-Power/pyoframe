@@ -8,7 +8,7 @@ from typing import (
     overload,
     Union,
     Optional,
-    TYPE_CHECKING
+    TYPE_CHECKING,
 )
 from abc import ABC, abstractmethod
 
@@ -50,7 +50,7 @@ from pyoframe.model_element import (
     SupportPolarsMethodMixin,
 )
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 VAR_TYPE = pl.UInt32
@@ -269,7 +269,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if isinstance(set, dict):
             df = pl.DataFrame(set)
         elif isinstance(set, Constraint):
-                df = set.data.select(set.dimensions_unsafe)
+            df = set.data.select(set.dimensions_unsafe)
         elif isinstance(set, SupportsMath):
             df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
         elif isinstance(set, pd.Index):
@@ -1039,12 +1039,12 @@ class Constraint(ModelElementWithId):
             m, var_name
         ), "Conflicting names, relaxation variable already exists on the model."
         var = Variable(self, lb=0, ub=max)
- 
+
         if self.sense == ConstraintSense.LE:
             self.lhs -= var
         elif self.sense == ConstraintSense.GE:
             self.lhs += var
-        else:
+        else:  # pragma: no cover
             # TODO
             raise NotImplementedError(
                 "Relaxation for equalities has not yet been implemented. Submit a pull request!"
@@ -1070,7 +1070,7 @@ class Constraint(ModelElementWithId):
         var_map=None,
         float_precision=None,
         const_map=None,
-    ):
+    ) -> str:
         dims = self.dimensions
         str_table = self.lhs.to_str_table(
             max_line_len=max_line_len,

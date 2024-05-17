@@ -36,14 +36,14 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     result = m.objective.to_str(
         var_map=var_map, include_prefix=False, include_const_variable=True
     )
-    f.writelines(result)
+    f.write(result)
 
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
     for constraint in create_section(
         tqdm(m.constraints, desc="Writing constraints to file"), f, "s.t."
     ):
-        f.writelines(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
+        f.write(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
 
 
 def bounds_to_file(m: "Model", f, var_map):
@@ -80,7 +80,7 @@ def bounds_to_file(m: "Model", f, var_map):
             .item()
         )
 
-        f.writelines(df)
+        f.write(df)
 
 
 def binaries_to_file(m: "Model", f, var_map: Mapper):
@@ -95,7 +95,7 @@ def binaries_to_file(m: "Model", f, var_map: Mapper):
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
-        f.writelines(lines + "\n")
+        f.write(lines + "\n")
 
 
 def integers_to_file(m: "Model", f, var_map: Mapper):
@@ -110,7 +110,7 @@ def integers_to_file(m: "Model", f, var_map: Mapper):
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
-        f.writelines(lines + "\n")
+        f.write(lines + "\n")
 
 
 T = TypeVar("T")

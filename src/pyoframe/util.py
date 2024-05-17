@@ -1,6 +1,7 @@
 """
 File containing utility functions and classes.
 """
+
 from typing import Any, Iterable, Optional, Union, List, Dict
 
 from dataclasses import dataclass, field
