@@ -324,11 +324,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         assert COEF_KEY in data.columns, "Missing coefficient column."
 
         # Sanity check no duplicates indices
-        if data.drop(COEF_KEY).is_duplicated().any():
-            duplicated_data = data.filter(data.drop(COEF_KEY).is_duplicated())
-            raise ValueError(
-                f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
-            )
+        if Config.enable_is_duplicated_expression_safety_check:
+            duplicated_mask = data.drop(COEF_KEY).is_duplicated()
+            if duplicated_mask.any():
+                duplicated_data = data.filter(duplicated_mask)
+                raise ValueError(
+                    f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
+                )
 
         super().__init__(data)
 
