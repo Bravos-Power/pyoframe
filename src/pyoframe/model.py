@@ -1,12 +1,18 @@
-from typing import Any, Iterable, List, Optional
-from pyoframe.constants import ObjSense, VType, Config, Result, PyoframeError
-from pyoframe.constraints import SupportsMath
+from typing import Any, Iterable, List, Optional, Union
+from pyoframe.constants import (
+    ObjSense,
+    VType,
+    Config,
+    Result,
+    PyoframeError,
+    ObjSenseValue,
+)
 from pyoframe.io_mappers import NamedVariableMapper, IOMappers
-from pyoframe.model_element import ModelElement
-from pyoframe.constraints import Constraint
+from pyoframe.model_element import ModelElement, ModelElementWithId
+from pyoframe.core import Constraint
 from pyoframe.objective import Objective
 from pyoframe.user_defined import Container, AttrContainerMixin
-from pyoframe.variables import Variable
+from pyoframe.core import Variable
 from pyoframe.io import to_file
 from pyoframe.solvers import solve, Solver
 import polars as pl
@@ -30,12 +36,14 @@ class Model(AttrContainerMixin):
         "params",
         "result",
         "attr",
+        "sense",
     ]
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, min_or_max: Union[ObjSense, ObjSenseValue], name=None, **kwargs):
         super().__init__(**kwargs)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
+        self.sense = ObjSense(min_or_max)
         self._objective: Optional[Objective] = None
         self.var_map = (
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
@@ -67,16 +75,6 @@ class Model(AttrContainerMixin):
     def objective(self):
         return self._objective
 
-    @property
-    def maximize(self):
-        assert self.objective is not None and self.objective.sense == ObjSense.MAX
-        return self.objective
-
-    @property
-    def minimize(self):
-        assert self.objective is not None and self.objective.sense == ObjSense.MIN
-        return self.objective
-
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name not in Model._reserved_attributes and not isinstance(
             __value, (ModelElement, pl.DataFrame, pd.DataFrame)
@@ -85,34 +83,29 @@ class Model(AttrContainerMixin):
                 f"Cannot set attribute '{__name}' on the model because it isn't of type ModelElement (e.g. Variable, Constraint, ...)"
             )
 
-        if __name in ("maximize", "minimize"):
-            assert isinstance(
-                __value, SupportsMath
-            ), f"Setting {__name} on the model requires an objective expression."
-            self._objective = Objective(__value, sense=__name)
-            self._objective.name = __name
-            self._objective._model = self
-            return
-
         if (
             isinstance(__value, ModelElement)
             and __name not in Model._reserved_attributes
         ):
-            assert not hasattr(
-                self, __name
-            ), f"Cannot create {__name} since it was already created."
+            if __name == "objective":
+                __value = Objective(__value)
+
+            if isinstance(__value, ModelElementWithId):
+                assert not hasattr(
+                    self, __name
+                ), f"Cannot create {__name} since it was already created."
 
             __value.on_add_to_model(self, __name)
 
-            if isinstance(__value, Objective):
-                assert self.objective is None, "Cannot create more than one objective."
-                self._objective = __value
-            elif isinstance(__value, Variable):
+            if isinstance(__value, Variable):
                 self._variables.append(__value)
                 if self.var_map is not None:
                     self.var_map.add(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
+            elif isinstance(__value, Objective):
+                self._objective = __value
+                return
         return super().__setattr__(__name, __value)
 
     def __repr__(self) -> str:

@@ -8,9 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
 from tqdm import tqdm
 
-from pyoframe.constants import CONST_TERM, VAR_KEY
-from pyoframe.constraints import Constraint
-from pyoframe.variables import Variable
+from pyoframe.constants import CONST_TERM, VAR_KEY, ObjSense
+from pyoframe.core import Constraint, Variable
 from pyoframe.io_mappers import (
     Base62ConstMapper,
     Base62VarMapper,
@@ -30,29 +29,30 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     """
     Write out the objective of a model to a lp file.
     """
-    assert m.objective is not None, "No objective set."
-
-    f.write(f"{m.objective.sense.value}\n\nobj:\n\n")
+    if m.objective is None:
+        return
+    objective_sense = "minimize" if m.sense == ObjSense.MIN else "maximize"
+    f.write(f"{objective_sense}\n\nobj:\n\n")
     result = m.objective.to_str(
         var_map=var_map, include_prefix=False, include_const_variable=True
     )
-    f.writelines(result)
+    f.write(result)
 
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
     for constraint in create_section(
         tqdm(m.constraints, desc="Writing constraints to file"), f, "s.t."
     ):
-        f.writelines(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
+        f.write(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
 
 
 def bounds_to_file(m: "Model", f, var_map):
     """
     Write out variables of a model to a lp file.
     """
-    if m.objective.has_constant or len(m.variables) != 0:
+    if (m.objective is not None and m.objective.has_constant) or len(m.variables) != 0:
         f.write("\n\nbounds\n\n")
-    if m.objective.has_constant:
+    if m.objective is not None and m.objective.has_constant:
         const_term_df = pl.DataFrame(
             {VAR_KEY: [CONST_TERM]}, schema={VAR_KEY: pl.UInt32}
         )
@@ -80,7 +80,7 @@ def bounds_to_file(m: "Model", f, var_map):
             .item()
         )
 
-        f.writelines(df)
+        f.write(df)
 
 
 def binaries_to_file(m: "Model", f, var_map: Mapper):
@@ -95,7 +95,7 @@ def binaries_to_file(m: "Model", f, var_map: Mapper):
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
-        f.writelines(lines + "\n")
+        f.write(lines + "\n")
 
 
 def integers_to_file(m: "Model", f, var_map: Mapper):
@@ -110,7 +110,7 @@ def integers_to_file(m: "Model", f, var_map: Mapper):
             .select(pl.col(VAR_KEY).str.concat("\n"))
             .item()
         )
-        f.writelines(lines + "\n")
+        f.write(lines + "\n")
 
 
 T = TypeVar("T")

@@ -18,7 +18,7 @@ def main(input_dir, directory, **kwargs):
     max_nutrient = nutrients.select(["category", "max"]).to_expr()
     food_nutrients = pl.read_csv(input_dir / "foods_to_nutrients.csv").to_expr()
 
-    m = Model()
+    m = Model("min")
     m.Buy = Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
 
     m.min_nutrients = (
@@ -28,7 +28,7 @@ def main(input_dir, directory, **kwargs):
         sum("food", m.Buy * food_nutrients).drop_unmatched() <= max_nutrient
     )
 
-    m.minimize = sum(m.Buy * food[["food", "cost"]])
+    m.objective = sum(m.Buy * food[["food", "cost"]])
 
     m.solve("gurobi", directory=directory, **kwargs)
 

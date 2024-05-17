@@ -11,7 +11,7 @@ from pyoframe.constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.constraints import Expression
+    from pyoframe.core import Expression
 
 
 def _add_expressions(*expressions: "Expression") -> "Expression":

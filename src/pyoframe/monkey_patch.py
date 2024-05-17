@@ -1,7 +1,7 @@
 import pandas as pd
 import polars as pl
-from pyoframe.constraints import SupportsMath
-from pyoframe.constraints import Expression
+from pyoframe.core import SupportsMath
+from pyoframe.core import Expression
 from functools import wraps
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY

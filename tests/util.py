@@ -3,7 +3,7 @@ from typing import Tuple, Union, TYPE_CHECKING, overload
 import io
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.constraints import Expression
+    from pyoframe.core import Expression
 
 
 @overload

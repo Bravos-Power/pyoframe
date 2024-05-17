@@ -3,13 +3,11 @@ import pandas as pd
 import numpy as np
 import pytest
 from pyoframe._arithmetic import PyoframeError
-from pyoframe.constraints import Constraint, Set
 from polars.testing import assert_frame_equal
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY, Config
-from pyoframe import Variable
-from pyoframe.constraints import Expression, sum
+from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe import Variable, Model, sum, Set, Config, Expression, VType
 from .util import csvs_to_expr
 
 
@@ -445,3 +443,18 @@ def test_no_propogate():
 
     result = sum("dim1", expr1 + expr2.keep_unmatched()) + expr3.drop_unmatched()
     assert str(result) == "[1]: 10"
+
+
+def test_variable_equals():
+    m = Model("max")
+    index = Set(x=[1, 2, 3])
+    m.Choose = Variable(index, vtype=VType.BINARY)
+    with pytest.raises(
+        AssertionError,
+        match=re.escape("Cannot specify both 'equals' and 'indexing_sets'"),
+    ):
+        m.Choose100 = Variable(index, equals=100 * m.Choose)
+    m.Choose100 = Variable(equals=100 * m.Choose)
+    m.objective = sum(m.Choose100)
+    m.solve(log_to_console=False)
+    assert m.objective.value == 300

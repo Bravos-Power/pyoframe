@@ -57,7 +57,7 @@ class ModelElement(ABC):
         The names of the data's dimensions.
 
         Examples:
-            >>> from pyoframe.variables import Variable
+            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
             >>> Variable().dimensions
 
@@ -84,7 +84,7 @@ class ModelElement(ABC):
         The number of indices in each dimension.
 
         Examples:
-            >>> from pyoframe.variables import Variable
+            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
             >>> Variable().shape
             {}
@@ -132,7 +132,7 @@ class SupportPolarsMethodMixin:
         """
 
 
-class CountableModelElement(ModelElement, AttrContainerMixin):
+class ModelElementWithId(ModelElement, AttrContainerMixin):
     """
     Provides a method that assigns a unique ID to each row in a DataFrame.
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.

@@ -5,7 +5,7 @@ Code to interface with various solvers
 from abc import abstractmethod, ABC
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, List, Optional, Union, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Type, Union, TYPE_CHECKING
 
 import polars as pl
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 available_solvers = []
-solver_registry = {}
+solver_registry: Dict[str, Type["Solver"]] = {}
 
 with contextlib.suppress(ImportError):
     import gurobipy
@@ -85,7 +85,8 @@ def solve(
     m.result = result
 
     if result.solution is not None:
-        m.objective.value = result.solution.objective
+        if m.objective is not None:
+            m.objective.value = result.solution.objective
 
         for variable in m.variables:
             variable.solution = result.solution.primal

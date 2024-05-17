@@ -52,6 +52,7 @@ class Config(metaclass=_ConfigMeta):
     print_uses_variable_names: bool = True
     # Number of elements to show when printing a set to the console (additional elements are replaced with ...)
     print_max_set_elements: int = 50
+    enable_is_duplicated_expression_safety_check: bool = False
 
     @classmethod
     def reset_defaults(cls):
@@ -69,8 +70,8 @@ class ConstraintSense(Enum):
 
 
 class ObjSense(Enum):
-    MIN = "minimize"
-    MAX = "maximize"
+    MIN = "min"
+    MAX = "max"
 
 
 class VType(Enum):
@@ -87,7 +88,7 @@ class UnmatchedStrategy(Enum):
 
 # This is a hack to get the Literal type for VType
 # See: https://stackoverflow.com/questions/67292470/type-hinting-enum-member-value-in-python
-ObjSenseValue = Literal["minimize", "maximize"]
+ObjSenseValue = Literal["min", "max"]
 VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
