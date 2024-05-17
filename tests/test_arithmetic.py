@@ -444,11 +444,15 @@ def test_no_propogate():
     result = sum("dim1", expr1 + expr2.keep_unmatched()) + expr3.drop_unmatched()
     assert str(result) == "[1]: 10"
 
+
 def test_variable_equals():
     m = Model("max")
     index = Set(x=[1, 2, 3])
     m.Choose = Variable(index, vtype=VType.BINARY)
-    with pytest.raises(AssertionError, match=re.escape("Cannot specify both 'equals' and 'indexing_sets'")):
+    with pytest.raises(
+        AssertionError,
+        match=re.escape("Cannot specify both 'equals' and 'indexing_sets'"),
+    ):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
     m.objective = sum(m.Choose100)
