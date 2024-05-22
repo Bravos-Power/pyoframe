@@ -109,8 +109,9 @@ class NamedVariableMapper(NamedMapper):
 
 class Base36Mapper(Mapper, ABC):
     # Mapping between a base 36 character and its integer value
+    # Note: we must use only lowercase since Gurobi auto-converts variables that aren't in constraints to lowercase (kind of annoying)
     _CHAR_TABLE = pl.DataFrame(
-        {"char": list(string.digits + string.ascii_uppercase)},
+        {"char": list(string.digits + string.ascii_lowercase)},
     ).with_columns(pl.int_range(pl.len()).cast(pl.UInt32).alias("code"))
 
     _BASE = _CHAR_TABLE.height  # _BASE = 36
@@ -152,7 +153,7 @@ class Base36Mapper(Mapper, ABC):
             >>> import polars as pl
             >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
             >>> Base36Mapper._to_base36(s).to_list()
-            ['0', 'A', 'K', '1O', '1H', '1U']
+            ['0', 'a', 'k', '1o', '1h', '1u']
 
             >>> s = pl.Series([0], dtype=pl.UInt32)
             >>> Base36Mapper._to_base36(s).to_list()
@@ -204,7 +205,7 @@ class Base36VarMapper(Base36Mapper):
         >>> (m.x.filter(t=11)+1).to_str()
         '[11]: 1  + x[11]'
         >>> (m.x.filter(t=11)+1).to_str(var_map=Base36VarMapper(Variable))
-        '[11]: 1  + xB'
+        '[11]: 1  + xb'
 
         >>> Base36VarMapper(Variable).apply(pl.DataFrame({VAR_KEY: []}))
         shape: (0, 1)
