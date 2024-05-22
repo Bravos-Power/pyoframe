@@ -109,6 +109,7 @@ class NamedVariableMapper(NamedMapper):
 
 class Base36Mapper(Mapper, ABC):
     # Mapping between a base 36 character and its integer value
+    # Note: we must use only lowercase since Gurobi auto-converts variables that aren't in constraints to lowercase (kind of annoying)
     _CHAR_TABLE = pl.DataFrame(
         {"char": list(string.digits + string.ascii_lowercase)},
     ).with_columns(pl.int_range(pl.len()).cast(pl.UInt32).alias("code"))
