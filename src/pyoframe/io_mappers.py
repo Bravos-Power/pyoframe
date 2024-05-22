@@ -107,13 +107,13 @@ class NamedVariableMapper(NamedMapper):
         )
 
 
-class Base62Mapper(Mapper, ABC):
-    # Mapping between a base 62 character and its integer value
+class Base36Mapper(Mapper, ABC):
+    # Mapping between a base 36 character and its integer value
     _CHAR_TABLE = pl.DataFrame(
-        {"char": list(string.digits + string.ascii_letters)},
+        {"char": list(string.digits + string.ascii_uppercase)},
     ).with_columns(pl.int_range(pl.len()).cast(pl.UInt32).alias("code"))
 
-    _BASE = _CHAR_TABLE.height  # _BASE = 62
+    _BASE = _CHAR_TABLE.height  # _BASE = 36
     _ZERO = _CHAR_TABLE.filter(pl.col("code") == 0).select("char").item()  # _ZERO = "0"
 
     @property
@@ -131,7 +131,7 @@ class Base62Mapper(Mapper, ABC):
         query = pl.concat_str(
             pl.lit(self._prefix),
             pl.col(self._ID_COL).map_batches(
-                Base62Mapper._to_base62,
+                Base36Mapper._to_base36,
                 return_dtype=pl.String,
                 is_elementwise=True,
             ),
@@ -143,24 +143,24 @@ class Base62Mapper(Mapper, ABC):
         return df.with_columns(query.alias(to_col))
 
     @classmethod
-    def _to_base62(cls, int_col: pl.Series) -> pl.Series:
-        """Returns a series of dtype str with a base 62 representation of the integers in int_col.
-        The letters 0-9a-zA-Z are used as symbols for the representation.
+    def _to_base36(cls, int_col: pl.Series) -> pl.Series:
+        """Returns a series of dtype str with a base 36 representation of the integers in int_col.
+        The letters 0-9A-Z are used as symbols for the representation.
 
         Examples:
 
             >>> import polars as pl
             >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
-            >>> Base62Mapper._to_base62(s).to_list()
-            ['0', 'a', 'k', 'Y', 'R', '14']
+            >>> Base36Mapper._to_base36(s).to_list()
+            ['0', 'A', 'K', '1O', '1H', '1U']
 
             >>> s = pl.Series([0], dtype=pl.UInt32)
-            >>> Base62Mapper._to_base62(s).to_list()
+            >>> Base36Mapper._to_base36(s).to_list()
             ['0']
         """
         assert isinstance(
             int_col.dtype, pl.UInt32
-        ), "_to_base62() only works for UInt32 id columns"
+        ), "_to_base36() only works for UInt32 id columns"
 
         largest_id = int_col.max()
         if largest_id == 0:
@@ -193,7 +193,7 @@ class Base62Mapper(Mapper, ABC):
         return self.apply(element.ids.select(self._ID_COL), to_col=Mapper.NAME_COL)
 
 
-class Base62VarMapper(Base62Mapper):
+class Base36VarMapper(Base36Mapper):
     """
     Examples:
         >>> import polars as pl
@@ -203,10 +203,10 @@ class Base62VarMapper(Base62Mapper):
         >>> m.x = Variable(pl.DataFrame({"t": range(1,63)}))
         >>> (m.x.filter(t=11)+1).to_str()
         '[11]: 1  + x[11]'
-        >>> (m.x.filter(t=11)+1).to_str(var_map=Base62VarMapper(Variable))
-        '[11]: 1  + xb'
+        >>> (m.x.filter(t=11)+1).to_str(var_map=Base36VarMapper(Variable))
+        '[11]: 1  + xB'
 
-        >>> Base62VarMapper(Variable).apply(pl.DataFrame({VAR_KEY: []}))
+        >>> Base36VarMapper(Variable).apply(pl.DataFrame({VAR_KEY: []}))
         shape: (0, 1)
         ┌───────────────┐
         │ __variable_id │
@@ -230,7 +230,7 @@ class Base62VarMapper(Base62Mapper):
         return "x"
 
 
-class Base62ConstMapper(Base62Mapper):
+class Base36ConstMapper(Base36Mapper):
 
     @property
     def _prefix(self) -> "str":

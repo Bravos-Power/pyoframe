@@ -11,8 +11,8 @@ from tqdm import tqdm
 from pyoframe.constants import CONST_TERM, VAR_KEY, ObjSense
 from pyoframe.core import Constraint, Variable
 from pyoframe.io_mappers import (
-    Base62ConstMapper,
-    Base62VarMapper,
+    Base36ConstMapper,
+    Base36VarMapper,
     IOMappers,
     Mapper,
     NamedMapper,
@@ -131,7 +131,7 @@ def get_var_map(m: "Model", use_var_names):
             return m.var_map
         var_map = NamedVariableMapper(Variable)
     else:
-        var_map = Base62VarMapper(Variable)
+        var_map = Base36VarMapper(Variable)
 
     for v in m.variables:
         var_map.add(v)
@@ -157,7 +157,7 @@ def to_file(
         file_path.unlink()
 
     const_map = (
-        NamedMapper(Constraint) if use_var_names else Base62ConstMapper(Constraint)
+        NamedMapper(Constraint) if use_var_names else Base36ConstMapper(Constraint)
     )
     for c in m.constraints:
         const_map.add(c)
