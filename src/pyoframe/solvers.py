@@ -5,7 +5,7 @@ Code to interface with various solvers
 from abc import abstractmethod, ABC
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, Union, TYPE_CHECKING
+from typing import Any, Dict, Optional, Type, Union, TYPE_CHECKING
 
 import polars as pl
 
@@ -68,17 +68,19 @@ def solve(
         raise ValueError(f"Solver {solver} not recognized or supported.")
 
     solver_cls = solver_registry[solver]
-    m.solver = solver_cls(m, log_to_console)
-    m.solver_model = m.solver.create_solver_model(directory, use_var_names, env)
+    m.solver = solver_cls(
+        m,
+        log_to_console,
+        params={param: value for param, value in m.params},
+        directory=directory,
+    )
+    m.solver_model = m.solver.create_solver_model(use_var_names, env)
     m.solver.solver_model = m.solver_model
 
     for attr_container in [m.variables, m.constraints, [m]]:
         for container in attr_container:
             for param_name, param_value in container.attr:
                 m.solver.set_attr(container, param_name, param_value)
-
-    for param, value in m.params:
-        m.solver.set_param(param, value)
 
     result = m.solver.solve(log_fn, warmstart_fn, basis_fn, solution_file)
     result = m.solver.process_result(result)
@@ -99,19 +101,18 @@ def solve(
 
 
 class Solver(ABC):
-    def __init__(self, model, log_to_console):
+    def __init__(self, model: "Model", log_to_console, params, directory):
         self._model = model
         self.solver_model: Optional[Any] = None
-        self.log_to_console = log_to_console
+        self.log_to_console: bool = log_to_console
+        self.params = params
+        self.directory = directory
 
     @abstractmethod
-    def create_solver_model(self, directory, use_var_names, env) -> Any: ...
+    def create_solver_model(self, use_var_names, env) -> Any: ...
 
     @abstractmethod
     def set_attr(self, element, param_name, param_value): ...
-
-    @abstractmethod
-    def set_param(self, param_name, param_value): ...
 
     @abstractmethod
     def solve(self, log_fn, warmstart_fn, basis_fn, solution_file) -> Result: ...
@@ -135,12 +136,26 @@ class Solver(ABC):
     @abstractmethod
     def _get_all_slack(self): ...
 
+    def dispose(self):
+        """
+        Clean up any resources that wouldn't be cleaned up by the garbage collector.
+
+        For now, this is only used by the Gurobi solver to call .dispose() on the solver model and Gurobi environment
+        which helps close a connection to the Gurobi Computer Server. Note that this effectively disables commands that
+        need access to the solver model (like .slack and .RC)
+        """
+        ...
+
 
 class FileBasedSolver(Solver):
-    def create_solver_model(
-        self, directory: Optional[Union[Path, str]], use_var_names, env
-    ) -> Any:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.problem_file: Optional[Path] = None
+        self.keep_files = self.directory is not None
+
+    def create_solver_model(self, use_var_names, env) -> Any:
         problem_file = None
+        directory = self.directory
         if directory is not None:
             if isinstance(directory, str):
                 directory = Path(directory)
@@ -150,12 +165,14 @@ class FileBasedSolver(Solver):
                 self._model.name if self._model.name is not None else "pyoframe-problem"
             )
             problem_file = directory / f"{filename}.lp"
-        problem_file = self._model.to_file(problem_file, use_var_names=use_var_names)
+        self.problem_file = self._model.to_file(
+            problem_file, use_var_names=use_var_names
+        )
         assert self._model.io_mappers is not None
-        return self.create_solver_model_from_lp(problem_file, env)
+        return self.create_solver_model_from_lp(env)
 
     @abstractmethod
-    def create_solver_model_from_lp(self, problem_file: Path, env) -> Any: ...
+    def create_solver_model_from_lp(self, env) -> Any: ...
 
     def set_attr(self, element, param_name, param_value):
         if isinstance(param_value, pl.DataFrame):
@@ -216,28 +233,31 @@ class GurobiSolver(FileBasedSolver):
         17: "internal_solver_error",
     }
 
-    def create_solver_model_from_lp(self, problem_fn, env) -> Any:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.log_to_console:
+            self.params["LogToConsole"] = 0
+        self.env = None
+
+    def create_solver_model_from_lp(self, env) -> Any:
         """
         Solve a linear problem using the gurobi solver.
 
         This function communicates with gurobi using the gurubipy package.
         """
-
+        assert self.problem_file is not None
         if env is None:
-            if self.log_to_console:
-                env = gurobipy.Env()
-            else:
-                # See https://support.gurobi.com/hc/en-us/articles/360044784552-How-do-I-suppress-all-console-output-from-Gurobi
-                env = gurobipy.Env(empty=True)
-                env.setParam("LogToConsole", 0)
-                env.start()
+            env = gurobipy.Env(params=self.params)
+        else:
+            for param, value in self.params.items():
+                env.setParam(param, value)
+        self.env = env
 
-        m = gurobipy.read(_path_to_str(problem_fn), env=env)
+        m = gurobipy.read(_path_to_str(self.problem_file), env=env)
+        if not self.keep_files:
+            self.problem_file.unlink()
+
         return m
-
-    def set_param(self, param_name, param_value):
-        assert self.solver_model is not None
-        self.solver_model.setParam(param_name, param_value)
 
     @lru_cache
     def _get_var_mapping(self):
@@ -349,6 +369,12 @@ class GurobiSolver(FileBasedSolver):
                 CONSTRAINT_KEY: m.getAttr("ConstrName", constraints),
             }
         )
+
+    def dispose(self):
+        if self.solver_model is not None:
+            self.solver_model.dispose()
+        if self.env is not None:
+            self.env.dispose()
 
 
 def _path_to_str(path: Union[Path, str]) -> str:
