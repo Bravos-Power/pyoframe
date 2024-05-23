@@ -709,6 +709,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.objective.value
             63.0
         """
+        assert self._model is not None, "Expression must be added to the model to use .value"
         if self._model.result is None or self._model.result.solution is None:
             raise ValueError(
                 "Can't obtain value of expression since the model has not been solved."
@@ -924,6 +925,7 @@ class Constraint(ModelElementWithId):
         The first call to this property will load the slack values from the solver (lazy loading).
         """
         if SLACK_COL not in self.data.columns:
+            assert self._model is not None, "Constraint must be added to a model to get the slack."
             if self._model.solver is None:
                 raise ValueError("The model has not been solved yet.")
             self._model.solver.load_slack()
@@ -1160,7 +1162,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         lb: float | int | SupportsToExpr | None = None,
         ub: float | int | SupportsToExpr | None = None,
         vtype: VType | VTypeValue = VType.CONTINUOUS,
-        equals: SupportsToExpr = None,
+        equals: Optional[SupportsMath] = None,
     ):
         if lb is None:
             lb = float("-inf")
@@ -1222,6 +1224,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         The first call to this property will load the reduced costs from the solver (lazy loading).
         """
         if RC_COL not in self.data.columns:
+            assert self._model is not None, "Variable must be added to a model to get the reduced cost."
             if self._model.solver is None:
                 raise ValueError("The model has not been solved yet.")
             self._model.solver.load_rc()

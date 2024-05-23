@@ -106,7 +106,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
 
         strat = (left.unmatched_strategy, right.unmatched_strategy)
 
-        propogate_strat = propogatation_strategies[strat]
+        propogate_strat = propogatation_strategies[strat]  # type: ignore
 
         if strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP):
             left_data = left.data.join(get_indices(right), how="inner", on=dims)

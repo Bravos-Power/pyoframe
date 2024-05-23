@@ -37,6 +37,7 @@ class Model(AttrContainerMixin):
         "result",
         "attr",
         "sense",
+        "objective"
     ]
 
     def __init__(self, min_or_max: Union[ObjSense, ObjSenseValue], name=None, **kwargs):
@@ -74,6 +75,12 @@ class Model(AttrContainerMixin):
     @property
     def objective(self):
         return self._objective
+    
+    @objective.setter
+    def objective(self, value):
+        value = Objective(value)
+        self._objective = value
+        value.on_add_to_model(self, "objective")
 
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name not in Model._reserved_attributes and not isinstance(
@@ -87,9 +94,6 @@ class Model(AttrContainerMixin):
             isinstance(__value, ModelElement)
             and __name not in Model._reserved_attributes
         ):
-            if __name == "objective":
-                __value = Objective(__value)
-
             if isinstance(__value, ModelElementWithId):
                 assert not hasattr(
                     self, __name
@@ -103,9 +107,6 @@ class Model(AttrContainerMixin):
                     self.var_map.add(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
-            elif isinstance(__value, Objective):
-                self._objective = __value
-                return
         return super().__setattr__(__name, __value)
 
     def __repr__(self) -> str:
