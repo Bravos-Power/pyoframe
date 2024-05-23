@@ -50,7 +50,6 @@ def solve(
     solver=None,
     directory: Optional[Union[Path, str]] = None,
     use_var_names=False,
-    env=None,
     log_fn=None,
     warmstart_fn=None,
     basis_fn=None,
@@ -74,7 +73,7 @@ def solve(
         params={param: value for param, value in m.params},
         directory=directory,
     )
-    m.solver_model = m.solver.create_solver_model(use_var_names, env)
+    m.solver_model = m.solver.create_solver_model(use_var_names)
     m.solver.solver_model = m.solver_model
 
     for attr_container in [m.variables, m.constraints, [m]]:
@@ -109,7 +108,7 @@ class Solver(ABC):
         self.directory = directory
 
     @abstractmethod
-    def create_solver_model(self, use_var_names, env) -> Any: ...
+    def create_solver_model(self, use_var_names) -> Any: ...
 
     @abstractmethod
     def set_attr(self, element, param_name, param_value): ...
@@ -144,7 +143,6 @@ class Solver(ABC):
         which helps close a connection to the Gurobi Computer Server. Note that this effectively disables commands that
         need access to the solver model (like .slack and .RC)
         """
-        ...
 
 
 class FileBasedSolver(Solver):
@@ -153,7 +151,7 @@ class FileBasedSolver(Solver):
         self.problem_file: Optional[Path] = None
         self.keep_files = self.directory is not None
 
-    def create_solver_model(self, use_var_names, env) -> Any:
+    def create_solver_model(self, use_var_names) -> Any:
         problem_file = None
         directory = self.directory
         if directory is not None:
@@ -169,10 +167,10 @@ class FileBasedSolver(Solver):
             problem_file, use_var_names=use_var_names
         )
         assert self._model.io_mappers is not None
-        return self.create_solver_model_from_lp(env)
+        return self.create_solver_model_from_lp()
 
     @abstractmethod
-    def create_solver_model_from_lp(self, env) -> Any: ...
+    def create_solver_model_from_lp(self) -> Any: ...
 
     def set_attr(self, element, param_name, param_value):
         if isinstance(param_value, pl.DataFrame):
@@ -239,21 +237,16 @@ class GurobiSolver(FileBasedSolver):
             self.params["LogToConsole"] = 0
         self.env = None
 
-    def create_solver_model_from_lp(self, env) -> Any:
+    def create_solver_model_from_lp(self) -> Any:
         """
         Solve a linear problem using the gurobi solver.
 
         This function communicates with gurobi using the gurubipy package.
         """
         assert self.problem_file is not None
-        if env is None:
-            env = gurobipy.Env(params=self.params)
-        else:
-            for param, value in self.params.items():
-                env.setParam(param, value)
-        self.env = env
+        self.env = gurobipy.Env(params=self.params)
 
-        m = gurobipy.read(_path_to_str(self.problem_file), env=env)
+        m = gurobipy.read(_path_to_str(self.problem_file), env=self.env)
         if not self.keep_files:
             self.problem_file.unlink()
 
