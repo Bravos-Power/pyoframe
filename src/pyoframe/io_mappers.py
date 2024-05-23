@@ -16,7 +16,7 @@ from pyoframe.constants import CONST_TERM
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Variable
     from pyoframe.core import Constraint
-    from pyoframe.util import CountableModelElement
+    from pyoframe.model_element import ModelElementWithId
 
 
 @dataclass
@@ -29,7 +29,7 @@ class Mapper(ABC):
 
     NAME_COL = "__name"
 
-    def __init__(self, cls: Type["CountableModelElement"]) -> None:
+    def __init__(self, cls: Type["ModelElementWithId"]) -> None:
         self._ID_COL = cls.get_id_column_name()
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], Mapper.NAME_COL: []},
@@ -43,7 +43,7 @@ class Mapper(ABC):
         self.mapping_registry = pl.concat([self.mapping_registry, df])
 
     @abstractmethod
-    def _element_to_map(self, element: "CountableModelElement") -> pl.DataFrame: ...
+    def _element_to_map(self, element: "ModelElementWithId") -> pl.DataFrame: ...
 
     def apply(
         self,

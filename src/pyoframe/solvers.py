@@ -105,7 +105,7 @@ class Solver(ABC):
         self.log_to_console = log_to_console
 
     @abstractmethod
-    def create_solver_model(self) -> Any: ...
+    def create_solver_model(self, directory, use_var_names, env) -> Any: ...
 
     @abstractmethod
     def set_attr(self, element, param_name, param_value): ...
@@ -216,7 +216,7 @@ class GurobiSolver(FileBasedSolver):
         17: "internal_solver_error",
     }
 
-    def create_solver_model_from_lp(self, problem_fn, env) -> Result:
+    def create_solver_model_from_lp(self, problem_fn, env) -> Any:
         """
         Solve a linear problem using the gurobi solver.
 
@@ -236,10 +236,12 @@ class GurobiSolver(FileBasedSolver):
         return m
 
     def set_param(self, param_name, param_value):
+        assert self.solver_model is not None
         self.solver_model.setParam(param_name, param_value)
 
     @lru_cache
     def _get_var_mapping(self):
+        assert self.solver_model is not None
         vars = self.solver_model.getVars()
         return vars, pl.DataFrame(
             {VAR_KEY: self.solver_model.getAttr("VarName", vars)}
@@ -247,12 +249,14 @@ class GurobiSolver(FileBasedSolver):
 
     @lru_cache
     def _get_constraint_mapping(self):
+        assert self.solver_model is not None
         constraints = self.solver_model.getConstrs()
         return constraints, pl.DataFrame(
             {CONSTRAINT_KEY: self.solver_model.getAttr("ConstrName", constraints)}
         ).with_columns(i=pl.int_range(pl.len()))
 
     def set_attr_unmapped(self, element, param_name, param_value):
+        assert self.solver_model is not None
         if isinstance(element, pf.Model):
             self.solver_model.setAttr(param_name, param_value)
         elif isinstance(element, pf.Variable):
@@ -277,6 +281,7 @@ class GurobiSolver(FileBasedSolver):
             raise ValueError(f"Element type {type(element)} not recognized.")
 
     def solve(self, log_fn, warmstart_fn, basis_fn, solution_file) -> Result:
+        assert self.solver_model is not None
         m = self.solver_model
         if log_fn is not None:
             m.setParam("logfile", _path_to_str(log_fn))
