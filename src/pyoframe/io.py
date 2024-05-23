@@ -139,10 +139,20 @@ def get_var_map(m: "Model", use_var_names):
 
 
 def to_file(
-    m: "Model", file_path: Optional[Union[str, Path]], use_var_names=False
+    m: "Model", file_path: Optional[Union[str, Path]] = None, use_var_names=False
 ) -> Path:
     """
     Write out a model to a lp file.
+
+    Args:
+        m: The model to write out.
+        file_path: The path to write the model to. If None, a temporary file is created. The caller is responsible for
+            deleting the file after use.
+        use_var_names: If True, variable names are used in the lp file. Otherwise, variable
+            indices are used.
+
+    Returns:
+        The path to the lp file.
     """
     if file_path is None:
         with NamedTemporaryFile(
