@@ -132,7 +132,10 @@ class SolverStatus(Enum):
     def from_termination_condition(
         cls, termination_condition: "TerminationCondition"
     ) -> "SolverStatus":
-        for status, termination_conditions in STATUS_TO_TERMINATION_CONDITION_MAP.items():
+        for (
+            status,
+            termination_conditions,
+        ) in STATUS_TO_TERMINATION_CONDITION_MAP.items():
             if termination_condition in termination_conditions:
                 return status
         return cls("unknown")

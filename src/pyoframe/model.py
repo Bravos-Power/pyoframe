@@ -37,7 +37,7 @@ class Model(AttrContainerMixin):
         "result",
         "attr",
         "sense",
-        "objective"
+        "objective",
     ]
 
     def __init__(self, min_or_max: Union[ObjSense, ObjSenseValue], name=None, **kwargs):
@@ -75,7 +75,7 @@ class Model(AttrContainerMixin):
     @property
     def objective(self):
         return self._objective
-    
+
     @objective.setter
     def objective(self, value):
         value = Objective(value)
