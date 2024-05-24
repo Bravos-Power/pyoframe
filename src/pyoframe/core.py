@@ -689,9 +689,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> import pyoframe as pf
             >>> m = pf.Model("max")
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
-            >>> m.expr_1 = 2 * m.X
+            >>> m.expr_1 = 2 * m.X + 1
             >>> m.expr_2 = pf.sum(m.expr_1)
-            >>> m.objective = m.expr_2 + 3
+            >>> m.objective = m.expr_2 - 3
             >>> result = m.solve(log_to_console=False)
             >>> m.expr_1.value
             shape: (3, 2)
@@ -700,13 +700,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             │ ---  ┆ ---      │
             │ i64  ┆ f64      │
             ╞══════╪══════════╡
-            │ 1    ┆ 20.0     │
-            │ 2    ┆ 20.0     │
-            │ 3    ┆ 20.0     │
+            │ 1    ┆ 21.0     │
+            │ 2    ┆ 21.0     │
+            │ 3    ┆ 21.0     │
             └──────┴──────────┘
             >>> m.expr_2.value
-            60.0
-            >>> m.objective.value
             63.0
         """
         assert (
@@ -719,8 +717,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         df = (
             self.data.join(self._model.result.solution.primal, on=VAR_KEY, how="left")
+            .with_columns(
+                (
+                    pl.when(pl.col(VAR_KEY) == CONST_TERM)
+                    .then(1)
+                    .otherwise(pl.col(SOLUTION_KEY))
+                    * pl.col(COEF_KEY)
+                ).alias(SOLUTION_KEY)
+            )
             .drop(VAR_KEY)
-            .with_columns((pl.col(SOLUTION_KEY) * pl.col(COEF_KEY)))
             .drop(COEF_KEY)
         )
 
