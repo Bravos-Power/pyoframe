@@ -313,7 +313,7 @@ class GurobiSolver(FileBasedSolver):
         termination_condition = GurobiSolver.CONDITION_MAP.get(condition, condition)
         status = Status.from_termination_condition(termination_condition)
 
-        if status.is_ok:
+        if status.is_ok and (termination_condition == "optimal"):
             if solution_file:
                 m.write(_path_to_str(solution_file))
 
