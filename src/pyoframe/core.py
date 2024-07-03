@@ -1341,5 +1341,5 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         data = expr.data.rename({dim: "__prev"})
         data = data.join(
             wrapped, left_on="__prev", right_on="__next", how="inner"
-        ).drop(["__prev", "__next"])
+        ).drop(["__prev", "__next"], strict=False)
         return expr._new(data)
