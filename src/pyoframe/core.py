@@ -1259,7 +1259,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def to_expr(self) -> Expression:
-        return self._new(self.data.drop(SOLUTION_KEY))
+        return self._new(self.data.drop(SOLUTION_KEY, strict=False))
 
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
