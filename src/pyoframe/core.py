@@ -273,7 +273,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         elif isinstance(set, SupportsMath):
             df = (
                 set.to_expr()
-                .data.drop(RESERVED_COL_KEYS, strict=False)
+                .data.drop(RESERVED_COL_KEYS)
                 .unique(maintain_order=True)
             )
         elif isinstance(set, pd.Index):
@@ -1263,7 +1263,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def to_expr(self) -> Expression:
-        return self._new(self.data.drop(SOLUTION_KEY, strict=False))
+        return self._new(self.data.drop(SOLUTION_KEY))
 
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
@@ -1341,5 +1341,5 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         data = expr.data.rename({dim: "__prev"})
         data = data.join(
             wrapped, left_on="__prev", right_on="__next", how="inner"
-        ).drop(["__prev", "__next"], strict=False)
+        ).drop(["__prev", "__next"])
         return expr._new(data)
