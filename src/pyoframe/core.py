@@ -272,9 +272,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = set.data.select(set.dimensions_unsafe)
         elif isinstance(set, SupportsMath):
             df = (
-                set.to_expr()
-                .data.drop(RESERVED_COL_KEYS)
-                .unique(maintain_order=True)
+                set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
             )
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
