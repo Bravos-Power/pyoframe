@@ -16,7 +16,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
 ]
-dependencies = ["polars==0.20.27", "numpy", "pyarrow", "pandas", "tqdm"]
+dependencies = ["polars==0.20.27", "numpy", "pyarrow", "pandas"]
 
 [project.optional-dependencies]
 dev = [
