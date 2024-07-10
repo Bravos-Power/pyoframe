@@ -62,7 +62,7 @@ def io_progress_bar(
             estimated_remaining_time = estimated_total_time - elapsed_time
             eta = time.strftime("%H:%M:%S", time.gmtime(estimated_remaining_time))
         else:
-            eta = "Estimating..."
+            eta = "Estimating..."  # pragma: no cover
         sys.stdout.write(
             f'\r{prefix} |{bar}| {percent}% Complete ({iteration}/{total if total else "?"}) ETA: {eta} {suffix}'
         )

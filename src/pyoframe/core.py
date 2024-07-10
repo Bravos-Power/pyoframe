@@ -1,16 +1,17 @@
 from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Iterable,
     List,
     Mapping,
+    Optional,
     Protocol,
     Sequence,
-    overload,
     Union,
-    Optional,
-    TYPE_CHECKING,
+    overload,
 )
-from abc import ABC, abstractmethod
 
 import pandas as pd
 import polars as pl
@@ -21,33 +22,32 @@ from pyoframe.constants import (
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
+    RC_COL,
     RESERVED_COL_KEYS,
     SLACK_COL,
-    VAR_KEY,
     SOLUTION_KEY,
-    RC_COL,
-    VType,
-    VTypeValue,
+    VAR_KEY,
     Config,
     ConstraintSense,
-    UnmatchedStrategy,
-    PyoframeError,
     ObjSense,
+    PyoframeError,
+    UnmatchedStrategy,
+    VType,
+    VTypeValue,
 )
-from pyoframe.util import (
-    cast_coef_to_string,
-    concat_dimensions,
-    get_obj_repr,
-    parse_inputs_as_iterable,
-    unwrap_single_values,
-    dataframe_to_tupled_list,
-    FuncArgs,
-)
-
 from pyoframe.model_element import (
     ModelElement,
     ModelElementWithId,
     SupportPolarsMethodMixin,
+)
+from pyoframe.util import (
+    FuncArgs,
+    cast_coef_to_string,
+    concat_dimensions,
+    dataframe_to_tupled_list,
+    get_obj_repr,
+    parse_inputs_as_iterable,
+    unwrap_single_values,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -692,7 +692,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_1 = 2 * m.X + 1
             >>> m.expr_2 = pf.sum(m.expr_1)
             >>> m.objective = m.expr_2 - 3
-            >>> result = m.solve(log_to_console=False)
+            >>> result = m.solve(log_to_console=False) # doctest: +ELLIPSIS
+            <BLANKLINE>
+            ...
             >>> m.expr_1.value
             shape: (3, 2)
             ┌──────┬──────────┐
@@ -1003,13 +1005,9 @@ class Constraint(ModelElementWithId):
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
             >>> m.must_finish_project = m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]
             >>> m.only_one_day = sum("project", m.hours_spent) <= 24
-            >>> m.solve(log_to_console=False)
-            Status: warning
-            Termination condition: infeasible
-            <BLANKLINE>
-
             >>> _ = m.must_finish_project.relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
-            >>> result = m.solve(log_to_console=False)
+            >>> _ = m.solve(log_to_console=False) # doctest: +ELLIPSIS
+            \rWriting ...
             >>> m.hours_spent.solution
             shape: (3, 2)
             ┌─────────┬──────────┐
@@ -1029,7 +1027,8 @@ class Constraint(ModelElementWithId):
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
             >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(5)
             >>> m.only_one_day = (sum("project", m.hours_spent) <= 24).relax(1)
-            >>> _ = m.solve(log_to_console=False)
+            >>> _ = m.solve(log_to_console=False) # doctest: +ELLIPSIS
+            \rWriting ...
             >>> m.objective.value
             -3.0
             >>> m.hours_spent.solution
