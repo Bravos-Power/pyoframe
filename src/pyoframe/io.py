@@ -2,11 +2,12 @@
 Module containing all import/export functionalities.
 """
 
+import sys
+import time
 from io import TextIOWrapper
-from tempfile import NamedTemporaryFile
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Iterable, Optional, TypeVar, Union
-from tqdm import tqdm
 
 from pyoframe.constants import CONST_TERM, VAR_KEY, ObjSense
 from pyoframe.core import Constraint, Variable
@@ -23,6 +24,57 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 import polars as pl
+
+T = TypeVar("T")
+
+
+def io_progress_bar(
+    iterable: Iterable[T],
+    prefix: str = "",
+    suffix: str = "",
+    length: int = 50,
+    fill: str = "█",
+    update_every: int = 1,
+):
+    """
+    Display progress bar for I/O operations.
+    """
+    try:
+        total = len(iterable)
+    except TypeError:
+        total = None
+
+    start_time = time.time()
+
+    def print_progress(iteration: int):
+        if total is not None:
+            percent = f"{100 * (iteration / float(total)):.1f}"
+            filled_length = int(length * iteration // total)
+            bar = fill * filled_length + "-" * (length - filled_length)
+        else:
+            percent = "N/A"
+            bar = fill * (iteration % length) + "-" * (length - (iteration % length))
+        elapsed_time = time.time() - start_time
+        if iteration > 0:
+            estimated_total_time = (
+                elapsed_time * (total / iteration) if total else elapsed_time
+            )
+            estimated_remaining_time = estimated_total_time - elapsed_time
+            eta = time.strftime("%H:%M:%S", time.gmtime(estimated_remaining_time))
+        else:
+            eta = "Estimating..."  # pragma: no cover
+        sys.stdout.write(
+            f'\r{prefix} |{bar}| {percent}% Complete ({iteration}/{total if total else "?"}) ETA: {eta} {suffix}'
+        )
+        sys.stdout.flush()
+
+    for i, item in enumerate(iterable):
+        yield item
+        if (i + 1) % update_every == 0 or total is None or i == total - 1:
+            print_progress(i + 1)
+
+    sys.stdout.write("\n")
+    sys.stdout.flush()
 
 
 def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
@@ -41,7 +93,11 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
 
 def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
     for constraint in create_section(
-        tqdm(m.constraints, desc="Writing constraints to file"), f, "s.t."
+        io_progress_bar(
+            m.constraints, prefix="Writing constraints to file", update_every=5
+        ),
+        f,
+        "s.t.",
     ):
         f.write(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
 
@@ -58,7 +114,9 @@ def bounds_to_file(m: "Model", f, var_map):
         )
         f.write(f"{var_map.apply(const_term_df).item()} = 1\n")
 
-    for variable in tqdm(m.variables, desc="Writing bounds to file"):
+    for variable in io_progress_bar(
+        m.variables, prefix="Writing bounds to file", update_every=1
+    ):
         terms = []
 
         if variable.lb != 0:
@@ -88,7 +146,13 @@ def binaries_to_file(m: "Model", f, var_map: Mapper):
     Write out binaries of a model to a lp file.
     """
     for variable in create_section(
-        tqdm(m.binary_variables, "Writing binary variables to file"), f, "binary"
+        io_progress_bar(
+            m.binary_variables,
+            prefix="Writing binary variables to file",
+            update_every=1,
+        ),
+        f,
+        "binary",
     ):
         lines = (
             var_map.apply(variable.data, to_col=None)
@@ -103,7 +167,13 @@ def integers_to_file(m: "Model", f, var_map: Mapper):
     Write out integers of a model to a lp file.
     """
     for variable in create_section(
-        tqdm(m.integer_variables, "Writing integer variables to file"), f, "general"
+        io_progress_bar(
+            m.integer_variables,
+            prefix="Writing integer variables to file",
+            update_every=5,
+        ),
+        f,
+        "general",
     ):
         lines = (
             var_map.apply(variable.data, to_col=None)
@@ -111,9 +181,6 @@ def integers_to_file(m: "Model", f, var_map: Mapper):
             .item()
         )
         f.write(lines + "\n")
-
-
-T = TypeVar("T")
 
 
 def create_section(iterable: Iterable[T], f, section_header) -> Iterable[T]:
