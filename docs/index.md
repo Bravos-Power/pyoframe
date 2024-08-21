@@ -2,7 +2,7 @@
 Fast and light-weight formulation of LP and MIP problems.
 
 ## Examples
-See [example code](tests/examples)
+See [example code](../tests/examples)
 ## User Guide
 TODO
 ## Quickstart
