@@ -11,3 +11,5 @@ tmp
 docs/reference
 dist
 *.log
+site
+.idea

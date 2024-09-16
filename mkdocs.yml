@@ -1,23 +1,60 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: Pyoframe
 site_url: https://Bravos-Power.github.io/pyoframe/
 repo_url: https://github.com/Bravos-Power/pyoframe
 edit_uri: edit/main/docs/
 theme:
   name: material
+  language: en
+  palette:
+    - primary: red
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+
+
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
     - navigation.tabs
-    - toc.follow
+    - navigation.sections
     - navigation.top
+    - toc.follow
+#    - navigation.indexes
     - content.action.edit
     - content.action.view
     - content.code.copy
     - content.code.annotate
 
 nav:
-  - Reference: reference/
+  - "Learn":
+    - Installation: index.md
+    - Build your first model: todo.md
+    - Guides:
+        - Building models from data: todo.md
+        - Handling mismatched indices: todo.md
+    - Key Concepts:
+        - Variables, constraints and objectives: concepts/variables-constraints-and-objectives.md
+        - The pyoframe datastructure: concepts/pyoframe-datastructure.md
+    - Performance:
+      - Tips for better performance: performance/tips.md
+  - API reference: reference/
+  - Examples: examples/
+  - Why Pyoframe?:
+      - Overview: why-pyoframe/index.md
+      - Speed benchmarks: performance/benchmarks.md
+      - Memory usage benchmarks: todo.md
+      - Readability comparison: todo.md
+  - Contribute: development/
 markdown_extensions:
   - admonition
   - codehilite
@@ -49,3 +86,7 @@ plugins:
       scripts:
         - scripts/gen_ref_pages.py
   - section-index
+
+extra:
+  version:
+    provider: mike
