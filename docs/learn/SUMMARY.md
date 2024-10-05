@@ -1,0 +1,8 @@
+- [Overview](index.md)
+- [Getting Started](01_getting-started/)
+- User Guides
+    - [Models from data](02_user-guides/creating-a-model.md)
+    - [Performance tips](02_user-guides/tips.md)
+- Concepts
+    - [Model building blocks](03_concepts/variables-constraints-and-objectives.md)
+    - [Pyoframe datastructure](03_concepts/pyoframe-datastructure.md)

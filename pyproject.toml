@@ -36,7 +36,7 @@ docs = [
     "mkdocs-git-committers-plugin-2",
     "mkdocs-gen-files",
     "mkdocs-section-index",
-    "mkdocs-literate-nav",
+    "mkdocs-literate-nav"
 ]
 
 [tool.isort]
