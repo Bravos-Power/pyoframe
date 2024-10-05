@@ -1,2 +1,4 @@
 - [Installation](installation.md)
-- [Build a Simple Model](build-simple-model.md)
+- [Build a simple model](build-simple-model.md)
+- [Adding a data source](creating-a-model-from-data.md)
+- [Performance tips](performance_tips.md)

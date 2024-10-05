@@ -29,7 +29,7 @@ theme:
     - navigation.sections
     - navigation.top
     - toc.follow
-#    - navigation.indexes
+    - navigation.indexes
     - content.action.edit
     - content.action.view
     - content.code.copy

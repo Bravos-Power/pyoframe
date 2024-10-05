@@ -1,0 +1,2 @@
+- [Model building blocks](variables-constraints-and-objectives.md)
+- [Pyoframe datastructure](pyoframe-datastructure.md)

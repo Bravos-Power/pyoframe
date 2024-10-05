@@ -10,13 +10,13 @@
 
     [:octicons-arrow-right-24: Getting started](01_getting-started/)
 
--   :fontawesome-brands-markdown:{ .lg .middle } __User Guides__
+-   :fontawesome-brands-markdown:{ .lg .middle } __Tutorials__
 
     ---
 
     Step-by-step tutorials to make sense of important features
 
-    [:octicons-arrow-right-24: User Guides](02_user-guides/)
+    [:octicons-arrow-right-24: Tutorials](02_tutorials/)
 
 -   :material-scale-balance:{ .lg .middle } __Concepts__
 
