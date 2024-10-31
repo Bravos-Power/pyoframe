@@ -614,7 +614,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         data = (
             self.data.join(
                 multiplier,
-                on=dims_in_common,
+                on=dims_in_common if len(dims_in_common) > 0 else None,
                 how="inner" if dims_in_common else "cross",
             )
             .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
