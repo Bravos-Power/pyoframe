@@ -15,6 +15,7 @@ from typing import (
 
 import pandas as pd
 import polars as pl
+from packaging import version
 
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
@@ -22,6 +23,7 @@ from pyoframe.constants import (
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
+    POLARS_VERSION,
     RC_COL,
     RESERVED_COL_KEYS,
     SLACK_COL,
@@ -271,7 +273,18 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         elif isinstance(set, Constraint):
             df = set.data.select(set.dimensions_unsafe)
         elif isinstance(set, SupportsMath):
-            df = set.to_expr().data.drop(RESERVED_COL_KEYS).unique(maintain_order=True)
+            if POLARS_VERSION < version.parse("1"):
+                df = (
+                    set.to_expr()
+                    .data.drop(RESERVED_COL_KEYS)
+                    .unique(maintain_order=True)
+                )
+            else:
+                df = (
+                    set.to_expr()
+                    .data.drop(RESERVED_COL_KEYS, strict=False)
+                    .unique(maintain_order=True)
+                )
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
         elif isinstance(set, pd.DataFrame):
@@ -1258,7 +1271,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def to_expr(self) -> Expression:
-        return self._new(self.data.drop(SOLUTION_KEY))
+        if POLARS_VERSION < version.parse("1"):
+            return self._new(self.data.drop(SOLUTION_KEY))
+        else:
+            return self._new(self.data.drop(SOLUTION_KEY, strict=False))
 
     def _new(self, data: pl.DataFrame):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
@@ -1334,7 +1350,13 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
         expr = self.to_expr()
         data = expr.data.rename({dim: "__prev"})
-        data = data.join(
-            wrapped, left_on="__prev", right_on="__next", how="inner"
-        ).drop(["__prev", "__next"])
+
+        if POLARS_VERSION < version.parse("1"):
+            data = data.join(
+                wrapped, left_on="__prev", right_on="__next", how="inner"
+            ).drop(["__prev", "__next"])
+        else:
+            data = data.join(
+                wrapped, left_on="__prev", right_on="__next", how="inner"
+            ).drop(["__prev", "__next"], strict=False)
         return expr._new(data)
