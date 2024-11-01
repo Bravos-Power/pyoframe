@@ -18,7 +18,6 @@ from packaging import version
 # We want to try and support multiple major versions of polars
 try:
     POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
-    print(POLARS_VERSION)
 except importlib.metadata.PackageNotFoundError:
     POLARS_VERSION = None
 
