@@ -16,10 +16,7 @@ import polars as pl
 from packaging import version
 
 # We want to try and support multiple major versions of polars
-try:
-    POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
-except importlib.metadata.PackageNotFoundError:
-    POLARS_VERSION = None
+POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
