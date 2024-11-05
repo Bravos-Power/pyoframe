@@ -11,3 +11,4 @@ tmp
 docs/reference
 dist
 *.log
+.idea/
