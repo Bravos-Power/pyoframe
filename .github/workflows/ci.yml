@@ -9,22 +9,32 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+        polars-version: ["1.12.0"]
+        include:
+          - python-version: "3.8"
+            polars-version: "0.20.27"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python 3.8
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: pip install --editable .[dev]
+        run: |
+          pip install --editable .[dev]
+          pip install polars==${{ matrix.polars-version }}
       - name: Run tests and collect coverage
         run: pytest --cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         with:
+          name: coverage-polars-${{ matrix.polars-version }}
           flags: smart-tests
           verbose: true
         env:
