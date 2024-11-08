@@ -195,6 +195,15 @@ SetTypes = Union[
 
 
 class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
+    """
+    A set which can then be used to index variables.
+    
+    Examples:
+        >>> import pyoframe as pf
+        >>> pf.Set(x=range(2), y=range(3))
+        <Set size=6 dimensions={'x': 2, 'y': 3}>
+        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+    """
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
         data_list = list(data)
         for name, set in named_data.items():
