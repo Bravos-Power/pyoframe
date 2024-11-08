@@ -6,10 +6,11 @@ from pyoframe._arithmetic import PyoframeError
 from polars.testing import assert_frame_equal
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY, POLARS_VERSION
 from pyoframe import Variable, Model, sum, Set, Config, Expression, VType
 from .util import csvs_to_expr
 
+check_dtypes_false = {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtypes": True}
 
 def test_set_multiplication():
     dim1 = [1, 2, 3]
@@ -51,7 +52,7 @@ def test_multiplication_no_common_dimensions():
                 VAR_KEY: [CONST_TERM] * 6,
             }
         ),
-        check_dtypes=False,
+        **check_dtypes_false,
     )
 
 
@@ -71,7 +72,7 @@ def test_within_set():
                 VAR_KEY: [1, 4],
             }
         ),
-        check_dtypes=False,
+        **check_dtypes_false,
     )
 
 
@@ -82,7 +83,7 @@ def test_filter_expression():
     assert_frame_equal(
         result.data,
         pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
-        check_dtypes=False,
+        **check_dtypes_false,
     )
 
 
@@ -92,7 +93,7 @@ def test_filter_constraint():
     assert_frame_equal(
         result,
         pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
-        check_dtypes=False,
+        **check_dtypes_false,
     )
 
 
@@ -139,7 +140,7 @@ def test_add_expressions():
     assert_frame_equal(
         result.data,
         pl.DataFrame({VAR_KEY: [CONST_TERM], COEF_KEY: [2]}),
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -150,7 +151,7 @@ def test_add_expressions_with_vars():
     assert_frame_equal(
         result.data,
         pl.DataFrame({VAR_KEY: [1, 2], COEF_KEY: [2, 4]}),
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -167,7 +168,7 @@ def test_add_expressions_with_vars_and_dims():
         pl.DataFrame(
             {"dim1": [1, 1, 2, 2], VAR_KEY: [1, 2, 1, 2], COEF_KEY: [2, 4, 6, 8]}
         ),
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -226,7 +227,7 @@ def test_add_expression_with_vars_and_add_dim():
     assert_frame_equal(
         result.data,
         expected_result,
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
         check_row_order=False,
     )
@@ -236,7 +237,7 @@ def test_add_expression_with_vars_and_add_dim():
     assert_frame_equal(
         result.data,
         expected_result,
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
         check_row_order=False,
     )
@@ -391,7 +392,7 @@ def test_three_way_add():
         pl.DataFrame(
             {"dim1": [1, 2], VAR_KEY: [CONST_TERM, CONST_TERM], COEF_KEY: [9, 4]}
         ),
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -402,7 +403,7 @@ def test_three_way_add():
     assert_frame_equal(
         result.data,
         pl.DataFrame({"dim1": [1], VAR_KEY: [CONST_TERM], COEF_KEY: [9]}),
-        check_dtypes=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
