@@ -5,7 +5,7 @@ from polars.testing import assert_frame_equal
 import pytest
 
 check_dtypes_false = (
-    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtypes": False}
+    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtype": False}
 )
 
 
