@@ -44,7 +44,7 @@ def test_retrieving_duals_vectorized():
     assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
     assert_frame_equal(
@@ -52,19 +52,19 @@ def test_retrieving_duals_vectorized():
         pl.DataFrame(
             {"t": [1, 2], "RC": [0, 0]}
         ),  # Somehow the reduced cost is 0 since we are no longer using a bound.
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
     assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
     assert_frame_equal(
         m.max_AB.slack,
         pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
 
@@ -87,25 +87,25 @@ def test_support_variable_attributes():
     assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
     assert_frame_equal(
         m.X.RC,
         pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
     assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
     assert_frame_equal(
         m.max_AB.slack,
         pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
-        check_dtype=False,
+        check_dtypes=False,
         check_row_order=False,
     )
 

@@ -126,6 +126,32 @@ class SupportsMath(ABC, SupportsToExpr):
     def __radd__(self, other):
         return self.to_expr() + other
 
+    def __truediv__(self, other):
+        """
+        Support division.
+        >>> from pyoframe import Variable
+        >>> var = Variable({"dim1": [1,2,3]})
+        >>> var / 2
+        <Expression size=3 dimensions={'dim1': 3} terms=3>
+        [1]: 0.5 x1
+        [2]: 0.5 x2
+        [3]: 0.5 x3
+        """
+        return self.to_expr() * (1 / other)
+
+    def __rsub__(self, other):
+        """
+        Support right subtraction.
+        >>> from pyoframe import Variable
+        >>> var = Variable({"dim1": [1,2,3]})
+        >>> 1 - var
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: 1  - x1
+        [2]: 1  - x2
+        [3]: 1  - x3
+        """
+        return other + (-self.to_expr())
+
     def __le__(self, other):
         """Equality constraint.
         Examples
@@ -248,7 +274,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 return self._new(
                     pl.concat([self.data, other.data]).unique(maintain_order=True)
                 )
-            except pl.ShapeError as e:
+            except pl.exceptions.ShapeError as e:
                 if "unable to vstack, column names don't match" in str(e):
                     raise PyoframeError(
                         f"Failed to add sets '{self.friendly_name}' and '{other.friendly_name}' because dimensions do not match ({self.dimensions} != {other.dimensions}) "
@@ -295,6 +321,10 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = set.to_frame()
         elif isinstance(set, Set):
             df = set.data
+        elif isinstance(set, range):
+            raise ValueError(
+                "Cannot convert a range to a set without a dimension name. Try Set(dim_name=range(...))"
+            )
         else:
             raise ValueError(f"Cannot convert type {type(set)} to a polars DataFrame")
 
@@ -507,7 +537,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 [
                     df.with_columns(pl.col(over).max())
                     for _, df in self.data.rolling(
-                        index_column=over, period=f"{window_size}i", by=remaining_dims
+                        index_column=over,
+                        period=f"{window_size}i",
+                        group_by=remaining_dims,
                     )
                 ]
             )
@@ -659,7 +691,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .unique(maintain_order=True)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
             )
-            data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
+            data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
             data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -678,7 +710,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return constant_terms.join(
                 self.data.select(dims).unique(maintain_order=True),
                 on=dims,
-                how="outer_coalesce",
+                how="full",
+                coalesce=True,
             ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:

@@ -116,7 +116,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
                 not Config.disable_unmatched_checks
             ), "This code should not be reached when unmatched checks are disabled."
             outer_join = get_indices(left).join(
-                get_indices(right), how="outer", on=dims
+                get_indices(right), how="full", on=dims
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
                 raise PyoframeError(
@@ -188,6 +188,7 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
         return self
 
     if not set(missing_dims) <= set(self.allowed_new_dims):
+        # TODO actually suggest using e.g. .add_dim("a", "b") instead of just "use .add_dim()"
         raise PyoframeError(
             f"Dataframe has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
         )
