@@ -10,7 +10,10 @@ from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY, POLARS_VERSION
 from pyoframe import Variable, Model, sum, Set, Config, Expression, VType
 from .util import csvs_to_expr
 
-check_dtypes_false = {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtypes": True}
+check_dtypes_false = (
+    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtypes": True}
+)
+
 
 def test_set_multiplication():
     dim1 = [1, 2, 3]
