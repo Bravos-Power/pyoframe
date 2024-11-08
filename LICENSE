@@ -1,8 +1,9 @@
 MIT License
 
-Copyright 2024 Bravos Power
-Copyright 2021-2023 Fabian Hofmann
-Copyright 2015-2021 PyPSA Developers
+Copyright 2024 Bravos Power (all contents)
+Copyright 2022 JuMP-dev (benchmarks folder only)
+Copyright 2021-2023 Fabian Hofmann (src/io.py only)
+Copyright 2015-2021 PyPSA Developers (src/io.py only)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
