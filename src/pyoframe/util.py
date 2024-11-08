@@ -47,10 +47,20 @@ def parse_inputs_as_iterable(
 
 
 def _is_iterable(input: Union[Any, Iterable[Any]]) -> bool:
-    # Inspired from the polars library
+    # Inspired from the polars library, TODO: Consider using opposite check, i.e. equals list or tuple
     return isinstance(input, Iterable) and not isinstance(
         input,
-        (str, bytes, pl.DataFrame, pl.Series, pd.DataFrame, pd.Series, pd.Index, dict),
+        (
+            str,
+            bytes,
+            pl.DataFrame,
+            pl.Series,
+            pd.DataFrame,
+            pd.Series,
+            pd.Index,
+            dict,
+            range,
+        ),
     )
 
 
