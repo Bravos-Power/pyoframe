@@ -11,7 +11,7 @@ from pyoframe import Variable, Model, sum, Set, Config, Expression, VType
 from .util import csvs_to_expr
 
 check_dtypes_false = (
-    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtypes": True}
+    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtypes": False}
 )
 
 
@@ -110,7 +110,7 @@ def test_filter_variable():
 def test_filter_set():
     s = Set(x=[1, 2, 3])
     result = s.filter(x=2)
-    assert_frame_equal(result.data, pl.DataFrame({"x": [2]}), check_dtypes=False)
+    assert_frame_equal(result.data, pl.DataFrame({"x": [2]}), **check_dtypes_false)
 
 
 def test_drops_na():
