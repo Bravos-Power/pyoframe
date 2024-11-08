@@ -8,6 +8,7 @@ from pyoframe.constants import (
     UnmatchedStrategy,
     Config,
     PyoframeError,
+    POLARS_VERSION,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -116,7 +117,9 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
                 not Config.disable_unmatched_checks
             ), "This code should not be reached when unmatched checks are disabled."
             outer_join = get_indices(left).join(
-                get_indices(right), how="full", on=dims
+                get_indices(right),
+                how="full" if POLARS_VERSION.major >= 1 else "outer",
+                on=dims,
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
                 raise PyoframeError(

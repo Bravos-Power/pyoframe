@@ -197,13 +197,14 @@ SetTypes = Union[
 class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     """
     A set which can then be used to index variables.
-    
+
     Examples:
         >>> import pyoframe as pf
         >>> pf.Set(x=range(2), y=range(3))
         <Set size=6 dimensions={'x': 2, 'y': 3}>
         [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
     """
+
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
         data_list = list(data)
         for name, set in named_data.items():
@@ -700,7 +701,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .unique(maintain_order=True)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
             )
-            data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
+            if POLARS_VERSION.major >= 1:
+                data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
+            else:
+                data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
             data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -716,12 +720,12 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         dims = self.dimensions
         constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
         if dims is not None:
-            return constant_terms.join(
-                self.data.select(dims).unique(maintain_order=True),
-                on=dims,
-                how="full",
-                coalesce=True,
-            ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
+            dims_df = self.data.select(dims).unique(maintain_order=True)
+            if POLARS_VERSION.major >= 1:
+                df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
+            else:
+                df = constant_terms.join(dims_df, on=dims, how="outer_coalesce")
+            return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
                 return pl.DataFrame(
