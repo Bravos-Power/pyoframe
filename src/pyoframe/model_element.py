@@ -5,7 +5,13 @@ from typing import Any, Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
 
-from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY, QUAD_VAR_KEY, COL_DTYPES
+from pyoframe.constants import (
+    COEF_KEY,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+    QUAD_VAR_KEY,
+    COL_DTYPES,
+)
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe.user_defined import AttrContainerMixin
 

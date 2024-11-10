@@ -56,7 +56,11 @@ class Mapper(ABC):
         if id_col is None:
             id_col = self._ID_COL
         result = df.join(
-            self.mapping_registry, how="left", validate="m:1", left_on=id_col, right_on=self._ID_COL
+            self.mapping_registry,
+            how="left",
+            validate="m:1",
+            left_on=id_col,
+            right_on=self._ID_COL,
         )
         if id_col != self._ID_COL:
             result = result.drop(self._ID_COL)

@@ -291,7 +291,9 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
         ]
 
     # Sort columns to allow for concat
-    expr_data = [e.select(dims + [c for c in e.columns if c not in dims]) for e in expr_data]
+    expr_data = [
+        e.select(dims + [c for c in e.columns if c not in dims]) for e in expr_data
+    ]
 
     data = pl.concat(expr_data, how="vertical_relaxed")
     data = _sum_like_terms(data)
