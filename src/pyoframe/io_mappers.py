@@ -49,15 +49,21 @@ class Mapper(ABC):
         self,
         df: pl.DataFrame,
         to_col: Optional[str] = None,
+        id_col: Optional[str] = None,
     ) -> pl.DataFrame:
         if df.height == 0:
             return df
+        if id_col is None:
+            id_col = self._ID_COL
         result = df.join(
-            self.mapping_registry, on=self._ID_COL, how="left", validate="m:1"
+            self.mapping_registry, how="left", validate="m:1", left_on=id_col, right_on=self._ID_COL
         )
-        if to_col is None:
+        if id_col != self._ID_COL:
             result = result.drop(self._ID_COL)
-            to_col = self._ID_COL
+        if to_col is None:
+            # Drop self._ID_COL so we can replace it with the result
+            result = result.drop(id_col)
+            to_col = id_col
         return result.rename({Mapper.NAME_COL: to_col})
 
     def undo(self, df: pl.DataFrame) -> pl.DataFrame:
@@ -125,13 +131,16 @@ class Base36Mapper(Mapper, ABC):
         self,
         df: pl.DataFrame,
         to_col: Optional[str] = None,
+        id_col: Optional[str] = None,
     ) -> pl.DataFrame:
         if df.height == 0:
             return df
+        if id_col is None:
+            id_col = self._ID_COL
 
         query = pl.concat_str(
             pl.lit(self._prefix),
-            pl.col(self._ID_COL).map_batches(
+            pl.col(id_col).map_batches(
                 Base36Mapper._to_base36,
                 return_dtype=pl.String,
                 is_elementwise=True,

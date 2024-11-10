@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
 
-from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY, QUAD_VAR_KEY, COL_DTYPES
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe.user_defined import AttrContainerMixin
 
@@ -29,10 +29,9 @@ class ModelElement(ABC):
         data = data.select(cols)
 
         # Cast to proper dtype
-        if COEF_KEY in data.columns:
-            data = data.cast({COEF_KEY: pl.Float64})
-        if VAR_KEY in data.columns:
-            data = data.cast({VAR_KEY: pl.UInt32})
+        for c in [COEF_KEY, VAR_KEY, QUAD_VAR_KEY]:
+            if c in data.columns:
+                data = data.cast({c: COL_DTYPES[c]})
 
         self._data = data
         self._model: Optional[Model] = None

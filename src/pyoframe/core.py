@@ -15,9 +15,12 @@ from typing import (
 
 import pandas as pd
 import polars as pl
-from packaging import version
 
-from pyoframe._arithmetic import _add_expressions, _get_dimensions
+from pyoframe._arithmetic import (
+    _add_expressions,
+    _get_dimensions,
+    _multiply_expressions,
+)
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
@@ -29,6 +32,8 @@ from pyoframe.constants import (
     SLACK_COL,
     SOLUTION_KEY,
     VAR_KEY,
+    QUAD_VAR_KEY,
+    VAR_TYPE,
     Config,
     ConstraintSense,
     ObjSense,
@@ -54,8 +59,6 @@ from pyoframe.util import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
-
-VAR_TYPE = pl.UInt32
 
 
 def _forward_to_expression(func_name: str):
@@ -97,6 +100,18 @@ class SupportsMath(ABC, SupportsToExpr):
     __mul__ = _forward_to_expression("__mul__")
     sum = _forward_to_expression("sum")
     map = _forward_to_expression("map")
+
+    def __pow__(self, power: int):
+        """
+        Support squaring expressions:
+        >>> from pyoframe import Variable
+        >>> Variable() ** 2
+        <Expression size=1 dimensions={} terms=1 degree=2>
+        x1*x1
+        """
+        if power == 2:
+            return self * self
+        return NotImplemented
 
     def __neg__(self):
         res = self.to_expr() * -1
@@ -353,7 +368,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
 class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
-    """A linear expression."""
+    """A linear or quadratic expression."""
 
     def __init__(self, data: pl.DataFrame):
         """
@@ -433,9 +448,16 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         return self._new(
             self.data.drop(over)
-            .group_by(remaining_dims + [VAR_KEY], maintain_order=True)
+            .group_by(remaining_dims + self._variable_columns, maintain_order=True)
             .sum()
         )
+
+    @property
+    def _variable_columns(self) -> List[str]:
+        if self.is_quadratic:
+            return [VAR_KEY, QUAD_VAR_KEY]
+        else:
+            return [VAR_KEY]
 
     def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True):
         """
@@ -585,6 +607,48 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         by_dims = df.select(dims_in_common).unique(maintain_order=True)
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
+    @property
+    def is_quadratic(self) -> bool:
+        """
+        Returns True if the expression is quadratic, False otherwise.
+
+        Computes in O(1) since expressions are quadratic if and
+        only if self.data contain the QUAD_VAR_KEY column.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable
+            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}) * Variable()
+            >>> expr *= Variable()
+            >>> expr.is_quadratic
+            True
+        """
+        return QUAD_VAR_KEY in self.data.columns
+
+    def degree(self) -> int:
+        """
+        Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
+
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable
+            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+            >>> expr.degree()
+            0
+            >>> expr *= Variable()
+            >>> expr.degree()
+            1
+            >>> expr += (Variable() ** 2).add_dim("dim1")
+            >>> expr.degree()
+            2
+        """
+        if self.is_quadratic:
+            return 2
+        elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
+            return 1
+        else:
+            return 0
+
     def __add__(self, other):
         """
         Examples:
@@ -639,31 +703,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         other = other.to_expr()
         self._learn_from_other(other)
-
-        if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
-            self, other = other, self
-
-        if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
-            raise ValueError(
-                "Multiplication of two expressions with variables is non-linear and not supported."
-            )
-        multiplier = other.data.drop(VAR_KEY)
-
-        dims = self.dimensions_unsafe
-        other_dims = other.dimensions_unsafe
-        dims_in_common = [dim for dim in dims if dim in other_dims]
-
-        data = (
-            self.data.join(
-                multiplier,
-                on=dims_in_common if len(dims_in_common) > 0 else None,
-                how="inner" if dims_in_common else "cross",
-            )
-            .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
-            .drop(COEF_KEY + "_right")
-        )
-
-        return self._new(data)
+        return _multiply_expressions(self, other)
 
     def to_expr(self) -> Expression:
         return self
@@ -680,19 +720,32 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def _add_const(self, const: int | float) -> Expression:
+        """
+        >>> Variable() + 5
+        <Expression size=1 dimensions={} terms=2>
+        x1 +5
+        >>> Variable() ** 2 + 5
+        <Expression size=1 dimensions={} terms=2 degree=2>
+        x2*x2 +5
+        >>> Variable() ** 2 + Variable() + 5
+        <Expression size=1 dimensions={} terms=3 degree=2>
+        x3*x3 + x4 +5
+        """
         dim = self.dimensions
         data = self.data
         # Fill in missing constant terms
         if not dim:
             if CONST_TERM not in data[VAR_KEY]:
+                const_df = pl.DataFrame(
+                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: VAR_TYPE},
+                )
+                if self.is_quadratic:
+                    const_df = const_df.with_columns(
+                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(VAR_TYPE)
+                    )
                 data = pl.concat(
-                    [
-                        data,
-                        pl.DataFrame(
-                            {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                            schema={COEF_KEY: pl.Float64, VAR_KEY: VAR_TYPE},
-                        ),
-                    ],
+                    [data, const_df],
                     how="vertical_relaxed",
                 )
         else:
@@ -701,10 +754,18 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .unique(maintain_order=True)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
             )
+            if self.is_quadratic:
+                keys = keys.with_columns(
+                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(VAR_TYPE)
+                )
             if POLARS_VERSION.major >= 1:
-                data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
+                data = data.join(
+                    keys, on=dim + self._variable_columns, how="full", coalesce=True
+                )
             else:
-                data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
+                data = data.join(
+                    keys, on=dim + self._variable_columns, how="outer_coalesce"
+                )
             data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -719,6 +780,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def constant_terms(self):
         dims = self.dimensions
         constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
+        if self.is_quadratic:
+            constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
             dims_df = self.data.select(dims).unique(maintain_order=True)
             if POLARS_VERSION.major >= 1:
@@ -776,19 +839,23 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 "Can't obtain value of expression since the model has not been solved."
             )
 
-        df = (
-            self.data.join(self._model.result.solution.primal, on=VAR_KEY, how="left")
-            .with_columns(
-                (
-                    pl.when(pl.col(VAR_KEY) == CONST_TERM)
-                    .then(1)
-                    .otherwise(pl.col(SOLUTION_KEY))
-                    * pl.col(COEF_KEY)
-                ).alias(SOLUTION_KEY)
+        df = self.data
+        for var_col in self._variable_columns:
+            df = (
+                df.join(self._model.result.solution.primal, on=var_col, how="left")
+                .with_columns(
+                    (
+                        pl.when(pl.col(var_col) == CONST_TERM)
+                        .then(1)
+                        .otherwise(pl.col(SOLUTION_KEY))
+                        * pl.col(COEF_KEY)
+                    ).alias(COEF_KEY)
+                )
+                .drop(var_col)
+                .drop(SOLUTION_KEY)
             )
-            .drop(VAR_KEY)
-            .drop(COEF_KEY)
-        )
+
+        df = df.rename({COEF_KEY: SOLUTION_KEY})
 
         dims = self.dimensions
         if dims is not None:
@@ -807,24 +874,34 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data, float_precision=float_precision)
 
-        if var_map is not None:
-            data = var_map.apply(data, to_col="str_var")
-        elif self._model is not None and self._model.var_map is not None:
-            var_map = self._model.var_map
-            data = var_map.apply(data, to_col="str_var")
-        else:
+        for var_column in self._variable_columns:
+            temp_var_column = f"{var_column}_temp"
+            if var_map is not None:
+                data = var_map.apply(data, to_col=temp_var_column, id_col=var_column)
+            elif self._model is not None and self._model.var_map is not None:
+                var_map = self._model.var_map
+                data = var_map.apply(data, to_col=temp_var_column, id_col=var_column)
+            else:
+                data = data.with_columns(
+                    pl.concat_str(pl.lit("x"), var_column).alias(temp_var_column)
+                )
+            if include_const_variable and var_column == VAR_KEY:
+                data = data.drop(var_column).rename({temp_var_column: var_column})
+            else:
+                data = data.with_columns(
+                    pl.when(pl.col(var_column) == CONST_TERM)
+                    .then(pl.lit(""))
+                    .otherwise(temp_var_column)
+                    .alias(var_column)
+                ).drop(temp_var_column)
+
+        if self.is_quadratic:
             data = data.with_columns(
-                pl.concat_str(pl.lit("x"), VAR_KEY).alias("str_var")
-            )
-        if include_const_variable:
-            data = data.drop(VAR_KEY).rename({"str_var": VAR_KEY})
-        else:
-            data = data.with_columns(
-                pl.when(pl.col(VAR_KEY) == CONST_TERM)
-                .then(pl.lit(""))
-                .otherwise("str_var")
+                pl.when(pl.col(QUAD_VAR_KEY) == "")
+                .then(pl.col(VAR_KEY))
+                .otherwise(pl.concat_str(VAR_KEY, pl.lit("*"), pl.col(QUAD_VAR_KEY)))
                 .alias(VAR_KEY)
-            ).drop("str_var")
+            ).drop(QUAD_VAR_KEY)
 
         dimensions = self.dimensions
 
@@ -888,7 +965,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         result = ""
         if include_header:
             result += get_obj_repr(
-                self, size=len(self), dimensions=self.shape, terms=len(self.data)
+                self,
+                size=len(self),
+                dimensions=self.shape,
+                terms=len(self.data),
+                degree=2 if self.degree() == 2 else None,
             )
         if include_header and include_data:
             result += "\n"
