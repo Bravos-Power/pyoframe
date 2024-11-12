@@ -4,10 +4,24 @@ Quadratic expressions work as you'd expect. Simply multiply two linear expressio
 
 ## Example
 
-## TODO
+### Maximize area of box
+Here's a short example that shows that a square maximizes the area of any box with a fixed perimeter.
 
 ```python3
+import pyoframe as pf
+model = pf.Model("max")
+model.w = pf.Variable(lb=0)
+model.h = pf.Variable(lb=0)
+model.limit_perimter = 2 * (model.w + model.h) <= 20
+model.objective = model.w * model.h
+model.solve()
+print(f"It's a square: {model.w.solution==model.h.solution}")
+
+# Outputs: It's a square: True
 ```
+### Facility Location Problem
+
+See [examples/facility_location](../tests/examples/facility_location/).
 
 ## Note for Pyoframe developers: Internal Representation of Quadratics
 

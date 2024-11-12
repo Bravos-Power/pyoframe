@@ -107,7 +107,7 @@ class SupportsMath(ABC, SupportsToExpr):
         >>> from pyoframe import Variable
         >>> Variable() ** 2
         <Expression size=1 dimensions={} terms=1 degree=2>
-        x1*x1
+        x1 * x1
         """
         if power == 2:
             return self * self
@@ -726,10 +726,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         x1 +5
         >>> Variable() ** 2 + 5
         <Expression size=1 dimensions={} terms=2 degree=2>
-        x2*x2 +5
+        x2 * x2 +5
         >>> Variable() ** 2 + Variable() + 5
         <Expression size=1 dimensions={} terms=3 degree=2>
-        x3*x3 + x4 +5
+        x3 * x3 + x4 +5
         """
         dim = self.dimensions
         data = self.data

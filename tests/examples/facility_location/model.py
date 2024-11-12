@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-def main(G, F, **kwargs):
+def main(G=4, F=3, **kwargs):
     model = pf.Model("min")
 
     g_range = range(G)
@@ -53,7 +53,7 @@ def main(G, F, **kwargs):
     return model
 
 
-def draw_results(model, G, T):
+def draw_results(model, G, F):
     import tkinter
 
     root = tkinter.Tk()
@@ -100,6 +100,6 @@ if __name__ == "__main__":
         F,
         directory=working_dir / "results",
         use_var_names=True,
-        solution_file=working_dir / "results" / "solution.sol",
+        solution_file=working_dir / "results" / "pyoframe-problem.sol",
     )
     draw_results(model, G, F)

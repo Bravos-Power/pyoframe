@@ -27,6 +27,11 @@ EXAMPLES = [
         many_valid_solutions=True,
         has_gurobi_version=False,
     ),
+    Example(
+        "facility_location",
+        has_gurobi_version=False,
+        many_valid_solutions=True,
+    ),
 ]
 
 
@@ -49,15 +54,19 @@ def test_examples(example: Example):
     symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
     dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
 
-    symbolic_model = main_module.main(
-        input_dir,
+    symbolic_kwargs = dict(
         directory=symbolic_output_dir,
         solution_file=symbolic_solution_file,
         use_var_names=True,
     )
-    dense_model = main_module.main(
-        input_dir, directory=dense_output_dir, solution_file=dense_solution_file
-    )
+    dense_kwargs = dict(directory=dense_output_dir, solution_file=dense_solution_file)
+
+    if input_dir.exists():
+        symbolic_kwargs["input_dir"] = input_dir
+        dense_kwargs["input_dir"] = input_dir
+
+    symbolic_model = main_module.main(**symbolic_kwargs)
+    dense_model = main_module.main(**dense_kwargs)
 
     if example.check_params is not None:
         for param, value in example.check_params.items():
