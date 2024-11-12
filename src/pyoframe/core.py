@@ -870,8 +870,21 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         include_const_variable=False,
         var_map=None,
         float_precision=None,
+        quadratic_divider=None,
     ):
+        assert (
+            quadratic_divider is None
+            or quadratic_divider == 1
+            or quadratic_divider == 2
+        )
         data = self.data if include_const_term else self.variable_terms
+        if self.is_quadratic and quadratic_divider == 2:
+            data = data.with_columns(
+                pl.when(pl.col(QUAD_VAR_KEY) == CONST_TERM)
+                .then(pl.col(COEF_KEY))
+                .otherwise(pl.col(COEF_KEY) * quadratic_divider)
+            )
+
         data = cast_coef_to_string(data, float_precision=float_precision)
 
         for var_column in self._variable_columns:
@@ -896,10 +909,14 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 ).drop(temp_var_column)
 
         if self.is_quadratic:
+            if quadratic_divider is not None:
+                data = data.sort(
+                    by=QUAD_VAR_KEY
+                )  # This ensures all elements in the brackets are grouped together
             data = data.with_columns(
                 pl.when(pl.col(QUAD_VAR_KEY) == "")
                 .then(pl.col(VAR_KEY))
-                .otherwise(pl.concat_str(VAR_KEY, pl.lit("*"), pl.col(QUAD_VAR_KEY)))
+                .otherwise(pl.concat_str(VAR_KEY, pl.lit(" * "), pl.col(QUAD_VAR_KEY)))
                 .alias(VAR_KEY)
             ).drop(QUAD_VAR_KEY)
 
@@ -915,6 +932,43 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         ).drop(COEF_KEY, VAR_KEY)
 
         # Combine terms into one string
+        if self.is_quadratic and quadratic_divider is not None:
+            query_first = pl.col("expr").str.contains("*", literal=True).cum_sum()
+            query_last = pl.col("expr").str.contains("*", literal=True).cum_sum(reverse=True)
+            if dimensions is not None:
+                query_first = query_first.over(dimensions)
+                query_last = query_last.over(dimensions)
+
+            data = data.with_columns(
+                pl.when(
+                    pl.col("expr").str.contains("*", literal=True),
+                    query_first == 1,
+                )
+                .then(
+                    pl.concat_str(
+                        pl.lit("+ [ "), pl.col("expr").str.strip_chars(characters=" +")
+                    )
+                )
+                .otherwise(pl.col("expr"))
+                .alias("expr")
+            ).with_columns(
+                pl.when(
+                    pl.col("expr").str.contains("*", literal=True), query_last == 1
+                )
+                .then(
+                    pl.concat_str(
+                        pl.col("expr"),
+                        pl.lit(
+                            " ]"
+                            if quadratic_divider == 1
+                            else f" ] / {quadratic_divider}"
+                        ),
+                    )
+                )
+                .otherwise(pl.col("expr"))
+                .alias("expr")
+            )
+
         if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
                 pl.col("expr").str.concat(delimiter=" ")
@@ -961,6 +1015,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         include_header=False,
         include_data=True,
         float_precision=None,
+        quadratic_divider=None,
     ):
         result = ""
         if include_header:
@@ -981,6 +1036,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 include_const_variable=include_const_variable,
                 var_map=var_map,
                 float_precision=float_precision,
+                quadratic_divider=quadratic_divider,
             )
             if include_prefix:
                 str_table = self.to_str_create_prefix(str_table)
@@ -1224,6 +1280,7 @@ class Constraint(ModelElementWithId):
         var_map=None,
         float_precision=None,
         const_map=None,
+        quadratic_divider=None,
     ) -> str:
         dims = self.dimensions
         str_table = self.lhs.to_str_table(
@@ -1231,6 +1288,7 @@ class Constraint(ModelElementWithId):
             max_rows=max_rows,
             include_const_term=False,
             var_map=var_map,
+            quadratic_divider=quadratic_divider,
         )
         str_table = self.to_str_create_prefix(str_table, const_map=const_map)
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)

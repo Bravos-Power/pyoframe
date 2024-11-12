@@ -140,6 +140,25 @@ class SupportPolarsMethodMixin(ABC):
     @abstractmethod
     def data(self): ...
 
+        
+    def select(self, **kwargs):
+        """
+        Filter elements by the given criteria and then drop the filtered dimensions.
+
+        Example:
+            >>> from pyoframe.core import Variable
+            >>> v = Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
+            >>> v.select(hour="06:00")
+            <Expression size=3 dimensions={'city': 3} terms=3>
+            [Toronto]: x4
+            [Berlin]: x5
+            [Paris]: x6
+            >>> v.select(hour="06:00", city="Toronto")
+            <Expression size=1 dimensions={} terms=1>
+            x4
+        """
+        return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
+
 
 class ModelElementWithId(ModelElement, AttrContainerMixin):
     """

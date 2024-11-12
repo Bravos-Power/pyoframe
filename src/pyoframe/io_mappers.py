@@ -72,9 +72,8 @@ class Mapper(ABC):
         if df.height == 0:
             return df
         df = df.rename({self._ID_COL: Mapper.NAME_COL})
-        # We use an inner join since sometimes Gurobi returns additional variables (i.e. quadratic variables)
         return df.join(
-            self.mapping_registry, on=Mapper.NAME_COL, how="inner", validate="m:1"
+            self.mapping_registry, on=Mapper.NAME_COL, how="left", validate="m:1"
         ).drop(Mapper.NAME_COL)
 
 

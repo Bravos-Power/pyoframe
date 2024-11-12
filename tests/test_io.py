@@ -49,5 +49,38 @@ def test_expression_with_const_to_str():
     assert str(expr) == "2 x1 +5"
 
 
+def test_quadratic_objective_to_str():
+    kwargs = dict(
+        include_prefix=False, include_const_variable=True, quadratic_divider=2
+    )
+    expr = (
+        5 * Variable() - 2 * Variable() ** 2 + 3 + 2 * Variable() + 4 * Variable() ** 2
+    )
+    assert expr.to_str(**kwargs) == "5 x1 +3 x0 +2 x3 + [ -4 x2 * x2 +8 x4 * x4 ] / 2"
+
+
+def test_quadratic_constraints_to_str():
+    kwargs = dict(quadratic_divider=1)
+    constraint = (
+        5 * Variable() - 2 * Variable() ** 2 + 3 + 2 * Variable() + 4 * Variable() ** 2
+        == 0
+    )
+    assert constraint.to_str(**kwargs) == "5 x1 +2 x3 + [ -2 x2 * x2 +4 x4 * x4 ] = -3"
+    df = pl.DataFrame({"x": [1, 2]})
+    constraint = (
+        5 * Variable(df)
+        - 2 * Variable(df) ** 2
+        + 3
+        + 2 * Variable(df)
+        + 4 * Variable(df) ** 2
+        == 0
+    )
+    assert (
+        constraint.to_str(**kwargs)
+        == """[1]: 5 x5 +2 x9 + [ 4 x11 * x11 -2 x7 * x7 ] = -3
+[2]: 5 x6 +2 x10 + [ 4 x12 * x12 -2 x8 * x8 ] = -3"""
+    )
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

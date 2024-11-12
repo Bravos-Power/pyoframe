@@ -86,7 +86,7 @@ def objective_to_file(m: "Model", f: TextIOWrapper, var_map):
     objective_sense = "minimize" if m.sense == ObjSense.MIN else "maximize"
     f.write(f"{objective_sense}\n\nobj:\n\n")
     result = m.objective.to_str(
-        var_map=var_map, include_prefix=False, include_const_variable=True
+        var_map=var_map, include_prefix=False, include_const_variable=True, quadratic_divider=2
     )
     f.write(result)
 
@@ -99,7 +99,7 @@ def constraints_to_file(m: "Model", f: TextIOWrapper, var_map, const_map):
         f,
         "s.t.",
     ):
-        f.write(constraint.to_str(var_map=var_map, const_map=const_map) + "\n")
+        f.write(constraint.to_str(var_map=var_map, const_map=const_map, quadratic_divider=1) + "\n")
 
 
 def bounds_to_file(m: "Model", f, var_map):
