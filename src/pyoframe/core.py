@@ -115,7 +115,9 @@ class SupportsMath(ABC, SupportsToExpr):
         """
         if power == 2:
             return self * self
-        raise ValueError(f"Raising an expressions to **{power} is not supported. Expressions can only be squared (**2).")
+        raise ValueError(
+            f"Raising an expressions to **{power} is not supported. Expressions can only be squared (**2)."
+        )
 
     def __neg__(self):
         res = self.to_expr() * -1
