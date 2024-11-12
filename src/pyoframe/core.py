@@ -126,6 +126,32 @@ class SupportsMath(ABC, SupportsToExpr):
     def __radd__(self, other):
         return self.to_expr() + other
 
+    def __truediv__(self, other):
+        """
+        Support division.
+        >>> from pyoframe import Variable
+        >>> var = Variable({"dim1": [1,2,3]})
+        >>> var / 2
+        <Expression size=3 dimensions={'dim1': 3} terms=3>
+        [1]: 0.5 x1
+        [2]: 0.5 x2
+        [3]: 0.5 x3
+        """
+        return self.to_expr() * (1 / other)
+
+    def __rsub__(self, other):
+        """
+        Support right subtraction.
+        >>> from pyoframe import Variable
+        >>> var = Variable({"dim1": [1,2,3]})
+        >>> 1 - var
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: 1  - x1
+        [2]: 1  - x2
+        [3]: 1  - x3
+        """
+        return other + (-self.to_expr())
+
     def __le__(self, other):
         """Equality constraint.
         Examples
@@ -169,6 +195,16 @@ SetTypes = Union[
 
 
 class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
+    """
+    A set which can then be used to index variables.
+
+    Examples:
+        >>> import pyoframe as pf
+        >>> pf.Set(x=range(2), y=range(3))
+        <Set size=6 dimensions={'x': 2, 'y': 3}>
+        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+    """
+
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
         data_list = list(data)
         for name, set in named_data.items():
@@ -248,7 +284,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 return self._new(
                     pl.concat([self.data, other.data]).unique(maintain_order=True)
                 )
-            except pl.ShapeError as e:
+            except pl.exceptions.ShapeError as e:
                 if "unable to vstack, column names don't match" in str(e):
                     raise PyoframeError(
                         f"Failed to add sets '{self.friendly_name}' and '{other.friendly_name}' because dimensions do not match ({self.dimensions} != {other.dimensions}) "
@@ -295,6 +331,10 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = set.to_frame()
         elif isinstance(set, Set):
             df = set.data
+        elif isinstance(set, range):
+            raise ValueError(
+                "Cannot convert a range to a set without a dimension name. Try Set(dim_name=range(...))"
+            )
         else:
             raise ValueError(f"Cannot convert type {type(set)} to a polars DataFrame")
 
@@ -507,7 +547,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 [
                     df.with_columns(pl.col(over).max())
                     for _, df in self.data.rolling(
-                        index_column=over, period=f"{window_size}i", by=remaining_dims
+                        index_column=over,
+                        period=f"{window_size}i",
+                        group_by=remaining_dims,
                     )
                 ]
             )
@@ -659,7 +701,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .unique(maintain_order=True)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
             )
-            data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
+            if POLARS_VERSION.major >= 1:
+                data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
+            else:
+                data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
             data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -675,11 +720,12 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         dims = self.dimensions
         constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
         if dims is not None:
-            return constant_terms.join(
-                self.data.select(dims).unique(maintain_order=True),
-                on=dims,
-                how="outer_coalesce",
-            ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
+            dims_df = self.data.select(dims).unique(maintain_order=True)
+            if POLARS_VERSION.major >= 1:
+                df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
+            else:
+                df = constant_terms.join(dims_df, on=dims, how="outer_coalesce")
+            return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
                 return pl.DataFrame(
