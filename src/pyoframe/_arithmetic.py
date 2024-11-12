@@ -106,9 +106,9 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
         >>> expr2 = df * x2 * 2 + 4
         >>> expr1 * expr2
         <Expression size=3 dimensions={'dim': 3} terms=6 degree=2>
-        [1]: 4 x1 +2 x2*x1
-        [2]: 8 x1 +8 x2*x1
-        [3]: 12 x1 +18 x2*x1
+        [1]: 4 x1 +2 x2 * x1
+        [2]: 8 x1 +8 x2 * x1
+        [3]: 12 x1 +18 x2 * x1
         >>> (expr1 * expr2) - df * x1 * df * x2 * 2
         <Expression size=3 dimensions={'dim': 3} terms=3>
         [1]: 4 x1
