@@ -140,7 +140,6 @@ class SupportPolarsMethodMixin(ABC):
     @abstractmethod
     def data(self): ...
 
-        
     def select(self, **kwargs):
         """
         Filter elements by the given criteria and then drop the filtered dimensions.

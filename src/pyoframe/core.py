@@ -934,7 +934,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         # Combine terms into one string
         if self.is_quadratic and quadratic_divider is not None:
             query_first = pl.col("expr").str.contains("*", literal=True).cum_sum()
-            query_last = pl.col("expr").str.contains("*", literal=True).cum_sum(reverse=True)
+            query_last = (
+                pl.col("expr").str.contains("*", literal=True).cum_sum(reverse=True)
+            )
             if dimensions is not None:
                 query_first = query_first.over(dimensions)
                 query_last = query_last.over(dimensions)
@@ -952,9 +954,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .otherwise(pl.col("expr"))
                 .alias("expr")
             ).with_columns(
-                pl.when(
-                    pl.col("expr").str.contains("*", literal=True), query_last == 1
-                )
+                pl.when(pl.col("expr").str.contains("*", literal=True), query_last == 1)
                 .then(
                     pl.concat_str(
                         pl.col("expr"),
