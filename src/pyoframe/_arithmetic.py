@@ -18,14 +18,35 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.core import Expression
 
 
-def _multiply_expressions(*expressions: "Expression") -> "Expression":
+def _multiply_expressions(self: "Expression", other: "Expression") -> "Expression":
+    """
+    Multiply two or more expressions together.
+
+    Examples:
+        >>> import pyoframe as pf
+        >>> m = pf.Model("min")
+        >>> m.x1 = pf.Variable()
+        >>> m.x2 = pf.Variable()
+        >>> m.x3 = pf.Variable()
+        >>> result = 5 * m.x1 * m.x2
+        >>> result
+        <Expression size=1 dimensions={} terms=1 degree=2>
+        5 x2 * x1
+        >>> result * m.x3
+        Traceback (most recent call last):
+        ...
+        pyoframe.constants.PyoframeError: Failed to multiply expressions:
+        <Expression size=1 dimensions={} terms=1 degree=2> * <Expression size=1 dimensions={} terms=1>
+        Due to error:
+        Cannot multiply a quadratic expression by a non-constant.
+    """
     try:
-        return _multiply_expressions_core(*expressions)
+        return _multiply_expressions_core(self, other)
     except PyoframeError as error:
         raise PyoframeError(
             "Failed to multiply expressions:\n"
             + " * ".join(
-                e.to_str(include_header=True, include_data=False) for e in expressions
+                e.to_str(include_header=True, include_data=False) for e in [self, other]
             )
             + "\nDue to error:\n"
             + str(error)
@@ -46,15 +67,7 @@ def _add_expressions(*expressions: "Expression") -> "Expression":
         ) from error
 
 
-def _multiply_expressions_core(*expressions: "Expression") -> "Expression":
-    if len(expressions) > 2:
-        result = expressions[0]
-        for expr in expressions[1:]:
-            result = _multiply_expressions(result, expr)
-        return result
-
-    self, other = expressions
-
+def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expression":
     self_degree, other_degree = self.degree(), other.degree()
     if self_degree + other_degree > 2:
         # We know one of the two must be a quadratic since 1 + 1 is not greater than 2.

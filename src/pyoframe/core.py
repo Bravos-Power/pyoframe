@@ -108,10 +108,14 @@ class SupportsMath(ABC, SupportsToExpr):
         >>> Variable() ** 2
         <Expression size=1 dimensions={} terms=1 degree=2>
         x1 * x1
+        >>> Variable() ** 3
+        Traceback (most recent call last):
+        ...
+        ValueError: Raising an expressions to **3 is not supported. Expressions can only be squared (**2).
         """
         if power == 2:
             return self * self
-        return NotImplemented
+        raise ValueError(f"Raising an expressions to **{power} is not supported. Expressions can only be squared (**2).")
 
     def __neg__(self):
         res = self.to_expr() * -1
