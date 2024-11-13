@@ -5,10 +5,12 @@
 
 using JuMP
 import Gurobi
+# import COPT
 
 function solve_facility(model, G, F)
+    set_silent(model)
     set_time_limit_sec(model, 0.0)
-    set_optimizer_attribute(model, "Presolve", 0)
+    # set_optimizer_attribute(model, "Presolve", 0)
     @variables(model, begin
         0 <= y[1:F, 1:2] <= 1
         s[0:G, 0:G, 1:F] >= 0
@@ -38,30 +40,33 @@ function solve_facility(model, G, F)
     return model
 end
 
+const GRB_ENV = Gurobi.Env()
+
 function get_model(arg)
-    if arg == "direct"
-        return direct_model(Gurobi.Optimizer())
-    else
-        return Model(Gurobi.Optimizer)
+    if arg == "gurobi"
+        return direct_model(Gurobi.Optimizer(GRB_ENV))
+    end
+    if arg == "copt"
+        return direct_model(COPT.Optimizer())
+    end
+    error("Unknown optimizer type: $arg")
+end
+
+function main(io::IO, optimizer_type, Ns = [25, 50, 75, 100])
+    for n in Ns
+        start = time()
+        optimizer = get_model(optimizer_type)
+        model = solve_facility(optimizer, n, n)
+        run_time = round(time() - start, digits=1)
+        num_var = num_variables(model)
+        content = "jump_$optimizer_type fac-$n $num_var $run_time"
+        println(stdout, content)
+        println(io, content)
     end
 end
 
-function main(io::IO, Ns = [25, 50, 75, 100])
-    for type in ["direct", "default"]
-        for n in Ns
-            start = time()
-            model = solve_facility(get_model(type), n, n)
-            run_time = round(Int, time() - start)
-            num_var = num_variables(model)
-            println(io, "$type fac-$n $num_var $run_time")
-        end
-    end
-end
-
-if isempty(ARGS)
-    main(stdout, [5])
-else
-    open(joinpath(@__DIR__, "benchmarks.csv"), "a") do io
-        main(io)
-    end
+optimizer_type = "gurobi" # ARGS[1]
+main(stdout, optimizer_type, [5])
+open(joinpath(@__DIR__, "benchmarks.csv"), "a") do io
+    main(io, optimizer_type)
 end

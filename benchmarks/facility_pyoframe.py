@@ -1,48 +1,75 @@
-# Copyright (c) 2022: Miles Lubin and contributors
+# Copyright (c) 2023: Yue Yang
 #
 # Use of this source code is governed by an MIT-style license that can be found
 # in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 
 import os
 import time
-import polars as pl
 import pyoframe as pf
-from pyoframe.constants import COEF_KEY
+import polars as pl
 
 def solve_facility(solver, G, F):
     model = pf.Model("min")
-    model.Grid = pf.Set(i=range(0, G))
-    model.Grid_Matrix = model.Grid * model.Grid.rename({"i": "j"})
-    model.Facs = pf.Set(f=range(1, F))
-    model.Dims = pf.Set(d=[1, 2])
-    model.y = pf.Variable(model.Facs, model.Dims, lb=0, ub=1)
-    model.s = pf.Variable(model.Grid_Matrix, model.Facs, lb=0)
-    model.z = pf.Variable(model.Grid_Matrix, model.Facs, vtype=pf.VType.BINARY)
-    model.r = pf.Variable(model.Grid_Matrix, model.Facs, model.Dims)
-    model.d = pf.Variable()
-    model.objective = model.d
-    model.assmt = pf.sum("f", model.z) == 1
-    model.quadrhs = model.s == model.d.add_dim("i", "j", "f") + 2*(2**(1/2))*(1 - model.z)
-    model.quaddistk1 = model.r.filter(d=1).drop("d") == (pl.DataFrame({"i": range(0, G), COEF_KEY: range(0, G)}).to_expr().add_dim("f") / G - model.y.filter(d=1).drop("d").add_dim("i")).add_dim("j")
-    model.quaddistk2 = model.r.filter(d=2).drop("d") == (pl.DataFrame({"j": range(0, G), COEF_KEY: range(0, G)}).to_expr().add_dim("f") / G - model.y.filter(d=2).drop("d").add_dim("j")).add_dim("i")
-    model.quaddist = model.r.filter(d=1).drop("d")**2 + model.r.filter(d=2).drop("d")**2 <= model.s**2 
-    model.attr["timelimit"] = 0.0
-    model.attr["presolve"] = False
-    model.solve()
-    return model
 
-def main(Ns = [25, 50, 75, 100]):
+    g_range = range(G)
+    model.facilities = pf.Set(f=range(F))
+    model.x_axis = pf.Set(x=g_range)
+    model.y_axis = pf.Set(y=g_range)
+    model.axis = pf.Set(d=[1, 2])
+    model.customers = model.x_axis * model.y_axis
+
+    model.facility_position = pf.Variable(model.facilities, model.axis, lb=0, ub=1)
+    model.customer_position_x = pl.DataFrame(
+        {"x": g_range, "x_pos": [step / (G - 1) for step in g_range]}
+    ).to_expr()
+    model.customer_position_y = pl.DataFrame(
+        {"y": g_range, "y_pos": [step / (G - 1) for step in g_range]}
+    ).to_expr()
+
+    model.max_distance = pf.Variable(lb=0)
+
+    model.is_closest = pf.Variable(model.customers, model.facilities, vtype="binary")
+    model.con_only_one_closest = pf.sum("f", model.is_closest) == 1
+
+    model.dist_x = pf.Variable(model.x_axis, model.facilities)
+    model.dist_y = pf.Variable(model.y_axis, model.facilities)
+    model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
+        "f"
+    ) - model.facility_position.select(d=1).add_dim("x")
+    model.con_dist_y = model.dist_y == model.customer_position_y.add_dim(
+        "f"
+    ) - model.facility_position.select(d=2).add_dim("y")
+    model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
+    model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
+        model.dist_y**2
+    ).add_dim("x")
+
+    M = (
+        2 * 1.414
+    )  # Twice the max distance which ensures that when is_closest is 0, the constraint is not binding.
+    model.con_max_distance = model.max_distance.add_dim(
+        "x", "y", "f"
+    ) >= model.dist - M * (1 - model.is_closest)
+
+    model.objective = model.max_distance
+    model.params.TimeLimit = 0
+    model.params.Presolve = 0
+
+    model.solve(solver, log_to_console=False)
+
+def main(Ns=[25, 50, 75, 100]):
     dir = os.path.realpath(os.path.dirname(__file__))
-    for n in Ns:
-        start = time.time()
-        try:
-            model = solve_facility('gurobi', n, n)
-        except Exception as e:
-            raise
-        run_time = round(time.time() - start)
-        with open(dir + "/benchmarks.csv", "a") as io:
-            io.write("pyoframe fac-%i -1 %i\n" % (n, run_time))
+    
+    for solver in ["poi-gurobi", "gurobi"]:
+        for n in Ns:
+            start = time.time()
+            solve_facility(solver, n, n)
+            run_time = round(time.time() - start, 1)
+            content = f"pyoframe-{solver} fac-{n} -1 {run_time}"
+            print(content)
+            with open(dir + "/benchmarks.csv", "a") as io:
+                io.write(f"{content}\n")
     return
 
-if __name__ == "__main__":
-    main()
+
+main()

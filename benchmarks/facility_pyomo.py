@@ -4,11 +4,13 @@
 # in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 
 import pyomo.environ as pyo
+from pyomo.contrib import appsi
 from pyomo.opt import SolverFactory
-import os
+import os, sys
 import time
 
-def solve_facility(solver, G, F):
+
+def solve_facility(solve_f, G, F):
     model = pyo.ConcreteModel()
     model.G = G
     model.F = F
@@ -21,43 +23,91 @@ def solve_facility(solver, G, F):
     model.r = pyo.Var(model.Grid, model.Grid, model.Facs, model.Dims)
     model.d = pyo.Var()
     model.obj = pyo.Objective(expr=1.0 * model.d)
-    def assmt_rule(mod,i,j):
-        return sum([mod.z[i,j,f] for f in mod.Facs]) == 1
+
+    def assmt_rule(mod, i, j):
+        return sum([mod.z[i, j, f] for f in mod.Facs]) == 1
+
     model.assmt = pyo.Constraint(model.Grid, model.Grid, rule=assmt_rule)
-    M = 2*1.414
-    def quadrhs_rule(mod,i,j,f):
-        return mod.s[i,j,f] == mod.d + M*(1 - mod.z[i,j,f])
-    model.quadrhs = pyo.Constraint(model.Grid, model.Grid, model.Facs, rule=quadrhs_rule)
-    def quaddistk1_rule(mod,i,j,f):
-        return mod.r[i,j,f,1] == (1.0*i)/mod.G - mod.y[f,1]
-    model.quaddistk1 = pyo.Constraint(model.Grid, model.Grid, model.Facs, rule=quaddistk1_rule)
-    def quaddistk2_rule(mod,i,j,f):
-        return mod.r[i,j,f,2] == (1.0*j)/mod.G - mod.y[f,2]
-    model.quaddistk2 = pyo.Constraint(model.Grid, model.Grid, model.Facs, rule=quaddistk2_rule)
-    def quaddist_rule(mod,i,j,f):
-        return mod.r[i,j,f,1]**2 + mod.r[i,j,f,2]**2 <= mod.s[i,j,f]**2
-    model.quaddist = pyo.Constraint(model.Grid, model.Grid, model.Facs, rule=quaddist_rule)
-    opt = SolverFactory(solver)
-    opt.options["timelimit"] = 0.0
-    opt.options["presolve"] = False
-    if solver == 'gurobi_persistent':
-        opt.set_instance(model)
-        opt.solve(tee=True)
-    else:
-        opt.solve(model, tee=True)
+    M = 2 * 1.414
+
+    def quadrhs_rule(mod, i, j, f):
+        return mod.s[i, j, f] == mod.d + M * (1 - mod.z[i, j, f])
+
+    model.quadrhs = pyo.Constraint(
+        model.Grid, model.Grid, model.Facs, rule=quadrhs_rule
+    )
+
+    def quaddistk1_rule(mod, i, j, f):
+        return mod.r[i, j, f, 1] == (1.0 * i) / mod.G - mod.y[f, 1]
+
+    model.quaddistk1 = pyo.Constraint(
+        model.Grid, model.Grid, model.Facs, rule=quaddistk1_rule
+    )
+
+    def quaddistk2_rule(mod, i, j, f):
+        return mod.r[i, j, f, 2] == (1.0 * j) / mod.G - mod.y[f, 2]
+
+    model.quaddistk2 = pyo.Constraint(
+        model.Grid, model.Grid, model.Facs, rule=quaddistk2_rule
+    )
+
+    def quaddist_rule(mod, i, j, f):
+        return mod.r[i, j, f, 1] ** 2 + mod.r[i, j, f, 2] ** 2 <= mod.s[i, j, f] ** 2
+
+    model.quaddist = pyo.Constraint(
+        model.Grid, model.Grid, model.Facs, rule=quaddist_rule
+    )
+    solve_f(model)
     return model
 
-def main(Ns = [25, 50, 75, 100]):
+
+def gurobi_persistent(model):
+    opt = SolverFactory("gurobi_persistent")
+    opt.options["timelimit"] = 0.0
+    opt.options["presolve"] = False
+    opt.set_instance(model)
+    opt.solve(tee=False, load_solutions=False)
+
+
+def appsi_gurobi(model):
+    opt = appsi.solvers.Gurobi()
+    opt.gurobi_options["OutputFlag"] = 0
+    opt.gurobi_options["TimeLimit"] = 0.0
+    opt.gurobi_options["Presolve"] = 0
+    opt.config.load_solution = False
+    opt.solve(model)
+
+
+def copt_persistent(model):
+    opt = SolverFactory("copt_persistent")
+    opt.options["timelimit"] = 0.0
+    # opt.options["presolve"] = True
+    opt.set_instance(model)
+    opt.solve(tee=False, load_solutions=False)
+
+
+def main(Ns=[25, 50, 75, 100]):
     dir = os.path.realpath(os.path.dirname(__file__))
+
+    optimizer = sys.argv[1] if len(sys.argv) > 1 else "gurobi"
+
+    if optimizer == "gurobi":
+        solver_f = gurobi_persistent
+        solver_name = "gurobi"
+    elif optimizer == "copt":
+        solver_f = copt_persistent
+        solver_name = "copt"
+    else:
+        raise ValueError(f"Unknown solver {optimizer}")
+
     for n in Ns:
         start = time.time()
-        try:
-            model = solve_facility('gurobi', n, n)
-        except:
-            pass
-        run_time = round(time.time() - start)
+        model = solve_facility(solver_f, n, n)
+        run_time = round(time.time() - start, 1)
+        content = f"pyomo_{solver_name} fac-{n} -1 {run_time}"
+        print(content)
         with open(dir + "/benchmarks.csv", "a") as io:
-            io.write("pyomo fac-%i -1 %i\n" % (n, run_time))
+            io.write(f"{content}\n")
     return
 
 if __name__ == "__main__":
