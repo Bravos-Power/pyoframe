@@ -7,6 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, Union, TYPE_CHECKING
 
+import numpy as np
 import polars as pl
 
 from pyoframe.constants import (
@@ -16,9 +17,11 @@ from pyoframe.constants import (
     RC_COL,
     VAR_KEY,
     CONSTRAINT_KEY,
+    COEF_KEY,
     Result,
     Solution,
     Status,
+    ConstraintSense,
 )
 import contextlib
 import pyoframe as pf
@@ -35,6 +38,14 @@ with contextlib.suppress(ImportError):
     import gurobipy
 
     available_solvers.append("gurobi")
+
+with contextlib.suppress(ImportError):
+    import pyoptinterface
+
+    with contextlib.suppress(ImportError):
+        from pyoptinterface import gurobi as poi_gurobi
+
+        available_solvers.append("poi-gurobi")
 
 
 def _register_solver(solver_name):
@@ -85,23 +96,23 @@ def solve(
     result = m.solver.process_result(result)
     m.result = result
 
-    if result.solution is not None:
-        if m.objective is not None:
-            m.objective.value = result.solution.objective
+    # if result.solution is not None:
+    #     if m.objective is not None:
+    #         m.objective.value = result.solution.objective
 
-        for variable in m.variables:
-            variable.solution = result.solution.primal
+    #     for variable in m.variables:
+    #         variable.solution = result.solution.primal
 
-        if result.solution.dual is not None:
-            for constraint in m.constraints:
-                constraint.dual = result.solution.dual
+    #     if result.solution.dual is not None:
+    #         for constraint in m.constraints:
+    #             constraint.dual = result.solution.dual
 
     return result
 
 
 class Solver(ABC):
     def __init__(self, model: "Model", log_to_console, params, directory):
-        self._model = model
+        self._model: "Model" = model
         self.solver_model: Optional[Any] = None
         self.log_to_console: bool = log_to_console
         self.params = params
@@ -206,6 +217,110 @@ class FileBasedSolver(Solver):
 
     @abstractmethod
     def _get_all_slack_unmapped(self): ...
+
+
+@_register_solver("poi")
+class PoiSolver(Solver):
+    def create_solver_model(self, use_var_names) -> Any:
+        solver_model: poi_gurobi.Model = self._get_empty_model()
+        var_map = []
+        for variable in self._model.variables:
+            var_map.append(
+                variable.data.select(
+                    pl.col(VAR_KEY),
+                    pl.col(VAR_KEY).map_elements(lambda _: solver_model.add_variable().index, return_dtype=pl.Int32).alias("var_id"),
+                )
+            )
+        var_map = pl.concat(var_map)
+
+        const_map = []
+
+        sense_mapping = {
+            ConstraintSense.EQ: pyoptinterface.ConstraintSense.Equal,
+            ConstraintSense.LE: pyoptinterface.ConstraintSense.LessEqual,
+            ConstraintSense.GE: pyoptinterface.ConstraintSense.GreaterEqual,
+        }
+
+        for constraint in self._model.constraints:
+            sense = sense_mapping[constraint.sense]
+            if constraint.dimensions is None:
+                const_map_addition = pl.DataFrame(
+                    {
+                        "const_id": [
+                            solver_model.add_linear_constraint(
+                                pyoptinterface.ScalarAffineFunction(
+                                    coefficients=constraint.lhs.data.get_column(
+                                        COEF_KEY
+                                    ).to_numpy(),
+                                    variables=constraint.lhs.data.get_column(VAR_KEY)
+                                    .map(var_map)
+                                    .to_numpy(),
+                                ),
+                                sense=sense,
+                                rhs=0,
+                            ).index
+                        ],
+                        CONSTRAINT_KEY: constraint.data.value,
+                    }
+                )
+
+            else:
+                const_map_addition = (
+                    constraint.data.join(constraint.lhs.variable_terms, on=constraint.dimensions)
+                    .select(CONSTRAINT_KEY, COEF_KEY, VAR_KEY)
+                    .join(var_map, on=VAR_KEY, how="left")
+                    .select(CONSTRAINT_KEY, COEF_KEY, "var_id")
+                    .group_by(CONSTRAINT_KEY, maintain_order=True)
+                    .agg(
+                        pl.col(COEF_KEY),
+                        pl.col("var_id"),
+                    )
+                )
+                const_map_addition = const_map_addition.select(
+                    pl.col(CONSTRAINT_KEY),
+                    pl.struct(pl.col(COEF_KEY), pl.col("var_id")).map_elements(
+                        lambda x: solver_model.add_linear_constraint(
+                            pyoptinterface.ScalarAffineFunction(
+                                coefficients=np.array(x[COEF_KEY]),
+                                variables=np.array(x["var_id"]),
+                            ),
+                            sense=sense,
+                            rhs=0,
+                        ),
+                        return_dtype=pl.Int32,
+                    ),
+                )
+            const_map.append(const_map_addition)
+        const_map = pl.concat(const_map)
+
+        self.var_map = var_map
+        self.const_map = const_map
+        return solver_model
+
+    def set_attr(self, element, param_name, param_value):
+        pass  # TODO
+
+    def solve(self, log_fn, warmstart_fn, basis_fn, solution_file) -> Result:
+        self.solver_model.optimize()
+
+    def process_result(self, results: Result) -> Result:
+        pass  # TODO
+
+    def _get_all_rc(self):
+        pass  # TODO
+
+    def _get_all_slack(self):
+        pass  # TODO
+
+    @abstractmethod
+    def _get_empty_model(self): ...
+
+
+@_register_solver("poi-gurobi")
+class PoiGurobiSolver(PoiSolver):
+    def _get_empty_model(self):
+        env = gurobipy.Env(params=self.params)
+        return poi_gurobi.Model(env)
 
 
 @_register_solver("gurobi")

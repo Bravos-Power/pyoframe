@@ -39,7 +39,8 @@ docs = [
     "mkdocs-literate-nav",
 ]
 benchmarks = [
-    "pyomo"
+    "pyomo",
+    "pyoptinterface"
 ]
 
 [tool.isort]
