@@ -1,7 +1,7 @@
 import pytest
 import polars as pl
 
-from pyoframe.core import Expression, Variable
+from pyoframe import Expression, Variable, Model
 
 
 @pytest.fixture
@@ -22,12 +22,12 @@ def expression_with_dimensions():
 
 
 def test_variables_to_string():
-    expression = (
-        5 * Variable()
-        + 3.4 * Variable()
-        - 2.1 * Variable()
-        + 1.1231237019273 * Variable()
-    )
+    m = Model()
+    m.x1 = Variable()
+    m.x2 = Variable()
+    m.x3 = Variable()
+    m.x4 = Variable()
+    expression = 5 * m.x1 + 3.4 * m.x2 - 2.1 * m.x3 + 1.1231237019273 * m.x4
     assert str(expression) == "5 x1 +3.4 x2 -2.1 x3 +1.1231237019273 x4"
 
 
@@ -45,9 +45,10 @@ def test_variables_to_string_with_dimensions(expression_with_dimensions: Express
 
 
 def test_expression_with_const_to_str():
-    expr = 5 + 2 * Variable()
+    m = Model()
+    m.x1 = Variable()
+    expr = 5 + 2 * m.x1
     assert str(expr) == "2 x1 +5"
-
 
 if __name__ == "__main__":
     pytest.main([__file__])

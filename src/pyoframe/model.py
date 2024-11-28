@@ -6,17 +6,18 @@ from pyoframe.constants import (
     Result,
     PyoframeError,
     ObjSenseValue,
+    CONST_TERM,
 )
-from pyoframe.io_mappers import NamedVariableMapper, IOMappers
+from pyoframe.io_mappers import NamedVariableMapper
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.core import Constraint
 from pyoframe.objective import Objective
 from pyoframe.user_defined import Container, AttrContainerMixin
 from pyoframe.core import Variable
-from pyoframe.io import to_file
-from pyoframe.solvers import solve, Solver
 import polars as pl
 import pandas as pd
+import pyoptinterface
+from pathlib import Path
 
 
 class Model(AttrContainerMixin):
@@ -38,9 +39,18 @@ class Model(AttrContainerMixin):
         "attr",
         "sense",
         "objective",
+        "_use_var_names",
+        "ONE",
     ]
 
-    def __init__(self, min_or_max: Union[ObjSense, ObjSenseValue], name=None, **kwargs):
+    def __init__(
+        self,
+        min_or_max: Union[ObjSense, ObjSenseValue] = "min",
+        name=None,
+        solver: str = "gurobi",
+        use_var_names=False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
@@ -49,12 +59,32 @@ class Model(AttrContainerMixin):
         self.var_map = (
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
         )
-        self.io_mappers: Optional[IOMappers] = None
         self.name = name
-        self.solver: Optional[Solver] = None
-        self.solver_model: Optional[Any] = None
+        self.solver_model: Optional["pyoptinterface.gurobi.Model"] = (
+            Model.create_pyoptint_model(solver)
+        )
         self.params = Container()
-        self.result: Optional[Result] = None
+        self._use_var_names = use_var_names
+
+    @property
+    def use_var_names(self):
+        return self._use_var_names
+
+    @staticmethod
+    def create_pyoptint_model(solver: str):
+        if solver == "gurobi":
+            from pyoptinterface.gurobi import Model
+        elif solver == "highs":
+            from pyoptinterface.highs import Model
+        elif solver == "copt":
+            from pyoptinterface.copt import Model
+        else:
+            raise ValueError(f"Solver {solver} not recognized or supported.")
+        model = Model()
+        constant_var = model.add_variable(lb=1, ub=1, name="ONE")
+        if constant_var.index != CONST_TERM:
+            raise ValueError("The first variable should have index 0.")
+        return model
 
     @property
     def variables(self) -> List[Variable]:
@@ -112,5 +142,15 @@ class Model(AttrContainerMixin):
     def __repr__(self) -> str:
         return f"""Model '{self.name}' ({len(self.variables)} vars, {len(self.constraints)} constrs, {1 if self.objective else "no"} obj)"""
 
-    to_file = to_file
-    solve = solve
+    def write(self, file_path: Union[Path, str]):
+        file_path = Path(file_path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        self.solver_model.write(str(file_path))
+
+    def solve(
+        self, log_to_console=True, solution_file: Optional[Union[Path, str]] = None
+    ):
+        self.attr.Silent = not log_to_console
+        self.solver_model.optimize()
+        if solution_file is not None:
+            self.write(solution_file)

@@ -38,13 +38,14 @@ def test_to_str():
     assert str(expr) == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
     # str() is the same as to_str()
     assert expr.to_str() == str(expr)
-    assert expr.to_str(float_precision=6) == "[1]: 2\n[2]: 3\n[3]: 4"
+    pf.Config.str_float_precision = 6
+    assert expr.to_str() == "[1]: 2\n[2]: 3\n[3]: 4"
     # repr() is what is used when the object is printed in the console
     assert (
         repr(expr)
         == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2\n[2]: 3\n[3]: 4"
     )
-    pf.Config.print_float_precision = None
+    pf.Config.str_float_precision = None
     assert (
         repr(expr)
         == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2.00000000001\n[2]: 3\n[3]: 4"

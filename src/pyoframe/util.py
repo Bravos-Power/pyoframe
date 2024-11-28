@@ -10,7 +10,7 @@ import polars as pl
 import pandas as pd
 from functools import wraps
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
@@ -82,6 +82,8 @@ def concat_dimensions(
             The prefix to be added to the concated dimension.
         keep_dims : bool, optional
             If True, the original dimensions are kept in the new DataFrame.
+        replace_spaces : bool, optional
+            If True, replaces spaces with underscores.
 
     Examples:
         >>> import polars as pl
@@ -170,9 +172,10 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True, float_precision=None
+    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True
 ) -> pl.DataFrame:
     """
+    Converts column `column_name` of the dataframe `df` to a string. Rounds to `Config.print_float_precision` decimal places if not None.
     Parameters:
         df : pl.DataFrame
             The input DataFrame.
@@ -180,8 +183,6 @@ def cast_coef_to_string(
             The name of the column to be casted.
         drop_ones : bool, optional
             If True, 1s are replaced with an empty string for non-constant terms.
-        float_precision : int, optional
-            The number of decimal places to round the coefficients to. If None, no rounding is done (so Polars' default precision is used).
     Examples:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
@@ -203,8 +204,8 @@ def cast_coef_to_string(
         _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
     )
 
-    if float_precision is not None:
-        df = df.with_columns(pl.col(column_name).round(float_precision))
+    if Config.str_float_precision is not None:
+        df = df.with_columns(pl.col(column_name).round(Config.str_float_precision))
 
     df = df.with_columns(
         pl.when(pl.col(column_name) == pl.col(column_name).floor())

@@ -60,10 +60,11 @@ def test_multiplication_no_common_dimensions():
 
 
 def test_within_set():
+    m = Model()
     small_set = Set(x=[1, 2], y=["a"])
     large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
-    v = Variable(large_set)
-    result = v.to_expr().within(small_set)
+    m.v = Variable(large_set)
+    result = m.v.to_expr().within(small_set)
     assert_frame_equal(
         result.data,
         pl.DataFrame(
@@ -101,10 +102,11 @@ def test_filter_constraint():
 
 
 def test_filter_variable():
-    v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
-    result = v.filter(dim1=2)
+    m = Model()
+    m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
+    result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
-    assert str(result) == "[2]: x2"
+    assert str(result) == "[2]: v[2]"
 
 
 def test_filter_set():
@@ -217,8 +219,10 @@ def test_add_expression_with_add_dim():
 
 
 def test_add_expression_with_vars_and_add_dim():
+    m = Model()
+    m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
-    lhs = (1 + 2 * Variable()).add_dim("dim1")
+    lhs = (1 + 2 * m.v).add_dim("dim1")
     result = lhs + expr_with_dim
     expected_result = pl.DataFrame(
         {
@@ -250,8 +254,11 @@ def test_add_expression_with_vars_and_add_dim_many():
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
-    lhs = 1 + 2 * Variable(dim1, dim2)
-    rhs = 3 + 4 * Variable(dim3, dim2)
+    m = Model()
+    m.v1 = Variable(dim1, dim2)
+    m.v2 = Variable(dim3, dim2)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
 
     with pytest.raises(
         PyoframeError,

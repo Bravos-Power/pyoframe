@@ -14,6 +14,7 @@ from typing import Literal, Optional, Union
 
 import polars as pl
 from packaging import version
+import pyoptinterface as poi
 
 # We want to try and support multiple major versions of polars
 POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
@@ -53,7 +54,7 @@ class _ConfigMeta(type):
 
 class Config(metaclass=_ConfigMeta):
     disable_unmatched_checks: bool = False
-    print_float_precision: Optional[int] = 5
+    str_float_precision: Optional[int] = 5
     print_uses_variable_names: bool = True
     # Number of elements to show when printing a set to the console (additional elements are replaced with ...)
     print_max_set_elements: int = 50
@@ -73,6 +74,16 @@ class ConstraintSense(Enum):
     GE = ">="
     EQ = "="
 
+    def to_poi(self):
+        if self == ConstraintSense.LE:
+            return poi.ConstraintSense.LessEqual
+        elif self == ConstraintSense.EQ:
+            return poi.ConstraintSense.Equal
+        elif self == ConstraintSense.GE:
+            return poi.ConstraintSense.GreaterEqual
+        else:
+            raise ValueError(f"Invalid constraint type: {self}")
+
 
 class ObjSense(Enum):
     MIN = "min"
@@ -83,6 +94,16 @@ class VType(Enum):
     CONTINUOUS = "continuous"
     BINARY = "binary"
     INTEGER = "integer"
+
+    def to_poi(self):
+        if self == VType.CONTINUOUS:
+            return poi.VariableDomain.Continuous
+        elif self == VType.BINARY:
+            return poi.VariableDomain.Binary
+        elif self == VType.INTEGER:
+            return poi.VariableDomain.Integer
+        else:
+            raise ValueError(f"Invalid variable type: {self}")
 
 
 class UnmatchedStrategy(Enum):
