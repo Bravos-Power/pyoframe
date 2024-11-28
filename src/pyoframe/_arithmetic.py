@@ -111,18 +111,19 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
 
     Examples:
         >>> import polars as pl
-        >>> from pyoframe import Variable
+        >>> import pyoframe as pf
+        >>> m = pf.Model()
         >>> df = pl.DataFrame({"dim": [1, 2, 3], "value": [1, 2, 3]})
-        >>> x1 = Variable()
-        >>> x2 = Variable()
-        >>> expr1 = df * x1
-        >>> expr2 = df * x2 * 2 + 4
+        >>> m.x1 = pf.Variable()
+        >>> m.x2 = pf.Variable()
+        >>> expr1 = df * m.x1
+        >>> expr2 = df * m.x2 * 2 + 4
         >>> expr1 * expr2
         <Expression size=3 dimensions={'dim': 3} terms=6 degree=2>
         [1]: 4 x1 +2 x2 * x1
         [2]: 8 x1 +8 x2 * x1
         [3]: 12 x1 +18 x2 * x1
-        >>> (expr1 * expr2) - df * x1 * df * x2 * 2
+        >>> (expr1 * expr2) - df * m.x1 * df * m.x2 * 2
         <Expression size=3 dimensions={'dim': 3} terms=3>
         [1]: 4 x1
         [2]: 8 x1

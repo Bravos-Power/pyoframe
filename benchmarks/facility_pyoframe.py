@@ -8,6 +8,7 @@ import time
 import pyoframe as pf
 import polars as pl
 
+
 def solve_facility(solver, G, F):
     model = pf.Model("min")
 
@@ -55,11 +56,12 @@ def solve_facility(solver, G, F):
     model.params.TimeLimit = 0
     model.params.Presolve = 0
 
-    model.solve(solver, log_to_console=False)
+    model.solve(log_to_console=False)
+
 
 def main(Ns=[25, 50, 75, 100]):
     dir = os.path.realpath(os.path.dirname(__file__))
-    
+
     for solver in ["poi-gurobi", "gurobi"]:
         for n in Ns:
             start = time.time()

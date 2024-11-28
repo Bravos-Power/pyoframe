@@ -4,8 +4,8 @@ import os
 from pathlib import Path
 
 
-def main(G=4, F=3, **kwargs):
-    model = pf.Model("min")
+def main(directory, G=4, F=3, use_var_names=True, **kwargs):
+    model = pf.Model("min", use_var_names=use_var_names)
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))
@@ -96,10 +96,9 @@ if __name__ == "__main__":
     G, F = 4, 3
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
     model = main(
-        G,
-        F,
+        G=G,
+        F=F,
         directory=working_dir / "results",
-        use_var_names=True,
         solution_file=working_dir / "results" / "pyoframe-problem.sol",
     )
     draw_results(model, G, F)

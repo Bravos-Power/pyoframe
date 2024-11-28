@@ -1,7 +1,5 @@
-from typing import Optional
-from pyoframe.constants import COEF_KEY
 from pyoframe.core import SupportsMath, Expression
-
+import pyoptinterface as poi
 
 class Objective(Expression):
     r"""
@@ -23,23 +21,11 @@ class Objective(Expression):
         assert (
             self.dimensions is None
         ), "Objective cannot have dimensions as it must be a single expression"
-        self._value: Optional[float] = None
 
     @property
-    def value(self):
-        if self._value is None:
-            raise ValueError(
-                "Objective value is not available before solving the model"
-            )
-        return self._value
+    def value(self) -> float:
+        self._model.solver_model.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
 
-    @value.setter
-    def value(self, value):
-        self._value = value
-
-    @property
-    def has_constant(self):
-        constant_terms = self.constant_terms
-        if len(constant_terms) == 0:
-            return False
-        return constant_terms.get_column(COEF_KEY).item() != 0
+    def on_add_to_model(self, model, name):
+        super().on_add_to_model(model, name)
+        self._model.solver_model.set_objective(self.to_poi())

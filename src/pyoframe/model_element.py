@@ -145,16 +145,17 @@ class SupportPolarsMethodMixin(ABC):
         Filter elements by the given criteria and then drop the filtered dimensions.
 
         Example:
-            >>> from pyoframe.core import Variable
-            >>> v = Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
-            >>> v.select(hour="06:00")
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
+            >>> m.v.select(hour="06:00")
             <Expression size=3 dimensions={'city': 3} terms=3>
-            [Toronto]: x4
-            [Berlin]: x5
-            [Paris]: x6
-            >>> v.select(hour="06:00", city="Toronto")
+            [Toronto]: v[06:00,Toronto]
+            [Berlin]: v[06:00,Berlin]
+            [Paris]: v[06:00,Paris]
+            >>> m.v.select(hour="06:00", city="Toronto")
             <Expression size=1 dimensions={} terms=1>
-            x4
+            v[06:00,Toronto]
         """
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 
@@ -166,40 +167,23 @@ class ModelElementWithId(ModelElement, AttrContainerMixin):
     IDs are only unique for the subclass since different subclasses have different counters.
     """
 
-    # Keys are the subclass names and values are the next unasigned ID.
-    _id_counters: Dict[str, int] = defaultdict(lambda: 1)
+    def on_add_to_model(self, model, name):
+        super().on_add_to_model(model, name)
+        self._assign_ids()
+        assert self._has_ids, "_assign_ids() was not properly implemented"
 
-    @classmethod
-    def reset_counters(cls):
-        """
-        Resets all the ID counters.
-        This function is called before every unit test to reset the code state.
-        """
-        cls._id_counters = defaultdict(lambda: 1)
+    @abstractmethod
+    def _assign_ids(self) -> pl.DataFrame: ...
 
-    def __init__(self, data: pl.DataFrame, **kwargs) -> None:
-        super().__init__(data, **kwargs)
-        self._data = self._assign_ids(self.data)
+    @property
+    def _has_ids(self) -> bool:
+        return self.get_id_column_name() in self.data.columns
 
-    @classmethod
-    def _assign_ids(cls, df: pl.DataFrame) -> pl.DataFrame:
-        """
-        Adds the column `to_column` to the DataFrame `df` with the next batch
-        of unique consecutive IDs.
-        """
-        cls_name = cls.__name__
-        cur_count = cls._id_counters[cls_name]
-        id_col_name = cls.get_id_column_name()
-
-        if df.height == 0:
-            df = df.with_columns(pl.lit(cur_count).alias(id_col_name))
-        else:
-            df = df.with_columns(
-                pl.int_range(cur_count, cur_count + pl.len()).alias(id_col_name)
+    def _assert_has_ids(self):
+        if not self._has_ids:
+            raise ValueError(
+                f"Cannot use '{self.__class__.__name__}' before it has beed added to a model."
             )
-        df = df.with_columns(pl.col(id_col_name).cast(pl.UInt32))
-        cls._id_counters[cls_name] += df.height
-        return df
 
     @classmethod
     @abstractmethod
@@ -210,6 +194,7 @@ class ModelElementWithId(ModelElement, AttrContainerMixin):
 
     @property
     def ids(self) -> pl.DataFrame:
+        self._assert_has_ids()
         return self.data.select(self.dimensions_unsafe + [self.get_id_column_name()])
 
     def _extend_dataframe_by_id(self, addition: pl.DataFrame):
