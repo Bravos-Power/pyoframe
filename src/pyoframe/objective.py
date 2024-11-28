@@ -1,6 +1,7 @@
 from pyoframe.core import SupportsMath, Expression
 import pyoptinterface as poi
 
+
 class Objective(Expression):
     r"""
     Examples:

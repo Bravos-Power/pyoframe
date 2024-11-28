@@ -915,7 +915,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         include_const_term=True,
         var_map=None,
         include_header=False,
-        include_data=True
+        include_data=True,
     ):
         result = ""
         if include_header:
@@ -929,7 +929,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 max_line_len=max_line_len,
                 max_rows=max_rows,
                 include_const_term=include_const_term,
-                var_map=var_map
+                var_map=var_map,
             )
             str_table = self.to_str_create_prefix(str_table)
             result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
@@ -937,11 +937,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return result
 
     def __repr__(self) -> str:
-        return self.to_str(
-            max_line_len=80,
-            max_rows=15,
-            include_header=True
-        )
+        return self.to_str(max_line_len=80, max_rows=15, include_header=True)
 
     def __str__(self) -> str:
         return self.to_str()
@@ -1218,18 +1214,13 @@ class Constraint(ModelElementWithId):
 
         return self
 
-    def to_str(
-        self,
-        max_line_len=None,
-        max_rows=None,
-        var_map=None
-    ) -> str:
+    def to_str(self, max_line_len=None, max_rows=None, var_map=None) -> str:
         dims = self.dimensions
         str_table = self.lhs.to_str_table(
             max_line_len=max_line_len,
             max_rows=max_rows,
             include_const_term=False,
-            var_map=var_map
+            var_map=var_map,
         )
         str_table = self.lhs.to_str_create_prefix(str_table)
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
