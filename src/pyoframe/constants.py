@@ -103,6 +103,14 @@ class ObjSense(Enum):
     MIN = "min"
     MAX = "max"
 
+    def to_poi(self):
+        if self == ObjSense.MIN:
+            return poi.ObjectiveSense.Minimize
+        elif self == ObjSense.MAX:
+            return poi.ObjectiveSense.Maximize
+        else:
+            raise ValueError(f"Invalid objective sense: {self}")
+
 
 class VType(Enum):
     CONTINUOUS = "continuous"

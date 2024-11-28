@@ -279,22 +279,25 @@ def test_add_expression_with_vars_and_add_dim_many():
     result = lhs + rhs
     assert (
         str(result)
-        == """[1,a,4]: 4  +2 x1 +4 x5
-[1,a,5]: 4  +2 x1 +4 x7
-[1,b,4]: 4  +2 x2 +4 x6
-[1,b,5]: 4  +2 x2 +4 x8
-[2,a,4]: 4  +2 x3 +4 x5
-[2,a,5]: 4  +2 x3 +4 x7
-[2,b,4]: 4  +2 x4 +4 x6
-[2,b,5]: 4  +2 x4 +4 x8"""
+        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[4,a]
+[1,a,5]: 4  +2 v1[1,a] +4 v2[5,a]
+[1,b,4]: 4  +2 v1[1,b] +4 v2[4,b]
+[1,b,5]: 4  +2 v1[1,b] +4 v2[5,b]
+[2,a,4]: 4  +2 v1[2,a] +4 v2[4,a]
+[2,a,5]: 4  +2 v1[2,a] +4 v2[5,a]
+[2,b,4]: 4  +2 v1[2,b] +4 v2[4,b]
+[2,b,5]: 4  +2 v1[2,b] +4 v2[5,b]"""
     )
 
 
 def test_add_expression_with_missing():
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    lhs = 1 + 2 * Variable(dim2)
-    rhs = 3 + 4 * Variable(dim2_large)
+    m = Model()
+    m.v1 = Variable(dim2)
+    m.v2 = Variable(dim2_large)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
 
     with pytest.raises(
         PyoframeError,
@@ -307,34 +310,37 @@ def test_add_expression_with_missing():
     result = lhs + rhs.drop_unmatched()
     assert (
         str(result)
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2"""
+        == """[a]: 4  +4 v2[a] +2 v1[a]
+[b]: 4  +4 v2[b] +2 v1[b]"""
     )
     result = lhs + rhs.keep_unmatched()
     assert (
         str(result)
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2
-[c]: 3  +4 x5"""
+        == """[a]: 4  +4 v2[a] +2 v1[a]
+[b]: 4  +4 v2[b] +2 v1[b]
+[c]: 3  +4 v2[c]"""
     )
 
     Config.disable_unmatched_checks = True
     result = lhs + rhs
     assert (
         str(result)
-        == """[a]: 4  +2 x1 +4 x3
-[b]: 4  +2 x2 +4 x4
-[c]: 3  +4 x5"""
+        == """[a]: 4  +2 v1[a] +4 v2[a]
+[b]: 4  +2 v1[b] +4 v2[b]
+[c]: 3  +4 v2[c]"""
     )
 
 
 def test_add_expressions_with_dims_and_missing():
+    m = Model()
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
     dim3 = Set(z=[4, 5])
-    lhs = 1 + 2 * Variable(dim, dim2)
-    rhs = 3 + 4 * Variable(dim2_large, dim3)
+    m.v1 = Variable(dim, dim2)
+    m.v2 = Variable(dim2_large, dim3)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
     with pytest.raises(
         PyoframeError,
         match=re.escape(
@@ -369,14 +375,14 @@ def test_add_expressions_with_dims_and_missing():
     result = lhs + rhs.drop_unmatched()
     assert (
         str(result)
-        == """[1,a,4]: 4  +2 x1 +4 x5
-[1,a,5]: 4  +2 x1 +4 x6
-[1,b,4]: 4  +2 x2 +4 x7
-[1,b,5]: 4  +2 x2 +4 x8
-[2,a,4]: 4  +2 x3 +4 x5
-[2,a,5]: 4  +2 x3 +4 x6
-[2,b,4]: 4  +2 x4 +4 x7
-[2,b,5]: 4  +2 x4 +4 x8"""
+        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[a,4]
+[1,a,5]: 4  +2 v1[1,a] +4 v2[a,5]
+[1,b,4]: 4  +2 v1[1,b] +4 v2[b,4]
+[1,b,5]: 4  +2 v1[1,b] +4 v2[b,5]
+[2,a,4]: 4  +2 v1[2,a] +4 v2[a,4]
+[2,a,5]: 4  +2 v1[2,a] +4 v2[a,5]
+[2,b,4]: 4  +2 v1[2,b] +4 v2[b,4]
+[2,b,5]: 4  +2 v1[2,b] +4 v2[b,5]"""
     )
 
 
@@ -469,3 +475,4 @@ def test_variable_equals():
     m.objective = sum(m.Choose100)
     m.solve(log_to_console=False)
     assert m.objective.value == 300
+    assert m.objective.evaluate() == 300

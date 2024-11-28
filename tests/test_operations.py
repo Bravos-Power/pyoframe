@@ -34,7 +34,7 @@ def test_to_str():
     3,4
 """
     )
-
+    pf.Config.str_float_precision = None
     assert str(expr) == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
     # str() is the same as to_str()
     assert expr.to_str() == str(expr)

@@ -3,6 +3,7 @@ from pyoframe.constants import POLARS_VERSION
 import polars as pl
 from polars.testing import assert_frame_equal
 import pytest
+import pyoptinterface as poi
 
 check_dtypes_false = (
     {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtype": False}
@@ -126,7 +127,7 @@ def test_setting_constraint_attr():
 
     # Solving it should return unbounded
     result = m.solve()
-    assert not result.status.is_ok
+    assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model bounded by setting the Sense attribute
     m.A_con.attr.Sense = "<"
@@ -134,7 +135,7 @@ def test_setting_constraint_attr():
 
     # Now the model should be bounded
     result = m.solve()
-    assert result.status.is_ok
+    assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
 def test_setting_model_attr():
@@ -144,24 +145,23 @@ def test_setting_model_attr():
     m.objective = m.A
 
     # Solving it should return unbounded
-    result = m.solve()
-    assert not result.status.is_ok
+    m.solve()
+    assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model a minimization problem
     m.attr.ModelSense = 1
 
     # Now the model should be bounded
-    result = m.solve()
-    assert result.status.is_ok
+    m.solve()
+    assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
 @pytest.mark.parametrize("use_var_names", [True, False])
 def test_const_term_in_objective(use_var_names):
-    m = pf.Model("max")
+    m = pf.Model("max", use_var_names=use_var_names)
     m.A = pf.Variable(ub=10)
     m.objective = 10 + m.A
 
-    result = m.solve(use_var_names=use_var_names)
-    assert result.status.is_ok
+    m.solve()
     assert m.A.solution == 10
     assert m.objective.value == 20

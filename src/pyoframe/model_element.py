@@ -13,7 +13,6 @@ from pyoframe.constants import (
     COL_DTYPES,
 )
 from pyoframe._arithmetic import _get_dimensions
-from pyoframe.user_defined import AttrContainerMixin
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -160,7 +159,7 @@ class SupportPolarsMethodMixin(ABC):
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 
 
-class ModelElementWithId(ModelElement, AttrContainerMixin):
+class ModelElementWithId(ModelElement):
     """
     Provides a method that assigns a unique ID to each row in a DataFrame.
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
