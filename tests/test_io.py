@@ -50,5 +50,6 @@ def test_expression_with_const_to_str():
     expr = 5 + 2 * m.x1
     assert str(expr) == "2 x1 +5"
 
+
 if __name__ == "__main__":
     pytest.main([__file__])
