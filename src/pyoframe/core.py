@@ -768,7 +768,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.objective = m.expr_2 - 3
             >>> result = m.solve(log_to_console=False) # doctest: +ELLIPSIS
             <BLANKLINE>
-          ...
+            ...
             >>> m.expr_1.value
             shape: (3, 2)
             ┌──────┬──────────┐

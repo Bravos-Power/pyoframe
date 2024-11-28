@@ -3,7 +3,6 @@ from pyoframe.constants import (
     ObjSense,
     VType,
     Config,
-    Result,
     PyoframeError,
     ObjSenseValue,
     CONST_TERM,
@@ -12,15 +11,15 @@ from pyoframe.io_mappers import NamedVariableMapper
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.core import Constraint
 from pyoframe.objective import Objective
-from pyoframe.user_defined import Container, AttrContainerMixin
+from pyoframe.attributes import Container
 from pyoframe.core import Variable
 import polars as pl
 import pandas as pd
-import pyoptinterface
+import pyoptinterface as poi
 from pathlib import Path
 
 
-class Model(AttrContainerMixin):
+class Model():
     """
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
     """
@@ -52,6 +51,9 @@ class Model(AttrContainerMixin):
         **kwargs,
     ):
         super().__init__(**kwargs)
+        self.solver_model: Optional["poi.gurobi.Model"] = Model.create_pyoptint_model(
+            solver
+        )
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self.sense = ObjSense(min_or_max)
@@ -60,10 +62,9 @@ class Model(AttrContainerMixin):
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
         )
         self.name = name
-        self.solver_model: Optional["pyoptinterface.gurobi.Model"] = (
-            Model.create_pyoptint_model(solver)
-        )
-        self.params = Container()
+
+        self.params = Container(self._set_param, self._get_param)
+        self.attr = Container(self._set_attr, self._get_attr)
         self._use_var_names = use_var_names
 
     @property
@@ -154,3 +155,21 @@ class Model(AttrContainerMixin):
         self.solver_model.optimize()
         if solution_file is not None:
             self.write(solution_file)
+
+    def _set_param(self, name, value):
+        self.solver_model.set_raw_parameter(name, value)
+
+    def _get_param(self, name):
+        self.solver_model.get_raw_parameter(name)
+
+    def _set_attr(self, name, value):
+        try:
+            self.solver_model.set_model_attribute(poi.ModelAttribute[name], value)
+        except KeyError:
+            self.solver_model.set_model_raw_attribute(name, value)
+
+    def _get_attr(self, name):
+        try:
+            return self.solver_model.get_model_attribute(poi.ModelAttribute[name])
+        except KeyError:
+            return self.solver_model.get_model_raw_attribute(name)

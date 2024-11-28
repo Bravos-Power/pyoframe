@@ -25,8 +25,8 @@ class Objective(Expression):
 
     @property
     def value(self) -> float:
-        self._model.solver_model.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
+        return self._model.solver_model.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
 
     def on_add_to_model(self, model, name):
         super().on_add_to_model(model, name)
-        self._model.solver_model.set_objective(self.to_poi())
+        self._model.solver_model.set_objective(self.to_poi(), sense=self._model.sense.to_poi())
