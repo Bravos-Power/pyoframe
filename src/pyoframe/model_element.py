@@ -183,20 +183,6 @@ class ModelElementWithId(ModelElement):
         self._assert_has_ids()
         return self.data.select(self.dimensions_unsafe + [self.get_id_column_name()])
 
-    def _extend_dataframe_by_id(self, addition: pl.DataFrame):
-        cols = addition.columns
-        assert len(cols) == 2
-        id_col = self.get_id_column_name()
-        assert id_col in cols
-        cols.remove(id_col)
-        new_col = cols[0]
-
-        original = self.data
-
-        if new_col in original.columns:
-            original = original.drop(new_col)
-        self._data = original.join(addition, on=id_col, how="left", validate="1:1")
-
     def _preprocess_attr(self, name: str, value: Any) -> Any:
         dims = self.dimensions
         ids = self.ids

@@ -22,7 +22,7 @@ dependencies = [
     "pyarrow",
     "pandas",
     "packaging",
-    "pyoptinterface @ git+https://github.com/metab0t/PyOptInterface",
+    "pyoptinterface~=0.3",
 ]
 
 [project.optional-dependencies]

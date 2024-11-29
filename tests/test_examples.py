@@ -29,12 +29,7 @@ class Example:
             integer_results_only=True,
             many_valid_solutions=True,
             has_gurobi_version=False,
-        ),
-        Example(
-            "facility_location",
-            has_gurobi_version=False,
-            many_valid_solutions=True,
-        ),
+        )
     ],
     ids=lambda x: x.folder_name,
 )

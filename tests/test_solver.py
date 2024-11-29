@@ -25,9 +25,7 @@ def test_retrieving_duals():
     assert m.B.solution == 10
     assert m.objective.value == 29
     assert m.max_AB.dual == 0.1
-    assert m.max_AB.slack == 0
     assert m.extra_slack_constraint.dual == 0
-    assert m.extra_slack_constraint.slack == 50
     assert m.A.RC == 0
     assert m.B.RC == 1.9
 
@@ -67,12 +65,6 @@ def test_retrieving_duals_vectorized():
         check_row_order=False,
         **check_dtypes_false,
     )
-    assert_frame_equal(
-        m.max_AB.slack,
-        pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
-        check_row_order=False,
-        **check_dtypes_false,
-    )
 
 
 def test_support_variable_attributes():
@@ -107,12 +99,6 @@ def test_support_variable_attributes():
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         **check_dtypes_false,
         check_row_order=False,
-    )
-    assert_frame_equal(
-        m.max_AB.slack,
-        pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
-        check_row_order=False,
-        **check_dtypes_false,
     )
 
 

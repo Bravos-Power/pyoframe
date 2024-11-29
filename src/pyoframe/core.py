@@ -1110,31 +1110,14 @@ class Constraint(ModelElementWithId):
 
         self._data = df
 
-    @property
-    @unwrap_single_values
-    def slack(self):
-        """
-        The slack of the constraint.
-        Will raise an error if the model has not already been solved.
-        The first call to this property will load the slack values from the solver (lazy loading).
-        """
-        if SLACK_COL not in self.data.columns:
-            assert (
-                self._model is not None
-            ), "Constraint must be added to a model to get the slack."
-            if self._model.solver is None:
-                raise ValueError("The model has not been solved yet.")
-            self._model.solver.load_slack()
-        return self.data.select(self.dimensions_unsafe + [SLACK_COL])
-
-    @slack.setter
-    def slack(self, value):
-        self._extend_dataframe_by_id(value)
 
     @property
     @unwrap_single_values
     def dual(self) -> Union[pl.DataFrame, float]:
-        return self.attr.Dual.rename({"Dual": DUAL_KEY})
+        dual = self.attr.Dual
+        if isinstance(dual, pl.DataFrame):
+            dual = dual.rename({"Dual": DUAL_KEY})
+        return dual
 
     @classmethod
     def get_id_column_name(cls):
@@ -1436,7 +1419,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     @property
     @unwrap_single_values
     def solution(self):
-        return self.attr.Value.rename({"Value": SOLUTION_KEY})
+        solution = self.attr.Value
+        if isinstance(solution, pl.DataFrame):
+            solution = solution.rename({"Value": SOLUTION_KEY})
+        return solution
 
     @property
     @unwrap_single_values
