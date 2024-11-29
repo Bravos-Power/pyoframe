@@ -14,17 +14,14 @@ class Container:
             A function to preprocess user-defined values before adding them to the container.
 
     Examples:
-        >>> params = Container()
+        >>> x = {}
+        >>> params = Container(setter=lambda n, v: x.__setitem__(n, v), getter=lambda n: x[n])
         >>> params.a = 1
         >>> params.b = 2
         >>> params.a
         1
         >>> params.b
         2
-        >>> for k, v in params:
-        ...     print(k, v)
-        a 1
-        b 2
     """
 
     def __init__(self, setter, getter):

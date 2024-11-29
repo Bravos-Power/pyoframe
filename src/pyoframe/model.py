@@ -160,7 +160,7 @@ class Model():
         self.solver_model.set_raw_parameter(name, value)
 
     def _get_param(self, name):
-        self.solver_model.get_raw_parameter(name)
+        return self.solver_model.get_raw_parameter(name)
 
     def _set_attr(self, name, value):
         try:

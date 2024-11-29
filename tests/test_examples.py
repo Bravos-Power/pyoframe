@@ -19,20 +19,35 @@ class Example:
     check_params: Optional[Dict[str, Any]] = None
 
 
-EXAMPLES = [
-    Example("diet_problem"),
-    Example("facility_problem", check_params={"Method": 2}),
-    Example(
-        "cutting_stock_problem",
-        integer_results_only=True,
-        many_valid_solutions=True,
-        has_gurobi_version=False,
-    ),
-]
-
-
-@pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
+@pytest.mark.parametrize(
+    "example",
+    [
+        Example("diet_problem"),
+        Example("facility_problem", check_params={"Method": 2}),
+        Example(
+            "cutting_stock_problem",
+            integer_results_only=True,
+            many_valid_solutions=True,
+            has_gurobi_version=False,
+        ),
+        Example(
+            "facility_location",
+            has_gurobi_version=False,
+            many_valid_solutions=True,
+        ),
+    ],
+    ids=lambda x: x.folder_name,
+)
 def test_examples(example: Example):
+    """
+    For each example, we
+    1. Run it twice in a temp directory, once with use_var_names=True and the other time with =False.
+    2. Check that their objective values are equal.
+    3. Check that the .lp file is the same as in the example directory (only for use_var_names=True).
+    4. Check that the .sol file is the same (only when many_valid_solutions=False).
+    5. Check that all values in .sol are integers (when integer_results_only=True).
+    6. Check that the .sol from the gurobipy version (if it exists) is the same.
+    """
     example_dir = Path("tests/examples") / example.folder_name
     input_dir = example_dir / "input_data"
     expected_output_dir = example_dir / "results"
@@ -78,13 +93,13 @@ def test_examples(example: Example):
         check_results_dir_equal(
             expected_output_dir,
             symbolic_output_dir,
-            check_solution_equal=not example.many_valid_solutions,
+            check_sol=not example.many_valid_solutions,
         )
         check_results_dir_equal(
             dense_output_dir,
             symbolic_output_dir,
-            check_solution_equal=not example.many_valid_solutions,
-            check_lp_sol=False,
+            check_sol=not example.many_valid_solutions,
+            check_lp=False,
         )
 
         if example.integer_results_only:
@@ -105,7 +120,7 @@ def test_examples(example: Example):
 
 
 def check_results_dir_equal(
-    expected_dir, actual_dir, check_solution_equal, check_lp_sol=True
+    expected_dir, actual_dir, check_sol, check_lp=True
 ):
     for file in actual_dir.iterdir():
         assert (
@@ -114,13 +129,13 @@ def check_results_dir_equal(
 
         expected = expected_dir / file.name
         if file.suffix == ".sol":
-            if check_solution_equal and check_lp_sol:
+            if check_sol:
                 check_sol_equal(expected, file)
         elif file.suffix == ".lp":
-            if check_lp_sol:
+            if check_lp:
                 check_lp_equal(expected, file)
         else:
-            if check_solution_equal:
+            if check_sol:
                 df1 = pl.read_csv(expected)
                 df2 = pl.read_csv(file)
                 assert_frame_equal(df1, df2, check_row_order=False)
@@ -157,11 +172,14 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
 
 
 def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
-    with open(sol_file_path) as f:
+    with open(sol_file_path, mode="r") as f:
         sol = f.readlines()
     sol = [line.strip() for line in sol]
     sol = [line for line in sol if not (line.startswith("#") or line == "")]
     sol = sorted(sol)
     sol = [line.partition(" ") for line in sol]
-    sol = [(name, float(value)) for name, _, value in sol]
-    return sol
+    sol = {name: float(value) for name, _, value in sol}
+    if "ONE" in sol:
+        assert sol["ONE"] == 1
+        del sol["ONE"]
+    return list(sol.items())

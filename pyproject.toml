@@ -16,7 +16,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
 ]
-dependencies = ["polars>=0.20,<2", "numpy", "pyarrow", "pandas", "packaging"]
+dependencies = [
+    "polars>=0.20,<2",
+    "numpy",
+    "pyarrow",
+    "pandas",
+    "packaging",
+    "pyoptinterface @ git+https://github.com/metab0t/PyOptInterface",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -38,10 +45,7 @@ docs = [
     "mkdocs-section-index",
     "mkdocs-literate-nav",
 ]
-benchmarks = [
-    "pyomo",
-    "pyoptinterface"
-]
+benchmarks = ["pyomo"]
 
 [tool.isort]
 profile = "black"

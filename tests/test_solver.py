@@ -78,10 +78,10 @@ def test_retrieving_duals_vectorized():
 def test_support_variable_attributes():
     m = pf.Model("max")
     data = pl.DataFrame(
-        {"t": [1, 2], "ub": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
+        {"t": [1, 2], "UB": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
     m.X = pf.Variable(data["t"])
-    m.X.attr.UB = data[["t", "ub"]]
+    m.X.attr.UB = data[["t", "UB"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
@@ -126,7 +126,7 @@ def test_setting_constraint_attr():
     m.objective = m.A + pf.sum(m.B)
 
     # Solving it should return unbounded
-    result = m.solve()
+    m.solve()
     assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model bounded by setting the Sense attribute
@@ -134,7 +134,7 @@ def test_setting_constraint_attr():
     m.B_con.attr.Sense = pl.DataFrame({"y": [1, 2, 3], "Sense": ["<", "<", "="]})
 
     # Now the model should be bounded
-    result = m.solve()
+    m.solve()
     assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
