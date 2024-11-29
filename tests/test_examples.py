@@ -72,9 +72,7 @@ def test_examples(example: Example):
             directory=symbolic_output_dir,
             use_var_names=True,
         )
-        dense_kwargs = dict(
-            directory=dense_output_dir
-        )
+        dense_kwargs = dict(directory=dense_output_dir)
 
         if input_dir.exists():
             symbolic_kwargs["input_dir"] = input_dir
