@@ -148,13 +148,9 @@ class Model:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         self.solver_model.write(str(file_path))
 
-    def solve(
-        self, log_to_console=True, solution_file: Optional[Union[Path, str]] = None
-    ):
+    def solve(self, log_to_console=True):
         self.attr.Silent = not log_to_console
         self.solver_model.optimize()
-        if solution_file is not None:
-            self.write(solution_file)
 
     def _set_param(self, name, value):
         self.solver_model.set_raw_parameter(name, value)
