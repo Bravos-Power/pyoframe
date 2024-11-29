@@ -45,7 +45,6 @@ docs = [
     "mkdocs-section-index",
     "mkdocs-literate-nav",
 ]
-benchmarks = ["pyomo"]
 
 [tool.isort]
 profile = "black"
