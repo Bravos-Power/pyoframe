@@ -1190,7 +1190,6 @@ class Constraint(ModelElementWithId):
             ...
             ValueError: .relax() must be called before the Constraint is added to the model
             >>> m.solve(log_to_console=True)
-            >>> m.write("test.lp")
             >>> m.objective.value
             -50.0
             >>> m.hours_spent.solution

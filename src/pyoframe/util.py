@@ -8,11 +8,14 @@ from dataclasses import dataclass, field
 
 import polars as pl
 import pandas as pd
+from typing import TYPE_CHECKING
 from functools import wraps
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
-from pyoframe.model import Variable
-from pyoframe.model_element import ModelElementWithId
+
+if TYPE_CHECKING:
+    from pyoframe.model import Variable
+    from pyoframe.model_element import ModelElementWithId
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
