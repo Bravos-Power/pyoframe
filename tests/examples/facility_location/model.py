@@ -98,7 +98,7 @@ if __name__ == "__main__":
     model = main(
         G=G,
         F=F,
-        directory=working_dir / "results",
-        solution_file=working_dir / "results" / "pyoframe-problem.sol",
+        directory=working_dir / "results"
     )
+    model.write(working_dir / "results" / "pyoframe-problem.sol")
     draw_results(model, G, F)

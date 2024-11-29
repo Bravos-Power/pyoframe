@@ -70,11 +70,10 @@ def test_examples(example: Example):
 
         symbolic_kwargs = dict(
             directory=symbolic_output_dir,
-            solution_file=symbolic_solution_file,
             use_var_names=True,
         )
         dense_kwargs = dict(
-            directory=dense_output_dir, solution_file=dense_solution_file
+            directory=dense_output_dir
         )
 
         if input_dir.exists():
@@ -82,7 +81,9 @@ def test_examples(example: Example):
             dense_kwargs["input_dir"] = input_dir
 
         symbolic_model = main_module.main(**symbolic_kwargs)
+        symbolic_model.write(symbolic_solution_file)
         dense_model = main_module.main(**dense_kwargs)
+        dense_model.write(dense_solution_file)
 
         if example.check_params is not None:
             for param, value in example.check_params.items():
