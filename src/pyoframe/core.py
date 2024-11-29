@@ -60,8 +60,6 @@ from pyoframe.util import Container
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
-VAR_TYPE = pl.UInt32
-
 
 def _forward_to_expression(func_name: str):
     def wrapper(self: "SupportsMath", *args, **kwargs) -> "Expression":
@@ -789,19 +787,18 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         df = self.data
         sm = self._model.solver_model
         attr = poi.VariableAttribute.Value
-        for var_col in self._variable_columns:
-            df = df.with_columns(
-                (
-                    pl.col(COEF_KEY)
-                    * pl.col(var_col).map_elements(
-                        lambda v_id: sm.get_variable_attribute(
-                            poi.VariableIndex(v_id), attr
-                        ),
-                        return_dtype=COL_DTYPES[SOLUTION_KEY],
-                    )
-                ).alias(COEF_KEY)
-            )
-        df = df.rename({COEF_KEY: SOLUTION_KEY}).drop(self._variable_columns)
+        df = df.with_columns(
+            (
+                pl.col(COEF_KEY)
+                * pl.col(VAR_KEY).map_elements(
+                    lambda v_id: sm.get_variable_attribute(
+                        poi.VariableIndex(v_id), attr
+                    ),
+                    return_dtype=COL_DTYPES[SOLUTION_KEY],
+                )
+            ).alias(COEF_KEY)
+        )
+        df = df.rename({COEF_KEY: SOLUTION_KEY}).drop(VAR_KEY)
 
         dims = self.dimensions
         if dims is not None:
@@ -829,33 +826,22 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
 
-        for var_column in self._variable_columns:
-            temp_var_column = f"{var_column}_temp"
-            if var_map is not None:
-                data = var_map.apply(data, to_col=temp_var_column, id_col=var_column)
-            elif self._model is not None and self._model.var_map is not None:
-                var_map = self._model.var_map
-                data = var_map.apply(data, to_col=temp_var_column, id_col=var_column)
-            else:
-                data = data.with_columns(
-                    pl.concat_str(pl.lit("x"), var_column).alias(temp_var_column)
-                )
-            data = data.with_columns(
-                pl.when(pl.col(var_column) == CONST_TERM)
-                .then(pl.lit(""))
-                .otherwise(temp_var_column)
-                .alias(var_column)
-            ).drop(temp_var_column)
-
-        if include_const_variable:
-            data = data.drop(VAR_KEY).rename({"str_var": VAR_KEY})
+        temp_var_column = f"{VAR_KEY}_temp"
+        if var_map is not None:
+            data = var_map.apply(data, to_col=temp_var_column, id_col=VAR_KEY)
+        elif self._model is not None and self._model.var_map is not None:
+            var_map = self._model.var_map
+            data = var_map.apply(data, to_col=temp_var_column, id_col=VAR_KEY)
         else:
             data = data.with_columns(
-                pl.when(pl.col(VAR_KEY) == CONST_TERM)
-                .then(pl.lit(""))
-                .otherwise("str_var")
-                .alias(VAR_KEY)
-            ).drop("str_var")
+                pl.concat_str(pl.lit("x"), VAR_KEY).alias(temp_var_column)
+            )
+        data = data.with_columns(
+            pl.when(pl.col(VAR_KEY) == CONST_TERM)
+            .then(pl.lit(""))
+            .otherwise(temp_var_column)
+            .alias(VAR_KEY)
+        ).drop(temp_var_column)
 
         dimensions = self.dimensions
 

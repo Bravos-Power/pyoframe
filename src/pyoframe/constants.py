@@ -27,7 +27,18 @@ DUAL_KEY = "dual"
 RC_COL = "RC"
 SLACK_COL = "slack"
 
-CONST_TERM = 0
+COL_DTYPES = {
+    COEF_KEY: pl.Float64,
+    VAR_KEY: pl.UInt32,
+    CONSTRAINT_KEY: pl.UInt32,
+    SOLUTION_KEY: pl.Float64,
+    DUAL_KEY: pl.Float64,
+    RC_COL: pl.Float64,
+    SLACK_COL: pl.Float64,
+}
+VAR_TYPE = COL_DTYPES[VAR_KEY]
+
+CONST_TERM = 0  # 0 is a reserved value which makes it easy to detect. It must be zero for e.g. ensuring consistency during quadratic multiplication.
 
 RESERVED_COL_KEYS = (
     COEF_KEY,
