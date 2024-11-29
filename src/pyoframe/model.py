@@ -11,7 +11,7 @@ from pyoframe.io_mappers import NamedVariableMapper
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.core import Constraint
 from pyoframe.objective import Objective
-from pyoframe.attributes import Container
+from pyoframe.util import Container
 from pyoframe.core import Variable
 import polars as pl
 import pandas as pd
@@ -19,7 +19,7 @@ import pyoptinterface as poi
 from pathlib import Path
 
 
-class Model():
+class Model:
     """
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
     """
