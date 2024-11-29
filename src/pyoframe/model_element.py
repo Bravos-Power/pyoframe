@@ -166,14 +166,6 @@ class ModelElementWithId(ModelElement):
     IDs are only unique for the subclass since different subclasses have different counters.
     """
 
-    def on_add_to_model(self, model, name):
-        super().on_add_to_model(model, name)
-        self._assign_ids()
-        assert self._has_ids, "_assign_ids() was not properly implemented"
-
-    @abstractmethod
-    def _assign_ids(self) -> pl.DataFrame: ...
-
     @property
     def _has_ids(self) -> bool:
         return self.get_id_column_name() in self.data.columns

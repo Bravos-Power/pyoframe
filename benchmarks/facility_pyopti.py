@@ -89,5 +89,5 @@ def main(Ns=[25, 50, 75, 100]):
             io.write(f"{content}\n")
     return
 
-
-main()
+if __name__ == "__main__":
+    main()
