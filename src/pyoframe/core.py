@@ -847,10 +847,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .alias(var_column)
             ).drop(temp_var_column)
 
-        if self.is_quadratic:
-            data = data.with_columns(
-                pl.concat_str(pl.lit("x"), VAR_KEY).alias("str_var")
-            )
         if include_const_variable:
             data = data.drop(VAR_KEY).rename({"str_var": VAR_KEY})
         else:
