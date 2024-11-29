@@ -1110,7 +1110,6 @@ class Constraint(ModelElementWithId):
 
         self._data = df
 
-
     @property
     @unwrap_single_values
     def dual(self) -> Union[pl.DataFrame, float]:

@@ -29,7 +29,7 @@ class Example:
             integer_results_only=True,
             many_valid_solutions=True,
             has_gurobi_version=False,
-        )
+        ),
     ],
     ids=lambda x: x.folder_name,
 )
