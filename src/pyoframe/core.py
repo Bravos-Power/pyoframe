@@ -59,7 +59,7 @@ from pyoframe.util import (
     parse_inputs_as_iterable,
     unwrap_single_values,
 )
-from pyoframe.attributes import Container
+from pyoframe.util import Container
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -1282,8 +1282,10 @@ class Constraint(ModelElementWithId):
             └─────────┴──────────┘
         """
         if self._has_ids:
-            raise ValueError(".relax() must be called before the Constraint is added to the model")
-        
+            raise ValueError(
+                ".relax() must be called before the Constraint is added to the model"
+            )
+
         m = self._model
         if m is None or self.name is None:
             self.to_relax = FuncArgs(args=[cost, max])

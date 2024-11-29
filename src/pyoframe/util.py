@@ -281,3 +281,33 @@ def dataframe_to_tupled_list(
 class FuncArgs:
     args: List
     kwargs: Dict = field(default_factory=dict)
+
+
+class Container:
+    """
+    A placeholder object that makes it easy to set and get attributes. Used in Model.attr and Model.params, for example.
+
+    Examples:
+        >>> x = {}
+        >>> params = Container(setter=lambda n, v: x.__setitem__(n, v), getter=lambda n: x[n])
+        >>> params.a = 1
+        >>> params.b = 2
+        >>> params.a
+        1
+        >>> params.b
+        2
+    """
+
+    def __init__(self, setter, getter):
+        self._setter = setter
+        self._getter = getter
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name.startswith("_"):
+            return super().__setattr__(name, value)
+        self._setter(name, value)
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("_"):
+            return super().__getattribute__(name)
+        return self._getter(name)

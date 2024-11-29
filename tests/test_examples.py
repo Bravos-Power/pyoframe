@@ -119,9 +119,7 @@ def test_examples(example: Example):
                 )
 
 
-def check_results_dir_equal(
-    expected_dir, actual_dir, check_sol, check_lp=True
-):
+def check_results_dir_equal(expected_dir, actual_dir, check_sol, check_lp=True):
     for file in actual_dir.iterdir():
         assert (
             expected_dir / file.name
