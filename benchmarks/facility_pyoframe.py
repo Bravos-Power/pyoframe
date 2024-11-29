@@ -10,7 +10,7 @@ import polars as pl
 
 
 def solve_facility(solver, G, F):
-    model = pf.Model("min")
+    model = pf.Model("min", solver=solver)
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))
@@ -62,7 +62,7 @@ def solve_facility(solver, G, F):
 def main(Ns=[25, 50, 75, 100]):
     dir = os.path.realpath(os.path.dirname(__file__))
 
-    for solver in ["poi-gurobi", "gurobi"]:
+    for solver in ["gurobi"]:
         for n in Ns:
             start = time.time()
             solve_facility(solver, n, n)
@@ -71,7 +71,6 @@ def main(Ns=[25, 50, 75, 100]):
             print(content)
             with open(dir + "/benchmarks.csv", "a") as io:
                 io.write(f"{content}\n")
-    return
 
 
 if __name__ == "__main__":
