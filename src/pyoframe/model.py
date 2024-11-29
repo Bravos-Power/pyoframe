@@ -7,7 +7,7 @@ from pyoframe.constants import (
     ObjSenseValue,
     CONST_TERM,
 )
-from pyoframe.io_mappers import NamedVariableMapper
+from pyoframe.util import NamedVariableMapper
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.core import Constraint
 from pyoframe.objective import Objective

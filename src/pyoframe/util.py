@@ -2,7 +2,7 @@
 File containing utility functions and classes.
 """
 
-from typing import Any, Iterable, Optional, Union, List, Dict
+from typing import Any, Iterable, Optional, Type, Union, List, Dict
 
 from dataclasses import dataclass, field
 
@@ -11,6 +11,8 @@ import pandas as pd
 from functools import wraps
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe.model import Variable
+from pyoframe.model_element import ModelElementWithId
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
@@ -311,3 +313,73 @@ class Container:
         if name.startswith("_"):
             return super().__getattribute__(name)
         return self._getter(name)
+
+
+class NamedVariableMapper:
+    """
+    Maps variables to a string representation using the object's name and dimensions.
+
+    Examples:
+
+        >>> import polars as pl
+        >>> import pyoframe as pf
+        >>> m = pf.Model("min")
+        >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
+        >>> pf.sum(m.foo)
+        <Expression size=1 dimensions={} terms=4>
+        foo[0] + foo[1] + foo[2] + foo[3]
+    """
+
+    CONST_TERM_NAME = "_ONE"
+    NAME_COL = "__name"
+
+    def __init__(self, cls: Type["ModelElementWithId"]) -> None:
+        self._ID_COL = cls.get_id_column_name()
+        self.mapping_registry = pl.DataFrame(
+            {self._ID_COL: [], self.NAME_COL: []},
+            schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+        )
+        self._extend_registry(
+            pl.DataFrame(
+                {self._ID_COL: [CONST_TERM], self.NAME_COL: [self.CONST_TERM_NAME]},
+                schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+            )
+        )
+
+    def add(self, element: "Variable") -> None:
+        self._extend_registry(self._element_to_map(element))
+
+    def _extend_registry(self, df: pl.DataFrame) -> None:
+        self.mapping_registry = pl.concat([self.mapping_registry, df])
+
+    def apply(
+        self,
+        df: pl.DataFrame,
+        to_col: Optional[str] = None,
+        id_col: Optional[str] = None,
+    ) -> pl.DataFrame:
+        if df.height == 0:
+            return df
+        if id_col is None:
+            id_col = self._ID_COL
+        result = df.join(
+            self.mapping_registry,
+            how="left",
+            validate="m:1",
+            left_on=id_col,
+            right_on=self._ID_COL,
+        )
+        if to_col is None:
+            # Drop self._ID_COL so we can replace it with the result
+            result = result.drop(id_col)
+            to_col = id_col
+        return result.rename({self.NAME_COL: to_col})
+
+    def _element_to_map(self, element) -> pl.DataFrame:
+        element_name = element.name  # type: ignore
+        assert (
+            element_name is not None
+        ), "Element must have a name to be used in a named mapping."
+        return concat_dimensions(
+            element.ids, keep_dims=False, prefix=element_name, to_col=self.NAME_COL
+        )
