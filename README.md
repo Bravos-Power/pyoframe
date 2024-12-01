@@ -10,16 +10,12 @@
 
 A library to rapidly and memory-efficiently formulate large and sparse optimization models using Pandas or Polars dataframes.
 
-## Contribute
+## **[Documentation](https://bravos-power.github.io/pyoframe/)**
 
-Contributions are welcome! See [`CONTRIBUTE.md`](./CONTRIBUTE.md).
+[Read the documentation](https://bravos-power.github.io/pyoframe/) to get started or to learn how to [contribute](https://bravos-power.github.io/pyoframe/contribute/).
+
 
 ## Acknowledgments
 
-Martin Staadecker first created this library while working for [Bravos Power](https://www.bravospower.com/) The library takes inspiration from Linopy and Pyomo, two prior libraries for optimization for which we are thankful.
+Martin Staadecker first created this library while working for [Bravos Power](https://www.bravospower.com/). The library takes inspiration from Linopy and Pyomo, two prior libraries for optimization for which we are thankful.
 
-## Troubleshooting Common Errors
-
-### `datatypes of join keys don't match`
-
-Often, this error indicates that two dataframes in your inputs representing the same dimension have different datatypes (e.g. 16bit integer and 64bit integer). This is not allowed and you should ensure for the same dimensions, datatypes are identical.

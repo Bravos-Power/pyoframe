@@ -154,31 +154,34 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __le__(self, other):
         """Equality constraint.
-        Examples
-        >>> from pyoframe import Variable
-        >>> Variable() <= 1
-        <Constraint sense='<=' size=1 dimensions={} terms=2>
-        x1 <= 1
+
+        Examples:
+            >>> from pyoframe import Variable
+            >>> Variable() <= 1
+            <Constraint sense='<=' size=1 dimensions={} terms=2>
+            x1 <= 1
         """
         return Constraint(self - other, ConstraintSense.LE)
 
     def __ge__(self, other):
         """Equality constraint.
-        Examples
-        >>> from pyoframe import Variable
-        >>> Variable() >= 1
-        <Constraint sense='>=' size=1 dimensions={} terms=2>
-        x1 >= 1
+
+        Examples:
+            >>> from pyoframe import Variable
+            >>> Variable() >= 1
+            <Constraint sense='>=' size=1 dimensions={} terms=2>
+            x1 >= 1
         """
         return Constraint(self - other, ConstraintSense.GE)
 
     def __eq__(self, value: object):
         """Equality constraint.
-        Examples
-        >>> from pyoframe import Variable
-        >>> Variable() == 1
-        <Constraint sense='=' size=1 dimensions={} terms=2>
-        x1 = 1
+        
+        Examples:
+            >>> from pyoframe import Variable
+            >>> Variable() == 1
+            <Constraint sense='=' size=1 dimensions={} terms=2>
+            x1 = 1
         """
         return Constraint(self - value, ConstraintSense.EQ)
 
@@ -226,28 +229,29 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         *over: SetTypes | Iterable[SetTypes],
     ) -> pl.DataFrame:
         """
-        >>> import pandas as pd
-        >>> dim1 = pd.Index([1, 2, 3], name="dim1")
-        >>> dim2 = pd.Index(["a", "b"], name="dim1")
-        >>> Set._parse_acceptable_sets([dim1, dim2])
-        Traceback (most recent call last):
-        ...
-        AssertionError: All coordinates must have unique column names.
-        >>> dim2.name = "dim2"
-        >>> Set._parse_acceptable_sets([dim1, dim2])
-        shape: (6, 2)
-        ┌──────┬──────┐
-        │ dim1 ┆ dim2 │
-        │ ---  ┆ ---  │
-        │ i64  ┆ str  │
-        ╞══════╪══════╡
-        │ 1    ┆ a    │
-        │ 1    ┆ b    │
-        │ 2    ┆ a    │
-        │ 2    ┆ b    │
-        │ 3    ┆ a    │
-        │ 3    ┆ b    │
-        └──────┴──────┘
+        Examples:
+            >>> import pandas as pd
+            >>> dim1 = pd.Index([1, 2, 3], name="dim1")
+            >>> dim2 = pd.Index(["a", "b"], name="dim1")
+            >>> Set._parse_acceptable_sets([dim1, dim2])
+            Traceback (most recent call last):
+            ...
+            AssertionError: All coordinates must have unique column names.
+            >>> dim2.name = "dim2"
+            >>> Set._parse_acceptable_sets([dim1, dim2])
+            shape: (6, 2)
+            ┌──────┬──────┐
+            │ dim1 ┆ dim2 │
+            │ ---  ┆ ---  │
+            │ i64  ┆ str  │
+            ╞══════╪══════╡
+            │ 1    ┆ a    │
+            │ 1    ┆ b    │
+            │ 2    ┆ a    │
+            │ 2    ┆ b    │
+            │ 3    ┆ a    │
+            │ 3    ┆ b    │
+            └──────┴──────┘
         """
         assert len(over) > 0, "At least one set must be provided."
         over_iter: Iterable[SetTypes] = parse_inputs_as_iterable(*over)
@@ -440,7 +444,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             .sum()
         )
 
-    def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True):
+    def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True) -> Expression:
         """
         Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
 
@@ -448,33 +452,30 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         is indexed by city to data indexed by country (see example).
 
         Parameters:
-            mapping_set : SetTypes
+            mapping_set:
                 The set to map the expression to. This can be a DataFrame, Index, or another Set.
-            drop_shared_dims : bool, default True
+            drop_shared_dims:
                 If True, the dimensions shared between the expression and the mapping set are dropped from the resulting expression and
                     repeated rows are summed.
                 If False, the shared dimensions are kept in the resulting expression.
 
         Returns:
-            Expression
-                A new Expression containing the result of the mapping operation.
+            A new Expression containing the result of the mapping operation.
 
         Examples:
-
-        >>> import polars as pl
-        >>> from pyoframe import Variable, Model
-        >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "year": [2024, 2024, 2024], "population": [10, 2, 8]}).to_expr()
-        >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
-        >>> pop_data.map(cities_and_countries)
-        <Expression size=2 dimensions={'year': 1, 'country': 2} terms=2>
-        [2024,Canada]: 12
-        [2024,USA]: 8
-
-        >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
-        <Expression size=3 dimensions={'city': 3, 'year': 1, 'country': 2} terms=3>
-        [Toronto,2024,Canada]: 10
-        [Vancouver,2024,Canada]: 2
-        [Boston,2024,USA]: 8
+            >>> import polars as pl
+            >>> from pyoframe import Variable, Model
+            >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "year": [2024, 2024, 2024], "population": [10, 2, 8]}).to_expr()
+            >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
+            >>> pop_data.map(cities_and_countries)
+            <Expression size=2 dimensions={'year': 1, 'country': 2} terms=2>
+            [2024,Canada]: 12
+            [2024,USA]: 8
+            >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
+            <Expression size=3 dimensions={'city': 3, 'year': 1, 'country': 2} terms=3>
+            [Toronto,2024,Canada]: 10
+            [Vancouver,2024,Canada]: 2
+            [Boston,2024,USA]: 8
         """
         mapping_set = Set(mapping_set)
 
@@ -501,7 +502,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         return mapped_expression
 
-    def rolling_sum(self, over: str, window_size: int):
+    def rolling_sum(self, over: str, window_size: int) -> Expression:
         """
         Calculates the rolling sum of the Expression over a specified window size for a given dimension.
 
@@ -510,16 +511,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
         Parameters:
-            over : str
+            over :
                 The name of the dimension (column) over which the rolling sum is calculated.
                 This dimension must exist within the Expression's dimensions.
-            window_size : int
+            window_size :
                 The size of the moving window in terms of number of records.
                 The rolling sum is calculated over this many consecutive elements.
 
         Returns:
-            Expression
-                A new Expression instance containing the result of the rolling sum operation.
+            A new Expression instance containing the result of the rolling sum operation.
                 This new Expression retains all dimensions (columns) of the original data,
                 with the rolling sum applied over the specified dimension.
 
@@ -560,20 +560,20 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def within(self, set: "SetTypes") -> Expression:
         """
-        Examples
-        >>> import pandas as pd
-        >>> general_expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
-        >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
-        >>> general_expr.within(filter_expr).data
-        shape: (2, 3)
-        ┌──────┬─────────┬───────────────┐
-        │ dim1 ┆ __coeff ┆ __variable_id │
-        │ ---  ┆ ---     ┆ ---           │
-        │ i64  ┆ f64     ┆ u32           │
-        ╞══════╪═════════╪═══════════════╡
-        │ 1    ┆ 1.0     ┆ 0             │
-        │ 3    ┆ 3.0     ┆ 0             │
-        └──────┴─────────┴───────────────┘
+        Examples:
+            >>> import pandas as pd
+            >>> general_expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+            >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
+            >>> general_expr.within(filter_expr).data
+            shape: (2, 3)
+            ┌──────┬─────────┬───────────────┐
+            │ dim1 ┆ __coeff ┆ __variable_id │
+            │ ---  ┆ ---     ┆ ---           │
+            │ i64  ┆ f64     ┆ u32           │
+            ╞══════╪═════════╪═══════════════╡
+            │ 1    ┆ 1.0     ┆ 0             │
+            │ 3    ┆ 3.0     ┆ 0             │
+            └──────┴─────────┴───────────────┘
         """
         df: pl.DataFrame = Set(set).data
         set_dims = _get_dimensions(df)
@@ -967,9 +967,9 @@ class Constraint(ModelElementWithId):
         """Initialize a constraint.
 
         Parameters:
-            lhs: Expression
+            lhs:
                 The left hand side of the constraint.
-            sense: Sense
+            sense:
                 The sense of the constraint.
         """
         self.lhs = lhs
@@ -1051,10 +1051,10 @@ class Constraint(ModelElementWithId):
         Relaxes the constraint by adding a variable to the constraint that can be non-zero at a cost.
 
         Parameters:
-            cost: SupportsToExpr
+            cost:
                 The cost of relaxing the constraint. Costs should be positives as they will automatically
                 become negative for maximization problems.
-            max: SupportsToExpr, default None
+            max:
                 The maximum value of the relaxation variable.
 
         Returns:
@@ -1190,16 +1190,16 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     Represents one or many decision variable in an optimization model.
 
     Parameters:
-        *indexing_sets: SetTypes (typically a DataFrame or Set)
+        *indexing_sets:
             If no indexing_sets are provided, a single variable with no dimensions is created.
             Otherwise, a variable is created for each element in the Cartesian product of the indexing_sets (see Set for details on behaviour).
-        lb: float
+        lb:
             The lower bound for all variables.
-        ub: float
+        ub:
             The upper bound for all variables.
-        vtype: VType | VTypeValue
+        vtype:
             The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
-        equals: SupportsToExpr
+        equals:
             When specified, a variable is created and a constraint is added to make the variable equal to the provided expression.
 
     Examples:
