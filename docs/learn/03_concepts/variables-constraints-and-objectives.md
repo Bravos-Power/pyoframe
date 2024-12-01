@@ -1,1 +1,0 @@
-# Variables, constraints and objectives

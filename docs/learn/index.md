@@ -8,7 +8,7 @@
 
     Install `pyoframe` and learn the library's basics.
 
-    [:octicons-arrow-right-24: Getting started](01_getting-started/)
+    [:octicons-arrow-right-24: Getting started](01_getting-started/01_installation.md)
 
 -   :fontawesome-brands-markdown:{ .lg .middle } __Tutorials__
 

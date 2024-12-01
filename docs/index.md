@@ -19,13 +19,13 @@ Here are some reasons we think you'd like Pyoframe:
 
 <div class="grid cards" markdown>
 
--   :material-clock-fast:{ .lg .middle } __Get Started__
+-   :material-clock-fast:{ .lg .middle } __Learn__
 
     ---
 
     Install `pyoframe` and learn the library's basics.
 
-    [:octicons-arrow-right-24: Getting started](#)
+    [:octicons-arrow-right-24: Get started](#)
 
 -   :fontawesome-brands-markdown:{ .lg .middle } __Why Pyoframe?__
 
@@ -42,7 +42,7 @@ Here are some reasons we think you'd like Pyoframe:
     
     [:octicons-arrow-right-24: Deep dive](#)
 
--   :material-format-font:{ .lg .middle } __Reference__
+-   :material-format-font:{ .lg .middle } __API Reference__
 
     ---
 
