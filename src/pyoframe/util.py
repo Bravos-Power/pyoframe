@@ -2,13 +2,12 @@
 File containing utility functions and classes.
 """
 
-from typing import Any, Iterable, Optional, Sequence, Union, List, Dict
-
 from dataclasses import dataclass, field
-
-import polars as pl
-import pandas as pd
 from functools import wraps
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Union
+
+import pandas as pd
+import polars as pl
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
 

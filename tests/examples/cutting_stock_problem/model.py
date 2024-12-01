@@ -1,9 +1,10 @@
 # pyright: reportAttributeAccessIssue=false
 import os
 from pathlib import Path
+
 import pandas as pd
 
-from pyoframe import Model, Variable, sum_by, sum
+from pyoframe import Model, Variable, sum, sum_by
 
 
 def main(input_dir, directory, **kwargs):

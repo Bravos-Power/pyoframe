@@ -2,20 +2,20 @@
 Defines various methods for mapping a variable or constraint to its string representation.
 """
 
-from dataclasses import dataclass
 import math
 import string
 from abc import ABC, abstractmethod
-
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Type, Union
-import polars as pl
-from pyoframe.util import concat_dimensions
-from pyoframe.constants import CONST_TERM
 
+import polars as pl
+
+from pyoframe.constants import CONST_TERM
+from pyoframe.util import concat_dimensions
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.model import Variable
     from pyoframe.core import Constraint
+    from pyoframe.model import Variable
     from pyoframe.model_element import ModelElementWithId
 
 

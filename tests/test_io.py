@@ -1,5 +1,5 @@
-import pytest
 import polars as pl
+import pytest
 
 from pyoframe.core import Expression, Variable
 

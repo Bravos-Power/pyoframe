@@ -20,7 +20,7 @@ dependencies = ["polars>=0.20,<2", "numpy", "pyarrow", "pandas", "packaging"]
 
 [project.optional-dependencies]
 dev = [
-    "black",
+    "black[jupyter]",
     "bumpver",
     "isort",
     "pip-tools",
@@ -41,7 +41,7 @@ docs = [
 ]
 
 [tool.isort]
-profile = "black[jupyter]"
+profile = "black"
 
 [tool.coverage.run]
 include = ["src/pyoframe/*"]

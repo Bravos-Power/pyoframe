@@ -1,9 +1,9 @@
-name: Lint
+name: Black and isort
 
 on: [pull_request]
 
 env:
-  - INPUT_JUPYTER: true
+  INPUT_JUPYTER: true
 
 jobs:
   lint:
@@ -11,3 +11,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
+      - uses: isort/isort-action@v1

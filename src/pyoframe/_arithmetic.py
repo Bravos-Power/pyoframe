@@ -1,14 +1,15 @@
 from typing import TYPE_CHECKING, List, Optional
+
 import polars as pl
 
 from pyoframe.constants import (
     COEF_KEY,
+    POLARS_VERSION,
     RESERVED_COL_KEYS,
     VAR_KEY,
-    UnmatchedStrategy,
     Config,
     PyoframeError,
-    POLARS_VERSION,
+    UnmatchedStrategy,
 )
 
 if TYPE_CHECKING:  # pragma: no cover

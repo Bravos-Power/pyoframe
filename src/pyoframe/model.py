@@ -1,22 +1,23 @@
 from typing import Any, Iterable, List, Optional, Union
-from pyoframe.constants import (
-    ObjSense,
-    VType,
-    Config,
-    Result,
-    PyoframeError,
-    ObjSenseValue,
-)
-from pyoframe.io_mappers import NamedVariableMapper, IOMappers
-from pyoframe.model_element import ModelElement, ModelElementWithId
-from pyoframe.core import Constraint
-from pyoframe.objective import Objective
-from pyoframe.user_defined import Container, AttrContainerMixin
-from pyoframe.core import Variable
-from pyoframe.io import to_file
-from pyoframe.solvers import solve, Solver
-import polars as pl
+
 import pandas as pd
+import polars as pl
+
+from pyoframe.constants import (
+    Config,
+    ObjSense,
+    ObjSenseValue,
+    PyoframeError,
+    Result,
+    VType,
+)
+from pyoframe.core import Constraint, Variable
+from pyoframe.io import to_file
+from pyoframe.io_mappers import IOMappers, NamedVariableMapper
+from pyoframe.model_element import ModelElement, ModelElementWithId
+from pyoframe.objective import Objective
+from pyoframe.solvers import Solver, solve
+from pyoframe.user_defined import AttrContainerMixin, Container
 
 
 class Model(AttrContainerMixin):
