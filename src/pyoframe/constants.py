@@ -6,12 +6,17 @@ Code is heavily based on the `linopy` package by Fabian Hofmann.
 MIT License
 """
 
+import importlib.metadata
+import typing
 from dataclasses import dataclass
 from enum import Enum
-import typing
 from typing import Literal, Optional, Union
-import polars as pl
 
+import polars as pl
+from packaging import version
+
+# We want to try and support multiple major versions of polars
+POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
