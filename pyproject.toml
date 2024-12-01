@@ -41,7 +41,7 @@ docs = [
 ]
 
 [tool.isort]
-profile = "black"
+profile = "black[jupyter]"
 
 [tool.coverage.run]
 include = ["src/pyoframe/*"]

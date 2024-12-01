@@ -4,8 +4,8 @@ on:
     branches:
       - main
 env:
-  ENABLED_GIT_REVISION_DATE: True
-  ENABLED_GIT_COMMITTERS: True
+  ENABLED_GIT_REVISION_DATE: true
+  ENABLED_GIT_COMMITTERS: true
 permissions:
   contents: write
 jobs:

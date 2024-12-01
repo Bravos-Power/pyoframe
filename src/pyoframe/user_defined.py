@@ -27,7 +27,7 @@ class Container:
         b 2
     """
 
-    def __init__(self, preprocess: Optional[Callable[[str, Any]]]=None):
+    def __init__(self, preprocess: Optional[Callable[[str, Any]]] = None):
         self._preprocess = preprocess
         self._attributes = {}
 

@@ -176,7 +176,7 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __eq__(self, value: object):
         """Equality constraint.
-        
+
         Examples:
             >>> from pyoframe import Variable
             >>> Variable() == 1

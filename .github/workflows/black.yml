@@ -2,6 +2,9 @@ name: Lint
 
 on: [pull_request]
 
+env:
+  - INPUT_JUPYTER: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest

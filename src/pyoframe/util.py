@@ -68,7 +68,7 @@ def concat_dimensions(
     df: pl.DataFrame,
     prefix: Optional[str] = None,
     keep_dims: bool = True,
-    ignore_columns: Sequence[str]=RESERVED_COL_KEYS,
+    ignore_columns: Sequence[str] = RESERVED_COL_KEYS,
     replace_spaces: bool = True,
     to_col: str = "concated_dim",
 ) -> pl.DataFrame:
@@ -170,7 +170,10 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool=True, float_precision: Optional[int]=None
+    df: pl.DataFrame,
+    column_name: str = COEF_KEY,
+    drop_ones: bool = True,
+    float_precision: Optional[int] = None,
 ) -> pl.DataFrame:
     """
     Parameters:
@@ -182,7 +185,7 @@ def cast_coef_to_string(
             If True, 1s are replaced with an empty string for non-constant terms.
         float_precision:
             The number of decimal places to round the coefficients to. If None, no rounding is done (so Polars' default precision is used).
-    
+
     Examples:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
