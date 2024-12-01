@@ -1,22 +1,53 @@
-# Welcome to MkDocs
+---
+hide:
+  - navigation
+  - toc
+  - actions
+template: home.html
+---
+# Pyoframe: Formulate huge optimization models 
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Tired of slow or archaic modelling frameworks like Pyomo and GAMS? 
+Here are some reasons we think you'd like Pyoframe:
 
-## Commands
+- Python library for building **LP and MILP models**
+- **Open-source** MIT License
+- **Works with Pandas** dataframes
+- **Powered by Rust** and Polars
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+---
 
-## Project layout
+<div class="grid cards" markdown>
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+-   :material-clock-fast:{ .lg .middle } __Learn__
 
+    ---
 
-```python
->>> x = 3 + 4
-```
+    Install `pyoframe` and learn the library's basics.
+
+    [:octicons-arrow-right-24: Get started](./learn/01_getting-started/01_installation.md)
+
+<!-- -   :fontawesome-brands-markdown:{ .lg .middle } __Why Pyoframe?__
+
+    ---
+
+    Compare our speed and memory-usage to other libraries and prepare to be amazed.
+
+    [:octicons-arrow-right-24: Benchmarks](#)
+
+-   :material-scale-balance:{ .lg .middle } __Deep dive__
+
+    ---
+    Understand our unique approach to building models with Polars dataframes. 
+    
+    [:octicons-arrow-right-24: Deep dive](#) -->
+
+-   :material-format-font:{ .lg .middle } __API Reference__
+
+    ---
+
+    Your go-to reference for understanding our API.
+
+    [:octicons-arrow-right-24: Reference](./reference/)
+
+</div>

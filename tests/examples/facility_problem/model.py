@@ -1,6 +1,9 @@
 # pyright: reportAttributeAccessIssue=false
 import os
 from pathlib import Path
+from typing import Union
+
+import pandas as pd
 
 import pandas as pd
 

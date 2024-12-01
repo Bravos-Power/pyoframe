@@ -1,0 +1,25 @@
+---
+hide:
+  - navigation
+---
+# Contribute
+
+Contributions are more than welcome! Submit a pull request, or [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new) and I (Martin) will gladly answer your questions on how to contribute.
+
+## Setup a development environment
+
+1. Clone this repository. `git clone https://github.com/Bravos-Power/pyoframe`
+
+2. Install the dependencies. `pip install --editable .[dev,docs]`
+
+3. Run `pytest` to make sure everything is working. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
+
+## Documentation
+
+We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please **follow the [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)** for docstrings.
+
+## Helpful commands
+
+- `pytest`: Runs all the tests. Tests are found under `/tests` and also as doc tests. Include the flag `--cov` to get test coverage information.
+- `mkdocs serve`: Generates the documentation locally. Navigate to [`http://127.0.0.1:8000/pyoframe/`](http://127.0.0.1:8000/pyoframe/) to check it out.
+

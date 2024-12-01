@@ -27,7 +27,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black",
+    "black[jupyter]",
     "bumpver",
     "isort",
     "pip-tools",
@@ -44,6 +44,7 @@ docs = [
     "mkdocs-gen-files",
     "mkdocs-section-index",
     "mkdocs-literate-nav",
+    "mkdocs-table-reader-plugin"
 ]
 
 [tool.isort]

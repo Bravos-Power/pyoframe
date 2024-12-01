@@ -4,7 +4,7 @@ from pyoframe.core import Expression, SupportsMath
 
 
 class Objective(Expression):
-    r"""
+    """
     Examples:
         >>> from pyoframe import Variable, Model, sum
         >>> m = Model("max")
