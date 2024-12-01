@@ -40,17 +40,21 @@ class Model:
         "objective",
         "_use_var_names",
         "ONE",
+        "solver_name"
     ]
 
     def __init__(
         self,
         min_or_max: Union[ObjSense, ObjSenseValue] = "min",
         name=None,
-        solver: str = "gurobi",
+        solver: Optional[str] = None,
         use_var_names=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
+        if solver is None:
+            solver = Config.default_solver
+        self.solver_name: str = solver
         self.solver_model: Optional["poi.gurobi.Model"] = Model.create_pyoptint_model(
             solver
         )

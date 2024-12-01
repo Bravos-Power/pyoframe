@@ -46,6 +46,7 @@ docs = [
     "mkdocs-literate-nav",
     "mkdocs-table-reader-plugin"
 ]
+highs = ["highsbox"]
 
 [tool.isort]
 profile = "black"

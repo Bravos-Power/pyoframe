@@ -59,6 +59,7 @@ class _ConfigMeta(type):
 
 
 class Config(metaclass=_ConfigMeta):
+    default_solver = "gurobi"
     disable_unmatched_checks: bool = False
     str_float_precision: Optional[int] = 5
     print_uses_variable_names: bool = True

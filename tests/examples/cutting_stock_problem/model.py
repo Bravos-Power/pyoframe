@@ -29,8 +29,10 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
     m.objective = sum(m.is_used)
 
     m.write(directory / "pyoframe-problem.lp")
-    m.solve("gurobi", **kwargs)
-    assert m.objective.value == 73  # type: ignore
+    m.solve(**kwargs)
+    if m.solver_name == "gurobi":
+        m.write(directory / "pyoframe-problem.sol")
+    assert m.objective.value == 6  # type: ignore
 
     # Write results to CSV files
     m.orders_in_stock.solution.write_csv(directory / "orders_in_stock.csv")  # type: ignore

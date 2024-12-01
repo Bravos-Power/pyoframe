@@ -33,7 +33,7 @@ class Example:
     ],
     ids=lambda x: x.folder_name,
 )
-def test_examples(example: Example):
+def test_examples(solver, example: Example):
     """
     For each example, we
     1. Run it twice in a temp directory, once with use_var_names=True and the other time with =False.
@@ -46,6 +46,7 @@ def test_examples(example: Example):
     example_dir = Path("tests/examples") / example.folder_name
     input_dir = example_dir / "input_data"
     expected_output_dir = example_dir / "results"
+    is_gurobi = solver == "gurobi"
     with TemporaryDirectory(prefix=example.folder_name) as working_dir_str:
         working_dir = Path(working_dir_str)
         symbolic_output_dir = working_dir / "results"
@@ -60,8 +61,9 @@ def test_examples(example: Example):
             f"tests.examples.{example.folder_name}.model"
         )
 
-        symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
-        dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
+        if is_gurobi:
+            symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
+            dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
 
         symbolic_kwargs = dict(
             directory=symbolic_output_dir,
@@ -74,11 +76,13 @@ def test_examples(example: Example):
             dense_kwargs["input_dir"] = input_dir
 
         symbolic_model = main_module.main(**symbolic_kwargs)
-        symbolic_model.write(symbolic_solution_file)
         dense_model = main_module.main(**dense_kwargs)
-        dense_model.write(dense_solution_file)
+        assert symbolic_model.objective.value == dense_model.objective.value
+        if is_gurobi:
+            symbolic_model.write(symbolic_solution_file)
+            dense_model.write(dense_solution_file)
 
-        if example.check_params is not None:
+        if example.check_params is not None and is_gurobi:
             for param, value in example.check_params.items():
                 assert getattr(dense_model.params, param) == value
                 assert getattr(symbolic_model.params, param) == value
@@ -87,21 +91,22 @@ def test_examples(example: Example):
         check_results_dir_equal(
             expected_output_dir,
             symbolic_output_dir,
-            check_sol=not example.many_valid_solutions,
+            check_sol=not example.many_valid_solutions and is_gurobi,
+            check_lp=is_gurobi
         )
         check_results_dir_equal(
             dense_output_dir,
             symbolic_output_dir,
-            check_sol=not example.many_valid_solutions,
+            check_sol=not example.many_valid_solutions and is_gurobi,
             check_lp=False,
         )
 
-        if example.integer_results_only:
+        if example.integer_results_only and is_gurobi:
             check_integer_solutions_only(symbolic_solution_file)
             check_integer_solutions_only(dense_solution_file)
 
         gurobi_module = None
-        if example.has_gurobi_version:
+        if example.has_gurobi_version and is_gurobi:
             gurobi_module = importlib.import_module(
                 f"tests.examples.{example.folder_name}.model_gurobipy"
             )
