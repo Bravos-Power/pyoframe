@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-      - uses: ./.github/actions/setup_optimizers_windows
+      - uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
           CHECK_LICENSE: true
