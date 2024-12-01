@@ -1,12 +1,13 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
-import polars as pl
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
+import polars as pl
+
 from pyoframe._arithmetic import _get_dimensions
+from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model

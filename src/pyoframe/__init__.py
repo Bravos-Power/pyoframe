@@ -3,11 +3,10 @@ Pyoframe's public API.
 Also applies the monkey patch to the DataFrame libraries.
 """
 
-from pyoframe.monkey_patch import patch_dataframe_libraries
-from pyoframe.core import sum, sum_by, Set, Constraint, Expression, Variable
-from pyoframe.constants import Config
+from pyoframe.constants import Config, VType
+from pyoframe.core import Constraint, Expression, Set, Variable, sum, sum_by
 from pyoframe.model import Model
-from pyoframe.constants import VType
+from pyoframe.monkey_patch import patch_dataframe_libraries
 
 patch_dataframe_libraries()
 

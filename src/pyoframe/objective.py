@@ -1,5 +1,6 @@
-from pyoframe.core import SupportsMath, Expression
 import pyoptinterface as poi
+
+from pyoframe.core import Expression, SupportsMath
 
 
 class Objective(Expression):

@@ -13,8 +13,8 @@ from enum import Enum
 from typing import Literal, Optional, Union
 
 import polars as pl
-from packaging import version
 import pyoptinterface as poi
+from packaging import version
 
 # We want to try and support multiple major versions of polars
 POLARS_VERSION = version.parse(importlib.metadata.version("polars"))

@@ -1,7 +1,7 @@
-import pytest
 import polars as pl
+import pytest
 
-from pyoframe import Expression, Variable, Model
+from pyoframe import Expression, Model, Variable
 
 
 def test_variables_to_string():

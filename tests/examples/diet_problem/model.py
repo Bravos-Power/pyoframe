@@ -6,9 +6,10 @@ Diet module example
 
 import os
 from pathlib import Path
+
 import polars as pl
 
-from pyoframe import sum, Model, Variable
+from pyoframe import Model, Variable, sum
 
 
 def main(input_dir, directory, use_var_names=True, **kwargs):

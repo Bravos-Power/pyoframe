@@ -1,22 +1,22 @@
-from typing import Any, Iterable, List, Optional, Union
-from pyoframe.constants import (
-    ObjSense,
-    VType,
-    Config,
-    PyoframeError,
-    ObjSenseValue,
-    CONST_TERM,
-)
-from pyoframe.util import NamedVariableMapper
-from pyoframe.model_element import ModelElement, ModelElementWithId
-from pyoframe.core import Constraint
-from pyoframe.objective import Objective
-from pyoframe.util import Container
-from pyoframe.core import Variable
-import polars as pl
-import pandas as pd
-import pyoptinterface as poi
 from pathlib import Path
+from typing import Any, Iterable, List, Optional, Union
+
+import pandas as pd
+import polars as pl
+import pyoptinterface as poi
+
+from pyoframe.constants import (
+    CONST_TERM,
+    Config,
+    ObjSense,
+    ObjSenseValue,
+    PyoframeError,
+    VType,
+)
+from pyoframe.core import Constraint, Variable
+from pyoframe.model_element import ModelElement, ModelElementWithId
+from pyoframe.objective import Objective
+from pyoframe.util import Container, NamedVariableMapper
 
 
 class Model:

@@ -1,12 +1,12 @@
-from dataclasses import dataclass
 import importlib
 import shutil
-import pytest
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple, Dict, Any
 from tempfile import TemporaryDirectory
+from typing import Any, Dict, List, Optional, Tuple
 
 import polars as pl
+import pytest
 from polars.testing import assert_frame_equal
 
 

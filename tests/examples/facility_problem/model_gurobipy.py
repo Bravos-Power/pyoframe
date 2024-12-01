@@ -12,9 +12,10 @@
 
 import os
 from pathlib import Path
+
 import gurobipy as gp
-from gurobipy import GRB
 import pandas as pd
+from gurobipy import GRB
 
 
 def main(input_dir, output_dir: Path):

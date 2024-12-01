@@ -13,15 +13,16 @@ from typing import (
     overload,
 )
 
+import numpy as np
 import pandas as pd
 import polars as pl
-from packaging import version
 import pyoptinterface as poi
-import numpy as np
+from packaging import version
 
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
     COEF_KEY,
+    COL_DTYPES,
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
@@ -32,7 +33,6 @@ from pyoframe.constants import (
     SOLUTION_KEY,
     VAR_KEY,
     VAR_TYPE,
-    COL_DTYPES,
     Config,
     ConstraintSense,
     ObjSense,
@@ -47,6 +47,7 @@ from pyoframe.model_element import (
     SupportPolarsMethodMixin,
 )
 from pyoframe.util import (
+    Container,
     FuncArgs,
     cast_coef_to_string,
     concat_dimensions,
@@ -55,7 +56,6 @@ from pyoframe.util import (
     parse_inputs_as_iterable,
     unwrap_single_values,
 )
-from pyoframe.util import Container
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model

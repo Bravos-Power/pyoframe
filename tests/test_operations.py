@@ -1,8 +1,9 @@
+import re
+
+import pytest
+
 import pyoframe as pf
 from tests.util import csvs_to_expr
-import pytest
-import pyoframe as pf
-import re
 
 
 def test_sum():
