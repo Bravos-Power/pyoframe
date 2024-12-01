@@ -69,18 +69,18 @@ plugins:
       enable_creation_date: true
       exclude:
         - index.md
+      enabled: !ENV [ENABLED_GIT_REVISION_DATE, False]
   - git-committers:
       repository: Bravos-Power/pyoframe
       branch: main
       exclude:
         - index.md
-      token: !!python/object/apply:os.getenv ["MKDOCS_GIT_COMMITTERS_APIKEY"]
+      enabled: !ENV [ENABLED_GIT_COMMITTERS, False]
   - literate-nav:
       nav_file: SUMMARY.md
   - gen-files:
       scripts:
         - scripts/gen_ref_pages.py
 
-extra:
-  version:
-    provider: mike
+watch:
+  - src

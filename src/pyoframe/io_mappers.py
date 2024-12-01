@@ -74,7 +74,6 @@ class NamedMapper(Mapper):
     Maps constraints or variables to a string representation using the object's name and dimensions.
 
     Examples:
-
         >>> import polars as pl
         >>> import pyoframe as pf
         >>> m = pf.Model("min")
@@ -149,7 +148,6 @@ class Base36Mapper(Mapper, ABC):
         The letters 0-9A-Z are used as symbols for the representation.
 
         Examples:
-
             >>> import polars as pl
             >>> s = pl.Series([0,10,20,60,53,66], dtype=pl.UInt32)
             >>> Base36Mapper._to_base36(s).to_list()
@@ -206,7 +204,6 @@ class Base36VarMapper(Base36Mapper):
         '[11]: 1  + x[11]'
         >>> (m.x.filter(t=11)+1).to_str(var_map=Base36VarMapper(Variable))
         '[11]: 1  + xb'
-
         >>> Base36VarMapper(Variable).apply(pl.DataFrame({VAR_KEY: []}))
         shape: (0, 1)
         ┌───────────────┐

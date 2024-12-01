@@ -206,7 +206,7 @@ def get_var_map(m: "Model", use_var_names):
 
 
 def to_file(
-    m: "Model", file_path: Optional[Union[str, Path]] = None, use_var_names=False
+    m: "Model", file_path: Optional[Union[str, Path]] = None, use_var_names: bool=False
 ) -> Path:
     """
     Write out a model to a lp file.

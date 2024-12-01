@@ -2,7 +2,7 @@
 File containing utility functions and classes.
 """
 
-from typing import Any, Iterable, Optional, Union, List, Dict
+from typing import Any, Iterable, Optional, Sequence, Union, List, Dict
 
 from dataclasses import dataclass, field
 
@@ -68,7 +68,7 @@ def concat_dimensions(
     df: pl.DataFrame,
     prefix: Optional[str] = None,
     keep_dims: bool = True,
-    ignore_columns=RESERVED_COL_KEYS,
+    ignore_columns: Sequence[str]=RESERVED_COL_KEYS,
     replace_spaces: bool = True,
     to_col: str = "concated_dim",
 ) -> pl.DataFrame:
@@ -76,11 +76,11 @@ def concat_dimensions(
     Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
 
     Parameters:
-        df : pl.DataFrame
+        df:
             The input DataFrame.
-        prefix : str, optional
+        prefix:
             The prefix to be added to the concated dimension.
-        keep_dims : bool, optional
+        keep_dims:
             If True, the original dimensions are kept in the new DataFrame.
 
     Examples:
@@ -170,18 +170,19 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True, float_precision=None
+    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool=True, float_precision: Optional[int]=None
 ) -> pl.DataFrame:
     """
     Parameters:
-        df : pl.DataFrame
+        df:
             The input DataFrame.
-        column_name : str, optional
+        column_name:
             The name of the column to be casted.
-        drop_ones : bool, optional
+        drop_ones:
             If True, 1s are replaced with an empty string for non-constant terms.
-        float_precision : int, optional
+        float_precision:
             The number of decimal places to round the coefficients to. If None, no rounding is done (so Polars' default precision is used).
+    
     Examples:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
