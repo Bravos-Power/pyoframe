@@ -5,7 +5,13 @@ from typing import Any, Dict, List, Optional
 import polars as pl
 from typing import TYPE_CHECKING
 
-from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.constants import (
+    COEF_KEY,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+    QUAD_VAR_KEY,
+    COL_DTYPES,
+)
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe.user_defined import AttrContainerMixin
 
@@ -29,10 +35,9 @@ class ModelElement(ABC):
         data = data.select(cols)
 
         # Cast to proper dtype
-        if COEF_KEY in data.columns:
-            data = data.cast({COEF_KEY: pl.Float64})
-        if VAR_KEY in data.columns:
-            data = data.cast({VAR_KEY: pl.UInt32})
+        for c in [COEF_KEY, VAR_KEY, QUAD_VAR_KEY]:
+            if c in data.columns:
+                data = data.cast({c: COL_DTYPES[c]})
 
         self._data = data
         self._model: Optional[Model] = None
@@ -134,6 +139,24 @@ class SupportPolarsMethodMixin(ABC):
     @property
     @abstractmethod
     def data(self): ...
+
+    def select(self, **kwargs):
+        """
+        Filter elements by the given criteria and then drop the filtered dimensions.
+
+        Example:
+            >>> from pyoframe.core import Variable
+            >>> v = Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
+            >>> v.select(hour="06:00")
+            <Expression size=3 dimensions={'city': 3} terms=3>
+            [Toronto]: x4
+            [Berlin]: x5
+            [Paris]: x6
+            >>> v.select(hour="06:00", city="Toronto")
+            <Expression size=1 dimensions={} terms=1>
+            x4
+        """
+        return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 
 
 class ModelElementWithId(ModelElement, AttrContainerMixin):
