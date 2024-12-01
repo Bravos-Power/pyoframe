@@ -132,29 +132,33 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __truediv__(self, other):
         """
-        Support division.
-        >>> import pyoframe as pf
-        >>> m = pf.Model()
-        >>> m.v = Variable({"dim1": [1,2,3]})
-        >>> m.v / 2
-        <Expression size=3 dimensions={'dim1': 3} terms=3>
-        [1]: 0.5 v[1]
-        [2]: 0.5 v[2]
-        [3]: 0.5 v[3]
+
+        Examples:
+            Support division.
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = Variable({"dim1": [1,2,3]})
+            >>> m.v / 2
+            <Expression size=3 dimensions={'dim1': 3} terms=3>
+            [1]: 0.5 v[1]
+            [2]: 0.5 v[2]
+            [3]: 0.5 v[3]
         """
         return self.to_expr() * (1 / other)
 
     def __rsub__(self, other):
         """
         Support right subtraction.
-        >>> import pyoframe as pf
-        >>> m = pf.Model()
-        >>> m.v = Variable({"dim1": [1,2,3]})
-        >>> 1 - m.v
-        <Expression size=3 dimensions={'dim1': 3} terms=6>
-        [1]: 1  - v[1]
-        [2]: 1  - v[2]
-        [3]: 1  - v[3]
+
+        Examples:
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = Variable({"dim1": [1,2,3]})
+            >>> 1 - m.v
+            <Expression size=3 dimensions={'dim1': 3} terms=6>
+            [1]: 1  - v[1]
+            [2]: 1  - v[2]
+            [3]: 1  - v[3]
         """
         return other + (-self.to_expr())
 
