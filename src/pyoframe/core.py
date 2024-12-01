@@ -357,20 +357,23 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __init__(self, data: pl.DataFrame):
         """
-        >>> import pandas as pd
-        >>> from pyoframe import Variable, Model
-        >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-        >>> m = Model("min")
-        >>> m.Time = Variable(df.index)
-        >>> m.Size = Variable(df.index)
-        >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
-        >>> expr
-        <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
-        [1,mon]: Time[1,mon] + Size[1,mon]
-        [1,tue]: 2 Time[1,tue] +2 Size[1,tue]
-        [1,wed]: 3 Time[1,wed] +3 Size[1,wed]
-        [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
-        [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
+        A linear expression.
+
+        Examples:
+            >>> import pandas as pd
+            >>> from pyoframe import Variable, Model
+            >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
+            >>> m = Model("min")
+            >>> m.Time = Variable(df.index)
+            >>> m.Size = Variable(df.index)
+            >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
+            >>> expr
+            <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
+            [1,mon]: Time[1,mon] + Size[1,mon]
+            [1,tue]: 2 Time[1,tue] +2 Size[1,tue]
+            [1,wed]: 3 Time[1,wed] +3 Size[1,wed]
+            [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
+            [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
         """
         # Sanity checks, VAR_KEY and COEF_KEY must be present
         assert VAR_KEY in data.columns, "Missing variable column."

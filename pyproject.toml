@@ -37,6 +37,7 @@ docs = [
     "mkdocs-gen-files",
     "mkdocs-section-index",
     "mkdocs-literate-nav",
+    "mkdocs-table-reader-plugin"
 ]
 
 [tool.isort]
