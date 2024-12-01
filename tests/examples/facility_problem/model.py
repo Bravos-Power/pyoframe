@@ -5,8 +5,6 @@ from typing import Union
 
 import pandas as pd
 
-import pandas as pd
-
 from pyoframe import Model, Variable, sum
 
 

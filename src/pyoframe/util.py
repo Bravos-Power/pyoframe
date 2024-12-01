@@ -175,11 +175,11 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool=True
+    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
 ) -> pl.DataFrame:
     """
     Converts column `column_name` of the dataframe `df` to a string. Rounds to `Config.print_float_precision` decimal places if not None.
-    
+
     Parameters:
         df:
             The input DataFrame.
@@ -187,7 +187,7 @@ def cast_coef_to_string(
             The name of the column to be casted.
         drop_ones:
             If True, 1s are replaced with an empty string for non-constant terms.
-    
+
     Examples:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})

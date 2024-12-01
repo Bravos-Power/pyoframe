@@ -160,7 +160,7 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __le__(self, other):
         """Equality constraint.
-        
+
         Examples:
             >>> import pyoframe as pf
             >>> m = pf.Model()
@@ -186,7 +186,7 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __eq__(self, value: object):
         """Equality constraint.
-        
+
         Examples:
             >>> import pyoframe as pf
             >>> m = pf.Model()
