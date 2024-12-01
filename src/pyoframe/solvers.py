@@ -2,28 +2,26 @@
 Code to interface with various solvers
 """
 
-from abc import abstractmethod, ABC
+import contextlib
+from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Optional, Type, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional, Type, Union
 
 import polars as pl
 
+import pyoframe as pf
 from pyoframe.constants import (
-    DUAL_KEY,
-    SOLUTION_KEY,
-    SLACK_COL,
-    RC_COL,
-    VAR_KEY,
     CONSTRAINT_KEY,
+    DUAL_KEY,
+    RC_COL,
+    SLACK_COL,
+    SOLUTION_KEY,
+    VAR_KEY,
     Result,
     Solution,
     Status,
 )
-import contextlib
-import pyoframe as pf
-
-from pathlib import Path
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model

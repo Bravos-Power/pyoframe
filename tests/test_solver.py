@@ -1,8 +1,9 @@
+import polars as pl
+import pytest
+from polars.testing import assert_frame_equal
+
 import pyoframe as pf
 from pyoframe.constants import POLARS_VERSION
-import polars as pl
-from polars.testing import assert_frame_equal
-import pytest
 
 check_dtypes_false = (
     {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtype": False}

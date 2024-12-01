@@ -1,10 +1,11 @@
 from typing import Optional
+
 from pyoframe.constants import COEF_KEY
-from pyoframe.core import SupportsMath, Expression
+from pyoframe.core import Expression, SupportsMath
 
 
 class Objective(Expression):
-    r"""
+    """
     Examples:
         >>> from pyoframe import Variable, Model, sum
         >>> m = Model("max")

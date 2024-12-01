@@ -25,9 +25,9 @@ Here are some reasons we think you'd like Pyoframe:
 
     Install `pyoframe` and learn the library's basics.
 
-    [:octicons-arrow-right-24: Get started](#)
+    [:octicons-arrow-right-24: Get started](./learn/01_getting-started/01_installation.md)
 
--   :fontawesome-brands-markdown:{ .lg .middle } __Why Pyoframe?__
+<!-- -   :fontawesome-brands-markdown:{ .lg .middle } __Why Pyoframe?__
 
     ---
 
@@ -40,7 +40,7 @@ Here are some reasons we think you'd like Pyoframe:
     ---
     Understand our unique approach to building models with Polars dataframes. 
     
-    [:octicons-arrow-right-24: Deep dive](#)
+    [:octicons-arrow-right-24: Deep dive](#) -->
 
 -   :material-format-font:{ .lg .middle } __API Reference__
 
@@ -48,6 +48,6 @@ Here are some reasons we think you'd like Pyoframe:
 
     Your go-to reference for understanding our API.
 
-    [:octicons-arrow-right-24: Reference](#)
+    [:octicons-arrow-right-24: Reference](./reference/)
 
 </div>

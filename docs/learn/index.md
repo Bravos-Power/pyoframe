@@ -16,14 +16,14 @@
 
     Step-by-step tutorials to make sense of important features
 
-    [:octicons-arrow-right-24: Tutorials](02_tutorials/)
+    [:octicons-arrow-right-24: Tutorials](./02_tutorials/)
 
 -   :material-scale-balance:{ .lg .middle } __Concepts__
 
     ---
     Understand the how and why of Pyoframe. 
     
-    [:octicons-arrow-right-24: Concepts](03_concepts/)
+    [:octicons-arrow-right-24: Concepts](./03_concepts/)
 
 -   :material-format-font:{ .lg .middle } __Reference__
 

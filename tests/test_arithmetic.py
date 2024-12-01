@@ -1,13 +1,15 @@
 import re
-import pandas as pd
-import numpy as np
-import pytest
-from pyoframe._arithmetic import PyoframeError
-from polars.testing import assert_frame_equal
-import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY, POLARS_VERSION
-from pyoframe import Variable, Model, sum, Set, Config, Expression, VType
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytest
+from polars.testing import assert_frame_equal
+
+from pyoframe import Config, Expression, Model, Set, Variable, VType, sum
+from pyoframe._arithmetic import PyoframeError
+from pyoframe.constants import COEF_KEY, CONST_TERM, POLARS_VERSION, VAR_KEY
+
 from .util import csvs_to_expr
 
 check_dtypes_false = (

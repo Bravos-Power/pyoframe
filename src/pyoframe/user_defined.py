@@ -2,7 +2,7 @@
 Contains the base classes to support .params and .attr containers for user-defined parameters and attributes.
 """
 
-from typing import Any
+from typing import Any, Callable, Optional
 
 
 class Container:
@@ -10,7 +10,7 @@ class Container:
     A container for user-defined attributes or parameters.
 
     Parameters:
-        preprocess : Callable[str, Any], optional
+        preprocess :
             A function to preprocess user-defined values before adding them to the container.
 
     Examples:
@@ -27,7 +27,7 @@ class Container:
         b 2
     """
 
-    def __init__(self, preprocess=None):
+    def __init__(self, preprocess: Optional[Callable[[str, Any], None]] = None):
         self._preprocess = preprocess
         self._attributes = {}
 

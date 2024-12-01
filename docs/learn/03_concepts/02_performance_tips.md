@@ -6,7 +6,7 @@ Pyoframe is already one of the fastest and lowest-memory-footprint libraries to 
 
 2. **Use integers not strings for indexing**. Pyoframe works fine with dataframes that contain string columns but you should know that strings take up a lot more space than just numbering your values. When possible, use integer indices.
 
-3. **Tweak the `pf.Config` settings.** Take a look at our [API Reference](/reference/) and you might find some settings to adjust to squeeze out the last bit of performance.
+3. **Tweak the `pf.Config` settings.** Take a look at our [API Reference](../../reference/) and you might find some settings to adjust to squeeze out the last bit of performance.
 
 ## `Expression` or `Variable` ?
 

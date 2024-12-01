@@ -20,7 +20,7 @@ dependencies = ["polars>=0.20,<2", "numpy", "pyarrow", "pandas", "packaging"]
 
 [project.optional-dependencies]
 dev = [
-    "black",
+    "black[jupyter]",
     "bumpver",
     "isort",
     "pip-tools",
