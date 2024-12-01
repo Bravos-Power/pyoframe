@@ -30,6 +30,9 @@ runs:
         curl -L -o D:\lessmsi.zip https://github.com/activescott/lessmsi/releases/download/v1.10.0/lessmsi-v1.10.0.zip
         7z x D:\lessmsi.zip -oD:\lessmsi
         echo "PATH=$env:PATH;D:\lessmsi" >> $env:GITHUB_ENV
+    - name: Echo
+      shell: pwsh
+      run: echo "$env:PATH"
     - name: Test lessmsi
       shell: pwsh
       run: |
