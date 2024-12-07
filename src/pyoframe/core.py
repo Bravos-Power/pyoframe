@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pyoptinterface as poi
+import warnings
 from packaging import version
 
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
@@ -1010,23 +1011,15 @@ class Constraint(ModelElementWithId):
             value = value.get_column(col_name).item()
 
         if isinstance(value, pl.DataFrame):
-            self.data.join(value, on=self.dimensions, how="inner").with_columns(
-                pl.struct([pl.col(CONSTRAINT_KEY), pl.col(col_name)]).map_elements(
-                    lambda x: setter(
-                        poi.ConstraintIndex(
-                            poi.ConstraintType.Linear, x[CONSTRAINT_KEY]
-                        ),
-                        name,
-                        x[col_name],
-                    )
-                )
-            )
+            for key, value in (
+                self.data.join(value, on=self.dimensions, how="inner")
+                .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
+                .iter_rows()
+            ):
+                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
         else:
-            self.data.get_column(CONSTRAINT_KEY).map_elements(
-                lambda v_id: setter(
-                    poi.ConstraintIndex(poi.ConstraintType.Linear, v_id), name, value
-                )
-            )
+            for key in self.data.get_column(CONSTRAINT_KEY):
+                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
 
     @unwrap_single_values
     def _get_attribute(self, name):
@@ -1038,15 +1031,19 @@ class Constraint(ModelElementWithId):
         except KeyError:
             getter = self._model.solver_model.get_constraint_raw_attribute
 
-        return self.data.with_columns(
-            pl.col(CONSTRAINT_KEY)
-            .map_elements(
-                lambda v_id: getter(
-                    poi.ConstraintIndex(poi.ConstraintType.Linear, v_id), name
-                )
+        with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
+            warnings.filterwarnings(
+                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
             )
-            .alias(col_name)
-        ).select(self.dimensions_unsafe + [col_name])
+            return self.data.with_columns(
+                pl.col(CONSTRAINT_KEY)
+                .map_elements(
+                    lambda v_id: getter(
+                        poi.ConstraintIndex(poi.ConstraintType.Linear, v_id), name
+                    )
+                )
+                .alias(col_name)
+            ).select(self.dimensions_unsafe + [col_name])
 
     def on_add_to_model(self, model: "Model", name: str):
         super().on_add_to_model(model, name)
@@ -1345,15 +1342,15 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             value = value.get_column(col_name).item()
 
         if isinstance(value, pl.DataFrame):
-            self.data.join(value, on=self.dimensions, how="inner").with_columns(
-                pl.struct([pl.col(VAR_KEY), pl.col(col_name)]).map_elements(
-                    lambda x: setter(poi.VariableIndex(x[VAR_KEY]), name, x[col_name])
-                )
-            )
+            for key, v in (
+                self.data.join(value, on=self.dimensions, how="inner")
+                .select(pl.col(VAR_KEY), pl.col(col_name))
+                .iter_rows()
+            ):
+                setter(poi.VariableIndex(key), name, v)
         else:
-            self.data.get_column(VAR_KEY).map_elements(
-                lambda v_id: setter(poi.VariableIndex(v_id), name, value)
-            )
+            for key in self.data.get_column(VAR_KEY):
+                setter(poi.VariableIndex(key), name, value)
 
     @unwrap_single_values
     def _get_attribute(self, name):
@@ -1365,11 +1362,15 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         except KeyError:
             getter = self._model.solver_model.get_variable_raw_attribute
 
-        return self.data.with_columns(
-            pl.col(VAR_KEY)
-            .map_elements(lambda v_id: getter(poi.VariableIndex(v_id), name))
-            .alias(col_name)
-        ).select(self.dimensions_unsafe + [col_name])
+        with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
+            warnings.filterwarnings(
+                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
+            )
+            return self.data.with_columns(
+                pl.col(VAR_KEY)
+                .map_elements(lambda v_id: getter(poi.VariableIndex(v_id), name))
+                .alias(col_name)
+            ).select(self.dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
         kwargs = dict(domain=self.vtype.to_poi())
