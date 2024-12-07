@@ -152,8 +152,7 @@ class Model:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         self.solver_model.write(str(file_path))
 
-    def optimize(self, log_to_console=True):
-        self.attr.Silent = not log_to_console
+    def optimize(self):
         self.solver_model.optimize()
 
     def _set_param(self, name, value):

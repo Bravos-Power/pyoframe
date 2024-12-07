@@ -475,6 +475,7 @@ def test_variable_equals():
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
     m.objective = sum(m.Choose100)
-    m.optimize(log_to_console=False)
+    m.attr.Silent = True
+    m.optimize()
     assert m.objective.value == 300
     assert m.objective.evaluate() == 300
