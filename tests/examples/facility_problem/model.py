@@ -30,7 +30,7 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
     if m.solver_name == "gurobi":
         m.params.Method = 2
     m.write(directory / "pyoframe-problem.lp")
-    m.solve(**kwargs)
+    m.optimize(**kwargs)
     if m.solver_name == "gurobi":
         m.write(directory / "pyoframe-problem.sol")
 

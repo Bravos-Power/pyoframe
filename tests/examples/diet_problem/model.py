@@ -32,7 +32,7 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
     m.objective = sum(m.Buy * food[["food", "cost"]])
 
     m.write(directory / "pyoframe-problem.lp")
-    m.solve(**kwargs)
+    m.optimize(**kwargs)
 
     # Write results to CSV files
     m.Buy.solution.write_csv(directory / "buy.csv")  # type: ignore

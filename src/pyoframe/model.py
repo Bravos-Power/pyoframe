@@ -40,7 +40,7 @@ class Model:
         "objective",
         "_use_var_names",
         "ONE",
-        "solver_name"
+        "solver_name",
     ]
 
     def __init__(
@@ -152,7 +152,7 @@ class Model:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         self.solver_model.write(str(file_path))
 
-    def solve(self, log_to_console=True):
+    def optimize(self, log_to_console=True):
         self.attr.Silent = not log_to_console
         self.solver_model.optimize()
 

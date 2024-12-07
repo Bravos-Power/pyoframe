@@ -17,7 +17,7 @@ m.chickpeas = pf.Variable(lb=0)
 m.objective = 10 * m.tofu + 8 * m.chickpeas # (3)!
 m.budget_constraint = 4 * m.tofu + 2 * m.chickpeas <= 10 # (4)!
 
-m.solve()
+m.optimize()
 
 print(f"{m.tofu.solution} blocks of tofu")
 print(f"{m.chickpeas.solution} cans of chickpeas")

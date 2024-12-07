@@ -20,7 +20,7 @@ def test_retrieving_duals(solver):
     m.extra_slack_constraint = 2 * m.A + m.B <= 150
     m.objective = 0.2 * m.A + 2 * m.B
 
-    m.solve()
+    m.optimize()
 
     assert m.A.solution == 45
     assert m.B.solution == 10
@@ -44,7 +44,7 @@ def test_retrieving_duals_vectorized(solver):
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
     m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
 
-    m.solve()
+    m.optimize()
 
     assert m.objective.value == 29
     assert_frame_equal(
@@ -68,7 +68,6 @@ def test_retrieving_duals_vectorized(solver):
             check_row_order=False,
             **check_dtypes_false,
         )
-    
 
 
 def test_support_variable_attributes(solver):
@@ -83,7 +82,7 @@ def test_support_variable_attributes(solver):
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
     m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
 
-    m.solve()
+    m.optimize()
 
     assert m.objective.value == 29
     assert_frame_equal(
@@ -106,8 +105,9 @@ def test_support_variable_attributes(solver):
         check_row_order=False,
     )
 
+
 def test_support_variable_raw_attributes(solver):
-    if solver != "gurobi":        
+    if solver != "gurobi":
         pytest.skip("Only valid for gurobi")
     m = pf.Model("max")
     data = pl.DataFrame(
@@ -120,7 +120,7 @@ def test_support_variable_raw_attributes(solver):
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
     m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
 
-    m.solve()
+    m.optimize()
 
     assert m.objective.value == 29
     assert_frame_equal(
@@ -142,6 +142,7 @@ def test_support_variable_raw_attributes(solver):
         **check_dtypes_false,
         check_row_order=False,
     )
+
 
 def test_setting_constraint_attr(solver):
     if solver != "gurobi":
@@ -155,7 +156,7 @@ def test_setting_constraint_attr(solver):
     m.objective = m.A + pf.sum(m.B)
 
     # Solving it should return unbounded
-    m.solve()
+    m.optimize()
     assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model bounded by setting the Sense attribute
@@ -163,7 +164,7 @@ def test_setting_constraint_attr(solver):
     m.B_con.attr.Sense = pl.DataFrame({"y": [1, 2, 3], "Sense": ["<", "<", "="]})
 
     # Now the model should be bounded
-    m.solve()
+    m.optimize()
     assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
@@ -176,14 +177,14 @@ def test_setting_model_attr(solver):
     m.objective = m.A
 
     # Solving it should return unbounded
-    m.solve()
+    m.optimize()
     assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model a minimization problem
     m.attr.ModelSense = 1
 
     # Now the model should be bounded
-    m.solve()
+    m.optimize()
     assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
@@ -193,6 +194,6 @@ def test_const_term_in_objective(use_var_names):
     m.A = pf.Variable(ub=10)
     m.objective = 10 + m.A
 
-    m.solve()
+    m.optimize()
     assert m.A.solution == 10
     assert m.objective.value == 20

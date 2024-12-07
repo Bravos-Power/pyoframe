@@ -80,7 +80,7 @@ m.objective = pf.sum(m.purchase_quantity * foods[["food", "cost"]]) # (5)!
 This ones easy:
 
 ```python3
-m.solve()
+m.optimize()
 ```
 
 !!! note "How does this work?"

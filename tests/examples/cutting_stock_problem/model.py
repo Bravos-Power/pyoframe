@@ -29,7 +29,7 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
     m.objective = sum(m.is_used)
 
     m.write(directory / "pyoframe-problem.lp")
-    m.solve(**kwargs)
+    m.optimize(**kwargs)
     if m.solver_name == "gurobi":
         m.write(directory / "pyoframe-problem.sol")
     assert m.objective.value == 6  # type: ignore

@@ -772,7 +772,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_1 = 2 * m.X + 1
             >>> m.expr_2 = pf.sum(m.expr_1)
             >>> m.objective = m.expr_2 - 3
-            >>> m.solve(log_to_console=False)
+            >>> m.optimize(log_to_console=False)
             >>> m.expr_1.evaluate()
             shape: (3, 2)
             ┌──────┬──────────┐
@@ -1160,7 +1160,7 @@ class Constraint(ModelElementWithId):
             Traceback (most recent call last):
             ...
             ValueError: .relax() must be called before the Constraint is added to the model
-            >>> m.solve(log_to_console=True)
+            >>> m.optimize(log_to_console=True)
             >>> m.objective.value
             -50.0
             >>> m.hours_spent.solution
