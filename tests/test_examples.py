@@ -92,7 +92,7 @@ def test_examples(solver, example: Example):
             expected_output_dir,
             symbolic_output_dir,
             check_sol=not example.many_valid_solutions and is_gurobi,
-            check_lp=is_gurobi
+            check_lp=is_gurobi,
         )
         check_results_dir_equal(
             dense_output_dir,
@@ -140,9 +140,9 @@ def check_results_dir_equal(expected_dir, actual_dir, check_sol, check_lp=True):
 
 def check_lp_equal(file_expected: Path, file_actual: Path):
     with open(file_expected) as f:
-        expected = f.readlines()
+        expected = filter(lambda l: "\\ Signature: 0x" not in l, f.readlines())
     with open(file_actual) as f:
-        actual = f.readlines()
+        actual = filter(lambda l: "\\ Signature: 0x" not in l, f.readlines())
     for e, a in zip(expected, actual):
         assert e == a, f"Expected {e} but got {a}"
 

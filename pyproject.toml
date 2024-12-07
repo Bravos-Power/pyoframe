@@ -35,6 +35,7 @@ dev = [
     "pytest-cov",
     "pre-commit",
     "gurobipy",
+    "highsbox"
 ]
 docs = [
     "mkdocs-material==9.*",
