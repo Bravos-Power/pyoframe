@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -17,8 +18,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import pyoptinterface as poi
-import warnings
-from packaging import version
 
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
