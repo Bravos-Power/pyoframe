@@ -1,11 +1,10 @@
 import pytest
 
 import pyoframe as pf
-from pyoframe.model_element import ModelElementWithId
 
 
 @pytest.fixture(autouse=True)
-def _setup_before_each_test():
-    ModelElementWithId.reset_counters()
+def _setup_before_each_test(doctest_namespace):
+    doctest_namespace["pf"] = pf
     pf.Config.reset_defaults()
     pf.Config.enable_is_duplicated_expression_safety_check = True

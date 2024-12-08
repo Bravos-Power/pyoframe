@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
@@ -13,13 +14,15 @@ from typing import (
     overload,
 )
 
+import numpy as np
 import pandas as pd
 import polars as pl
-from packaging import version
+import pyoptinterface as poi
 
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
     COEF_KEY,
+    COL_DTYPES,
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
@@ -29,6 +32,7 @@ from pyoframe.constants import (
     SLACK_COL,
     SOLUTION_KEY,
     VAR_KEY,
+    VAR_TYPE,
     Config,
     ConstraintSense,
     ObjSense,
@@ -43,6 +47,7 @@ from pyoframe.model_element import (
     SupportPolarsMethodMixin,
 )
 from pyoframe.util import (
+    Container,
     FuncArgs,
     cast_coef_to_string,
     concat_dimensions,
@@ -54,8 +59,6 @@ from pyoframe.util import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
-
-VAR_TYPE = pl.UInt32
 
 
 def _forward_to_expression(func_name: str):
@@ -107,14 +110,15 @@ class SupportsMath(ABC, SupportsToExpr):
     def __sub__(self, other):
         """
         >>> import polars as pl
-        >>> from pyoframe import Variable
+        >>> import pyoframe as pf
+        >>> m = pf.Model()
         >>> df = pl.DataFrame({"dim1": [1,2,3], "value": [1,2,3]})
-        >>> var = Variable(df["dim1"])
-        >>> var - df
+        >>> m.v = pf.Variable(df["dim1"])
+        >>> m.v - df
         <Expression size=3 dimensions={'dim1': 3} terms=6>
-        [1]: x1 -1
-        [2]: x2 -2
-        [3]: x3 -3
+        [1]: v[1] -1
+        [2]: v[2] -2
+        [3]: v[3] -3
         """
         if not isinstance(other, (int, float)):
             other = other.to_expr()
@@ -128,27 +132,33 @@ class SupportsMath(ABC, SupportsToExpr):
 
     def __truediv__(self, other):
         """
-        Support division.
-        >>> from pyoframe import Variable
-        >>> var = Variable({"dim1": [1,2,3]})
-        >>> var / 2
-        <Expression size=3 dimensions={'dim1': 3} terms=3>
-        [1]: 0.5 x1
-        [2]: 0.5 x2
-        [3]: 0.5 x3
+
+        Examples:
+            Support division.
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = Variable({"dim1": [1,2,3]})
+            >>> m.v / 2
+            <Expression size=3 dimensions={'dim1': 3} terms=3>
+            [1]: 0.5 v[1]
+            [2]: 0.5 v[2]
+            [3]: 0.5 v[3]
         """
         return self.to_expr() * (1 / other)
 
     def __rsub__(self, other):
         """
         Support right subtraction.
-        >>> from pyoframe import Variable
-        >>> var = Variable({"dim1": [1,2,3]})
-        >>> 1 - var
-        <Expression size=3 dimensions={'dim1': 3} terms=6>
-        [1]: 1  - x1
-        [2]: 1  - x2
-        [3]: 1  - x3
+
+        Examples:
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = Variable({"dim1": [1,2,3]})
+            >>> 1 - m.v
+            <Expression size=3 dimensions={'dim1': 3} terms=6>
+            [1]: 1  - v[1]
+            [2]: 1  - v[2]
+            [3]: 1  - v[3]
         """
         return other + (-self.to_expr())
 
@@ -156,10 +166,12 @@ class SupportsMath(ABC, SupportsToExpr):
         """Equality constraint.
 
         Examples:
-            >>> from pyoframe import Variable
-            >>> Variable() <= 1
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable()
+            >>> m.v <= 1
             <Constraint sense='<=' size=1 dimensions={} terms=2>
-            x1 <= 1
+            v <= 1
         """
         return Constraint(self - other, ConstraintSense.LE)
 
@@ -167,10 +179,12 @@ class SupportsMath(ABC, SupportsToExpr):
         """Equality constraint.
 
         Examples:
-            >>> from pyoframe import Variable
-            >>> Variable() >= 1
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable()
+            >>> m.v >= 1
             <Constraint sense='>=' size=1 dimensions={} terms=2>
-            x1 >= 1
+            v >= 1
         """
         return Constraint(self - other, ConstraintSense.GE)
 
@@ -178,10 +192,12 @@ class SupportsMath(ABC, SupportsToExpr):
         """Equality constraint.
 
         Examples:
-            >>> from pyoframe import Variable
-            >>> Variable() == 1
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable()
+            >>> m.v == 1
             <Constraint sense='=' size=1 dimensions={} terms=2>
-            x1 = 1
+            v = 1
         """
         return Constraint(self - value, ConstraintSense.EQ)
 
@@ -413,10 +429,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         Examples:
             >>> import pandas as pd
-            >>> from pyoframe import Variable
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
             >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-            >>> quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
-            >>> expr = (quantity * df["cost"]).sum("time")
+            >>> m.quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
+            >>> expr = (m.quantity * df["cost"]).sum("time")
             >>> expr.data
             shape: (2, 3)
             ┌──────┬─────────┬───────────────┐
@@ -592,20 +609,21 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         Examples:
             >>> import pandas as pd
-            >>> from pyoframe import Variable
+            >>> import pyoframe as pf
+            >>> m = pf.Model()
             >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
-            >>> var = Variable(add)
-            >>> var + add
+            >>> m.v = Variable(add)
+            >>> m.v + add
             <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: x1 +10
-            [2]: x2 +20
-            [3]: x3 +30
-            >>> var + add + 2
+            [1]: v[1] +10
+            [2]: v[2] +20
+            [3]: v[3] +30
+            >>> m.v + add + 2
             <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: x1 +12
-            [2]: x2 +22
-            [3]: x3 +32
-            >>> var + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
+            [1]: v[1] +12
+            [2]: v[2] +22
+            [3]: v[3] +32
+            >>> m.v + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
             pyoframe.constants.PyoframeError: Failed to add expressions:
@@ -620,9 +638,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             ╞══════╪════════════╡
             │ 3    ┆ null       │
             └──────┴────────────┘
-            >>> 5 + 2 * Variable()
+            >>> m.v2 = Variable()
+            >>> 5 + 2 * m.v2
             <Expression size=1 dimensions={} terms=2>
-            2 x4 +5
+            2 v2 +5
         """
         if isinstance(other, str):
             raise ValueError(
@@ -741,9 +760,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def variable_terms(self):
         return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
 
-    @property
     @unwrap_single_values
-    def value(self) -> pl.DataFrame:
+    def evaluate(self) -> pl.DataFrame:
         """
         The value of the expression. Only available after the model has been solved.
 
@@ -754,10 +772,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_1 = 2 * m.X + 1
             >>> m.expr_2 = pf.sum(m.expr_1)
             >>> m.objective = m.expr_2 - 3
-            >>> result = m.solve(log_to_console=False) # doctest: +ELLIPSIS
-            <BLANKLINE>
-            ...
-            >>> m.expr_1.value
+            >>> m.attr.Silent = True
+            >>> m.optimize()
+            >>> m.expr_1.evaluate()
             shape: (3, 2)
             ┌──────┬──────────┐
             │ dim1 ┆ solution │
@@ -768,66 +785,71 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             │ 2    ┆ 21.0     │
             │ 3    ┆ 21.0     │
             └──────┴──────────┘
-            >>> m.expr_2.value
+            >>> m.expr_2.evaluate()
             63.0
         """
         assert (
             self._model is not None
         ), "Expression must be added to the model to use .value"
-        if self._model.result is None or self._model.result.solution is None:
-            raise ValueError(
-                "Can't obtain value of expression since the model has not been solved."
-            )
 
-        df = (
-            self.data.join(self._model.result.solution.primal, on=VAR_KEY, how="left")
-            .with_columns(
-                (
-                    pl.when(pl.col(VAR_KEY) == CONST_TERM)
-                    .then(1)
-                    .otherwise(pl.col(SOLUTION_KEY))
-                    * pl.col(COEF_KEY)
-                ).alias(SOLUTION_KEY)
-            )
-            .drop(VAR_KEY)
-            .drop(COEF_KEY)
+        df = self.data
+        sm = self._model.solver_model
+        attr = poi.VariableAttribute.Value
+        df = df.with_columns(
+            (
+                pl.col(COEF_KEY)
+                * pl.col(VAR_KEY).map_elements(
+                    lambda v_id: sm.get_variable_attribute(
+                        poi.VariableIndex(v_id), attr
+                    ),
+                    return_dtype=COL_DTYPES[SOLUTION_KEY],
+                )
+            ).alias(COEF_KEY)
         )
+        df = df.rename({COEF_KEY: SOLUTION_KEY}).drop(VAR_KEY)
 
         dims = self.dimensions
         if dims is not None:
             df = df.group_by(dims, maintain_order=True)
         return df.sum()
 
+    def to_poi(self) -> poi.ScalarAffineFunction:
+        if self.dimensions is not None:
+            raise ValueError(
+                "Can only convert a uni-dimensional expression to PyOptInterface."
+            )
+
+        return poi.ScalarAffineFunction(
+            coefficients=self.data.get_column(COEF_KEY).to_numpy(),
+            variables=self.data.get_column(VAR_KEY).to_numpy(),
+        )
+
     def to_str_table(
         self,
         max_line_len=None,
         max_rows=None,
         include_const_term=True,
-        include_const_variable=False,
         var_map=None,
-        float_precision=None,
     ):
         data = self.data if include_const_term else self.variable_terms
-        data = cast_coef_to_string(data, float_precision=float_precision)
+        data = cast_coef_to_string(data)
 
+        temp_var_column = f"{VAR_KEY}_temp"
         if var_map is not None:
-            data = var_map.apply(data, to_col="str_var")
+            data = var_map.apply(data, to_col=temp_var_column, id_col=VAR_KEY)
         elif self._model is not None and self._model.var_map is not None:
             var_map = self._model.var_map
-            data = var_map.apply(data, to_col="str_var")
+            data = var_map.apply(data, to_col=temp_var_column, id_col=VAR_KEY)
         else:
             data = data.with_columns(
-                pl.concat_str(pl.lit("x"), VAR_KEY).alias("str_var")
+                pl.concat_str(pl.lit("x"), VAR_KEY).alias(temp_var_column)
             )
-        if include_const_variable:
-            data = data.drop(VAR_KEY).rename({"str_var": VAR_KEY})
-        else:
-            data = data.with_columns(
-                pl.when(pl.col(VAR_KEY) == CONST_TERM)
-                .then(pl.lit(""))
-                .otherwise("str_var")
-                .alias(VAR_KEY)
-            ).drop("str_var")
+        data = data.with_columns(
+            pl.when(pl.col(VAR_KEY) == CONST_TERM)
+            .then(pl.lit(""))
+            .otherwise(temp_var_column)
+            .alias(VAR_KEY)
+        ).drop(temp_var_column)
 
         dimensions = self.dimensions
 
@@ -840,7 +862,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             )
         ).drop(COEF_KEY, VAR_KEY)
 
-        # Combine terms into one string
         if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
                 pl.col("expr").str.concat(delimiter=" ")
@@ -869,24 +890,25 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return data
 
     def to_str_create_prefix(self, data):
-        if self.name is not None or self.dimensions:
-            data = concat_dimensions(data, prefix=self.name, ignore_columns=["expr"])
-            data = data.with_columns(
+        if self.name is None and self.dimensions is None:
+            return data
+
+        return (
+            concat_dimensions(data, prefix=self.name, ignore_columns=["expr"])
+            .with_columns(
                 pl.concat_str("concated_dim", pl.lit(": "), "expr").alias("expr")
-            ).drop("concated_dim")
-        return data
+            )
+            .drop("concated_dim")
+        )
 
     def to_str(
         self,
         max_line_len=None,
         max_rows=None,
         include_const_term=True,
-        include_const_variable=False,
         var_map=None,
-        include_prefix=True,
         include_header=False,
         include_data=True,
-        float_precision=None,
     ):
         result = ""
         if include_header:
@@ -900,23 +922,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 max_line_len=max_line_len,
                 max_rows=max_rows,
                 include_const_term=include_const_term,
-                include_const_variable=include_const_variable,
                 var_map=var_map,
-                float_precision=float_precision,
             )
-            if include_prefix:
-                str_table = self.to_str_create_prefix(str_table)
+            str_table = self.to_str_create_prefix(str_table)
             result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
 
         return result
 
     def __repr__(self) -> str:
-        return self.to_str(
-            max_line_len=80,
-            max_rows=15,
-            include_header=True,
-            float_precision=Config.print_float_precision,
-        )
+        return self.to_str(max_line_len=80, max_rows=15, include_header=True)
 
     def __str__(self) -> str:
         return self.to_str()
@@ -976,70 +990,141 @@ class Constraint(ModelElementWithId):
         self._model = lhs._model
         self.sense = sense
         self.to_relax: Optional[FuncArgs] = None
+        self.attr = Container(self._set_attribute, self._get_attribute)
 
         dims = self.lhs.dimensions
         data = pl.DataFrame() if dims is None else self.lhs.data.select(dims).unique()
 
         super().__init__(data)
 
+    def _set_attribute(self, name, value):
+        self._assert_has_ids()
+        col_name = name
+        try:
+            name = poi.ConstraintAttribute[name]
+            setter = self._model.solver_model.set_constraint_attribute
+        except KeyError:
+            setter = self._model.solver_model.set_constraint_raw_attribute
+
+        if self.dimensions is None and isinstance(value, pl.DataFrame):
+            value = value.get_column(col_name).item()
+
+        if isinstance(value, pl.DataFrame):
+            for key, value in (
+                self.data.join(value, on=self.dimensions, how="inner")
+                .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
+                .iter_rows()
+            ):
+                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
+        else:
+            for key in self.data.get_column(CONSTRAINT_KEY):
+                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
+
+    @unwrap_single_values
+    def _get_attribute(self, name):
+        self._assert_has_ids()
+        col_name = name
+        try:
+            name = poi.ConstraintAttribute[name]
+            getter = self._model.solver_model.get_constraint_attribute
+        except KeyError:
+            getter = self._model.solver_model.get_constraint_raw_attribute
+
+        with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
+            warnings.filterwarnings(
+                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
+            )
+            return self.data.with_columns(
+                pl.col(CONSTRAINT_KEY)
+                .map_elements(
+                    lambda v_id: getter(
+                        poi.ConstraintIndex(poi.ConstraintType.Linear, v_id), name
+                    )
+                )
+                .alias(col_name)
+            ).select(self.dimensions_unsafe + [col_name])
+
     def on_add_to_model(self, model: "Model", name: str):
         super().on_add_to_model(model, name)
         if self.to_relax is not None:
             self.relax(*self.to_relax.args, **self.to_relax.kwargs)
+        self._assign_ids()
 
-    @property
-    @unwrap_single_values
-    def slack(self):
-        """
-        The slack of the constraint.
-        Will raise an error if the model has not already been solved.
-        The first call to this property will load the slack values from the solver (lazy loading).
-        """
-        if SLACK_COL not in self.data.columns:
-            assert (
-                self._model is not None
-            ), "Constraint must be added to a model to get the slack."
-            if self._model.solver is None:
-                raise ValueError("The model has not been solved yet.")
-            self._model.solver.load_slack()
-        return self.data.select(self.dimensions_unsafe + [SLACK_COL])
+    def _assign_ids(self):
+        kwargs = dict(sense=self.sense.to_poi(), rhs=0)
+        if self.dimensions is None:
+            if self._model.use_var_names:
+                kwargs["name"] = self.name
+            df = self.data.with_columns(
+                pl.lit(
+                    self._model.solver_model.add_linear_constraint(
+                        poi.ScalarAffineFunction(
+                            coefficients=self.lhs.data.get_column(COEF_KEY).to_numpy(),
+                            variables=self.lhs.data.get_column(VAR_KEY).to_numpy(),
+                        ),
+                        **kwargs,
+                    ).index
+                )
+                .alias(CONSTRAINT_KEY)
+                .cast(VAR_TYPE)
+            )
+        else:
+            df = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
+                pl.col(COEF_KEY), pl.col(VAR_KEY)
+            )
 
-    @slack.setter
-    def slack(self, value):
-        self._extend_dataframe_by_id(value)
+            if self._model.use_var_names:
+                df = (
+                    concat_dimensions(df, prefix=self.name)
+                    .with_columns(
+                        pl.struct(
+                            pl.col(COEF_KEY), pl.col(VAR_KEY), pl.col("concated_dim")
+                        )
+                        .map_elements(
+                            lambda x: self._model.solver_model.add_linear_constraint(
+                                poi.ScalarAffineFunction(
+                                    coefficients=np.array(x[COEF_KEY]),
+                                    variables=np.array(x[VAR_KEY]),
+                                ),
+                                name=x["concated_dim"],
+                                **kwargs,
+                            ).index,
+                            return_dtype=VAR_TYPE,
+                        )
+                        .alias(CONSTRAINT_KEY),
+                    )
+                    .drop("concated_dim")
+                )
+            else:
+                df = df.with_columns(
+                    pl.struct(pl.col(COEF_KEY), pl.col(VAR_KEY))
+                    .map_elements(
+                        lambda x: self._model.solver_model.add_linear_constraint(
+                            poi.ScalarAffineFunction(
+                                coefficients=np.array(x[COEF_KEY]),
+                                variables=np.array(x[VAR_KEY]),
+                            ),
+                            **kwargs,
+                        ).index,
+                        return_dtype=VAR_TYPE,
+                    )
+                    .alias(CONSTRAINT_KEY),
+                )
+            df = df.drop([COEF_KEY, VAR_KEY])
+
+        self._data = df
 
     @property
     @unwrap_single_values
     def dual(self) -> Union[pl.DataFrame, float]:
-        if DUAL_KEY not in self.data.columns:
-            raise ValueError(f"No dual values founds for constraint '{self.name}'")
-        return self.data.select(self.dimensions_unsafe + [DUAL_KEY])
-
-    @dual.setter
-    def dual(self, value):
-        self._extend_dataframe_by_id(value)
+        dual = self.attr.Dual
+        if isinstance(dual, pl.DataFrame):
+            dual = dual.rename({"Dual": DUAL_KEY})
+        return dual
 
     @classmethod
     def get_id_column_name(cls):
         return CONSTRAINT_KEY
-
-    def to_str_create_prefix(self, data, const_map=None):
-        if const_map is None:
-            return self.lhs.to_str_create_prefix(data)
-
-        data_map = const_map.apply(self.ids, to_col=None)
-
-        if self.dimensions is None:
-            assert data.height == 1
-            prefix = data_map.select(pl.col(CONSTRAINT_KEY)).item()
-            return data.select(
-                pl.concat_str(pl.lit(f"{prefix}: "), "expr").alias("expr")
-            )
-
-        data = data.join(data_map, on=self.dimensions)
-        return data.with_columns(
-            pl.concat_str(CONSTRAINT_KEY, pl.lit(": "), "expr").alias("expr")
-        ).drop(CONSTRAINT_KEY)
 
     def filter(self, *args, **kwargs) -> pl.DataFrame:
         return self.lhs.data.filter(*args, **kwargs)
@@ -1062,14 +1147,20 @@ class Constraint(ModelElementWithId):
 
         Examples:
             >>> import pyoframe as pf
-            >>> m = pf.Model("max")
+            >>> m = pf.Model("max", use_var_names=True)
             >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
-            >>> m.must_finish_project = m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]
+            >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
             >>> m.only_one_day = sum("project", m.hours_spent) <= 24
-            >>> _ = m.must_finish_project.relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
-            >>> _ = m.solve(log_to_console=False) # doctest: +ELLIPSIS
-            \rWriting ...
+            >>> # Relaxing a constraint after it has already been assigned will give an error
+            >>> m.only_one_day.relax(1)
+            Traceback (most recent call last):
+            ...
+            ValueError: .relax() must be called before the Constraint is added to the model
+            >>> m.attr.Silent = True
+            >>> m.optimize()
+            >>> m.objective.value
+            -50.0
             >>> m.hours_spent.solution
             shape: (3, 2)
             ┌─────────┬──────────┐
@@ -1081,30 +1172,12 @@ class Constraint(ModelElementWithId):
             │ B       ┆ 7.0      │
             │ C       ┆ 9.0      │
             └─────────┴──────────┘
-
-
-            >>> # It can also be done all in one go!
-            >>> m = pf.Model("max")
-            >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
-            >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
-            >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(5)
-            >>> m.only_one_day = (sum("project", m.hours_spent) <= 24).relax(1)
-            >>> _ = m.solve(log_to_console=False) # doctest: +ELLIPSIS
-            \rWriting ...
-            >>> m.objective.value
-            -3.0
-            >>> m.hours_spent.solution
-            shape: (3, 2)
-            ┌─────────┬──────────┐
-            │ project ┆ solution │
-            │ ---     ┆ ---      │
-            │ str     ┆ f64      │
-            ╞═════════╪══════════╡
-            │ A       ┆ 9.0      │
-            │ B       ┆ 9.0      │
-            │ C       ┆ 9.0      │
-            └─────────┴──────────┘
         """
+        if self._has_ids:
+            raise ValueError(
+                ".relax() must be called before the Constraint is added to the model"
+            )
+
         m = self._model
         if m is None or self.name is None:
             self.to_relax = FuncArgs(args=[cost, max])
@@ -1115,6 +1188,7 @@ class Constraint(ModelElementWithId):
             m, var_name
         ), "Conflicting names, relaxation variable already exists on the model."
         var = Variable(self, lb=0, ub=max)
+        setattr(m, var_name, var)
 
         if self.sense == ConstraintSense.LE:
             self.lhs -= var
@@ -1126,7 +1200,6 @@ class Constraint(ModelElementWithId):
                 "Relaxation for equalities has not yet been implemented. Submit a pull request!"
             )
 
-        setattr(m, var_name, var)
         penalty = var * cost
         if self.dimensions:
             penalty = sum(self.dimensions, penalty)
@@ -1139,14 +1212,7 @@ class Constraint(ModelElementWithId):
 
         return self
 
-    def to_str(
-        self,
-        max_line_len=None,
-        max_rows=None,
-        var_map=None,
-        float_precision=None,
-        const_map=None,
-    ) -> str:
+    def to_str(self, max_line_len=None, max_rows=None, var_map=None) -> str:
         dims = self.dimensions
         str_table = self.lhs.to_str_table(
             max_line_len=max_line_len,
@@ -1154,9 +1220,9 @@ class Constraint(ModelElementWithId):
             include_const_term=False,
             var_map=var_map,
         )
-        str_table = self.to_str_create_prefix(str_table, const_map=const_map)
+        str_table = self.lhs.to_str_create_prefix(str_table)
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
-        rhs = cast_coef_to_string(rhs, drop_ones=False, float_precision=float_precision)
+        rhs = cast_coef_to_string(rhs, drop_ones=False)
         # Remove leading +
         rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters=" +"))
         rhs = rhs.rename({COEF_KEY: "rhs"})
@@ -1204,25 +1270,31 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
     Examples:
         >>> import pandas as pd
-        >>> from pyoframe import Variable
+        >>> import pyoframe as pf
+        >>> m = pf.Model()
         >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
-        >>> Variable(df)
-        <Variable lb=-inf ub=inf size=6 dimensions={'dim1': 3, 'dim2': 2}>
-        [1,a]: x1
-        [1,b]: x2
-        [2,a]: x3
-        [2,b]: x4
-        [3,a]: x5
-        [3,b]: x6
-        >>> Variable(df[["dim1"]])
+        >>> v = Variable(df)
+        >>> v
+        <Variable size=6 dimensions={'dim1': 3, 'dim2': 2} added_to_model=False>
+        >>> m.v = v
+        >>> m.v
+        <Variable name=v size=6 dimensions={'dim1': 3, 'dim2': 2}>
+        [1,a]: v[1,a]
+        [1,b]: v[1,b]
+        [2,a]: v[2,a]
+        [2,b]: v[2,b]
+        [3,a]: v[3,a]
+        [3,b]: v[3,b]
+        >>> m.v2 = Variable(df[["dim1"]])
         Traceback (most recent call last):
         ...
         ValueError: Duplicate rows found in input data.
-        >>> Variable(df[["dim1"]].drop_duplicates())
-        <Variable lb=-inf ub=inf size=3 dimensions={'dim1': 3}>
-        [1]: x7
-        [2]: x8
-        [3]: x9
+        >>> m.v3 = Variable(df[["dim1"]].drop_duplicates())
+        >>> m.v3
+        <Variable name=v3 size=3 dimensions={'dim1': 3}>
+        [1]: v3[1]
+        [2]: v3[2]
+        [3]: v3[3]
     """
 
     # TODO: Breaking change, remove support for Iterable[AcceptableSets]
@@ -1234,10 +1306,6 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         vtype: VType | VTypeValue = VType.CONTINUOUS,
         equals: Optional[SupportsMath] = None,
     ):
-        if lb is None:
-            lb = float("-inf")
-        if ub is None:
-            ub = float("inf")
         if equals is not None:
             assert (
                 len(indexing_sets) == 0
@@ -1248,28 +1316,107 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
+        self.attr = Container(self._set_attribute, self._get_attribute)
         self._equals = equals
 
-        # Tightening the bounds is not strictly necessary, but it adds clarity
-        if self.vtype == VType.BINARY:
-            lb, ub = 0, 1
-
-        if isinstance(lb, (float, int)):
-            self.lb, self.lb_constraint = lb, None
+        if lb is not None and not isinstance(lb, (float, int)):
+            self._lb_expr, self.lb = lb, None
         else:
-            self.lb, self.lb_constraint = float("-inf"), lb <= self
-
-        if isinstance(ub, (float, int)):
-            self.ub, self.ub_constraint = ub, None
+            self._lb_expr, self.lb = None, lb
+        if ub is not None and not isinstance(ub, (float, int)):
+            self._ub_expr, self.ub = ub, None
         else:
-            self.ub, self.ub_constraint = float("inf"), self <= ub
+            self._ub_expr, self.ub = None, ub
 
-    def on_add_to_model(self, model: "Model", name: str):
+    def _set_attribute(self, name, value):
+        self._assert_has_ids()
+        col_name = name
+        try:
+            name = poi.VariableAttribute[name]
+            setter = self._model.solver_model.set_variable_attribute
+        except KeyError:
+            setter = self._model.solver_model.set_variable_raw_attribute
+
+        if self.dimensions is None and isinstance(value, pl.DataFrame):
+            value = value.get_column(col_name).item()
+
+        if isinstance(value, pl.DataFrame):
+            for key, v in (
+                self.data.join(value, on=self.dimensions, how="inner")
+                .select(pl.col(VAR_KEY), pl.col(col_name))
+                .iter_rows()
+            ):
+                setter(poi.VariableIndex(key), name, v)
+        else:
+            for key in self.data.get_column(VAR_KEY):
+                setter(poi.VariableIndex(key), name, value)
+
+    @unwrap_single_values
+    def _get_attribute(self, name):
+        self._assert_has_ids()
+        col_name = name
+        try:
+            name = poi.VariableAttribute[name]
+            getter = self._model.solver_model.get_variable_attribute
+        except KeyError:
+            getter = self._model.solver_model.get_variable_raw_attribute
+
+        with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
+            warnings.filterwarnings(
+                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
+            )
+            return self.data.with_columns(
+                pl.col(VAR_KEY)
+                .map_elements(lambda v_id: getter(poi.VariableIndex(v_id), name))
+                .alias(col_name)
+            ).select(self.dimensions_unsafe + [col_name])
+
+    def _assign_ids(self):
+        kwargs = dict(domain=self.vtype.to_poi())
+        if self.lb is not None:
+            kwargs["lb"] = self.lb
+        if self.ub is not None:
+            kwargs["ub"] = self.ub
+
+        if self.dimensions is not None and self._model.use_var_names:
+            df = (
+                concat_dimensions(self.data, prefix=self.name)
+                .with_columns(
+                    pl.col("concated_dim")
+                    .map_elements(
+                        lambda name: self._model.solver_model.add_variable(
+                            name=name, **kwargs
+                        ).index,
+                        return_dtype=VAR_TYPE,
+                    )
+                    .alias(VAR_KEY)
+                )
+                .drop("concated_dim")
+            )
+        else:
+            if self._model.use_var_names:
+                kwargs["name"] = self.name
+
+            df = self.data.with_columns(
+                pl.lit(0).alias(VAR_KEY).cast(VAR_TYPE)
+            ).with_columns(
+                pl.col(VAR_KEY).map_elements(
+                    lambda _: self._model.solver_model.add_variable(**kwargs).index,
+                    return_dtype=VAR_TYPE,
+                )
+            )
+
+        self._data = df
+
+    def on_add_to_model(self, model, name):
         super().on_add_to_model(model, name)
-        if self.lb_constraint is not None:
-            setattr(model, f"{name}_lb", self.lb_constraint)
-        if self.ub_constraint is not None:
-            setattr(model, f"{name}_ub", self.ub_constraint)
+        self._assign_ids()
+        if self._lb_expr is not None:
+            setattr(model, f"{name}_lb", self._lb_expr <= self)
+
+        if self._ub_expr is not None:
+            setattr(model, f"{name}_ub", self <= self._ub_expr)
+
         if self._equals is not None:
             setattr(model, f"{name}_equals", self == self._equals)
 
@@ -1280,10 +1427,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     @property
     @unwrap_single_values
     def solution(self):
-        if SOLUTION_KEY not in self.data.columns:
-            raise ValueError(f"No solution solution found for Variable '{self.name}'.")
-
-        return self.data.select(self.dimensions_unsafe + [SOLUTION_KEY])
+        solution = self.attr.Value
+        if isinstance(solution, pl.DataFrame):
+            solution = solution.rename({"Value": SOLUTION_KEY})
+        return solution
 
     @property
     @unwrap_single_values
@@ -1293,39 +1440,41 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         Will raise an error if the model has not already been solved.
         The first call to this property will load the reduced costs from the solver (lazy loading).
         """
-        if RC_COL not in self.data.columns:
-            assert (
-                self._model is not None
-            ), "Variable must be added to a model to get the reduced cost."
-            if self._model.solver is None:
-                raise ValueError("The model has not been solved yet.")
-            self._model.solver.load_rc()
-        return self.data.select(self.dimensions_unsafe + [RC_COL])
-
-    @RC.setter
-    def RC(self, value):
-        self._extend_dataframe_by_id(value)
-
-    @solution.setter
-    def solution(self, value):
-        self._extend_dataframe_by_id(value)
+        return self.attr.RC
 
     def __repr__(self):
-        return (
-            get_obj_repr(
-                self, ("name", "lb", "ub"), size=self.data.height, dimensions=self.shape
+        if self._has_ids:
+            return (
+                get_obj_repr(
+                    self,
+                    ("name", "lb", "ub"),
+                    size=self.data.height,
+                    dimensions=self.shape,
+                )
+                + "\n"
+                + self.to_expr().to_str(max_line_len=80, max_rows=10)
             )
-            + "\n"
-            + self.to_expr().to_str(max_line_len=80, max_rows=10)
-        )
+        else:
+            return get_obj_repr(
+                self,
+                ("name", "lb", "ub"),
+                size=self.data.height,
+                dimensions=self.shape,
+                added_to_model=False,
+            )
 
     def to_expr(self) -> Expression:
+        if VAR_KEY not in self.data.columns:
+            raise ValueError(
+                f"Cannot use Variable() before it has beed added to a model."
+            )
         if POLARS_VERSION.major < 1:
             return self._new(self.data.drop(SOLUTION_KEY))
         else:
             return self._new(self.data.drop(SOLUTION_KEY, strict=False))
 
     def _new(self, data: pl.DataFrame):
+        self._assert_has_ids()
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
         e._model = self._model
         # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
