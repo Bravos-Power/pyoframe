@@ -16,12 +16,19 @@ from pyoframe.constants import (
 from pyoframe.core import Constraint, Variable
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.objective import Objective
-from pyoframe.util import Container, NamedVariableMapper
+from pyoframe.util import Container, NamedVariableMapper, get_obj_repr
 
 
 class Model:
     """
     Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
+
+    Example:
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable()
+        >>> m.my_constraint = m.X <= 10
+        >>> m
+        <Model vars=1 constrs=1 objective=False>
     """
 
     _reserved_attributes = [
@@ -81,27 +88,22 @@ class Model:
             from pyoptinterface.gurobi import Model
         elif solver == "highs":
             from pyoptinterface.highs import Model
-        elif solver == "copt":
-            from pyoptinterface.copt import Model
+        # TODO add support for copt
+        # elif solver == "copt":
+        #     from pyoptinterface.copt import Model
         else:
             raise ValueError(f"Solver {solver} not recognized or supported.")
         model = Model()
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
         if constant_var.index != CONST_TERM:
-            raise ValueError("The first variable should have index 0.")
+            raise ValueError(
+                "The first variable should have index 0."
+            )  # pragma: no cover
         return model
 
     @property
     def variables(self) -> List[Variable]:
         return self._variables
-
-    @property
-    def binary_variables(self) -> Iterable[Variable]:
-        return (v for v in self.variables if v.vtype == VType.BINARY)
-
-    @property
-    def integer_variables(self) -> Iterable[Variable]:
-        return (v for v in self.variables if v.vtype == VType.INTEGER)
 
     @property
     def constraints(self):
@@ -145,7 +147,13 @@ class Model:
         return super().__setattr__(__name, __value)
 
     def __repr__(self) -> str:
-        return f"""Model '{self.name}' ({len(self.variables)} vars, {len(self.constraints)} constrs, {1 if self.objective else "no"} obj)"""
+        return get_obj_repr(
+            self,
+            name=self.name,
+            vars=len(self.variables),
+            constrs=len(self.constraints),
+            objective=bool(self.objective),
+        )
 
     def write(self, file_path: Union[Path, str]):
         file_path = Path(file_path)
