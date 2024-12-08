@@ -1,3 +1,5 @@
+# MIT License
+# Copyright (c) 2021 Viacheslav Poturaev
 name: cloc
 on:
   pull_request:
