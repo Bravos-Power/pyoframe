@@ -178,30 +178,3 @@ class ModelElementWithId(ModelElement):
         """
         Returns the name of the column containing the IDs.
         """
-
-    @property
-    def ids(self) -> pl.DataFrame:
-        self._assert_has_ids()
-        return self.data.select(self.dimensions_unsafe + [self.get_id_column_name()])
-
-    def _preprocess_attr(self, name: str, value: Any) -> Any:
-        dims = self.dimensions
-        ids = self.ids
-        id_col = self.get_id_column_name()
-
-        if isinstance(value, pl.DataFrame):
-            if value.shape == (1, 1):
-                value = value.item()
-            else:
-                assert (
-                    dims is not None
-                ), "Attribute must be a scalar since there are no dimensions"
-                result = value.join(ids, on=dims, validate="1:1", how="inner").drop(
-                    dims
-                )
-                assert len(result.columns) == 2, "Attribute has too many columns"
-                value_col = [c for c in result.columns if c != id_col][0]
-                return result.rename({value_col: name})
-
-        assert ids.height == 1, "Attribute is a scalar but there are multiple IDs."
-        return pl.DataFrame({name: [value], id_col: ids.get_column(id_col)})

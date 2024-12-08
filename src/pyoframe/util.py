@@ -347,7 +347,7 @@ class NamedVariableMapper:
     NAME_COL = "__name"
 
     def __init__(self, cls: Type["ModelElementWithId"]) -> None:
-        self._ID_COL = cls.get_id_column_name()
+        self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},
             schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
@@ -393,6 +393,10 @@ class NamedVariableMapper:
         assert (
             element_name is not None
         ), "Element must have a name to be used in a named mapping."
+        element._assert_has_ids()
         return concat_dimensions(
-            element.ids, keep_dims=False, prefix=element_name, to_col=self.NAME_COL
+            element.data.select(element.dimensions_unsafe + [VAR_KEY]),
+            keep_dims=False,
+            prefix=element_name,
+            to_col=self.NAME_COL,
         )
