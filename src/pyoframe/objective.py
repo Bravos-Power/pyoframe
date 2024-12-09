@@ -28,6 +28,10 @@ class Objective(Expression):
         >>> m.optimize()
         >>> m.A.solution, m.B.solution
         (10.0, 0.0)
+        >>> m.objective -= 2 * m.A
+        >>> m.optimize()
+        >>> m.A.solution, m.B.solution
+        (0.0, 10.0)
     """
 
     def __init__(self, expr: SupportsMath) -> None:
