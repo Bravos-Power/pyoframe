@@ -157,7 +157,7 @@ def test_setting_constraint_attr(solver):
 
     # Solving it should return unbounded
     m.optimize()
-    assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
+    assert m.attr.TerminationStatus != poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model bounded by setting the Sense attribute
     m.A_con.attr.Sense = "<"
@@ -172,18 +172,16 @@ def test_setting_model_attr(solver):
     if solver != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
-    m = pf.Model("min")
+    m = pf.Model("max")
     m.A = pf.Variable(lb=0)
     m.objective = m.A
 
-    m.attr.TimeLimitSec = 0
-
     # Solving it should return unbounded
     m.optimize()
-    assert not m.attr.TerminationStatus == poi.TerminationStatusCode.TIME_LIMIT
+    assert m.attr.TerminationStatus != poi.TerminationStatusCode.OPTIMAL
 
     # Now we make the model a minimization problem
-    m.attr.TimeLimitSec = 1e6
+    m.attr.ModelSense = 1
 
     # Now the model should be bounded
     m.optimize()
