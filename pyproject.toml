@@ -16,7 +16,14 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
 ]
-dependencies = ["polars>=0.20,<2", "numpy", "pyarrow", "pandas", "packaging"]
+dependencies = [
+    "polars>=0.20,<2",
+    "numpy",
+    "pyarrow",
+    "pandas",
+    "packaging",
+    "pyoptinterface~=0.3",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -28,6 +35,8 @@ dev = [
     "pytest-cov",
     "pre-commit",
     "gurobipy",
+    "highsbox",
+    "pre-commit"
 ]
 docs = [
     "mkdocs-material==9.*",
@@ -39,6 +48,7 @@ docs = [
     "mkdocs-literate-nav",
     "mkdocs-table-reader-plugin"
 ]
+highs = ["highsbox"]
 
 [tool.isort]
 profile = "black"

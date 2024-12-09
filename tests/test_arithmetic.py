@@ -62,10 +62,11 @@ def test_multiplication_no_common_dimensions():
 
 
 def test_within_set():
+    m = Model()
     small_set = Set(x=[1, 2], y=["a"])
     large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
-    v = Variable(large_set)
-    result = v.to_expr().within(small_set)
+    m.v = Variable(large_set)
+    result = m.v.to_expr().within(small_set)
     assert_frame_equal(
         result.data,
         pl.DataFrame(
@@ -103,10 +104,11 @@ def test_filter_constraint():
 
 
 def test_filter_variable():
-    v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
-    result = v.filter(dim1=2)
+    m = Model()
+    m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
+    result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
-    assert str(result) == "[2]: x2"
+    assert str(result) == "[2]: v[2]"
 
 
 def test_filter_set():
@@ -219,8 +221,10 @@ def test_add_expression_with_add_dim():
 
 
 def test_add_expression_with_vars_and_add_dim():
+    m = Model()
+    m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
-    lhs = (1 + 2 * Variable()).add_dim("dim1")
+    lhs = (1 + 2 * m.v).add_dim("dim1")
     result = lhs + expr_with_dim
     expected_result = pl.DataFrame(
         {
@@ -252,8 +256,11 @@ def test_add_expression_with_vars_and_add_dim_many():
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
-    lhs = 1 + 2 * Variable(dim1, dim2)
-    rhs = 3 + 4 * Variable(dim3, dim2)
+    m = Model()
+    m.v1 = Variable(dim1, dim2)
+    m.v2 = Variable(dim3, dim2)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
 
     with pytest.raises(
         PyoframeError,
@@ -274,22 +281,25 @@ def test_add_expression_with_vars_and_add_dim_many():
     result = lhs + rhs
     assert (
         str(result)
-        == """[1,a,4]: 4  +2 x1 +4 x5
-[1,a,5]: 4  +2 x1 +4 x7
-[1,b,4]: 4  +2 x2 +4 x6
-[1,b,5]: 4  +2 x2 +4 x8
-[2,a,4]: 4  +2 x3 +4 x5
-[2,a,5]: 4  +2 x3 +4 x7
-[2,b,4]: 4  +2 x4 +4 x6
-[2,b,5]: 4  +2 x4 +4 x8"""
+        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[4,a]
+[1,a,5]: 4  +2 v1[1,a] +4 v2[5,a]
+[1,b,4]: 4  +2 v1[1,b] +4 v2[4,b]
+[1,b,5]: 4  +2 v1[1,b] +4 v2[5,b]
+[2,a,4]: 4  +2 v1[2,a] +4 v2[4,a]
+[2,a,5]: 4  +2 v1[2,a] +4 v2[5,a]
+[2,b,4]: 4  +2 v1[2,b] +4 v2[4,b]
+[2,b,5]: 4  +2 v1[2,b] +4 v2[5,b]"""
     )
 
 
 def test_add_expression_with_missing():
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    lhs = 1 + 2 * Variable(dim2)
-    rhs = 3 + 4 * Variable(dim2_large)
+    m = Model()
+    m.v1 = Variable(dim2)
+    m.v2 = Variable(dim2_large)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
 
     with pytest.raises(
         PyoframeError,
@@ -302,34 +312,37 @@ def test_add_expression_with_missing():
     result = lhs + rhs.drop_unmatched()
     assert (
         str(result)
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2"""
+        == """[a]: 4  +4 v2[a] +2 v1[a]
+[b]: 4  +4 v2[b] +2 v1[b]"""
     )
     result = lhs + rhs.keep_unmatched()
     assert (
         str(result)
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2
-[c]: 3  +4 x5"""
+        == """[a]: 4  +4 v2[a] +2 v1[a]
+[b]: 4  +4 v2[b] +2 v1[b]
+[c]: 3  +4 v2[c]"""
     )
 
     Config.disable_unmatched_checks = True
     result = lhs + rhs
     assert (
         str(result)
-        == """[a]: 4  +2 x1 +4 x3
-[b]: 4  +2 x2 +4 x4
-[c]: 3  +4 x5"""
+        == """[a]: 4  +2 v1[a] +4 v2[a]
+[b]: 4  +2 v1[b] +4 v2[b]
+[c]: 3  +4 v2[c]"""
     )
 
 
 def test_add_expressions_with_dims_and_missing():
+    m = Model()
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
     dim3 = Set(z=[4, 5])
-    lhs = 1 + 2 * Variable(dim, dim2)
-    rhs = 3 + 4 * Variable(dim2_large, dim3)
+    m.v1 = Variable(dim, dim2)
+    m.v2 = Variable(dim2_large, dim3)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
     with pytest.raises(
         PyoframeError,
         match=re.escape(
@@ -364,14 +377,14 @@ def test_add_expressions_with_dims_and_missing():
     result = lhs + rhs.drop_unmatched()
     assert (
         str(result)
-        == """[1,a,4]: 4  +2 x1 +4 x5
-[1,a,5]: 4  +2 x1 +4 x6
-[1,b,4]: 4  +2 x2 +4 x7
-[1,b,5]: 4  +2 x2 +4 x8
-[2,a,4]: 4  +2 x3 +4 x5
-[2,a,5]: 4  +2 x3 +4 x6
-[2,b,4]: 4  +2 x4 +4 x7
-[2,b,5]: 4  +2 x4 +4 x8"""
+        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[a,4]
+[1,a,5]: 4  +2 v1[1,a] +4 v2[a,5]
+[1,b,4]: 4  +2 v1[1,b] +4 v2[b,4]
+[1,b,5]: 4  +2 v1[1,b] +4 v2[b,5]
+[2,a,4]: 4  +2 v1[2,a] +4 v2[a,4]
+[2,a,5]: 4  +2 v1[2,a] +4 v2[a,5]
+[2,b,4]: 4  +2 v1[2,b] +4 v2[b,4]
+[2,b,5]: 4  +2 v1[2,b] +4 v2[b,5]"""
     )
 
 
@@ -462,5 +475,7 @@ def test_variable_equals():
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
     m.objective = sum(m.Choose100)
-    m.solve(log_to_console=False)
+    m.attr.Silent = True
+    m.optimize()
     assert m.objective.value == 300
+    assert m.objective.evaluate() == 300
