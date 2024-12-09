@@ -139,12 +139,16 @@ def check_results_dir_equal(expected_dir, actual_dir, check_sol, check_lp=True):
 
 
 def check_lp_equal(file_expected: Path, file_actual: Path):
+    def keep_line(line):
+        return "\\ Signature: 0x" not in line and line.strip() != ""
+
     with open(file_expected) as f:
-        expected = filter(lambda l: "\\ Signature: 0x" not in l, f.readlines())
+        expected = "\n".join(filter(keep_line, f.readlines()))
     with open(file_actual) as f:
-        actual = filter(lambda l: "\\ Signature: 0x" not in l, f.readlines())
-    for e, a in zip(expected, actual):
-        assert e == a, f"Expected {e} but got {a}"
+        actual = "\n".join(filter(keep_line, f.readlines()))
+    assert (
+        expected == actual
+    ), f"LP files {file_expected} and {file_actual} are different"
 
 
 def check_integer_solutions_only(sol_file):

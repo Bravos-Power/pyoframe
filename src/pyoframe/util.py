@@ -333,9 +333,7 @@ class NamedVariableMapper:
     Maps variables to a string representation using the object's name and dimensions.
 
     Examples:
-
         >>> import polars as pl
-        >>> import pyoframe as pf
         >>> m = pf.Model("min")
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)

@@ -57,12 +57,11 @@ class ModelElement(ABC):
         The names of the data's dimensions.
 
         Examples:
-            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
-            >>> Variable().dimensions
+            >>> pf.Variable().dimensions
 
             >>> # A variable with dimensions of "hour" and "city"
-            >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
+            >>> pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
             ['hour', 'city']
         """
         return _get_dimensions(self.data)
@@ -84,12 +83,11 @@ class ModelElement(ABC):
         The number of indices in each dimension.
 
         Examples:
-            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
-            >>> Variable().shape
+            >>> pf.Variable().shape
             {}
             >>> # A variable with dimensions of "hour" and "city"
-            >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
+            >>> pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
             {'hour': 4, 'city': 3}
         """
         dims = self.dimensions
@@ -140,7 +138,6 @@ class SupportPolarsMethodMixin(ABC):
         Filter elements by the given criteria and then drop the filtered dimensions.
 
         Example:
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
             >>> m.v.select(hour="06:00")

@@ -172,16 +172,18 @@ def test_setting_model_attr(solver):
     if solver != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
-    m = pf.Model("max")
+    m = pf.Model("min")
     m.A = pf.Variable(lb=0)
     m.objective = m.A
 
+    m.attr.TimeLimitSec = 0
+
     # Solving it should return unbounded
     m.optimize()
-    assert not m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
+    assert not m.attr.TerminationStatus == poi.TerminationStatusCode.TIME_LIMIT
 
     # Now we make the model a minimization problem
-    m.attr.ModelSense = 1
+    m.attr.TimeLimitSec = 1e6
 
     # Now the model should be bounded
     m.optimize()

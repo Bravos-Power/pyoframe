@@ -110,7 +110,6 @@ class SupportsMath(ABC, SupportsToExpr):
     def __sub__(self, other):
         """
         >>> import polars as pl
-        >>> import pyoframe as pf
         >>> m = pf.Model()
         >>> df = pl.DataFrame({"dim1": [1,2,3], "value": [1,2,3]})
         >>> m.v = pf.Variable(df["dim1"])
@@ -135,7 +134,6 @@ class SupportsMath(ABC, SupportsToExpr):
 
         Examples:
             Support division.
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1,2,3]})
             >>> m.v / 2
@@ -151,7 +149,6 @@ class SupportsMath(ABC, SupportsToExpr):
         Support right subtraction.
 
         Examples:
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1,2,3]})
             >>> 1 - m.v
@@ -166,7 +163,6 @@ class SupportsMath(ABC, SupportsToExpr):
         """Equality constraint.
 
         Examples:
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v <= 1
@@ -179,7 +175,6 @@ class SupportsMath(ABC, SupportsToExpr):
         """Equality constraint.
 
         Examples:
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v >= 1
@@ -192,7 +187,6 @@ class SupportsMath(ABC, SupportsToExpr):
         """Equality constraint.
 
         Examples:
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v == 1
@@ -218,7 +212,6 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     A set which can then be used to index variables.
 
     Examples:
-        >>> import pyoframe as pf
         >>> pf.Set(x=range(2), y=range(3))
         <Set size=6 dimensions={'x': 2, 'y': 3}>
         [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
@@ -381,11 +374,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import pandas as pd
-            >>> from pyoframe import Variable, Model
             >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-            >>> m = Model("min")
-            >>> m.Time = Variable(df.index)
-            >>> m.Size = Variable(df.index)
+            >>> m = pf.Model("min")
+            >>> m.Time = pf.Variable(df.index)
+            >>> m.Size = pf.Variable(df.index)
             >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
             >>> expr
             <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
@@ -429,7 +421,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         Examples:
             >>> import pandas as pd
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
             >>> m.quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
@@ -481,7 +472,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import polars as pl
-            >>> from pyoframe import Variable, Model
             >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "year": [2024, 2024, 2024], "population": [10, 2, 8]}).to_expr()
             >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
             >>> pop_data.map(cities_and_countries)
@@ -542,10 +532,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import polars as pl
-            >>> from pyoframe import Variable, Model
             >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
-            >>> m = Model("min")
-            >>> m.quantity = Variable(cost[["item", "time"]])
+            >>> m = pf.Model("min")
+            >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
             <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
             [1,1]: quantity[1,1]
@@ -609,7 +598,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         Examples:
             >>> import pandas as pd
-            >>> import pyoframe as pf
             >>> m = pf.Model()
             >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
             >>> m.v = Variable(add)
@@ -766,7 +754,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         The value of the expression. Only available after the model has been solved.
 
         Examples:
-            >>> import pyoframe as pf
             >>> m = pf.Model("max")
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X + 1
@@ -1146,7 +1133,6 @@ class Constraint(ModelElementWithId):
             The same constraint
 
         Examples:
-            >>> import pyoframe as pf
             >>> m = pf.Model("max", use_var_names=True)
             >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
@@ -1270,7 +1256,6 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
     Examples:
         >>> import pandas as pd
-        >>> import pyoframe as pf
         >>> m = pf.Model()
         >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
         >>> v = Variable(df)
@@ -1494,12 +1479,11 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import pandas as pd
-            >>> from pyoframe import Variable, Model
             >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
             >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
-            >>> m = Model("min")
-            >>> m.bat_charge = Variable(time_dim, space_dim)
-            >>> m.bat_flow = Variable(time_dim, space_dim)
+            >>> m = pf.Model("min")
+            >>> m.bat_charge = pf.Variable(time_dim, space_dim)
+            >>> m.bat_flow = pf.Variable(time_dim, space_dim)
             >>> # Fails because the dimensions are not the same
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
