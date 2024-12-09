@@ -22,15 +22,14 @@ import pyoptinterface as poi
 from pyoframe._arithmetic import _add_expressions, _get_dimensions
 from pyoframe.constants import (
     COEF_KEY,
-    COL_DTYPES,
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
+    KEY_TYPE,
     POLARS_VERSION,
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
     VAR_KEY,
-    VAR_TYPE,
     Config,
     ConstraintSense,
     ObjSense,
@@ -698,7 +697,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                         data,
                         pl.DataFrame(
                             {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                            schema={COEF_KEY: pl.Float64, VAR_KEY: VAR_TYPE},
+                            schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
                         ),
                     ],
                     how="vertical_relaxed",
@@ -707,7 +706,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             keys = (
                 data.select(dim)
                 .unique(maintain_order=True)
-                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(VAR_TYPE))
+                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
             )
             if POLARS_VERSION.major >= 1:
                 data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
@@ -738,7 +737,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             if len(constant_terms) == 0:
                 return pl.DataFrame(
                     {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: VAR_TYPE},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
                 )
             return constant_terms
 
@@ -787,7 +786,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                     lambda v_id: sm.get_variable_attribute(
                         poi.VariableIndex(v_id), attr
                     ),
-                    return_dtype=COL_DTYPES[SOLUTION_KEY],
+                    return_dtype=pl.Float64,
                 )
             ).alias(COEF_KEY)
         )
@@ -1035,7 +1034,7 @@ class Constraint(ModelElementWithId):
                     ).index
                 )
                 .alias(CONSTRAINT_KEY)
-                .cast(VAR_TYPE)
+                .cast(KEY_TYPE)
             )
         else:
             df = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
@@ -1058,7 +1057,7 @@ class Constraint(ModelElementWithId):
                                 name=x["concated_dim"],
                                 **kwargs,
                             ).index,
-                            return_dtype=VAR_TYPE,
+                            return_dtype=KEY_TYPE,
                         )
                         .alias(CONSTRAINT_KEY),
                     )
@@ -1075,7 +1074,7 @@ class Constraint(ModelElementWithId):
                             ),
                             **kwargs,
                         ).index,
-                        return_dtype=VAR_TYPE,
+                        return_dtype=KEY_TYPE,
                     )
                     .alias(CONSTRAINT_KEY),
                 )
@@ -1355,7 +1354,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                         lambda name: self._model.poi.add_variable(
                             name=name, **kwargs
                         ).index,
-                        return_dtype=VAR_TYPE,
+                        return_dtype=KEY_TYPE,
                     )
                     .alias(VAR_KEY)
                 )
@@ -1366,11 +1365,11 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 kwargs["name"] = self.name
 
             df = self.data.with_columns(
-                pl.lit(0).alias(VAR_KEY).cast(VAR_TYPE)
+                pl.lit(0).alias(VAR_KEY).cast(KEY_TYPE)
             ).with_columns(
                 pl.col(VAR_KEY).map_elements(
                     lambda _: self._model.poi.add_variable(**kwargs).index,
-                    return_dtype=VAR_TYPE,
+                    return_dtype=KEY_TYPE,
                 )
             )
 

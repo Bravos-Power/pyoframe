@@ -19,14 +19,8 @@ VAR_KEY = "__variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
-
-COL_DTYPES = {
-    COEF_KEY: pl.Float64,
-    VAR_KEY: pl.UInt32,
-    CONSTRAINT_KEY: pl.UInt32,
-    SOLUTION_KEY: pl.Float64,
-}
-VAR_TYPE = COL_DTYPES[VAR_KEY]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs"]
+KEY_TYPE = pl.UInt32
 
 # Variable ID for constant terms. This variable ID is reserved.
 CONST_TERM = 0
@@ -47,7 +41,7 @@ class _ConfigMeta(type):
 
 
 class Config(metaclass=_ConfigMeta):
-    default_solver = "gurobi"
+    default_solver: Optional[SUPPORTED_SOLVER_TYPES] = None
     disable_unmatched_checks: bool = False
     float_to_str_precision: Optional[int] = 5
     print_uses_variable_names: bool = True

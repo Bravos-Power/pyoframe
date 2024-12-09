@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pandas as pd
 import polars as pl
@@ -7,6 +7,7 @@ import pyoptinterface as poi
 
 from pyoframe.constants import (
     CONST_TERM,
+    SUPPORTED_SOLVER_TYPES,
     Config,
     ObjSense,
     ObjSenseValue,
@@ -21,7 +22,20 @@ from pyoframe.util import Container, NamedVariableMapper, get_obj_repr
 
 class Model:
     """
-    Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
+    The object that holds all the variables, constraints, and the objective.
+
+    Parameters:
+        min_or_max:
+            The sense of the objective. Either "min" or "max".
+        name:
+            The name of the model. Currently not used for much.
+        solver:
+            The solver to use. If `None`, `Config.default_solver` will be used.
+            If `Config.default_solver` is `None`, the first solver that imports without an error will be used.
+        solver_env:
+            Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
+        use_var_names:
+            Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
 
     Example:
         >>> m = pf.Model()
@@ -54,15 +68,11 @@ class Model:
         self,
         min_or_max: Union[ObjSense, ObjSenseValue] = "min",
         name=None,
-        solver: Optional[str] = None,
+        solver: Optional[SUPPORTED_SOLVER_TYPES] = None,
+        solver_env: Optional[Dict[str, str]] = None,
         use_var_names=False,
-        **kwargs,
     ):
-        super().__init__(**kwargs)
-        if solver is None:
-            solver = Config.default_solver
-        self.solver_name: str = solver
-        self.poi: Optional["poi.gurobi.Model"] = Model.create_pyoptint_model(solver)
+        self.poi, self.solver_name = Model.create_poi_model(solver, solver_env)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self.sense = ObjSense(min_or_max)
@@ -80,26 +90,50 @@ class Model:
     def use_var_names(self):
         return self._use_var_names
 
-    @staticmethod
-    def create_pyoptint_model(solver: str):
+    @classmethod
+    def create_poi_model(
+        cls, solver: Optional[str], solver_env: Optional[Dict[str, str]]
+    ):
+        if solver is None:
+            if Config.default_solver is None:
+                for solver_option in ["highs", "gurobi"]:
+                    try:
+                        return cls.create_poi_model(solver_option, solver_env)
+                    except RuntimeError:
+                        pass
+                raise ValueError(
+                    'Could not automatically find a solver. Is one installed? If so, specify which one: e.g. Model(solver="gurobi")'
+                )
+            else:
+                solver = Config.default_solver
+
+        solver = solver.lower()
         if solver == "gurobi":
-            from pyoptinterface.gurobi import Model
+            from pyoptinterface import gurobi
+
+            if solver_env is None:
+                model = gurobi.Model()
+            else:
+                env = gurobi.Env(empty=True)
+                for key, value in solver_env.items():
+                    env.set_raw_parameter(key, value)
+                env.start()
+                model = gurobi.Model(env)
         elif solver == "highs":
-            from pyoptinterface.highs import Model
-        # TODO add support for copt
-        # elif solver == "copt":
-        #     from pyoptinterface.copt import Model
+            from pyoptinterface import highs
+
+            model = highs.Model()
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."
             )  # pragma: no cover
-        model = Model()
+
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
         if constant_var.index != CONST_TERM:
             raise ValueError(
                 "The first variable should have index 0."
             )  # pragma: no cover
-        return model
+        return model, solver
 
     @property
     def variables(self) -> List[Variable]:
@@ -124,7 +158,7 @@ class Model:
             >>> m = pf.Model()
             >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
             >>> m.Y = pf.Variable()
-            >>> len(list(m.binary_variables))
+            >>> len(list(m.integer_variables))
             1
         """
         return (v for v in self.variables if v.vtype == VType.INTEGER)
