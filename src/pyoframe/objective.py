@@ -6,7 +6,7 @@ from pyoframe.core import Expression, SupportsMath
 class Objective(Expression):
     """
     Examples:
-        Objectives are created just like expressions.
+        An `Objective` is automatically created when an `Expression` is assigned to `Model.objective`.
 
         >>> m = pf.Model("max")
         >>> m.A, m.B = pf.Variable(lb=0), pf.Variable(lb=0)
@@ -16,7 +16,7 @@ class Objective(Expression):
         <Objective size=1 dimensions={} terms=2>
         objective: 2 B +4
 
-        Objective values can be retrieved directly from the solver with `.value`
+        The objective value can be retrieved with from the solver once the model is solved using `.value`.
 
         >>> m.optimize()
         >>> m.objective.value
@@ -32,15 +32,24 @@ class Objective(Expression):
         >>> m.optimize()
         >>> m.A.solution, m.B.solution
         (0.0, 10.0)
+
+        Objectives cannot be created from dimensioned expressions since an objective must be a single expression.
+
+        >>> m.dimensioned_variable = pf.Variable({"city": ["Toronto", "Berlin", "Paris"]})
+        >>> m.objective = m.dimensioned_variable
+        Traceback (most recent call last):
+        ...
+        ValueError: Objective cannot be created from a dimensioned expression. Did you forget to pf.sum() the expression?
     """
 
     def __init__(self, expr: SupportsMath) -> None:
         expr = expr.to_expr()
         super().__init__(expr.data)
         self._model = expr._model
-        assert (
-            self.dimensions is None
-        ), "Objective cannot have dimensions as it must be a single expression"
+        if self.dimensions is not None:
+            raise ValueError(
+                "Objective cannot be created from a dimensioned expression. Did you forget to pf.sum() the expression?"
+            )
 
     @property
     def value(self) -> float:
