@@ -43,6 +43,12 @@ class Model:
         >>> m.my_constraint = m.X <= 10
         >>> m
         <Model vars=1 constrs=1 objective=False>
+
+        Try setting the Gurobi license:
+        >>> m = pf.Model(solver="gurobi", solver_env=dict(ComputeServer="myserver", ServerPassword="mypassword"))
+        Traceback (most recent call last):
+        ...
+        RuntimeError: Could not resolve host: myserver (code 6, command POST http://myserver/api/v1/cluster/jobs)
     """
 
     _reserved_attributes = [
