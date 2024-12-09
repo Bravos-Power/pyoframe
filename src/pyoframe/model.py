@@ -92,7 +92,9 @@ class Model:
         # elif solver == "copt":
         #     from pyoptinterface.copt import Model
         else:
-            raise ValueError(f"Solver {solver} not recognized or supported.")
+            raise ValueError(
+                f"Solver {solver} not recognized or supported."
+            )  # pragma: no cover
         model = Model()
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
         if constant_var.index != CONST_TERM:

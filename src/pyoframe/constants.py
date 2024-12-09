@@ -89,7 +89,7 @@ class ConstraintSense(Enum):
         elif self == ConstraintSense.GE:
             return poi.ConstraintSense.GreaterEqual
         else:
-            raise ValueError(f"Invalid constraint type: {self}")
+            raise ValueError(f"Invalid constraint type: {self}")  # pragma: no cover
 
 
 class ObjSense(Enum):
@@ -102,7 +102,7 @@ class ObjSense(Enum):
         elif self == ObjSense.MAX:
             return poi.ObjectiveSense.Maximize
         else:
-            raise ValueError(f"Invalid objective sense: {self}")
+            raise ValueError(f"Invalid objective sense: {self}")  # pragma: no cover
 
 
 class VType(Enum):
@@ -118,7 +118,7 @@ class VType(Enum):
         elif self == VType.INTEGER:
             return poi.VariableDomain.Integer
         else:
-            raise ValueError(f"Invalid variable type: {self}")
+            raise ValueError(f"Invalid variable type: {self}")  # pragma: no cover
 
 
 class UnmatchedStrategy(Enum):

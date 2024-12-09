@@ -803,30 +803,23 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def to_poi(self) -> poi.ScalarAffineFunction:
         if self.dimensions is not None:
             raise ValueError(
-                "Can only convert a uni-dimensional expression to PyOptInterface."
-            )
+                "Only non-dimensioned expressions can be converted to PyOptInterface."
+            )  # pragma: no cover
 
         return poi.ScalarAffineFunction(
             coefficients=self.data.get_column(COEF_KEY).to_numpy(),
             variables=self.data.get_column(VAR_KEY).to_numpy(),
         )
 
-    def to_str_table(
-        self,
-        max_line_len=None,
-        max_rows=None,
-        include_const_term=True,
-        var_map=None,
-    ):
+    def to_str_table(self, max_line_len=None, max_rows=None, include_const_term=True):
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
 
         temp_var_column = f"{VAR_KEY}_temp"
-        if var_map is not None:
-            data = var_map.apply(data, to_col=temp_var_column, id_col=VAR_KEY)
-        elif self._model is not None and self._model.var_map is not None:
-            var_map = self._model.var_map
-            data = var_map.apply(data, to_col=temp_var_column, id_col=VAR_KEY)
+        if self._model is not None and self._model.var_map is not None:
+            data = self._model.var_map.apply(
+                data, to_col=temp_var_column, id_col=VAR_KEY
+            )
         else:
             data = data.with_columns(
                 pl.concat_str(pl.lit("x"), VAR_KEY).alias(temp_var_column)
@@ -893,7 +886,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         max_line_len=None,
         max_rows=None,
         include_const_term=True,
-        var_map=None,
         include_header=False,
         include_data=True,
     ):
@@ -909,7 +901,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 max_line_len=max_line_len,
                 max_rows=max_rows,
                 include_const_term=include_const_term,
-                var_map=var_map,
             )
             str_table = self.to_str_create_prefix(str_table)
             result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
@@ -993,18 +984,15 @@ class Constraint(ModelElementWithId):
         except KeyError:
             setter = self._model.solver_model.set_constraint_raw_attribute
 
-        if self.dimensions is None and isinstance(value, pl.DataFrame):
-            value = value.get_column(col_name).item()
-
-        if isinstance(value, pl.DataFrame):
+        if self.dimensions is None:
+            for key in self.data.get_column(CONSTRAINT_KEY):
+                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
+        else:
             for key, value in (
                 self.data.join(value, on=self.dimensions, how="inner")
                 .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
                 .iter_rows()
             ):
-                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
-        else:
-            for key in self.data.get_column(CONSTRAINT_KEY):
                 setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
 
     @unwrap_single_values
@@ -1198,13 +1186,10 @@ class Constraint(ModelElementWithId):
 
         return self
 
-    def to_str(self, max_line_len=None, max_rows=None, var_map=None) -> str:
+    def to_str(self, max_line_len=None, max_rows=None) -> str:
         dims = self.dimensions
         str_table = self.lhs.to_str_table(
-            max_line_len=max_line_len,
-            max_rows=max_rows,
-            include_const_term=False,
-            var_map=var_map,
+            max_line_len=max_line_len, max_rows=max_rows, include_const_term=False
         )
         str_table = self.lhs.to_str_create_prefix(str_table)
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
@@ -1261,7 +1246,16 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         >>> v = Variable(df)
         >>> v
         <Variable size=6 dimensions={'dim1': 3, 'dim2': 2} added_to_model=False>
+
+        Variables cannot be used until they're added to the model.
+
+        >>> m.constraint = v <= 3
+        Traceback (most recent call last):
+        ...
+        ValueError: Cannot use 'Variable' before it has beed added to a model.
         >>> m.v = v
+        >>> m.constraint = m.v <= 3
+
         >>> m.v
         <Variable name=v size=6 dimensions={'dim1': 3, 'dim2': 2}>
         [1,a]: v[1,a]
@@ -1322,19 +1316,16 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         except KeyError:
             setter = self._model.solver_model.set_variable_raw_attribute
 
-        if self.dimensions is None and isinstance(value, pl.DataFrame):
-            value = value.get_column(col_name).item()
-
-        if isinstance(value, pl.DataFrame):
+        if self.dimensions is None:
+            for key in self.data.get_column(VAR_KEY):
+                setter(poi.VariableIndex(key), name, value)
+        else:
             for key, v in (
                 self.data.join(value, on=self.dimensions, how="inner")
                 .select(pl.col(VAR_KEY), pl.col(col_name))
                 .iter_rows()
             ):
                 setter(poi.VariableIndex(key), name, v)
-        else:
-            for key in self.data.get_column(VAR_KEY):
-                setter(poi.VariableIndex(key), name, value)
 
     @unwrap_single_values
     def _get_attribute(self, name):
@@ -1449,10 +1440,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             )
 
     def to_expr(self) -> Expression:
-        if VAR_KEY not in self.data.columns:
-            raise ValueError(
-                f"Cannot use Variable() before it has beed added to a model."
-            )
+        self._assert_has_ids()
         if POLARS_VERSION.major < 1:
             return self._new(self.data.drop(SOLUTION_KEY))
         else:

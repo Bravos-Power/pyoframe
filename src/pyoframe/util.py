@@ -21,7 +21,7 @@ import polars as pl
 
 from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Variable
     from pyoframe.model_element import ModelElementWithId
 
@@ -318,12 +318,12 @@ class Container:
         self._getter = getter
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name.startswith("_"):
+        if name.startswith("_"):  # pragma: no cover
             return super().__setattr__(name, value)
         self._setter(name, value)
 
     def __getattr__(self, name: str) -> Any:
-        if name.startswith("_"):
+        if name.startswith("_"):  # pragma: no cover
             return super().__getattribute__(name)
         return self._getter(name)
 
@@ -366,25 +366,16 @@ class NamedVariableMapper:
     def apply(
         self,
         df: pl.DataFrame,
-        to_col: Optional[str] = None,
-        id_col: Optional[str] = None,
+        to_col: str,
+        id_col: str,
     ) -> pl.DataFrame:
-        if df.height == 0:
-            return df
-        if id_col is None:
-            id_col = self._ID_COL
-        result = df.join(
+        return df.join(
             self.mapping_registry,
             how="left",
             validate="m:1",
             left_on=id_col,
             right_on=self._ID_COL,
-        )
-        if to_col is None:
-            # Drop self._ID_COL so we can replace it with the result
-            result = result.drop(id_col)
-            to_col = id_col
-        return result.rename({self.NAME_COL: to_col})
+        ).rename({self.NAME_COL: to_col})
 
     def _element_to_map(self, element) -> pl.DataFrame:
         element_name = element.name  # type: ignore

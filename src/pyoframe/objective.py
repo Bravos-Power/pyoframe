@@ -39,7 +39,7 @@ class Objective(Expression):
         >>> m.objective = m.dimensioned_variable
         Traceback (most recent call last):
         ...
-        ValueError: Objective cannot be created from a dimensioned expression. Did you forget to pf.sum() the expression?
+        ValueError: Objective cannot be created from a dimensioned expression. Did you forget to use pf.sum()?
     """
 
     def __init__(self, expr: SupportsMath) -> None:
@@ -48,7 +48,7 @@ class Objective(Expression):
         self._model = expr._model
         if self.dimensions is not None:
             raise ValueError(
-                "Objective cannot be created from a dimensioned expression. Did you forget to pf.sum() the expression?"
+                "Objective cannot be created from a dimensioned expression. Did you forget to use pf.sum()?"
             )
 
     @property
