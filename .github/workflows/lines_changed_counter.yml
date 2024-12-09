@@ -1,6 +1,6 @@
 # MIT License
 # Copyright (c) 2021 Viacheslav Poturaev
-name: cloc
+name: line-count
 on:
   pull_request:
 
@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  cloc:
+  line-count:
     runs-on: ubuntu-latest
 
     permissions:
