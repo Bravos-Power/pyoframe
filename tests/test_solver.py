@@ -28,8 +28,11 @@ def test_retrieving_duals(solver):
     assert m.max_AB.dual == 0.1
     assert m.extra_slack_constraint.dual == 0
     if solver == "gurobi":
-        assert m.A.RC == 0
-        assert m.B.RC == 1.9
+        assert m.max_AB.attr.slack == 0
+        assert m.extra_slack_constraint.attr.slack == 50
+    if solver == "gurobi":
+        assert m.A.attr.RC == 0
+        assert m.B.attr.RC == 1.9
 
 
 def test_retrieving_duals_vectorized(solver):
@@ -61,7 +64,13 @@ def test_retrieving_duals_vectorized(solver):
     )
     if solver == "gurobi":
         assert_frame_equal(
-            m.X.RC,
+            m.max_AB.attr.slack,
+            pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
+            check_row_order=False,
+            **check_dtypes_false,
+        )
+        assert_frame_equal(
+            m.X.attr.RC,
             pl.DataFrame(
                 {"t": [1, 2], "RC": [0, 0]}
             ),  # Somehow the reduced cost is 0 since we are no longer using a bound.
@@ -93,8 +102,14 @@ def test_support_variable_attributes(solver):
     )
     if solver == "gurobi":
         assert_frame_equal(
-            m.X.RC,
+            m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
+            check_row_order=False,
+            **check_dtypes_false,
+        )
+        assert_frame_equal(
+            m.max_AB.attr.slack,
+            pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
             check_row_order=False,
             **check_dtypes_false,
         )
@@ -131,7 +146,7 @@ def test_support_variable_raw_attributes(solver):
     )
     if solver == "gurobi":
         assert_frame_equal(
-            m.X.RC,
+            m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
             check_row_order=False,
             **check_dtypes_false,

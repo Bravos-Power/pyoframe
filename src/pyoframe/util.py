@@ -219,8 +219,8 @@ def cast_coef_to_string(
         _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
     )
 
-    if Config.str_float_precision is not None:
-        df = df.with_columns(pl.col(column_name).round(Config.str_float_precision))
+    if Config.float_to_str_precision is not None:
+        df = df.with_columns(pl.col(column_name).round(Config.float_to_str_precision))
 
     df = df.with_columns(
         pl.when(pl.col(column_name) == pl.col(column_name).floor())

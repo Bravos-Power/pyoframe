@@ -19,31 +19,19 @@ VAR_KEY = "__variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
-RC_COL = "RC"
-SLACK_COL = "slack"
 
 COL_DTYPES = {
     COEF_KEY: pl.Float64,
     VAR_KEY: pl.UInt32,
     CONSTRAINT_KEY: pl.UInt32,
     SOLUTION_KEY: pl.Float64,
-    DUAL_KEY: pl.Float64,
-    RC_COL: pl.Float64,
-    SLACK_COL: pl.Float64,
 }
 VAR_TYPE = COL_DTYPES[VAR_KEY]
 
-CONST_TERM = 0  # 0 is a reserved value which makes it easy to detect. It must be zero for e.g. ensuring consistency during quadratic multiplication.
+# Variable ID for constant terms. This variable ID is reserved.
+CONST_TERM = 0
 
-RESERVED_COL_KEYS = (
-    COEF_KEY,
-    VAR_KEY,
-    CONSTRAINT_KEY,
-    SOLUTION_KEY,
-    DUAL_KEY,
-    RC_COL,
-    SLACK_COL,
-)
+RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY, CONSTRAINT_KEY, SOLUTION_KEY, DUAL_KEY)
 
 
 class _ConfigMeta(type):
@@ -61,8 +49,10 @@ class _ConfigMeta(type):
 class Config(metaclass=_ConfigMeta):
     default_solver = "gurobi"
     disable_unmatched_checks: bool = False
-    str_float_precision: Optional[int] = 5
+    float_to_str_precision: Optional[int] = 5
     print_uses_variable_names: bool = True
+    print_max_line_length: int = 80
+    print_max_lines: int = 15
     # Number of elements to show when printing a set to the console (additional elements are replaced with ...)
     print_max_set_elements: int = 50
     enable_is_duplicated_expression_safety_check: bool = False

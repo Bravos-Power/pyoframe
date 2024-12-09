@@ -39,7 +39,7 @@ class Model:
         "io_mappers",
         "name",
         "solver",
-        "solver_model",
+        "poi",
         "params",
         "result",
         "attr",
@@ -62,9 +62,7 @@ class Model:
         if solver is None:
             solver = Config.default_solver
         self.solver_name: str = solver
-        self.solver_model: Optional["poi.gurobi.Model"] = Model.create_pyoptint_model(
-            solver
-        )
+        self.poi: Optional["poi.gurobi.Model"] = Model.create_pyoptint_model(solver)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self.sense = ObjSense(min_or_max)
@@ -106,6 +104,30 @@ class Model:
     @property
     def variables(self) -> List[Variable]:
         return self._variables
+
+    @property
+    def binary_variables(self) -> Iterable[Variable]:
+        """
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
+            >>> m.Y = pf.Variable()
+            >>> len(list(m.binary_variables))
+            1
+        """
+        return (v for v in self.variables if v.vtype == VType.INTEGER)
+
+    @property
+    def integer_variables(self) -> Iterable[Variable]:
+        """
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
+            >>> m.Y = pf.Variable()
+            >>> len(list(m.binary_variables))
+            1
+        """
+        return (v for v in self.variables if v.vtype == VType.INTEGER)
 
     @property
     def constraints(self):
@@ -160,25 +182,25 @@ class Model:
     def write(self, file_path: Union[Path, str]):
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        self.solver_model.write(str(file_path))
+        self.poi.write(str(file_path))
 
     def optimize(self):
-        self.solver_model.optimize()
+        self.poi.optimize()
 
     def _set_param(self, name, value):
-        self.solver_model.set_raw_parameter(name, value)
+        self.poi.set_raw_parameter(name, value)
 
     def _get_param(self, name):
-        return self.solver_model.get_raw_parameter(name)
+        return self.poi.get_raw_parameter(name)
 
     def _set_attr(self, name, value):
         try:
-            self.solver_model.set_model_attribute(poi.ModelAttribute[name], value)
+            self.poi.set_model_attribute(poi.ModelAttribute[name], value)
         except KeyError:
-            self.solver_model.set_model_raw_attribute(name, value)
+            self.poi.set_model_raw_attribute(name, value)
 
     def _get_attr(self, name):
         try:
-            return self.solver_model.get_model_attribute(poi.ModelAttribute[name])
+            return self.poi.get_model_attribute(poi.ModelAttribute[name])
         except KeyError:
-            return self.solver_model.get_model_raw_attribute(name)
+            return self.poi.get_model_raw_attribute(name)

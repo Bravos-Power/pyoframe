@@ -27,9 +27,7 @@ from pyoframe.constants import (
     CONSTRAINT_KEY,
     DUAL_KEY,
     POLARS_VERSION,
-    RC_COL,
     RESERVED_COL_KEYS,
-    SLACK_COL,
     SOLUTION_KEY,
     VAR_KEY,
     VAR_TYPE,
@@ -780,7 +778,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         ), "Expression must be added to the model to use .value"
 
         df = self.data
-        sm = self._model.solver_model
+        sm = self._model.poi
         attr = poi.VariableAttribute.Value
         df = df.with_columns(
             (
@@ -811,7 +809,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             variables=self.data.get_column(VAR_KEY).to_numpy(),
         )
 
-    def to_str_table(self, max_line_len=None, max_rows=None, include_const_term=True):
+    def to_str_table(self, include_const_term=True):
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
 
@@ -853,15 +851,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
 
         # TODO add vertical ... if too many rows, in the middle of the table
-        if max_rows:
-            data = data.head(max_rows)
+        if Config.print_max_lines:
+            data = data.head(Config.print_max_lines)
 
-        if max_line_len:
+        if Config.print_max_line_length:
             data = data.with_columns(
-                pl.when(pl.col("expr").str.len_chars() > max_line_len)
+                pl.when(pl.col("expr").str.len_chars() > Config.print_max_line_length)
                 .then(
                     pl.concat_str(
-                        pl.col("expr").str.slice(0, max_line_len),
+                        pl.col("expr").str.slice(0, Config.print_max_line_length),
                         pl.lit("..."),
                     )
                 )
@@ -883,8 +881,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def to_str(
         self,
-        max_line_len=None,
-        max_rows=None,
         include_const_term=True,
         include_header=False,
         include_data=True,
@@ -898,8 +894,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             result += "\n"
         if include_data:
             str_table = self.to_str_table(
-                max_line_len=max_line_len,
-                max_rows=max_rows,
                 include_const_term=include_const_term,
             )
             str_table = self.to_str_create_prefix(str_table)
@@ -908,7 +902,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return result
 
     def __repr__(self) -> str:
-        return self.to_str(max_line_len=80, max_rows=15, include_header=True)
+        return self.to_str(include_header=True)
 
     def __str__(self) -> str:
         return self.to_str()
@@ -980,9 +974,9 @@ class Constraint(ModelElementWithId):
         col_name = name
         try:
             name = poi.ConstraintAttribute[name]
-            setter = self._model.solver_model.set_constraint_attribute
+            setter = self._model.poi.set_constraint_attribute
         except KeyError:
-            setter = self._model.solver_model.set_constraint_raw_attribute
+            setter = self._model.poi.set_constraint_raw_attribute
 
         if self.dimensions is None:
             for key in self.data.get_column(CONSTRAINT_KEY):
@@ -1001,9 +995,9 @@ class Constraint(ModelElementWithId):
         col_name = name
         try:
             name = poi.ConstraintAttribute[name]
-            getter = self._model.solver_model.get_constraint_attribute
+            getter = self._model.poi.get_constraint_attribute
         except KeyError:
-            getter = self._model.solver_model.get_constraint_raw_attribute
+            getter = self._model.poi.get_constraint_raw_attribute
 
         with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
             warnings.filterwarnings(
@@ -1032,7 +1026,7 @@ class Constraint(ModelElementWithId):
                 kwargs["name"] = self.name
             df = self.data.with_columns(
                 pl.lit(
-                    self._model.solver_model.add_linear_constraint(
+                    self._model.poi.add_linear_constraint(
                         poi.ScalarAffineFunction(
                             coefficients=self.lhs.data.get_column(COEF_KEY).to_numpy(),
                             variables=self.lhs.data.get_column(VAR_KEY).to_numpy(),
@@ -1056,7 +1050,7 @@ class Constraint(ModelElementWithId):
                             pl.col(COEF_KEY), pl.col(VAR_KEY), pl.col("concated_dim")
                         )
                         .map_elements(
-                            lambda x: self._model.solver_model.add_linear_constraint(
+                            lambda x: self._model.poi.add_linear_constraint(
                                 poi.ScalarAffineFunction(
                                     coefficients=np.array(x[COEF_KEY]),
                                     variables=np.array(x[VAR_KEY]),
@@ -1074,7 +1068,7 @@ class Constraint(ModelElementWithId):
                 df = df.with_columns(
                     pl.struct(pl.col(COEF_KEY), pl.col(VAR_KEY))
                     .map_elements(
-                        lambda x: self._model.solver_model.add_linear_constraint(
+                        lambda x: self._model.poi.add_linear_constraint(
                             poi.ScalarAffineFunction(
                                 coefficients=np.array(x[COEF_KEY]),
                                 variables=np.array(x[VAR_KEY]),
@@ -1186,11 +1180,9 @@ class Constraint(ModelElementWithId):
 
         return self
 
-    def to_str(self, max_line_len=None, max_rows=None) -> str:
+    def to_str(self) -> str:
         dims = self.dimensions
-        str_table = self.lhs.to_str_table(
-            max_line_len=max_line_len, max_rows=max_rows, include_const_term=False
-        )
+        str_table = self.lhs.to_str_table(include_const_term=False)
         str_table = self.lhs.to_str_create_prefix(str_table)
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False)
@@ -1218,7 +1210,7 @@ class Constraint(ModelElementWithId):
                 terms=len(self.lhs.data),
             )
             + "\n"
-            + self.to_str(max_line_len=80, max_rows=15)
+            + self.to_str()
         )
 
 
@@ -1312,9 +1304,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         col_name = name
         try:
             name = poi.VariableAttribute[name]
-            setter = self._model.solver_model.set_variable_attribute
+            setter = self._model.poi.set_variable_attribute
         except KeyError:
-            setter = self._model.solver_model.set_variable_raw_attribute
+            setter = self._model.poi.set_variable_raw_attribute
 
         if self.dimensions is None:
             for key in self.data.get_column(VAR_KEY):
@@ -1333,9 +1325,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         col_name = name
         try:
             name = poi.VariableAttribute[name]
-            getter = self._model.solver_model.get_variable_attribute
+            getter = self._model.poi.get_variable_attribute
         except KeyError:
-            getter = self._model.solver_model.get_variable_raw_attribute
+            getter = self._model.poi.get_variable_raw_attribute
 
         with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
             warnings.filterwarnings(
@@ -1360,7 +1352,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 .with_columns(
                     pl.col("concated_dim")
                     .map_elements(
-                        lambda name: self._model.solver_model.add_variable(
+                        lambda name: self._model.poi.add_variable(
                             name=name, **kwargs
                         ).index,
                         return_dtype=VAR_TYPE,
@@ -1377,7 +1369,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 pl.lit(0).alias(VAR_KEY).cast(VAR_TYPE)
             ).with_columns(
                 pl.col(VAR_KEY).map_elements(
-                    lambda _: self._model.solver_model.add_variable(**kwargs).index,
+                    lambda _: self._model.poi.add_variable(**kwargs).index,
                     return_dtype=VAR_TYPE,
                 )
             )
@@ -1408,16 +1400,6 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             solution = solution.rename({"Value": SOLUTION_KEY})
         return solution
 
-    @property
-    @unwrap_single_values
-    def RC(self):
-        """
-        The reduced cost of the variable.
-        Will raise an error if the model has not already been solved.
-        The first call to this property will load the reduced costs from the solver (lazy loading).
-        """
-        return self.attr.RC
-
     def __repr__(self):
         if self._has_ids:
             return (
@@ -1428,7 +1410,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                     dimensions=self.shape,
                 )
                 + "\n"
-                + self.to_expr().to_str(max_line_len=80, max_rows=10)
+                + self.to_expr().to_str()
             )
         else:
             return get_obj_repr(
