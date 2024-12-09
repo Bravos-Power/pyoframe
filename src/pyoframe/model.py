@@ -115,7 +115,7 @@ class Model:
             >>> len(list(m.binary_variables))
             1
         """
-        return (v for v in self.variables if v.vtype == VType.INTEGER)
+        return (v for v in self.variables if v.vtype == VType.BINARY)
 
     @property
     def integer_variables(self) -> Iterable[Variable]:
