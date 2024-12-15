@@ -389,3 +389,24 @@ class NamedVariableMapper:
             prefix=element_name,
             to_col=self.NAME_COL,
         )
+
+
+def for_solvers(solvers: Union[str, Sequence[str]]):
+    """
+    Decorator that limits the function to only be called when the solver is in the `only` list.
+    """
+    if isinstance(solvers, str):
+        solvers = (solvers,)
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if self.solver_name not in solvers:
+                raise NotImplementedError(
+                    f"Method '{func.__name__}' is not implemented for solver '{self.solver_name}'."
+                )
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
