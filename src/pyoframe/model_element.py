@@ -8,7 +8,6 @@ import polars as pl
 
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
-from pyoframe.user_defined import AttrContainerMixin
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -58,12 +57,11 @@ class ModelElement(ABC):
         The names of the data's dimensions.
 
         Examples:
-            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
-            >>> Variable().dimensions
+            >>> pf.Variable().dimensions
 
             >>> # A variable with dimensions of "hour" and "city"
-            >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
+            >>> pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
             ['hour', 'city']
         """
         return _get_dimensions(self.data)
@@ -85,12 +83,11 @@ class ModelElement(ABC):
         The number of indices in each dimension.
 
         Examples:
-            >>> from pyoframe.core import Variable
             >>> # A variable with no dimensions
-            >>> Variable().shape
+            >>> pf.Variable().shape
             {}
             >>> # A variable with dimensions of "hour" and "city"
-            >>> Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
+            >>> pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
             {'hour': 4, 'city': 3}
         """
         dims = self.dimensions
@@ -136,48 +133,41 @@ class SupportPolarsMethodMixin(ABC):
     @abstractmethod
     def data(self): ...
 
+    def pick(self, **kwargs):
+        """
+        Filters elements by the given criteria and then drops the filtered dimensions.
 
-class ModelElementWithId(ModelElement, AttrContainerMixin):
+        Example:
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
+            >>> m.v.pick(hour="06:00")
+            <Expression size=3 dimensions={'city': 3} terms=3>
+            [Toronto]: v[06:00,Toronto]
+            [Berlin]: v[06:00,Berlin]
+            [Paris]: v[06:00,Paris]
+            >>> m.v.pick(hour="06:00", city="Toronto")
+            <Expression size=1 dimensions={} terms=1>
+            v[06:00,Toronto]
+        """
+        return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
+
+
+class ModelElementWithId(ModelElement):
     """
     Provides a method that assigns a unique ID to each row in a DataFrame.
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
     IDs are only unique for the subclass since different subclasses have different counters.
     """
 
-    # Keys are the subclass names and values are the next unasigned ID.
-    _id_counters: Dict[str, int] = defaultdict(lambda: 1)
+    @property
+    def _has_ids(self) -> bool:
+        return self.get_id_column_name() in self.data.columns
 
-    @classmethod
-    def reset_counters(cls):
-        """
-        Resets all the ID counters.
-        This function is called before every unit test to reset the code state.
-        """
-        cls._id_counters = defaultdict(lambda: 1)
-
-    def __init__(self, data: pl.DataFrame, **kwargs) -> None:
-        super().__init__(data, **kwargs)
-        self._data = self._assign_ids(self.data)
-
-    @classmethod
-    def _assign_ids(cls, df: pl.DataFrame) -> pl.DataFrame:
-        """
-        Adds the column `to_column` to the DataFrame `df` with the next batch
-        of unique consecutive IDs.
-        """
-        cls_name = cls.__name__
-        cur_count = cls._id_counters[cls_name]
-        id_col_name = cls.get_id_column_name()
-
-        if df.height == 0:
-            df = df.with_columns(pl.lit(cur_count).alias(id_col_name))
-        else:
-            df = df.with_columns(
-                pl.int_range(cur_count, cur_count + pl.len()).alias(id_col_name)
+    def _assert_has_ids(self):
+        if not self._has_ids:
+            raise ValueError(
+                f"Cannot use '{self.__class__.__name__}' before it has beed added to a model."
             )
-        df = df.with_columns(pl.col(id_col_name).cast(pl.UInt32))
-        cls._id_counters[cls_name] += df.height
-        return df
 
     @classmethod
     @abstractmethod
@@ -185,43 +175,3 @@ class ModelElementWithId(ModelElement, AttrContainerMixin):
         """
         Returns the name of the column containing the IDs.
         """
-
-    @property
-    def ids(self) -> pl.DataFrame:
-        return self.data.select(self.dimensions_unsafe + [self.get_id_column_name()])
-
-    def _extend_dataframe_by_id(self, addition: pl.DataFrame):
-        cols = addition.columns
-        assert len(cols) == 2
-        id_col = self.get_id_column_name()
-        assert id_col in cols
-        cols.remove(id_col)
-        new_col = cols[0]
-
-        original = self.data
-
-        if new_col in original.columns:
-            original = original.drop(new_col)
-        self._data = original.join(addition, on=id_col, how="left", validate="1:1")
-
-    def _preprocess_attr(self, name: str, value: Any) -> Any:
-        dims = self.dimensions
-        ids = self.ids
-        id_col = self.get_id_column_name()
-
-        if isinstance(value, pl.DataFrame):
-            if value.shape == (1, 1):
-                value = value.item()
-            else:
-                assert (
-                    dims is not None
-                ), "Attribute must be a scalar since there are no dimensions"
-                result = value.join(ids, on=dims, validate="1:1", how="inner").drop(
-                    dims
-                )
-                assert len(result.columns) == 2, "Attribute has too many columns"
-                value_col = [c for c in result.columns if c != id_col][0]
-                return result.rename({value_col: name})
-
-        assert ids.height == 1, "Attribute is a scalar but there are multiple IDs."
-        return pl.DataFrame({name: [value], id_col: ids.get_column(id_col)})

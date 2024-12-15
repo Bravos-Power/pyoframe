@@ -1,28 +1,54 @@
-from typing import Any, Iterable, List, Optional, Union
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import pandas as pd
 import polars as pl
+import pyoptinterface as poi
 
 from pyoframe.constants import (
+    CONST_TERM,
+    SUPPORTED_SOLVER_TYPES,
     Config,
     ObjSense,
     ObjSenseValue,
     PyoframeError,
-    Result,
     VType,
 )
 from pyoframe.core import Constraint, Variable
-from pyoframe.io import to_file
-from pyoframe.io_mappers import IOMappers, NamedVariableMapper
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.objective import Objective
-from pyoframe.solvers import Solver, solve
-from pyoframe.user_defined import AttrContainerMixin, Container
+from pyoframe.util import Container, NamedVariableMapper, get_obj_repr
 
 
-class Model(AttrContainerMixin):
+class Model:
     """
-    Represents a mathematical optimization model. Add variables, constraints, and an objective to the model by setting attributes.
+    The object that holds all the variables, constraints, and the objective.
+
+    Parameters:
+        min_or_max:
+            The sense of the objective. Either "min" or "max".
+        name:
+            The name of the model. Currently not used for much.
+        solver:
+            The solver to use. If `None`, `Config.default_solver` will be used.
+            If `Config.default_solver` is `None`, the first solver that imports without an error will be used.
+        solver_env:
+            Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
+        use_var_names:
+            Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+
+    Example:
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable()
+        >>> m.my_constraint = m.X <= 10
+        >>> m
+        <Model vars=1 constrs=1 objective=False>
+
+        Try setting the Gurobi license:
+        >>> m = pf.Model(solver="gurobi", solver_env=dict(ComputeServer="myserver", ServerPassword="mypassword"))
+        Traceback (most recent call last):
+        ...
+        RuntimeError: Could not resolve host: myserver (code 6, command POST http://myserver/api/v1/cluster/jobs)
     """
 
     _reserved_attributes = [
@@ -33,16 +59,26 @@ class Model(AttrContainerMixin):
         "io_mappers",
         "name",
         "solver",
-        "solver_model",
+        "poi",
         "params",
         "result",
         "attr",
         "sense",
         "objective",
+        "_use_var_names",
+        "ONE",
+        "solver_name",
     ]
 
-    def __init__(self, min_or_max: Union[ObjSense, ObjSenseValue], name=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        min_or_max: Union[ObjSense, ObjSenseValue] = "min",
+        name=None,
+        solver: Optional[SUPPORTED_SOLVER_TYPES] = None,
+        solver_env: Optional[Dict[str, str]] = None,
+        use_var_names=False,
+    ):
+        self.poi, self.solver_name = Model.create_poi_model(solver, solver_env)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self.sense = ObjSense(min_or_max)
@@ -50,12 +86,60 @@ class Model(AttrContainerMixin):
         self.var_map = (
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
         )
-        self.io_mappers: Optional[IOMappers] = None
         self.name = name
-        self.solver: Optional[Solver] = None
-        self.solver_model: Optional[Any] = None
-        self.params = Container()
-        self.result: Optional[Result] = None
+
+        self.params = Container(self._set_param, self._get_param)
+        self.attr = Container(self._set_attr, self._get_attr)
+        self._use_var_names = use_var_names
+
+    @property
+    def use_var_names(self):
+        return self._use_var_names
+
+    @classmethod
+    def create_poi_model(
+        cls, solver: Optional[str], solver_env: Optional[Dict[str, str]]
+    ):
+        if solver is None:
+            if Config.default_solver is None:
+                for solver_option in ["highs", "gurobi"]:
+                    try:
+                        return cls.create_poi_model(solver_option, solver_env)
+                    except RuntimeError:
+                        pass
+                raise ValueError(
+                    'Could not automatically find a solver. Is one installed? If so, specify which one: e.g. Model(solver="gurobi")'
+                )
+            else:
+                solver = Config.default_solver
+
+        solver = solver.lower()
+        if solver == "gurobi":
+            from pyoptinterface import gurobi
+
+            if solver_env is None:
+                model = gurobi.Model()
+            else:
+                env = gurobi.Env(empty=True)
+                for key, value in solver_env.items():
+                    env.set_raw_parameter(key, value)
+                env.start()
+                model = gurobi.Model(env)
+        elif solver == "highs":
+            from pyoptinterface import highs
+
+            model = highs.Model()
+        else:
+            raise ValueError(
+                f"Solver {solver} not recognized or supported."
+            )  # pragma: no cover
+
+        constant_var = model.add_variable(lb=1, ub=1, name="ONE")
+        if constant_var.index != CONST_TERM:
+            raise ValueError(
+                "The first variable should have index 0."
+            )  # pragma: no cover
+        return model, solver
 
     @property
     def variables(self) -> List[Variable]:
@@ -63,10 +147,26 @@ class Model(AttrContainerMixin):
 
     @property
     def binary_variables(self) -> Iterable[Variable]:
+        """
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
+            >>> m.Y = pf.Variable()
+            >>> len(list(m.binary_variables))
+            1
+        """
         return (v for v in self.variables if v.vtype == VType.BINARY)
 
     @property
     def integer_variables(self) -> Iterable[Variable]:
+        """
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
+            >>> m.Y = pf.Variable()
+            >>> len(list(m.integer_variables))
+            1
+        """
         return (v for v in self.variables if v.vtype == VType.INTEGER)
 
     @property
@@ -111,7 +211,36 @@ class Model(AttrContainerMixin):
         return super().__setattr__(__name, __value)
 
     def __repr__(self) -> str:
-        return f"""Model '{self.name}' ({len(self.variables)} vars, {len(self.constraints)} constrs, {1 if self.objective else "no"} obj)"""
+        return get_obj_repr(
+            self,
+            name=self.name,
+            vars=len(self.variables),
+            constrs=len(self.constraints),
+            objective=bool(self.objective),
+        )
 
-    to_file = to_file
-    solve = solve
+    def write(self, file_path: Union[Path, str]):
+        file_path = Path(file_path)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        self.poi.write(str(file_path))
+
+    def optimize(self):
+        self.poi.optimize()
+
+    def _set_param(self, name, value):
+        self.poi.set_raw_parameter(name, value)
+
+    def _get_param(self, name):
+        return self.poi.get_raw_parameter(name)
+
+    def _set_attr(self, name, value):
+        try:
+            self.poi.set_model_attribute(poi.ModelAttribute[name], value)
+        except KeyError:
+            self.poi.set_model_raw_attribute(name, value)
+
+    def _get_attr(self, name):
+        try:
+            return self.poi.get_model_attribute(poi.ModelAttribute[name])
+        except KeyError:
+            return self.poi.get_model_raw_attribute(name)
