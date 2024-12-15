@@ -17,7 +17,7 @@ from pyoframe.constants import (
 from pyoframe.core import Constraint, Variable
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.objective import Objective
-from pyoframe.util import Container, NamedVariableMapper, get_obj_repr
+from pyoframe.util import Container, NamedVariableMapper, for_solvers, get_obj_repr
 
 
 class Model:
@@ -226,6 +226,69 @@ class Model:
 
     def optimize(self):
         self.poi.optimize()
+
+    @for_solvers("gurobi")
+    def convert_to_fixed(self) -> None:
+        """
+        Turns a mixed integer program into a continuous one by fixing
+        all the integer and binary variables to their solution values.
+
+        !!! warning "Gurobi only"
+            This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
+
+        Example:
+            >>> m = pf.Model("max", solver="gurobi")
+            >>> m.X = pf.Variable(vtype=pf.VType.BINARY, lb=0)
+            >>> m.Y = pf.Variable(vtype=pf.VType.INTEGER, lb=0)
+            >>> m.Z = pf.Variable(lb=0)
+            >>> m.my_constraint = m.X + m.Y + m.Z <= 10
+            >>> m.objective = 3 * m.X + 2 * m.Y + m.Z
+            >>> m.optimize()
+            >>> m.X.solution, m.Y.solution, m.Z.solution
+            (1.0, 9.0, 0.0)
+            >>> m.my_constraint.dual
+            Traceback (most recent call last):
+            ...
+            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'Pi'
+            >>> m.convert_to_fixed()
+            >>> m.optimize()
+            >>> m.my_constraint.dual
+            1.0
+
+            Only works for Gurobi:
+
+            >>> m = pf.Model("max", solver="highs")
+            >>> m.convert_to_fixed()
+            Traceback (most recent call last):
+            ...
+            NotImplementedError: This method only works with the Gurobi solver.
+        """
+        self.poi._converttofixed()
+
+    @for_solvers("gurobi")
+    def compute_IIS(self):
+        """
+        Computes the Irreducible Infeasible Set (IIS) of the model.
+
+        !!! warning "Gurobi only"
+            This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
+
+        Example:
+            >>> m = pf.Model(solver="gurobi")
+            >>> m.X = pf.Variable(lb=0, ub=2)
+            >>> m.Y = pf.Variable(lb=0, ub=2)
+            >>> m.bad_constraint = m.X >= 3
+            >>> m.objective = m.X + m.Y
+            >>> m.optimize()
+            >>> m.bad_constraint.attr.IIS
+            True
+            >>> m.attr.TerminationStatus
+            INFEASIBLE
+            >>> m.compute_IIS()
+            >>> m.bad_constraint.attr.IIS
+            True
+        """
+        self.poi._computeIIS()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
