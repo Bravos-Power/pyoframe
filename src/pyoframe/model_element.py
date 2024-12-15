@@ -133,19 +133,19 @@ class SupportPolarsMethodMixin(ABC):
     @abstractmethod
     def data(self): ...
 
-    def select(self, **kwargs):
+    def pick(self, **kwargs):
         """
-        Filter elements by the given criteria and then drop the filtered dimensions.
+        Filters elements by the given criteria and then drops the filtered dimensions.
 
         Example:
             >>> m = pf.Model()
             >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
-            >>> m.v.select(hour="06:00")
+            >>> m.v.pick(hour="06:00")
             <Expression size=3 dimensions={'city': 3} terms=3>
             [Toronto]: v[06:00,Toronto]
             [Berlin]: v[06:00,Berlin]
             [Paris]: v[06:00,Paris]
-            >>> m.v.select(hour="06:00", city="Toronto")
+            >>> m.v.pick(hour="06:00", city="Toronto")
             <Expression size=1 dimensions={} terms=1>
             v[06:00,Toronto]
         """
