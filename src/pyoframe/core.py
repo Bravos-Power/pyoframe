@@ -998,7 +998,9 @@ class Constraint(ModelElementWithId):
         except KeyError:
             getter = self._model.poi.get_constraint_raw_attribute
 
-        with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
+        with (
+            warnings.catch_warnings()
+        ):  # map_elements without return_dtype= gives a warning
             warnings.filterwarnings(
                 action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
             )
@@ -1328,7 +1330,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         except KeyError:
             getter = self._model.poi.get_variable_raw_attribute
 
-        with warnings.catch_warnings():  # map_elements without return_dtype= gives a warning
+        with (
+            warnings.catch_warnings()
+        ):  # map_elements without return_dtype= gives a warning
             warnings.filterwarnings(
                 action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
             )
