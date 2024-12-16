@@ -1139,9 +1139,9 @@ class Constraint(ModelElementWithId):
             >>> m = pf.Model()
             >>> m.hours_sleep = pf.Variable(lb=0)
             >>> m.hours_day = pf.Variable(lb=0)
-            >>> m.24_hours = m.hours_sleep + m.hours_day == 24
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
             >>> m.maximize = m.hours_day
-            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, limit=3)
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
             >>> m.optimize()
             >>> m.hours_day.solution
             16.0
@@ -1155,20 +1155,19 @@ class Constraint(ModelElementWithId):
             >>> m = pf.Model()
             >>> m.hours_sleep = pf.Variable(lb=0)
             >>> m.hours_day = pf.Variable(lb=0)
-            >>> m.24_hours = m.hours_sleep + m.hours_day == 24
-            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, limit=3)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
             Traceback (most recent call last):
             ...
-            ValueError: .relax() must be called after the Constraint is added to the model
+            ValueError: Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).
 
             One way to solve this is by setting the sense directly on the model. See how this works fine:
 
             >>> m = pf.Model(sense="max")
-            >>> m = pf.Model()
             >>> m.hours_sleep = pf.Variable(lb=0)
             >>> m.hours_day = pf.Variable(lb=0)
-            >>> m.24_hours = m.hours_sleep + m.hours_day == 24
-            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, limit=3)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
 
             And now an example with dimensions:
 
@@ -1229,7 +1228,7 @@ class Constraint(ModelElementWithId):
             penalty = sum(self.dimensions, penalty)
         if m.sense is None:
             raise ValueError(
-                "Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(min_or_max=...)."
+                "Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...)."
             )
         elif m.sense == ObjSense.MAX:
             penalty *= -1
