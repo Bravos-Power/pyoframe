@@ -1116,7 +1116,7 @@ class Constraint(ModelElementWithId):
             The same constraint
 
         Examples:
-            >>> m = pf.Model(use_var_names=True)
+            >>> m = pf.Model(sense="min")
             >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
             >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
