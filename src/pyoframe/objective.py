@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import pyoptinterface as poi
 
-from pyoframe.core import Expression, SupportsMath
+from pyoframe.core import Expression, SupportsToExpr
 
 
 class Objective(Expression):
@@ -42,8 +44,11 @@ class Objective(Expression):
         ValueError: Objective cannot be created from a dimensioned expression. Did you forget to use pf.sum()?
     """
 
-    def __init__(self, expr: SupportsMath) -> None:
-        expr = expr.to_expr()
+    def __init__(self, expr: SupportsToExpr | int | float) -> None:
+        if isinstance(expr, (int, float)):
+            expr = Expression.constant(expr)
+        else:
+            expr = expr.to_expr()
         super().__init__(expr.data)
         self._model = expr._model
         if self.dimensions is not None:

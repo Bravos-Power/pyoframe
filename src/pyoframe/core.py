@@ -414,6 +414,24 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     #         )
     #     )
 
+    @classmethod
+    def constant(cls, constant: int | float) -> "Expression":
+        """
+        Examples:
+            >>> pf.Expression.constant(5)
+            <Expression size=1 dimensions={} terms=1>
+            5
+        """
+        return cls(
+            pl.DataFrame(
+                {
+                    COEF_KEY: [constant],
+                    VAR_KEY: [CONST_TERM],
+                },
+                schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+            )
+        )
+
     def sum(self, over: Union[str, Iterable[str]]):
         """
         Examples:
@@ -783,8 +801,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             (
                 pl.col(COEF_KEY)
                 * pl.col(VAR_KEY).map_elements(
-                    lambda v_id: sm.get_variable_attribute(
-                        poi.VariableIndex(v_id), attr
+                    lambda v_id: (
+                        sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
+                        if v_id != CONST_TERM
+                        else 1
                     ),
                     return_dtype=pl.Float64,
                 )
@@ -1116,7 +1136,42 @@ class Constraint(ModelElementWithId):
             The same constraint
 
         Examples:
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.24_hours = m.hours_sleep + m.hours_day == 24
+            >>> m.maximize = m.hours_day
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, limit=3)
+            >>> m.optimize()
+            >>> m.hours_day.solution
+            16.0
+            >>> m.maximize = 3 * m.hours_day
+            >>> m.optimize()
+            >>> m.hours_day.solution
+            19.0
+
+            Note: .relax() can only be called after the sense of the model has been defined.
+
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.24_hours = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, limit=3)
+            Traceback (most recent call last):
+            ...
+            ValueError: .relax() must be called after the Constraint is added to the model
+
+            One way to solve this is by setting the sense directly on the model. See how this works fine:
+
             >>> m = pf.Model(sense="max")
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.24_hours = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, limit=3)
+
+            And now an example with dimensions:
+
             >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
             >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
