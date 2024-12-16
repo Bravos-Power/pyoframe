@@ -18,14 +18,14 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
         .set_index(["wharehouse", "plant"])["cost"]
     )
 
-    m = Model("min", use_var_names=use_var_names)
+    m = Model(use_var_names=use_var_names)
     m.open = Variable(plants.index, vtype="binary")
     m.transport = Variable(warehouses.index, plants.index, lb=0)
 
     m.con_max_capacity = sum("wharehouse", m.transport) <= plants.capacity * m.open
     m.con_meet_demand = sum("plant", m.transport) == warehouses.demand
 
-    m.objective = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
+    m.minimize = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
 
     if m.solver_name == "gurobi":
         m.params.Method = 2

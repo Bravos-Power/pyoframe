@@ -1,17 +1,20 @@
 ## Install Pyoframe
-```
+
+```cmd
 pip install pyoframe
 ```
 
 ## Install a solver
 
-*[solver]: Solvers like HiGHS and Gurobi do the actual solving of your model. Pyoframe is a wrapper that makes it easy to build models but Pyoframe still needs a solver to work.
+*[solver]: Solvers like HiGHS and Gurobi do the actual solving of your model. Pyoframe is a layer on top of the solver that makes it easy to build models and switch between solvers.
 
-=== "HiGHS"
+=== "HiGHS (free)"
 
-    `pip install pyoframe[highs]`
+    ```cmd
+    pip install pyoframe[highs]
+    ```
 
-=== "Gurobi"
+=== "Gurobi (commercial)"
 
     1. [Install Gurobi](https://www.gurobi.com/downloads/gurobi-software/) from their website.
     2. Ensure you have a valid Gurobi license installed on your machine.

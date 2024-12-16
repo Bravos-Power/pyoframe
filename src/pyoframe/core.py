@@ -372,7 +372,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> import pandas as pd
             >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-            >>> m = pf.Model("min")
+            >>> m = pf.Model()
             >>> m.Time = pf.Variable(df.index)
             >>> m.Size = pf.Variable(df.index)
             >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
@@ -413,6 +413,24 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     #             *[pl.col(c).cast(t) for c, t in schema.items()]
     #         )
     #     )
+
+    @classmethod
+    def constant(cls, constant: int | float) -> "Expression":
+        """
+        Examples:
+            >>> pf.Expression.constant(5)
+            <Expression size=1 dimensions={} terms=1>
+            5
+        """
+        return cls(
+            pl.DataFrame(
+                {
+                    COEF_KEY: [constant],
+                    VAR_KEY: [CONST_TERM],
+                },
+                schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+            )
+        )
 
     def sum(self, over: Union[str, Iterable[str]]):
         """
@@ -530,7 +548,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> import polars as pl
             >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
-            >>> m = pf.Model("min")
+            >>> m = pf.Model()
             >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
             <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
@@ -751,11 +769,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         The value of the expression. Only available after the model has been solved.
 
         Examples:
-            >>> m = pf.Model("max")
+            >>> m = pf.Model()
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X + 1
             >>> m.expr_2 = pf.sum(m.expr_1)
-            >>> m.objective = m.expr_2 - 3
+            >>> m.maximize = m.expr_2 - 3
             >>> m.attr.Silent = True
             >>> m.optimize()
             >>> m.expr_1.evaluate()
@@ -783,8 +801,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             (
                 pl.col(COEF_KEY)
                 * pl.col(VAR_KEY).map_elements(
-                    lambda v_id: sm.get_variable_attribute(
-                        poi.VariableIndex(v_id), attr
+                    lambda v_id: (
+                        sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
+                        if v_id != CONST_TERM
+                        else 1
                     ),
                     return_dtype=pl.Float64,
                 )
@@ -1116,7 +1136,41 @@ class Constraint(ModelElementWithId):
             The same constraint
 
         Examples:
-            >>> m = pf.Model("max", use_var_names=True)
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.maximize = m.hours_day
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
+            >>> m.optimize()
+            >>> m.hours_day.solution
+            16.0
+            >>> m.maximize = 3 * m.hours_day
+            >>> m.optimize()
+            >>> m.hours_day.solution
+            19.0
+
+            Note: .relax() can only be called after the sense of the model has been defined.
+
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
+            Traceback (most recent call last):
+            ...
+            ValueError: Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).
+
+            One way to solve this is by setting the sense directly on the model. See how this works fine:
+
+            >>> m = pf.Model(sense="max")
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
+
+            And now an example with dimensions:
+
             >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
             >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
@@ -1128,7 +1182,7 @@ class Constraint(ModelElementWithId):
             ValueError: .relax() must be called before the Constraint is added to the model
             >>> m.attr.Silent = True
             >>> m.optimize()
-            >>> m.objective.value
+            >>> m.maximize.value
             -50.0
             >>> m.hours_spent.solution
             shape: (3, 2)
@@ -1172,7 +1226,11 @@ class Constraint(ModelElementWithId):
         penalty = var * cost
         if self.dimensions:
             penalty = sum(self.dimensions, penalty)
-        if m.sense == ObjSense.MAX:
+        if m.sense is None:
+            raise ValueError(
+                "Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...)."
+            )
+        elif m.sense == ObjSense.MAX:
             penalty *= -1
         if m.objective is None:
             m.objective = penalty
@@ -1454,7 +1512,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> import pandas as pd
             >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
             >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
-            >>> m = pf.Model("min")
+            >>> m = pf.Model()
             >>> m.bat_charge = pf.Variable(time_dim, space_dim)
             >>> m.bat_flow = pf.Variable(time_dim, space_dim)
             >>> # Fails because the dimensions are not the same
