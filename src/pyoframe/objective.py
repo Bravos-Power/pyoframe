@@ -8,7 +8,7 @@ from pyoframe.core import Expression, SupportsToExpr
 class Objective(Expression):
     """
     Examples:
-        An `Objective` is automatically created when an `Expression` is assigned to `Model.objective`.
+        An `Objective` is automatically created when an `Expression` is assigned to `.minimize` or `.maximize`
 
         >>> m = pf.Model()
         >>> m.A, m.B = pf.Variable(lb=0), pf.Variable(lb=0)
@@ -37,14 +37,28 @@ class Objective(Expression):
 
         Objectives cannot be created from dimensioned expressions since an objective must be a single expression.
 
+        >>> m = pf.Model()
         >>> m.dimensioned_variable = pf.Variable({"city": ["Toronto", "Berlin", "Paris"]})
         >>> m.maximize = m.dimensioned_variable
         Traceback (most recent call last):
         ...
         ValueError: Objective cannot be created from a dimensioned expression. Did you forget to use pf.sum()?
+
+        Objectives cannot be overwritten.
+
+        >>> m = pf.Model()
+        >>> m.A = pf.Variable(lb=0)
+        >>> m.maximize = 2 * m.A
+        >>> m.maximize = 3 * m.A
+        Traceback (most recent call last):
+        ...
+        ValueError: An objective already exists. Use += or -= to modify it.
     """
 
-    def __init__(self, expr: SupportsToExpr | int | float) -> None:
+    def __init__(
+        self, expr: SupportsToExpr | int | float, _constructive: bool = False
+    ) -> None:
+        self._constructive = _constructive
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
@@ -67,8 +81,15 @@ class Objective(Expression):
 
     def on_add_to_model(self, model, name):
         super().on_add_to_model(model, name)
+        assert self._model is not None
         if self._model.sense is None:
             raise ValueError(
                 "Can't set an objective without specifying the sense. Did you use .objective instead of .minimize or .maximize ?"
             )
         self._model.poi.set_objective(self.to_poi(), sense=self._model.sense.to_poi())
+
+    def __iadd__(self, other):
+        return Objective(self + other, _constructive=True)
+
+    def __isub__(self, other):
+        return Objective(self - other, _constructive=True)
