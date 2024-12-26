@@ -1,3 +1,7 @@
+"""
+Defines helper functions for doing arithmetic operations on expressions (e.g. addition).
+"""
+
 from typing import TYPE_CHECKING, List, Optional
 
 import polars as pl

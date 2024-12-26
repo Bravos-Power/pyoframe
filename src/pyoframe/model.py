@@ -183,7 +183,12 @@ class Model:
 
     @objective.setter
     def objective(self, value):
-        value = Objective(value)
+        if self._objective is not None and (
+            not isinstance(value, Objective) or not value._constructive
+        ):
+            raise ValueError("An objective already exists. Use += or -= to modify it.")
+        if not isinstance(value, Objective):
+            value = Objective(value)
         self._objective = value
         value.on_add_to_model(self, "objective")
 

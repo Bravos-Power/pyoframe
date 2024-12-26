@@ -41,6 +41,10 @@ class _ConfigMeta(type):
 
 
 class Config(metaclass=_ConfigMeta):
+    """
+    Configuration options that apply to the entire library.
+    """
+
     default_solver: Optional[SUPPORTED_SOLVER_TYPES] = None
     disable_unmatched_checks: bool = False
     float_to_str_precision: Optional[int] = 5

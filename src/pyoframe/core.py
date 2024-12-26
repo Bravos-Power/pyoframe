@@ -180,7 +180,7 @@ class SupportsMath(ABC, SupportsToExpr):
         """
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, value: object):
+    def __eq__(self, value: object):  # type: ignore
         """Equality constraint.
 
         Examples:
@@ -1145,7 +1145,7 @@ class Constraint(ModelElementWithId):
             >>> m.optimize()
             >>> m.hours_day.solution
             16.0
-            >>> m.maximize = 3 * m.hours_day
+            >>> m.maximize += 2 * m.hours_day
             >>> m.optimize()
             >>> m.hours_day.solution
             19.0
