@@ -4,8 +4,9 @@ Adapted from https://www.gurobi.com/documentation/current/examples/diet_py.html.
 
 import os
 from pathlib import Path
-from gurobipy import GRB, Model, quicksum
+
 import pandas as pd
+from gurobipy import GRB, Model, quicksum
 
 
 def main(input_dir, output_dir):
@@ -23,7 +24,7 @@ def main(input_dir, output_dir):
     categories = nutrients.index.tolist()
 
     # Model
-    m = Model("min")
+    m = Model()
 
     # Create decision variables for the foods to buy
     buy = m.addVars(foods, name="Buy", ub=df["stock"])

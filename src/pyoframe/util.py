@@ -2,15 +2,28 @@
 File containing utility functions and classes.
 """
 
-from typing import Any, Iterable, Optional, Union, List, Dict
-
 from dataclasses import dataclass, field
-
-import polars as pl
-import pandas as pd
 from functools import wraps
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+)
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY
+import pandas as pd
+import polars as pl
+
+from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyoframe.model import Variable
+    from pyoframe.model_element import ModelElementWithId
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
@@ -68,7 +81,7 @@ def concat_dimensions(
     df: pl.DataFrame,
     prefix: Optional[str] = None,
     keep_dims: bool = True,
-    ignore_columns=RESERVED_COL_KEYS,
+    ignore_columns: Sequence[str] = RESERVED_COL_KEYS,
     replace_spaces: bool = True,
     to_col: str = "concated_dim",
 ) -> pl.DataFrame:
@@ -76,12 +89,14 @@ def concat_dimensions(
     Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
 
     Parameters:
-        df : pl.DataFrame
+        df:
             The input DataFrame.
-        prefix : str, optional
+        prefix:
             The prefix to be added to the concated dimension.
-        keep_dims : bool, optional
+        keep_dims:
             If True, the original dimensions are kept in the new DataFrame.
+        replace_spaces : bool, optional
+            If True, replaces spaces with underscores.
 
     Examples:
         >>> import polars as pl
@@ -170,18 +185,19 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones=True, float_precision=None
+    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
 ) -> pl.DataFrame:
     """
+    Converts column `column_name` of the dataframe `df` to a string. Rounds to `Config.print_float_precision` decimal places if not None.
+
     Parameters:
-        df : pl.DataFrame
+        df:
             The input DataFrame.
-        column_name : str, optional
+        column_name:
             The name of the column to be casted.
-        drop_ones : bool, optional
+        drop_ones:
             If True, 1s are replaced with an empty string for non-constant terms.
-        float_precision : int, optional
-            The number of decimal places to round the coefficients to. If None, no rounding is done (so Polars' default precision is used).
+
     Examples:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1.0, -2.0, 1.0, 4.0], VAR_KEY: [1, 2, 0, 4]})
@@ -203,8 +219,8 @@ def cast_coef_to_string(
         _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
     )
 
-    if float_precision is not None:
-        df = df.with_columns(pl.col(column_name).round(float_precision))
+    if Config.float_to_str_precision is not None:
+        df = df.with_columns(pl.col(column_name).round(Config.float_to_str_precision))
 
     df = df.with_columns(
         pl.when(pl.col(column_name) == pl.col(column_name).floor())
@@ -280,3 +296,96 @@ def dataframe_to_tupled_list(
 class FuncArgs:
     args: List
     kwargs: Dict = field(default_factory=dict)
+
+
+class Container:
+    """
+    A placeholder object that makes it easy to set and get attributes. Used in Model.attr and Model.params, for example.
+
+    Examples:
+        >>> x = {}
+        >>> params = Container(setter=lambda n, v: x.__setitem__(n, v), getter=lambda n: x[n])
+        >>> params.a = 1
+        >>> params.b = 2
+        >>> params.a
+        1
+        >>> params.b
+        2
+    """
+
+    def __init__(self, setter, getter):
+        self._setter = setter
+        self._getter = getter
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name.startswith("_"):  # pragma: no cover
+            return super().__setattr__(name, value)
+        self._setter(name, value)
+
+    def __getattr__(self, name: str) -> Any:
+        if name.startswith("_"):  # pragma: no cover
+            return super().__getattribute__(name)
+        return self._getter(name)
+
+
+class NamedVariableMapper:
+    """
+    Maps variables to a string representation using the object's name and dimensions.
+
+    Examples:
+        >>> import polars as pl
+        >>> m = pf.Model()
+        >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
+        >>> pf.sum(m.foo)
+        <Expression size=1 dimensions={} terms=4>
+        foo[0] + foo[1] + foo[2] + foo[3]
+    """
+
+    CONST_TERM_NAME = "_ONE"
+    NAME_COL = "__name"
+
+    def __init__(self, cls: Type["ModelElementWithId"]) -> None:
+        self._ID_COL = VAR_KEY
+        self.mapping_registry = pl.DataFrame(
+            {self._ID_COL: [], self.NAME_COL: []},
+            schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+        )
+        self._extend_registry(
+            pl.DataFrame(
+                {self._ID_COL: [CONST_TERM], self.NAME_COL: [self.CONST_TERM_NAME]},
+                schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+            )
+        )
+
+    def add(self, element: "Variable") -> None:
+        self._extend_registry(self._element_to_map(element))
+
+    def _extend_registry(self, df: pl.DataFrame) -> None:
+        self.mapping_registry = pl.concat([self.mapping_registry, df])
+
+    def apply(
+        self,
+        df: pl.DataFrame,
+        to_col: str,
+        id_col: str,
+    ) -> pl.DataFrame:
+        return df.join(
+            self.mapping_registry,
+            how="left",
+            validate="m:1",
+            left_on=id_col,
+            right_on=self._ID_COL,
+        ).rename({self.NAME_COL: to_col})
+
+    def _element_to_map(self, element) -> pl.DataFrame:
+        element_name = element.name  # type: ignore
+        assert (
+            element_name is not None
+        ), "Element must have a name to be used in a named mapping."
+        element._assert_has_ids()
+        return concat_dimensions(
+            element.data.select(element.dimensions_unsafe + [VAR_KEY]),
+            keep_dims=False,
+            prefix=element_name,
+            to_col=self.NAME_COL,
+        )

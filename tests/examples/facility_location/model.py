@@ -1,11 +1,13 @@
-import pyoframe as pf
-import polars as pl
 import os
 from pathlib import Path
 
+import polars as pl
+
+import pyoframe as pf
+
 
 def main(G=4, F=3, **kwargs):
-    model = pf.Model("min")
+    model = pf.Model(sense="min")
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))
@@ -31,10 +33,10 @@ def main(G=4, F=3, **kwargs):
     model.dist_y = pf.Variable(model.y_axis, model.facilities)
     model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
         "f"
-    ) - model.facility_position.select(d=1).add_dim("x")
+    ) - model.facility_position.pick(d=1).add_dim("x")
     model.con_dist_y = model.dist_y == model.customer_position_y.add_dim(
         "f"
-    ) - model.facility_position.select(d=2).add_dim("y")
+    ) - model.facility_position.pick(d=2).add_dim("y")
     model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
     model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
         model.dist_y**2
@@ -49,7 +51,7 @@ def main(G=4, F=3, **kwargs):
 
     model.objective = model.max_distance
 
-    model.solve(**kwargs)
+    model.optimize()
     return model
 
 

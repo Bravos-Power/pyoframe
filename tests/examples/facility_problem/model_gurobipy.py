@@ -12,9 +12,10 @@
 
 import os
 from pathlib import Path
+
 import gurobipy as gp
-from gurobipy import GRB
 import pandas as pd
+from gurobipy import GRB
 
 
 def main(input_dir, output_dir: Path):
@@ -62,7 +63,7 @@ def main(input_dir, output_dir: Path):
     m.addConstrs((transport.sum(w) == demand[w] for w in warehouses), "Demand")
 
     # Use barrier to solve root relaxation
-    m.Params.Method = 2
+    m.params.Method = 2
 
     m.write(str(output_dir / "gurobipy.lp"))
     m.optimize()

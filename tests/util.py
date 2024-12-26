@@ -1,6 +1,9 @@
-import polars as pl
-from typing import Tuple, Union, TYPE_CHECKING, overload
+from __future__ import annotations
+
 import io
+from typing import TYPE_CHECKING, Tuple, Union, overload
+
+import polars as pl
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.core import Expression

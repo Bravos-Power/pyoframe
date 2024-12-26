@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]
-        polars-version: ["1.12.0"]
+        python-version: ["3.12"]
+        polars-version: ["1.17.1"]
         include:
-          - python-version: "3.8"
+          - python-version: "3.9"
             polars-version: "0.20.27"
     steps:
       - name: Checkout
@@ -22,9 +22,14 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+      - uses: ./.github/actions/setup_optimizers_linux
+        with:
+          GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
+          CHECK_LICENSE: true
       - name: Install dependencies
         run: |
           pip install --editable .[dev]

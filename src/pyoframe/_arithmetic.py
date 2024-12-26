@@ -1,17 +1,18 @@
 from typing import TYPE_CHECKING, List, Optional
+
 import polars as pl
 
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
+    POLARS_VERSION,
     QUAD_VAR_KEY,
-    VAR_TYPE,
     RESERVED_COL_KEYS,
     VAR_KEY,
-    UnmatchedStrategy,
+    KEY_TYPE,
     Config,
     PyoframeError,
-    POLARS_VERSION,
+    UnmatchedStrategy,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -111,18 +112,18 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
 
     Examples:
         >>> import polars as pl
-        >>> from pyoframe import Variable
         >>> df = pl.DataFrame({"dim": [1, 2, 3], "value": [1, 2, 3]})
-        >>> x1 = Variable()
-        >>> x2 = Variable()
-        >>> expr1 = df * x1
-        >>> expr2 = df * x2 * 2 + 4
+        >>> m = pf.Model()
+        >>> m.x1 = pf.Variable()
+        >>> m.x2 = pf.Variable()
+        >>> expr1 = df * m.x1
+        >>> expr2 = df * m.x2 * 2 + 4
         >>> expr1 * expr2
         <Expression size=3 dimensions={'dim': 3} terms=6 degree=2>
         [1]: 4 x1 +2 x2 * x1
         [2]: 8 x1 +8 x2 * x1
         [3]: 12 x1 +18 x2 * x1
-        >>> (expr1 * expr2) - df * x1 * df * x2 * 2
+        >>> (expr1 * expr2) - df * m.x1 * df * m.x2 * 2
         <Expression size=3 dimensions={'dim': 3} terms=3>
         [1]: 4 x1
         [2]: 8 x1
@@ -296,7 +297,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
     if any(QUAD_VAR_KEY in df.columns for df in expr_data):
         expr_data = [
             (
-                df.with_columns(pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(VAR_TYPE))
+                df.with_columns(pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE))
                 if QUAD_VAR_KEY not in df.columns
                 else df
             )
