@@ -1133,68 +1133,113 @@ class Constraint(ModelElementWithId):
         self._assign_ids()
 
     def _assign_ids(self):
-        kwargs = dict(sense=self.sense.to_poi(), rhs=0)
-        if self.dimensions is None:
-            if self._model.use_var_names:
-                kwargs["name"] = self.name
-            df = self.data.with_columns(
-                pl.lit(
-                    self._model.poi.add_linear_constraint(
-                        poi.ScalarAffineFunction(
-                            coefficients=self.lhs.data.get_column(COEF_KEY).to_numpy(),
-                            variables=self.lhs.data.get_column(VAR_KEY).to_numpy(),
-                        ),
-                        **kwargs,
-                    ).index
-                )
-                .alias(CONSTRAINT_KEY)
-                .cast(KEY_TYPE)
-            )
-        else:
-            df = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
-                pl.col(COEF_KEY), pl.col(VAR_KEY)
-            )
+        key_cols = [pl.col(COEF_KEY), pl.col(VAR_KEY)]
+        if self.lhs.is_quadratic:
+            key_cols.append(pl.col(QUAD_VAR_KEY))
 
-            if self._model.use_var_names:
+        def create_quadratic_index(data, name="", **kwargs):
+            if "name" in kwargs:
+                name = kwargs.pop("name")
+            return self._model.poi.add_quadratic_constraint(
+                poi.ScalarQuadraticFunction(
+                    coefficients=np.array(data[COEF_KEY]),
+                    var1s=np.array(data[VAR_KEY]),
+                    var2s=np.array(data[QUAD_VAR_KEY]),
+                ),
+                name=name,
+                **kwargs,
+            ).index
+
+        def create_linear_index(data, name="", **kwargs):
+            if "name" in kwargs:
+                name = kwargs.pop("name")
+            return self._model.poi.add_linear_constraint(
+                poi.ScalarAffineFunction(
+                    coefficients=np.array(data[COEF_KEY]),
+                    variables=np.array(data[VAR_KEY]),
+                ),
+                name=name,
+                **kwargs,
+            ).index
+
+        def apply_constraints(df, is_quadratic, use_var_names, **kwargs):
+            create_index = (
+                create_quadratic_index if is_quadratic else create_linear_index
+            )
+            if use_var_names:
                 df = (
                     concat_dimensions(df, prefix=self.name)
                     .with_columns(
-                        pl.struct(
-                            pl.col(COEF_KEY), pl.col(VAR_KEY), pl.col("concated_dim")
-                        )
+                        pl.struct(*key_cols, pl.col("concated_dim"))
                         .map_elements(
-                            lambda x: self._model.poi.add_linear_constraint(
-                                poi.ScalarAffineFunction(
-                                    coefficients=np.array(x[COEF_KEY]),
-                                    variables=np.array(x[VAR_KEY]),
+                            lambda x: create_index(
+                                (
+                                    {
+                                        COEF_KEY: x[COEF_KEY],
+                                        VAR_KEY: x[VAR_KEY],
+                                    }
+                                    | (
+                                        {QUAD_VAR_KEY: x[QUAD_VAR_KEY]}
+                                        if is_quadratic
+                                        else {}
+                                    )
                                 ),
                                 name=x["concated_dim"],
                                 **kwargs,
-                            ).index,
+                            ),
                             return_dtype=KEY_TYPE,
                         )
-                        .alias(CONSTRAINT_KEY),
+                        .alias(CONSTRAINT_KEY)
                     )
                     .drop("concated_dim")
                 )
             else:
                 df = df.with_columns(
-                    pl.struct(pl.col(COEF_KEY), pl.col(VAR_KEY))
+                    pl.struct(*key_cols)
                     .map_elements(
-                        lambda x: self._model.poi.add_linear_constraint(
-                            poi.ScalarAffineFunction(
-                                coefficients=np.array(x[COEF_KEY]),
-                                variables=np.array(x[VAR_KEY]),
+                        lambda x: create_index(
+                            (
+                                {
+                                    COEF_KEY: np.array(x[COEF_KEY]),
+                                    VAR_KEY: np.array(x[VAR_KEY]),
+                                }
+                                | (
+                                    {QUAD_VAR_KEY: np.array([x[QUAD_VAR_KEY]])}
+                                    if is_quadratic
+                                    else {}
+                                )
                             ),
                             **kwargs,
-                        ).index,
+                        ),
                         return_dtype=KEY_TYPE,
                     )
-                    .alias(CONSTRAINT_KEY),
+                    .alias(CONSTRAINT_KEY)
                 )
-            df = df.drop([COEF_KEY, VAR_KEY])
+            return df.drop([col.meta.output_name() for col in key_cols])
 
-        self._data = df
+        kwargs = dict(sense=self.sense.to_poi(), rhs=0)
+        if self.dimensions is None:
+            if self._model.use_var_names:
+                kwargs["name"] = self.name
+
+            self._data = self.data.with_columns(
+                pl.lit(
+                    (
+                        create_quadratic_index(self.lhs.data)
+                        if self.lhs.is_quadratic
+                        else create_linear_index(self.lhs.data)
+                    )
+                )
+                .alias(CONSTRAINT_KEY)
+                .cast(KEY_TYPE)
+            )
+        else:
+            df_ = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
+                *key_cols
+            )
+            self._data = apply_constraints(
+                df_, self.lhs.is_quadratic, self._model.use_var_names
+            )
 
     @property
     @unwrap_single_values
