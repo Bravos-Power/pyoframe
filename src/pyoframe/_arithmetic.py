@@ -5,11 +5,11 @@ import polars as pl
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
+    KEY_TYPE,
     POLARS_VERSION,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
-    KEY_TYPE,
     Config,
     PyoframeError,
     UnmatchedStrategy,

@@ -7,9 +7,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 import polars as pl
 
 from pyoframe._arithmetic import _get_dimensions
-from pyoframe.constants import COEF_KEY, QUAD_VAR_KEY, RESERVED_COL_KEYS, VAR_KEY
-
-from pyoframe.constants import KEY_TYPE
+from pyoframe.constants import (
+    COEF_KEY,
+    KEY_TYPE,
+    QUAD_VAR_KEY,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
