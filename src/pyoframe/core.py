@@ -760,18 +760,29 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def _add_const(self, const: int | float) -> Expression:
         """
-        >>> m = pf.Model()
-        >>> m.x1 = Variable()
-        >>> m.x2 = Variable()
-        >>> m.x1 + 5
-        <Expression size=1 dimensions={} terms=2>
-        x1 +5
-        >>> m.x1 ** 2 + 5
-        <Expression size=1 dimensions={} terms=2 degree=2>
-        x1 * x1 +5
-        >>> m.x1 ** 2 + m.x2 + 5
-        <Expression size=1 dimensions={} terms=3 degree=2>
-        x1 * x1 + x2 +5
+        Examples:
+            >>> m = pf.Model()
+            >>> m.x1 = Variable()
+            >>> m.x2 = Variable()
+            >>> m.x1 + 5
+            <Expression size=1 dimensions={} terms=2>
+            x1 +5
+            >>> m.x1 ** 2 + 5
+            <Expression size=1 dimensions={} terms=2 degree=2>
+            x1 * x1 +5
+            >>> m.x1 ** 2 + m.x2 + 5
+            <Expression size=1 dimensions={} terms=3 degree=2>
+            x1 * x1 + x2 +5
+
+            It also works with dimensions
+
+            >>> m = pf.Model()
+            >>> m.v = Variable({"dim1": [1, 2, 3]})
+            >>> m.v * m.v + 5
+            <Expression size=3 dimensions={'dim1': 3} terms=6 degree=2>
+            [1]: 5  + v[1] * v[1]
+            [2]: 5  + v[2] * v[2]
+            [3]: 5  + v[3] * v[3]
         """
         dim = self.dimensions
         data = self.data
