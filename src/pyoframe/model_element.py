@@ -7,7 +7,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 import polars as pl
 
 from pyoframe._arithmetic import _get_dimensions
-from pyoframe.constants import COEF_KEY, RESERVED_COL_KEYS, VAR_KEY
+from pyoframe.constants import (
+    COEF_KEY,
+    KEY_TYPE,
+    QUAD_VAR_KEY,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -32,7 +38,9 @@ class ModelElement(ABC):
         if COEF_KEY in data.columns:
             data = data.cast({COEF_KEY: pl.Float64})
         if VAR_KEY in data.columns:
-            data = data.cast({VAR_KEY: pl.UInt32})
+            data = data.cast({VAR_KEY: KEY_TYPE})
+        if QUAD_VAR_KEY in data.columns:
+            data = data.cast({QUAD_VAR_KEY: KEY_TYPE})
 
         self._data = data
         self._model: Optional[Model] = None

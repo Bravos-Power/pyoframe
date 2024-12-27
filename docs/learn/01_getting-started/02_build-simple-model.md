@@ -5,33 +5,35 @@ Here's a simple model to show you Pyoframe's syntax. Click on the :material-plus
 ```python
 import pyoframe as pf
 
-m = pf.Model("max") # (1)!
+m = pf.Model()
 
 # You can buy tofu or chickpeas
-m.tofu = pf.Variable(lb=0)  # (2)!
+m.tofu = pf.Variable(lb=0)  # (1)!
 m.chickpeas = pf.Variable(lb=0)
 
-# Youd want to maximize your protein intake (10g for tofu, 8g for chickpeas)
-m.objective = 10 * m.tofu + 8 * m.chickpeas # (3)!
+# You want to maximize your protein intake (10g per tofu, 8g per chickpeas)
+m.maximize = 10 * m.tofu + 8 * m.chickpeas # (2)!
 
-# You have $10 and tofu costs $4 while chickpeas cost $2.
-m.budget_constraint = 4 * m.tofu + 2 * m.chickpeas <= 10 # (4)!
+# You must stay with your $10 budget (4$ per tofu, $2 per chickpeas)
+m.budget_constraint = 4 * m.tofu + 2 * m.chickpeas <= 10 # (3)!
 
-m.optimize()
+m.optimize()  # (4)!
 
 print("You should buy:")
 print(f"\t{m.tofu.solution} blocks of tofu")
 print(f"\t{m.chickpeas.solution} cans of chickpeas")
 ```
 
-1. Creating your model is always the starting point!
-2. `lb=0` sets the variable's lower bound to ensure you can't buy a negative quantity of tofu!
-3. Variables can be added and multiplied as you'd expect!
-4. Using `<=`, `>=` or `==` will automatically create a constraint.
+1. Create a variable with a lower bound of zero (`lb=0`) so that you can't buy a negative quantity of tofu!
+2. Define your objective by setting the reserved variables `.maximize` or `.minimize`.
+3. Creates constraints by using `<=`, `>=`, or `==`.
+4. Pyoframe automatically detects your installed solver and optimizes your model!
 
 ## Use dimensions
 
-The above model would quickly become unworkable if we had more than just tofu and chickpeas. Let's create a `food` dimension to make this scalable. While were at it, let's also read our data from the following .csv file instead of hardcoding it.
+The above model would quickly become unworkable if we had more than just tofu and chickpeas. I'll walk you through how we can make a `food` dimension to make this scalable. You can also skip to the end to see the example in full!
+
+Note that instead of hardcoding our values, we'll be reading them from the following csv file.
 
 > `food_data.csv`
 >
@@ -64,7 +66,7 @@ Nothing special here. Load your data using your favourite dataframe library. We 
 
 ```python
 import pyoframe as pf
-m = pf.Model("max")
+m = pf.Model()
 ```
 
 ### Create an dimensioned variable
@@ -84,13 +86,13 @@ If you print the variable, you'll see it actually contains a `tofu` and `chickpe
 ```
 
 !!! tip "Tip"
-    Naming your model's decision variables with an uppercase first letter (e.g. `m.Buy`) makes it to remember what's a variable and what isn't.
+    Naming your model's decision variables with an uppercase first letter (e.g. `m.Buy`) makes it easier to remember what's a variable and what isn't.
 
 ### Create the objective
 
 Previously we had:
 ```python
-m.objective = 10 * m.tofu + 8 * m.chickpeas
+m.maximize = 10 * m.tofu + 8 * m.chickpeas
 ```
 
 How do we make use of our dimensioned variable `m.Buy` instead?
@@ -119,7 +121,7 @@ Second, notice that our `Expression` still has a `food` dimension—it really co
 This works and since `food` is the only dimensions we don't even need to specify it. Putting it all together:
 
 ```python
-m.objective = pf.sum(data[["food", "protein"]] * m.Buy)
+m.maximize = pf.sum(data[["food", "protein"]] * m.Buy)
 ```
 
 ### Adding the constraint
@@ -138,9 +140,9 @@ import pyoframe as pf
 
 data = pd.read_csv("food_data.csv")
 
-m = pf.Model("max")
+m = pf.Model()
 m.Buy = pf.Variable(data[["food"]], lb=0)
-m.objective = pf.sum(data[["food", "protein"]] * m.Buy)
+m.maximize = pf.sum(data[["food", "protein"]] * m.Buy)
 m.budget_constraint = pf.sum(data[["food", "cost"]] * m.Buy) <= 10
 
 m.optimize()

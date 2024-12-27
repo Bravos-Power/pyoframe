@@ -4,6 +4,8 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    Any,
+    Dict,
     Iterable,
     List,
     Mapping,
@@ -19,7 +21,11 @@ import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
-from pyoframe._arithmetic import _add_expressions, _get_dimensions
+from pyoframe._arithmetic import (
+    _add_expressions,
+    _get_dimensions,
+    _multiply_expressions,
+)
 from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
@@ -27,6 +33,7 @@ from pyoframe.constants import (
     DUAL_KEY,
     KEY_TYPE,
     POLARS_VERSION,
+    QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
     VAR_KEY,
@@ -97,6 +104,25 @@ class SupportsMath(ABC, SupportsToExpr):
     __mul__ = _forward_to_expression("__mul__")
     sum = _forward_to_expression("sum")
     map = _forward_to_expression("map")
+
+    def __pow__(self, power: int):
+        """
+        Support squaring expressions:
+        >>> m = pf.Model()
+        >>> m.v = pf.Variable()
+        >>> m.v ** 2
+        <Expression size=1 dimensions={} terms=1 degree=2>
+        v * v
+        >>> m.v ** 3
+        Traceback (most recent call last):
+        ...
+        ValueError: Raising an expressions to **3 is not supported. Expressions can only be squared (**2).
+        """
+        if power == 2:
+            return self * self
+        raise ValueError(
+            f"Raising an expressions to **{power} is not supported. Expressions can only be squared (**2)."
+        )
 
     def __neg__(self):
         res = self.to_expr() * -1
@@ -180,7 +206,7 @@ class SupportsMath(ABC, SupportsToExpr):
         """
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, value: object):
+    def __eq__(self, value: object):  # type: ignore
         """Equality constraint.
 
         Examples:
@@ -363,7 +389,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
 class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
-    """A linear expression."""
+    """A linear or quadratic expression."""
 
     def __init__(self, data: pl.DataFrame):
         """
@@ -372,7 +398,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> import pandas as pd
             >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
-            >>> m = pf.Model("min")
+            >>> m = pf.Model()
             >>> m.Time = pf.Variable(df.index)
             >>> m.Size = pf.Variable(df.index)
             >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
@@ -414,6 +440,24 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     #         )
     #     )
 
+    @classmethod
+    def constant(cls, constant: int | float) -> "Expression":
+        """
+        Examples:
+            >>> pf.Expression.constant(5)
+            <Expression size=1 dimensions={} terms=1>
+            5
+        """
+        return cls(
+            pl.DataFrame(
+                {
+                    COEF_KEY: [constant],
+                    VAR_KEY: [CONST_TERM],
+                },
+                schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+            )
+        )
+
     def sum(self, over: Union[str, Iterable[str]]):
         """
         Examples:
@@ -445,9 +489,16 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         return self._new(
             self.data.drop(over)
-            .group_by(remaining_dims + [VAR_KEY], maintain_order=True)
+            .group_by(remaining_dims + self._variable_columns, maintain_order=True)
             .sum()
         )
+
+    @property
+    def _variable_columns(self) -> List[str]:
+        if self.is_quadratic:
+            return [VAR_KEY, QUAD_VAR_KEY]
+        else:
+            return [VAR_KEY]
 
     def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True) -> Expression:
         """
@@ -530,7 +581,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> import polars as pl
             >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
-            >>> m = pf.Model("min")
+            >>> m = pf.Model()
             >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
             <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
@@ -591,6 +642,51 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         by_dims = df.select(dims_in_common).unique(maintain_order=True)
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
+    @property
+    def is_quadratic(self) -> bool:
+        """
+        Returns True if the expression is quadratic, False otherwise.
+
+        Computes in O(1) since expressions are quadratic if and
+        only if self.data contain the QUAD_VAR_KEY column.
+
+        Examples:
+            >>> import pandas as pd
+            >>> m = pf.Model()
+            >>> m.v = Variable()
+            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}) * m.v
+            >>> expr *= m.v
+            >>> expr.is_quadratic
+            True
+        """
+        return QUAD_VAR_KEY in self.data.columns
+
+    def degree(self) -> int:
+        """
+        Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
+
+        Examples:
+            >>> import pandas as pd
+            >>> m = pf.Model()
+            >>> m.v1 = pf.Variable()
+            >>> m.v2 = pf.Variable()
+            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+            >>> expr.degree()
+            0
+            >>> expr *= m.v1
+            >>> expr.degree()
+            1
+            >>> expr += (m.v2 ** 2).add_dim("dim1")
+            >>> expr.degree()
+            2
+        """
+        if self.is_quadratic:
+            return 2
+        elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
+            return 1
+        else:
+            return 0
+
     def __add__(self, other):
         """
         Examples:
@@ -646,31 +742,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         other = other.to_expr()
         self._learn_from_other(other)
-
-        if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
-            self, other = other, self
-
-        if (other.data.get_column(VAR_KEY) != CONST_TERM).any():
-            raise ValueError(
-                "Multiplication of two expressions with variables is non-linear and not supported."
-            )
-        multiplier = other.data.drop(VAR_KEY)
-
-        dims = self.dimensions_unsafe
-        other_dims = other.dimensions_unsafe
-        dims_in_common = [dim for dim in dims if dim in other_dims]
-
-        data = (
-            self.data.join(
-                multiplier,
-                on=dims_in_common if len(dims_in_common) > 0 else None,
-                how="inner" if dims_in_common else "cross",
-            )
-            .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
-            .drop(COEF_KEY + "_right")
-        )
-
-        return self._new(data)
+        return _multiply_expressions(self, other)
 
     def to_expr(self) -> Expression:
         return self
@@ -687,19 +759,46 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def _add_const(self, const: int | float) -> Expression:
+        """
+        Examples:
+            >>> m = pf.Model()
+            >>> m.x1 = Variable()
+            >>> m.x2 = Variable()
+            >>> m.x1 + 5
+            <Expression size=1 dimensions={} terms=2>
+            x1 +5
+            >>> m.x1 ** 2 + 5
+            <Expression size=1 dimensions={} terms=2 degree=2>
+            x1 * x1 +5
+            >>> m.x1 ** 2 + m.x2 + 5
+            <Expression size=1 dimensions={} terms=3 degree=2>
+            x1 * x1 + x2 +5
+
+            It also works with dimensions
+
+            >>> m = pf.Model()
+            >>> m.v = Variable({"dim1": [1, 2, 3]})
+            >>> m.v * m.v + 5
+            <Expression size=3 dimensions={'dim1': 3} terms=6 degree=2>
+            [1]: 5  + v[1] * v[1]
+            [2]: 5  + v[2] * v[2]
+            [3]: 5  + v[3] * v[3]
+        """
         dim = self.dimensions
         data = self.data
         # Fill in missing constant terms
         if not dim:
             if CONST_TERM not in data[VAR_KEY]:
+                const_df = pl.DataFrame(
+                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                )
+                if self.is_quadratic:
+                    const_df = const_df.with_columns(
+                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                    )
                 data = pl.concat(
-                    [
-                        data,
-                        pl.DataFrame(
-                            {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                            schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
-                        ),
-                    ],
+                    [data, const_df],
                     how="vertical_relaxed",
                 )
         else:
@@ -708,10 +807,18 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .unique(maintain_order=True)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
             )
+            if self.is_quadratic:
+                keys = keys.with_columns(
+                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                )
             if POLARS_VERSION.major >= 1:
-                data = data.join(keys, on=dim + [VAR_KEY], how="full", coalesce=True)
+                data = data.join(
+                    keys, on=dim + self._variable_columns, how="full", coalesce=True
+                )
             else:
-                data = data.join(keys, on=dim + [VAR_KEY], how="outer_coalesce")
+                data = data.join(
+                    keys, on=dim + self._variable_columns, how="outer_coalesce"
+                )
             data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -726,6 +833,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def constant_terms(self):
         dims = self.dimensions
         constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
+        if self.is_quadratic:
+            constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
             dims_df = self.data.select(dims).unique(maintain_order=True)
             if POLARS_VERSION.major >= 1:
@@ -751,11 +860,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         The value of the expression. Only available after the model has been solved.
 
         Examples:
-            >>> m = pf.Model("max")
+            >>> m = pf.Model()
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X + 1
             >>> m.expr_2 = pf.sum(m.expr_1)
-            >>> m.objective = m.expr_2 - 3
+            >>> m.maximize = m.expr_2 - 3
             >>> m.attr.Silent = True
             >>> m.optimize()
             >>> m.expr_1.evaluate()
@@ -779,18 +888,22 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         df = self.data
         sm = self._model.poi
         attr = poi.VariableAttribute.Value
-        df = df.with_columns(
-            (
-                pl.col(COEF_KEY)
-                * pl.col(VAR_KEY).map_elements(
-                    lambda v_id: sm.get_variable_attribute(
-                        poi.VariableIndex(v_id), attr
-                    ),
-                    return_dtype=pl.Float64,
-                )
-            ).alias(COEF_KEY)
-        )
-        df = df.rename({COEF_KEY: SOLUTION_KEY}).drop(VAR_KEY)
+        for var_col in self._variable_columns:
+            df = df.with_columns(
+                (
+                    pl.col(COEF_KEY)
+                    * pl.col(var_col).map_elements(
+                        lambda v_id: (
+                            sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
+                            if v_id != CONST_TERM
+                            else 1
+                        ),
+                        return_dtype=pl.Float64,
+                    )
+                ).alias(COEF_KEY)
+            ).drop(var_col)
+
+        df = df.rename({COEF_KEY: SOLUTION_KEY})
 
         dims = self.dimensions
         if dims is not None:
@@ -812,21 +925,29 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
 
-        temp_var_column = f"{VAR_KEY}_temp"
-        if self._model is not None and self._model.var_map is not None:
-            data = self._model.var_map.apply(
-                data, to_col=temp_var_column, id_col=VAR_KEY
-            )
-        else:
+        for var_col in self._variable_columns:
+            temp_var_column = f"{var_col}_temp"
+            if self._model is not None and self._model.var_map is not None:
+                data = self._model.var_map.apply(
+                    data, to_col=temp_var_column, id_col=var_col
+                )
+            else:
+                data = data.with_columns(
+                    pl.concat_str(pl.lit("x"), var_col).alias(temp_var_column)
+                )
             data = data.with_columns(
-                pl.concat_str(pl.lit("x"), VAR_KEY).alias(temp_var_column)
-            )
-        data = data.with_columns(
-            pl.when(pl.col(VAR_KEY) == CONST_TERM)
-            .then(pl.lit(""))
-            .otherwise(temp_var_column)
-            .alias(VAR_KEY)
-        ).drop(temp_var_column)
+                pl.when(pl.col(var_col) == CONST_TERM)
+                .then(pl.lit(""))
+                .otherwise(temp_var_column)
+                .alias(var_col)
+            ).drop(temp_var_column)
+        if self.is_quadratic:
+            data = data.with_columns(
+                pl.when(pl.col(QUAD_VAR_KEY) == "")
+                .then(pl.col(VAR_KEY))
+                .otherwise(pl.concat_str(VAR_KEY, pl.lit(" * "), pl.col(QUAD_VAR_KEY)))
+                .alias(VAR_KEY)
+            ).drop(QUAD_VAR_KEY)
 
         dimensions = self.dimensions
 
@@ -887,7 +1008,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         result = ""
         if include_header:
             result += get_obj_repr(
-                self, size=len(self), dimensions=self.shape, terms=len(self.data)
+                self,
+                size=len(self),
+                dimensions=self.shape,
+                terms=len(self.data),
+                degree=2 if self.degree() == 2 else None,
             )
         if include_header and include_data:
             result += "\n"
@@ -1021,16 +1146,32 @@ class Constraint(ModelElementWithId):
         self._assign_ids()
 
     def _assign_ids(self):
-        kwargs = dict(sense=self.sense.to_poi(), rhs=0)
+        assert self._model is not None
+
+        is_quadratic = self.lhs.is_quadratic
+        use_var_names = self._model.use_var_names
+        kwargs: Dict[str, Any] = dict(sense=self.sense.to_poi(), rhs=0)
+
+        key_cols = [COEF_KEY] + self.lhs._variable_columns
+        key_cols_polars = [pl.col(c) for c in key_cols]
+
+        add_constraint = (
+            self._model.poi.add_quadratic_constraint
+            if is_quadratic
+            else self._model.poi.add_linear_constraint
+        )
+        ScalarFunction = (
+            poi.ScalarQuadraticFunction if is_quadratic else poi.ScalarAffineFunction
+        )
+
         if self.dimensions is None:
             if self._model.use_var_names:
                 kwargs["name"] = self.name
             df = self.data.with_columns(
                 pl.lit(
-                    self._model.poi.add_linear_constraint(
-                        poi.ScalarAffineFunction(
-                            coefficients=self.lhs.data.get_column(COEF_KEY).to_numpy(),
-                            variables=self.lhs.data.get_column(VAR_KEY).to_numpy(),
+                    add_constraint(
+                        ScalarFunction(
+                            *[self.lhs.data.get_column(c).to_numpy() for c in key_cols]
                         ),
                         **kwargs,
                     ).index
@@ -1040,47 +1181,38 @@ class Constraint(ModelElementWithId):
             )
         else:
             df = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
-                pl.col(COEF_KEY), pl.col(VAR_KEY)
+                *key_cols_polars
             )
-
-            if self._model.use_var_names:
+            if use_var_names:
                 df = (
                     concat_dimensions(df, prefix=self.name)
                     .with_columns(
-                        pl.struct(
-                            pl.col(COEF_KEY), pl.col(VAR_KEY), pl.col("concated_dim")
-                        )
+                        pl.struct(*key_cols_polars, pl.col("concated_dim"))
                         .map_elements(
-                            lambda x: self._model.poi.add_linear_constraint(
-                                poi.ScalarAffineFunction(
-                                    coefficients=np.array(x[COEF_KEY]),
-                                    variables=np.array(x[VAR_KEY]),
-                                ),
+                            lambda x: add_constraint(
+                                ScalarFunction(*[np.array(x[c]) for c in key_cols]),
                                 name=x["concated_dim"],
                                 **kwargs,
                             ).index,
                             return_dtype=KEY_TYPE,
                         )
-                        .alias(CONSTRAINT_KEY),
+                        .alias(CONSTRAINT_KEY)
                     )
                     .drop("concated_dim")
                 )
             else:
                 df = df.with_columns(
-                    pl.struct(pl.col(COEF_KEY), pl.col(VAR_KEY))
+                    pl.struct(*key_cols_polars)
                     .map_elements(
-                        lambda x: self._model.poi.add_linear_constraint(
-                            poi.ScalarAffineFunction(
-                                coefficients=np.array(x[COEF_KEY]),
-                                variables=np.array(x[VAR_KEY]),
-                            ),
+                        lambda x: add_constraint(
+                            ScalarFunction(*[np.array(x[c]) for c in key_cols]),
                             **kwargs,
                         ).index,
                         return_dtype=KEY_TYPE,
                     )
-                    .alias(CONSTRAINT_KEY),
+                    .alias(CONSTRAINT_KEY)
                 )
-            df = df.drop([COEF_KEY, VAR_KEY])
+            df = df.drop(key_cols)
 
         self._data = df
 
@@ -1116,7 +1248,41 @@ class Constraint(ModelElementWithId):
             The same constraint
 
         Examples:
-            >>> m = pf.Model("max", use_var_names=True)
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.maximize = m.hours_day
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
+            >>> m.optimize()
+            >>> m.hours_day.solution
+            16.0
+            >>> m.maximize += 2 * m.hours_day
+            >>> m.optimize()
+            >>> m.hours_day.solution
+            19.0
+
+            Note: .relax() can only be called after the sense of the model has been defined.
+
+            >>> m = pf.Model()
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
+            Traceback (most recent call last):
+            ...
+            ValueError: Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).
+
+            One way to solve this is by setting the sense directly on the model. See how this works fine:
+
+            >>> m = pf.Model(sense="max")
+            >>> m.hours_sleep = pf.Variable(lb=0)
+            >>> m.hours_day = pf.Variable(lb=0)
+            >>> m.hours_in_day = m.hours_sleep + m.hours_day == 24
+            >>> m.must_sleep = (m.hours_sleep >= 8).relax(cost=2, max=3)
+
+            And now an example with dimensions:
+
             >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
             >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
@@ -1128,7 +1294,7 @@ class Constraint(ModelElementWithId):
             ValueError: .relax() must be called before the Constraint is added to the model
             >>> m.attr.Silent = True
             >>> m.optimize()
-            >>> m.objective.value
+            >>> m.maximize.value
             -50.0
             >>> m.hours_spent.solution
             shape: (3, 2)
@@ -1172,7 +1338,11 @@ class Constraint(ModelElementWithId):
         penalty = var * cost
         if self.dimensions:
             penalty = sum(self.dimensions, penalty)
-        if m.sense == ObjSense.MAX:
+        if m.sense is None:
+            raise ValueError(
+                "Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...)."
+            )
+        elif m.sense == ObjSense.MAX:
             penalty *= -1
         if m.objective is None:
             m.objective = penalty
@@ -1454,7 +1624,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> import pandas as pd
             >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
             >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
-            >>> m = pf.Model("min")
+            >>> m = pf.Model()
             >>> m.bat_charge = pf.Variable(time_dim, space_dim)
             >>> m.bat_flow = pf.Variable(time_dim, space_dim)
             >>> # Fails because the dimensions are not the same

@@ -1,3 +1,4 @@
 - [Pyoframe datastructure](./01_pyoframe-datastructure.md)
 - [Performance](./02_performance_tips.md)
-- [Troubleshooting](./03_troubleshooting.md)
+- [Quadratics](./03_quadratic_expressions.md)
+- [Troubleshooting](./04_troubleshooting)

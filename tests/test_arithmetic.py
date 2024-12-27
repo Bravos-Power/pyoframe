@@ -465,7 +465,7 @@ def test_no_propogate():
 
 
 def test_variable_equals():
-    m = Model("max")
+    m = Model()
     index = Set(x=[1, 2, 3])
     m.Choose = Variable(index, vtype=VType.BINARY)
     with pytest.raises(
@@ -474,8 +474,8 @@ def test_variable_equals():
     ):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
-    m.objective = sum(m.Choose100)
+    m.maximize = sum(m.Choose100)
     m.attr.Silent = True
     m.optimize()
-    assert m.objective.value == 300
-    assert m.objective.evaluate() == 300
+    assert m.maximize.value == 300
+    assert m.maximize.evaluate() == 300

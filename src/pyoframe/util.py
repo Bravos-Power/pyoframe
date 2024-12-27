@@ -334,7 +334,7 @@ class NamedVariableMapper:
 
     Examples:
         >>> import polars as pl
-        >>> m = pf.Model("min")
+        >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)
         <Expression size=1 dimensions={} terms=4>

@@ -25,17 +25,19 @@ class Model:
     The object that holds all the variables, constraints, and the objective.
 
     Parameters:
-        min_or_max:
-            The sense of the objective. Either "min" or "max".
         name:
-            The name of the model. Currently not used for much.
+            The name of the model. Currently it is not used for much.
         solver:
             The solver to use. If `None`, `Config.default_solver` will be used.
-            If `Config.default_solver` is `None`, the first solver that imports without an error will be used.
+            If `Config.default_solver` has not been set (`None`), Pyoframe will try to detect whichever solver is already installed.
         solver_env:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
             Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+        sense:
+            Either "min" or "max". Indicates whether it's a minmization or maximization problem.
+            Typically, this parameter can be omitted (`None`) as it will automatically be
+            set when the objective is set using `.minimize` or `.maximize`.
 
     Example:
         >>> m = pf.Model()
@@ -68,20 +70,22 @@ class Model:
         "_use_var_names",
         "ONE",
         "solver_name",
+        "minimize",
+        "maximize",
     ]
 
     def __init__(
         self,
-        min_or_max: Union[ObjSense, ObjSenseValue] = "min",
         name=None,
         solver: Optional[SUPPORTED_SOLVER_TYPES] = None,
         solver_env: Optional[Dict[str, str]] = None,
         use_var_names=False,
+        sense: Union[ObjSense, ObjSenseValue, None] = None,
     ):
         self.poi, self.solver_name = Model.create_poi_model(solver, solver_env)
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
-        self.sense = ObjSense(min_or_max)
+        self.sense = ObjSense(sense) if sense is not None else None
         self._objective: Optional[Objective] = None
         self.var_map = (
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
@@ -179,9 +183,42 @@ class Model:
 
     @objective.setter
     def objective(self, value):
-        value = Objective(value)
+        if self._objective is not None and (
+            not isinstance(value, Objective) or not value._constructive
+        ):
+            raise ValueError("An objective already exists. Use += or -= to modify it.")
+        if not isinstance(value, Objective):
+            value = Objective(value)
         self._objective = value
         value.on_add_to_model(self, "objective")
+
+    @property
+    def minimize(self):
+        if self.sense != ObjSense.MIN:
+            raise ValueError("Can't get .minimize in a maximization problem.")
+        return self._objective
+
+    @minimize.setter
+    def minimize(self, value):
+        if self.sense is None:
+            self.sense = ObjSense.MIN
+        if self.sense != ObjSense.MIN:
+            raise ValueError("Can't set .minimize in a maximization problem.")
+        self.objective = value
+
+    @property
+    def maximize(self):
+        if self.sense != ObjSense.MAX:
+            raise ValueError("Can't get .maximize in a minimization problem.")
+        return self._objective
+
+    @maximize.setter
+    def maximize(self, value):
+        if self.sense is None:
+            self.sense = ObjSense.MAX
+        if self.sense != ObjSense.MAX:
+            raise ValueError("Can't set .maximize in a minimization problem.")
+        self.objective = value
 
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name not in Model._reserved_attributes and not isinstance(

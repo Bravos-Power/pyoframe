@@ -12,19 +12,19 @@ check_dtypes_false = (
 
 
 def test_retrieving_duals(solver):
-    m = pf.Model("max")
+    m = pf.Model()
 
     m.A = pf.Variable(ub=100)
     m.B = pf.Variable(ub=10)
     m.max_AB = 2 * m.A + m.B <= 100
     m.extra_slack_constraint = 2 * m.A + m.B <= 150
-    m.objective = 0.2 * m.A + 2 * m.B
+    m.maximize = 0.2 * m.A + 2 * m.B
 
     m.optimize()
 
     assert m.A.solution == 45
     assert m.B.solution == 10
-    assert m.objective.value == 29
+    assert m.maximize.value == 29
     assert m.max_AB.dual == 0.1
     assert m.extra_slack_constraint.dual == 0
     if solver == "gurobi":
@@ -36,7 +36,7 @@ def test_retrieving_duals(solver):
 
 
 def test_retrieving_duals_vectorized(solver):
-    m = pf.Model("max")
+    m = pf.Model()
     data = pl.DataFrame(
         {"t": [1, 2], "ub": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -45,11 +45,11 @@ def test_retrieving_duals_vectorized(solver):
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
 
     m.optimize()
 
-    assert m.objective.value == 29
+    assert m.maximize.value == 29
     assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
@@ -80,7 +80,7 @@ def test_retrieving_duals_vectorized(solver):
 
 
 def test_support_variable_attributes(solver):
-    m = pf.Model("max")
+    m = pf.Model()
     data = pl.DataFrame(
         {"t": [1, 2], "UpperBound": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -89,11 +89,11 @@ def test_support_variable_attributes(solver):
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
 
     m.optimize()
 
-    assert m.objective.value == 29
+    assert m.maximize.value == 29
     assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
@@ -124,7 +124,7 @@ def test_support_variable_attributes(solver):
 def test_support_variable_raw_attributes(solver):
     if solver != "gurobi":
         pytest.skip("Only valid for gurobi")
-    m = pf.Model("max")
+    m = pf.Model()
     data = pl.DataFrame(
         {"t": [1, 2], "UB": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -133,11 +133,11 @@ def test_support_variable_raw_attributes(solver):
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
     m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.objective = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
 
     m.optimize()
 
-    assert m.objective.value == 29
+    assert m.maximize.value == 29
     assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
@@ -163,12 +163,12 @@ def test_setting_constraint_attr(solver):
     if solver != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
-    m = pf.Model("max")
+    m = pf.Model()
     m.A = pf.Variable()
     m.B = pf.Variable(pf.Set(y=[1, 2, 3]))
     m.A_con = m.A >= 10
     m.B_con = m.B >= 5
-    m.objective = m.A + pf.sum(m.B)
+    m.maximize = m.A + pf.sum(m.B)
 
     # Solving it should return unbounded
     m.optimize()
@@ -187,9 +187,9 @@ def test_setting_model_attr(solver):
     if solver != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
-    m = pf.Model("max")
+    m = pf.Model()
     m.A = pf.Variable(lb=0)
-    m.objective = m.A
+    m.maximize = m.A
 
     # Solving it should return unbounded
     m.optimize()
@@ -205,10 +205,10 @@ def test_setting_model_attr(solver):
 
 @pytest.mark.parametrize("use_var_names", [True, False])
 def test_const_term_in_objective(use_var_names):
-    m = pf.Model("max", use_var_names=use_var_names)
+    m = pf.Model(use_var_names=use_var_names)
     m.A = pf.Variable(ub=10)
-    m.objective = 10 + m.A
+    m.maximize = 10 + m.A
 
     m.optimize()
     assert m.A.solution == 10
-    assert m.objective.value == 20
+    assert m.maximize.value == 20
