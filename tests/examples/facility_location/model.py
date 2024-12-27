@@ -5,11 +5,9 @@ import polars as pl
 
 import pyoframe as pf
 
-pf.Config.default_solver = "gurobi"
 
-
-def main(G=4, F=3, **kwargs):
-    model = pf.Model(sense="min")
+def main(G=4, F=3, solver=None, **kwargs):
+    model = pf.Model(solver=solver, sense="min")
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))
@@ -97,11 +95,12 @@ def draw_results(model, G, F):
 
 
 if __name__ == "__main__":
-    G, F = 5, 3
+    G, F = 4, 3
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
     model = main(
         G,
         F,
+        solver="gurobi",
         directory=working_dir / "results",
         use_var_names=True,
         solution_file=working_dir / "results" / "pyoframe-problem.sol",
