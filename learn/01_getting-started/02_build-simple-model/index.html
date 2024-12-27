@@ -14,11 +14,11 @@
         <link rel="prev" href="../01_installation/">
       
       
-        <link rel="next" href="../03_using_dataframes/">
+        <link rel="next" href="../04_building_blocks/">
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.47">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.49">
     
     
       
@@ -529,6 +529,17 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    A simple model
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -539,27 +550,94 @@
 
       </a>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../03_using_dataframes/" class="md-nav__link">
         
-  
-  <span class="md-ellipsis">
-    Using dataframes
-  </span>
-  
 
-      </a>
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#use-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use dimensions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use dimensions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#load-your-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Load your data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create the model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-an-dimensioned-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create an dimensioned variable
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-the-objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create the objective
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-the-constraint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding the constraint
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#putting-it-all-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      Putting it all together
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -607,6 +685,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06_accessing_the_solver/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Accessing the solver
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -623,6 +722,8 @@
   
     
     
+      
+        
       
         
       
@@ -715,7 +816,28 @@
   
   
     <li class="md-nav__item">
-      <a href="../../03_concepts/03_troubleshooting/" class="md-nav__link">
+      <a href="../../03_concepts/03_quadratic_expressions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quadratics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03_concepts/04_troubleshooting" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -877,14 +999,6 @@
       
         
       
-        
-      
-        
-      
-        
-      
-        
-      
     
     
       
@@ -977,48 +1091,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../reference/io/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    io
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/io_mappers/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    io_mappers
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../reference/model/" class="md-nav__link">
         
   
@@ -1087,48 +1159,6 @@
   
   <span class="md-ellipsis">
     objective
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/solvers/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    solvers
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/user_defined/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    user_defined
   </span>
   
 
@@ -1252,6 +1282,83 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#use-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use dimensions
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Use dimensions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#load-your-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Load your data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create the model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-an-dimensioned-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create an dimensioned variable
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-the-objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create the objective
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-the-constraint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adding the constraint
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#putting-it-all-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      Putting it all together
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1284,32 +1391,149 @@
 
 
 <h1 id="a-simple-model">A simple model</h1>
-<p>Here's a simple problem to show you Pyoframe's syntax. Click on the <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg></span> buttons to learn what's happening!</p>
-<blockquote>
-<p>A block of tofu costs $4 and contains 10 g of protein. A can of chickpeas costs $2 and contains 8 g of protein. How should you spend your $10 budget to get the most protein?</p>
-</blockquote>
-<p>Run the code below to find the answer!</p>
-<div class="language-python3 highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">pyoframe</span> <span class="k">as</span> <span class="nn">pf</span>
+<p>Here's a simple model to show you Pyoframe's syntax. Click on the <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg></span> buttons to discover what's happening.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">pyoframe</span> <span class="k">as</span> <span class="nn">pf</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">)</span> <span class="c1"># (1)!</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (2)!</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span> <span class="c1"># (3)!</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">m</span><span class="o">.</span><span class="n">budget_constraint</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span> <span class="o">&lt;=</span> <span class="mi">10</span> <span class="c1"># (4)!</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">m</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">tofu</span><span class="o">.</span><span class="n">solution</span><span class="si">}</span><span class="s2"> blocks of tofu&quot;</span><span class="p">)</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span><span class="o">.</span><span class="n">solution</span><span class="si">}</span><span class="s2"> cans of chickpeas&quot;</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># You can buy tofu or chickpeas</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># (1)!</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># You want to maximize your protein intake (10g per tofu, 8g per chickpeas)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">m</span><span class="o">.</span><span class="n">maximize</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span> <span class="c1"># (2)!</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># You must stay with your $10 budget (4$ per tofu, $2 per chickpeas)</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">m</span><span class="o">.</span><span class="n">budget_constraint</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span> <span class="o">&lt;=</span> <span class="mi">10</span> <span class="c1"># (3)!</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>  <span class="c1"># (4)!</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;You should buy:&quot;</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">tofu</span><span class="o">.</span><span class="n">solution</span><span class="si">}</span><span class="s2"> blocks of tofu&quot;</span><span class="p">)</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span><span class="o">.</span><span class="n">solution</span><span class="si">}</span><span class="s2"> cans of chickpeas&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <ol>
-<li>Creating your model is always the starting point!</li>
-<li><code>lb=0</code> sets the variable's <em>lower bound</em> to ensure you can't buy a negative quantity of tofu!</li>
-<li>Variables can be added and multiplied as you'd expect!</li>
-<li>Constraints are easily created with <code>&lt;=</code>, <code>&gt;=</code> or <code>==</code>.</li>
+<li>Create a variable with a lower bound of zero (<code>lb=0</code>) so that you can't buy a negative quantity of tofu!</li>
+<li>Define your objective by setting the reserved variables <code>.maximize</code> or <code>.minimize</code>.</li>
+<li>Creates constraints by using <code>&lt;=</code>, <code>&gt;=</code>, or <code>==</code>.</li>
+<li>Pyoframe automatically detects your installed solver and optimizes your model!</li>
 </ol>
+<h2 id="use-dimensions">Use dimensions</h2>
+<p>The above model would quickly become unworkable if we had more than just tofu and chickpeas. I'll walk you through how we can make a <code>food</code> dimension to make this scalable. You can also skip to the end to see the example in full!</p>
+<p>Note that instead of hardcoding our values, we'll be reading them from the following csv file.</p>
+<blockquote>
+<p><code>food_data.csv</code></p>
+<table>
+<thead>
+<tr>
+<th>food</th>
+<th>protein</th>
+<th>cost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tofu</td>
+<td>10</td>
+<td>4</td>
+</tr>
+<tr>
+<td>chickpeas</td>
+<td>8</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+<h3 id="load-your-data">Load your data</h3>
+<p>Nothing special here. Load your data using your favourite dataframe library. We like <a href="https://pola.rs/">Polars</a> because it's <em>fast</em> but Pandas works too.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Pandas</label><label for="__tabbed_1_2">Polars</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;food_data.csv&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span> <span class="nn">polars</span> <span class="k">as</span> <span class="nn">pl</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;food_data.csv&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="create-the-model">Create the model</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span> <span class="nn">pyoframe</span> <span class="k">as</span> <span class="nn">pf</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span></code></pre></div>
+<h3 id="create-an-dimensioned-variable">Create an dimensioned variable</h3>
+<p>Previously, we created two variables: <code>m.tofu</code> and <code>m.chickpeas</code>. Instead, we now create a single variable dimensioned over <code>food</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Buy</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">]],</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></code></pre></div>
+<p>If you print the variable, you'll see it actually contains a <code>tofu</code> and <code>chickpeas</code> variable!</p>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Buy</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="go">&lt;Variable name=Buy lb=0 size=2 dimensions={&#39;food&#39;: 2}&gt;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="go">[tofu]: Buy[tofu]</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="go">[chickpeas]: Buy[chickpeas]</span>
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Naming your model's decision variables with an uppercase first letter (e.g. <code>m.Buy</code>) makes it easier to remember what's a variable and what isn't.</p>
+</div>
+<h3 id="create-the-objective">Create the objective</h3>
+<p>Previously we had:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">m</span><span class="o">.</span><span class="n">maximize</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpeas</span>
+</span></code></pre></div></p>
+<p>How do we make use of our dimensioned variable <code>m.Buy</code> instead?</p>
+<p>First, we multiply the variable by the protein amount.</p>
+<p><div class="language-pycon highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;protein&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Buy</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="go">&lt;Expression size=2 dimensions={&#39;food&#39;: 2} terms=2&gt;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="go">[tofu]: 10 Buy[tofu]</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="go">[chickpeas]: 8 Buy[chickpeas]</span>
+</span></code></pre></div>
+As you can see, Pyoframe <abbr title="Pyoframe always converts dataframes into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.">with a bit of magic</abbr> converted our <code>Variable</code> into an <code>Expression</code> where the coefficients are the protein amounts!</p>
+<p>Second, notice that our <code>Expression</code> still has a <code>food</code> dimension—it really contains two seperate expressions, one for tofu and one for chickpeas. Our model's objective must be a single expression (without dimensions) so let's sum over the <code>food</code> dimensions using <code>pf.sum()</code>.</p>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;protein&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Buy</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="go">&lt;Expression size=1 dimensions={} terms=2&gt;</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="go">10 Buy[tofu] +8 Buy[chickpeas]</span>
+</span></code></pre></div>
+<p>This works and since <code>food</code> is the only dimensions we don't even need to specify it. Putting it all together:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">m</span><span class="o">.</span><span class="n">maximize</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;protein&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Buy</span><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="adding-the-constraint">Adding the constraint</h3>
+<p>This is similar to how we created the objective, except now we're using <code>cost</code> and we turn our <code>Expression</code> into a <code>Constraint</code> by with the <code>&lt;=</code> operation.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">m</span><span class="o">.</span><span class="n">budget_constraint</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Buy</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">10</span>
+</span></code></pre></div>
+<h3 id="putting-it-all-together">Putting it all together</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">import</span> <span class="nn">pyoframe</span> <span class="k">as</span> <span class="nn">pf</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">&quot;food_data.csv&quot;</span><span class="p">)</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">m</span><span class="o">.</span><span class="n">Buy</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">]],</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">m</span><span class="o">.</span><span class="n">maximize</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;protein&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Buy</span><span class="p">)</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="n">m</span><span class="o">.</span><span class="n">budget_constraint</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">]]</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Buy</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">10</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+</span></code></pre></div>
+<p>So you should buy:
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Buy</span><span class="o">.</span><span class="n">solution</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="go">┌───────────┬──────────┐</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="go">│ food      ┆ solution │</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="go">│ ---       ┆ ---      │</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="go">│ str       ┆ f64      │</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="go">╞═══════════╪══════════╡</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="go">│ tofu      ┆ 0.0      │</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="go">│ chickpeas ┆ 5.0      │</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="go">└───────────┴──────────┘</span>
+</span></code></pre></div>
+Notice that since <code>m.Buy</code> is dimensioned, <code>m.Buy.solution</code> returned a dataframe with the solution for each of indices!</p>
+<div class="admonition info">
+<p class="admonition-title">info</p>
+<p>Pyoframe currently always returns Polars dataframes although we plan to add support for returning Pandas dataframes in the future. <a href="https://github.com/Bravos-Power/pyoframe/issues/47">Upvote the issue</a> if you'd like this feature and in the meantime use <code>.to_pandas()</code> to convert from a Polars dataframe.</p>
+</div>
 
 
 
@@ -1332,7 +1556,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">December 1, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">December 16, 2024</span>
   </span>
 
     
@@ -1422,13 +1646,13 @@
         
         
           
-          <a href="../03_using_dataframes/" class="md-footer__link md-footer__link--next" aria-label="Next: Using dataframes">
+          <a href="../04_building_blocks/" class="md-footer__link md-footer__link--next" aria-label="Next: Model building blocks">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Using dataframes
+                Model building blocks
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1468,10 +1692,10 @@
       <div class="md-progress" data-md-component="progress" role="progressbar"></div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "navigation.indexes", "content.action.edit", "content.action.view", "content.code.copy", "content.code.annotate"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "navigation.indexes", "content.action.edit", "content.action.view", "content.code.copy", "content.code.annotate", "content.tooltips"], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.88dd0f4e.min.js"></script>
       
     
   </body>
