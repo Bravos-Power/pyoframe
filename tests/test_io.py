@@ -47,5 +47,29 @@ def test_expression_with_const_to_str():
     assert str(expr) == "2 x1 +5"
 
 
+def test_constraint_to_str(solver):
+    if solver == "highs":
+        pytest.skip("Highs does not support quadratic constraints yet.")
+    m = Model()
+    m.x1 = Variable()
+    m.constraint = m.x1**2 <= 5
+    assert (
+        str(m.constraint)
+        == """<Constraint name=constraint sense='<=' size=1 dimensions={} terms=2>
+x1 * x1 <= 5"""
+    )
+
+    # Now with dimensions
+    m.x2 = Variable({"x": [1, 2, 3]})
+    m.constraint_2 = m.x2 * m.x1 <= 5
+    assert (
+        str(m.constraint_2)
+        == """<Constraint name=constraint_2 sense='<=' size=3 dimensions={'x': 3} terms=6>
+[1]: x2[1] * x1 <= 5
+[2]: x2[2] * x1 <= 5
+[3]: x2[3] * x1 <= 5"""
+    )
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import shutil
 from dataclasses import dataclass
@@ -17,6 +19,7 @@ class Example:
     many_valid_solutions: bool = False
     has_gurobi_version: bool = True
     check_params: Optional[Dict[str, Any]] = None
+    skip_solvers: List[str] | None = None
 
 
 @pytest.mark.parametrize(
@@ -29,6 +32,12 @@ class Example:
             integer_results_only=True,
             many_valid_solutions=True,
             has_gurobi_version=False,
+        ),
+        Example(
+            "facility_location",
+            has_gurobi_version=False,
+            many_valid_solutions=True,
+            skip_solvers=["highs"],
         ),
     ],
     ids=lambda x: x.folder_name,
@@ -43,6 +52,9 @@ def test_examples(solver, example: Example):
     5. Check that all values in .sol are integers (when integer_results_only=True).
     6. Check that the .sol from the gurobipy version (if it exists) is the same.
     """
+    if example.skip_solvers is not None and solver in example.skip_solvers:
+        pytest.skip(f"Skipping {solver} for example {example.folder_name}")
+
     example_dir = Path("tests/examples") / example.folder_name
     input_dir = example_dir / "input_data"
     expected_output_dir = example_dir / "results"

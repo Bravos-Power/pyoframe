@@ -16,6 +16,7 @@ POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
+QUAD_VAR_KEY = "__quadratic_variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
@@ -25,7 +26,14 @@ KEY_TYPE = pl.UInt32
 # Variable ID for constant terms. This variable ID is reserved.
 CONST_TERM = 0
 
-RESERVED_COL_KEYS = (COEF_KEY, VAR_KEY, CONSTRAINT_KEY, SOLUTION_KEY, DUAL_KEY)
+RESERVED_COL_KEYS = (
+    COEF_KEY,
+    VAR_KEY,
+    QUAD_VAR_KEY,
+    CONSTRAINT_KEY,
+    SOLUTION_KEY,
+    DUAL_KEY,
+)
 
 
 class _ConfigMeta(type):
