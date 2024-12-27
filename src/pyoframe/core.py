@@ -4,6 +4,8 @@ import warnings
 from abc import ABC, abstractmethod
 from typing import (
     TYPE_CHECKING,
+    Any,
+    Dict,
     Iterable,
     List,
     Mapping,
@@ -1134,11 +1136,10 @@ class Constraint(ModelElementWithId):
 
     def _assign_ids(self):
         assert self._model is not None
-        assert self.name is not None
 
         is_quadratic = self.lhs.is_quadratic
         use_var_names = self._model.use_var_names
-        kwargs = dict(sense=self.sense.to_poi(), rhs=0)
+        kwargs: Dict[str, Any] = dict(sense=self.sense.to_poi(), rhs=0)
 
         key_cols = [COEF_KEY] + self.lhs._variable_columns
         key_cols_polars = [pl.col(c) for c in key_cols]
