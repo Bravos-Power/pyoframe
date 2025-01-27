@@ -391,12 +391,10 @@ class NamedVariableMapper:
         )
 
 
-def for_solvers(solvers: Union[str, Sequence[str]]):
+def for_solvers(*solvers: str):
     """
     Decorator that limits the function to only be called when the solver is in the `only` list.
     """
-    if isinstance(solvers, str):
-        solvers = (solvers,)
 
     def decorator(func):
         @wraps(func)

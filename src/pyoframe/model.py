@@ -274,12 +274,12 @@ class Model:
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
         Example:
-            >>> m = pf.Model("max", solver="gurobi")
+            >>> m = pf.Model(solver="gurobi")
             >>> m.X = pf.Variable(vtype=pf.VType.BINARY, lb=0)
             >>> m.Y = pf.Variable(vtype=pf.VType.INTEGER, lb=0)
             >>> m.Z = pf.Variable(lb=0)
             >>> m.my_constraint = m.X + m.Y + m.Z <= 10
-            >>> m.objective = 3 * m.X + 2 * m.Y + m.Z
+            >>> m.maximize = 3 * m.X + 2 * m.Y + m.Z
             >>> m.optimize()
             >>> m.X.solution, m.Y.solution, m.Z.solution
             (1.0, 9.0, 0.0)
@@ -298,11 +298,11 @@ class Model:
             >>> m.convert_to_fixed()
             Traceback (most recent call last):
             ...
-            NotImplementedError: This method only works with the Gurobi solver.
+            NotImplementedError: Method 'convert_to_fixed' is not implemented for solver 'highs'.
         """
         self.poi._converttofixed()
 
-    @for_solvers("gurobi")
+    @for_solvers("gurobi", "copt")
     def compute_IIS(self):
         """
         Computes the Irreducible Infeasible Set (IIS) of the model.
@@ -315,17 +315,19 @@ class Model:
             >>> m.X = pf.Variable(lb=0, ub=2)
             >>> m.Y = pf.Variable(lb=0, ub=2)
             >>> m.bad_constraint = m.X >= 3
-            >>> m.objective = m.X + m.Y
+            >>> m.minimize = m.X + m.Y
             >>> m.optimize()
-            >>> m.bad_constraint.attr.IIS
-            True
             >>> m.attr.TerminationStatus
-            INFEASIBLE
+            <TerminationStatusCode.INFEASIBLE: 3>
+            >>> m.bad_constraint.attr.IIS
+            Traceback (most recent call last):
+            ...
+            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'IISConstr'
             >>> m.compute_IIS()
             >>> m.bad_constraint.attr.IIS
             True
         """
-        self.poi._computeIIS()
+        self.poi.computeIIS()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
