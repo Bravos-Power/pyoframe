@@ -2,7 +2,6 @@
 File containing shared constants used across the package.
 """
 
-import importlib.metadata
 import typing
 from enum import Enum
 from typing import Literal, Optional
@@ -12,13 +11,7 @@ import pyoptinterface as poi
 from packaging import version
 
 # We want to try and support multiple major versions of polars
-try:
-    POLARS_VERSION = version.parse(importlib.metadata.version("polars"))
-except importlib.metadata.PackageNotFoundError:
-    try:
-        POLARS_VERSION = version.parse(importlib.metadata.version("polars-lts-cpu"))
-    except importlib.metadata.PackageNotFoundError:
-        POLARS_VERSION = None
+POLARS_VERSION = version.parse(pl.__version__)
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
