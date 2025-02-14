@@ -12,3 +12,4 @@ dist
 *.log
 site
 .idea
+htmlcov/

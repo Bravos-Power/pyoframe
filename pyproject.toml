@@ -36,7 +36,8 @@ dev = [
     "pre-commit",
     "gurobipy",
     "highsbox",
-    "pre-commit"
+    "pre-commit",
+    "coverage"
 ]
 docs = [
     "mkdocs-material==9.*",
