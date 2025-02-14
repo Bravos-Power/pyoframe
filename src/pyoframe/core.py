@@ -25,6 +25,7 @@ from pyoframe._arithmetic import (
     _add_expressions,
     _get_dimensions,
     _multiply_expressions,
+    _simplify_expr_df
 )
 from pyoframe.constants import (
     COEF_KEY,
@@ -423,22 +424,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 raise ValueError(
                     f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
                 )
+            
+        data = _simplify_expr_df(data)
 
         super().__init__(data)
-
-    # Might add this in later
-    # @classmethod
-    # def empty(cls, dimensions=[], type=None):
-    #     data = {COEF_KEY: [], VAR_KEY: []}
-    #     data.update({d: [] for d in dimensions})
-    #     schema = {COEF_KEY: pl.Float64, VAR_KEY: pl.UInt32}
-    #     if type is not None:
-    #         schema.update({d: t for d, t in zip(dimensions, type)})
-    #     return Expression(
-    #         pl.DataFrame(data).with_columns(
-    #             *[pl.col(c).cast(t) for c, t in schema.items()]
-    #         )
-    #     )
 
     @classmethod
     def constant(cls, constant: int | float) -> "Expression":
@@ -1011,7 +1000,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 self,
                 size=len(self),
                 dimensions=self.shape,
-                terms=len(self.data),
+                terms=self.terms,
                 degree=2 if self.degree() == 2 else None,
             )
         if include_header and include_data:
@@ -1030,6 +1019,27 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __str__(self) -> str:
         return self.to_str()
+    
+    @property
+    def terms(self) -> int:
+        """
+        Number of terms across all subexpressions. 
+        
+        Expressions equal to zero count as one term.
+        
+        Examples:
+            >>> import polars as pl
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable({"t": [1, 2]})
+            >>> coef = pl.DataFrame({"t": [1, 2], "coef": [0, 1]})
+            >>> coef*(m.v+4)
+            <Expression size=2 dimensions={'t': 2} terms=3>
+            [1]: 0
+            [2]: 4  + v[2]
+            >>> (coef*(m.v+4)).terms
+            3
+        """
+        return len(self.data)
 
 
 @overload
