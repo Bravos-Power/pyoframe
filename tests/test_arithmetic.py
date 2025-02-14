@@ -480,24 +480,26 @@ def test_variable_equals():
     assert m.maximize.value == 300
     assert m.maximize.evaluate() == 300
 
+
 def test_adding_expressions_that_cancel():
     m = Model()
-    m.x = Variable(pl.DataFrame({"t": [0,1]}))
-    m.y = Variable(pl.DataFrame({"t": [0,1]}))
+    m.x = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.y = Variable(pl.DataFrame({"t": [0, 1]}))
 
-    coef_1 = pl.DataFrame({"t": [0,1], "value": [1, -1]})
-    coef_2 = pl.DataFrame({"t": [0,1], "value": [1, 1]})
+    coef_1 = pl.DataFrame({"t": [0, 1], "value": [1, -1]})
+    coef_2 = pl.DataFrame({"t": [0, 1], "value": [1, 1]})
 
     m.c = coef_1 * m.x + coef_2 * m.x + m.y >= 0
 
+
 def test_adding_empty_expression():
     m = Model()
-    m.x = Variable(pl.DataFrame({"t": [0,1]}))
-    m.y = Variable(pl.DataFrame({"t": [0,1]}))
-    m.z = Variable(pl.DataFrame({"t": [0,1]}))
-    m.c = 0*m.x + m.y >= 0
-    m.c_2 = 0*m.x + 0*m.y + m.z >= 0
-    m.c_3 = m.z + 0*m.x + 0*m.y >= 0
+    m.x = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.y = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.z = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.c = 0 * m.x + m.y >= 0
+    m.c_2 = 0 * m.x + 0 * m.y + m.z >= 0
+    m.c_3 = m.z + 0 * m.x + 0 * m.y >= 0
 
 
 def test_to_and_from_quadratic():

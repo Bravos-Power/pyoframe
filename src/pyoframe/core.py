@@ -25,7 +25,7 @@ from pyoframe._arithmetic import (
     _add_expressions,
     _get_dimensions,
     _multiply_expressions,
-    _simplify_expr_df
+    _simplify_expr_df,
 )
 from pyoframe.constants import (
     COEF_KEY,
@@ -424,7 +424,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 raise ValueError(
                     f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
                 )
-            
+
         data = _simplify_expr_df(data)
 
         super().__init__(data)
@@ -1019,14 +1019,14 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __str__(self) -> str:
         return self.to_str()
-    
+
     @property
     def terms(self) -> int:
         """
-        Number of terms across all subexpressions. 
-        
+        Number of terms across all subexpressions.
+
         Expressions equal to zero count as one term.
-        
+
         Examples:
             >>> import polars as pl
             >>> m = pf.Model()

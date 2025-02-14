@@ -409,7 +409,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
         if dims:
             dim_values = df.select(dims).unique(maintain_order=True)
             df = (
-                dim_values.join(df_filtered, on=dims, how="left", maintain_order="left")
+                dim_values.join(df_filtered, on=dims, how="left")
                 .with_columns(pl.col(COEF_KEY).fill_null(0))
                 .fill_null(CONST_TERM)
             )
