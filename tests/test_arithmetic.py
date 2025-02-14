@@ -492,6 +492,12 @@ def test_adding_expressions_that_cancel():
     m.c = coef_1 * m.x + coef_2 * m.x + m.y >= 0
 
 
+def test_adding_cancelling_expressions_no_dim():
+    m = Model()
+    m.X = Variable()
+    m.c = m.X - m.X >= 0
+
+
 def test_adding_empty_expression():
     m = Model()
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
