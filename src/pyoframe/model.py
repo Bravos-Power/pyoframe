@@ -329,6 +329,33 @@ class Model:
         """
         self.poi.computeIIS()
 
+    def dispose(self):
+        """
+        Tries to close the solver connection by deleting the model and forcing the garbage collector to run.
+
+        Once this method is called, this model is no longer usable.
+
+        Example:
+
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.dispose()
+            >>> m.X
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'Model' object has no attribute 'X'
+        """
+        # See https://github.com/metab0t/PyOptInterface/issues/36 for details
+        import gc
+
+        for attr in dir(self):
+            if not attr.startswith("__"):
+                try:
+                    delattr(self, attr)
+                except AttributeError:
+                    pass
+        gc.collect()
+
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
 
