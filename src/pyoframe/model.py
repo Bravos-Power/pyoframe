@@ -39,7 +39,7 @@ class Model:
             Typically, this parameter can be omitted (`None`) as it will automatically be
             set when the objective is set using `.minimize` or `.maximize`.
 
-    Example:
+    Examples:
         >>> m = pf.Model()
         >>> m.X = pf.Variable()
         >>> m.my_constraint = m.X <= 10
@@ -273,7 +273,7 @@ class Model:
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
-        Example:
+        Examples:
             >>> m = pf.Model(solver="gurobi")
             >>> m.X = pf.Variable(vtype=pf.VType.BINARY, lb=0)
             >>> m.Y = pf.Variable(vtype=pf.VType.INTEGER, lb=0)
@@ -310,7 +310,7 @@ class Model:
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
-        Example:
+        Examples:
             >>> m = pf.Model(solver="gurobi")
             >>> m.X = pf.Variable(lb=0, ub=2)
             >>> m.Y = pf.Variable(lb=0, ub=2)
@@ -328,6 +328,35 @@ class Model:
             True
         """
         self.poi.computeIIS()
+
+    def dispose(self):
+        """
+        Tries to close the solver connection by deleting the model and forcing the garbage collector to run.
+
+        Once this method is called, this model is no longer usable.
+
+        This method will not work if you still have variables that reference parts of this model.
+        Unfortunately, this is a limitation from the underlying solver interface library.
+        See https://github.com/metab0t/PyOptInterface/issues/36 for context.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.dispose()
+            >>> m.X
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'Model' object has no attribute 'X'
+        """
+        import gc
+
+        for attr in dir(self):
+            if not attr.startswith("__"):
+                try:
+                    delattr(self, attr)
+                except AttributeError:
+                    pass
+        gc.collect()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
