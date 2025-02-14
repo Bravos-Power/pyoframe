@@ -145,7 +145,7 @@ class SupportPolarsMethodMixin(ABC):
         """
         Filters elements by the given criteria and then drops the filtered dimensions.
 
-        Example:
+        Examples:
             >>> m = pf.Model()
             >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
             >>> m.v.pick(hour="06:00")
