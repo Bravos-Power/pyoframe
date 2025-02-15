@@ -335,27 +335,26 @@ class Model:
 
         Once this method is called, this model is no longer usable.
 
-        This method will not work if you still have variables that reference parts of this model.
+        This method will not work if you have a variable that references self.poi.
         Unfortunately, this is a limitation from the underlying solver interface library.
         See https://github.com/metab0t/PyOptInterface/issues/36 for context.
 
         Examples:
             >>> m = pf.Model()
-            >>> m.X = pf.Variable()
+            >>> m.X = pf.Variable(ub=1)
+            >>> m.maximize = m.X
+            >>> m.optimize()
+            >>> m.X.solution
+            1.0
             >>> m.dispose()
-            >>> m.X
+            >>> m.X.solution
             Traceback (most recent call last):
             ...
-            AttributeError: 'Model' object has no attribute 'X'
+            AttributeError: 'Model' object has no attribute 'poi'
         """
         import gc
 
-        for attr in dir(self):
-            if not attr.startswith("__"):
-                try:
-                    delattr(self, attr)
-                except AttributeError:
-                    pass
+        del self.poi
         gc.collect()
 
     def _set_param(self, name, value):
