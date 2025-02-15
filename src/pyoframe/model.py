@@ -329,11 +329,12 @@ class Model:
         """
         self.poi.computeIIS()
 
+    @for_solvers("gurobi")
     def dispose(self):
         """
         Tries to close the solver connection by deleting the model and forcing the garbage collector to run.
 
-        Once this method is called, this model is no longer usable.
+        Gurobi only. Once this method is called, this model is no longer usable.
 
         This method will not work if you have a variable that references self.poi.
         Unfortunately, this is a limitation from the underlying solver interface library.
