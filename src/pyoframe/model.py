@@ -329,18 +329,19 @@ class Model:
         """
         self.poi.computeIIS()
 
+    @for_solvers("gurobi")
     def dispose(self):
         """
         Tries to close the solver connection by deleting the model and forcing the garbage collector to run.
 
-        Once this method is called, this model is no longer usable.
+        Gurobi only. Once this method is called, this model is no longer usable.
 
         This method will not work if you have a variable that references self.poi.
         Unfortunately, this is a limitation from the underlying solver interface library.
         See https://github.com/metab0t/PyOptInterface/issues/36 for context.
 
         Examples:
-            >>> m = pf.Model()
+            >>> m = pf.Model(solver="gurobi")
             >>> m.X = pf.Variable(ub=1)
             >>> m.maximize = m.X
             >>> m.optimize()
@@ -354,7 +355,10 @@ class Model:
         """
         import gc
 
+        env = self.poi._env
         del self.poi
+        gc.collect()
+        del env
         gc.collect()
 
     def _set_param(self, name, value):
