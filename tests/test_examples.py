@@ -39,6 +39,12 @@ class Example:
             many_valid_solutions=True,
             skip_solvers=["highs"],
         ),
+        Example(
+            "sudoku",
+            has_gurobi_version=False,
+            many_valid_solutions=False,
+            # skip_solvers=["highs"],
+        ),
     ],
     ids=lambda x: x.folder_name,
 )
@@ -55,7 +61,7 @@ def test_examples(solver, example: Example):
     if example.skip_solvers is not None and solver in example.skip_solvers:
         pytest.skip(f"Skipping {solver} for example {example.folder_name}")
 
-    example_dir = Path("tests/examples") / example.folder_name
+    example_dir = Path("examples") / example.folder_name
     input_dir = example_dir / "input_data"
     expected_output_dir = example_dir / "results"
     is_gurobi = solver == "gurobi"
