@@ -16,7 +16,6 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'safe to test')
     strategy:
       matrix:
         python-version: ["3.12"]
@@ -26,21 +25,40 @@ jobs:
             polars-version: "0.20.27"
     steps:
       # Important checks to ensure that the user has the required permissions. See note above.
+      # Step 1: If user has current permissions we're good!
       - name: Get User Permission
         id: checkAccess
+        uses: actions-cool/check-user-permission@v2
+        with:
+          require: write
+          username: ${{ github.actor }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Otherwise, get triggering user's permissions
+      - name: Get Triggering User Permission
+        if: steps.checkAccess.outputs.require-result == 'false'
+        id: checkTriggeringAccess
         uses: actions-cool/check-user-permission@v2
         with:
           require: write
           username: ${{ github.triggering_actor }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # If neither has permissions throw error
       - name: Check User Permission
-        if: steps.checkAccess.outputs.require-result == 'false'
+        if: steps.checkAccess.outputs.require-result == 'false' && steps.checkTriggeringAccess.outputs.require-result == 'false'
         shell: bash
         run: |
           echo "${{ github.triggering_actor }} does not have permissions on this repo."
           echo "Current permission level is ${{ steps.checkAccess.outputs.user-permission }}"
           echo "Job originally triggered by ${{ github.actor }}"
+          exit 1
+      # If no 'safe to test' label also throw error
+      - name: Check Label
+        if: steps.checkAccess.outputs.require-result == 'false' && !contains(github.event.pull_request.labels.*.name, 'safe to test')
+        shell: bash
+        run: |
+          echo "The 'safe to test' label is required to run this workflow since ${{ github.actor }} does not have permissions on this repo."
           exit 1
       - name: Checkout
         uses: actions/checkout@v4
