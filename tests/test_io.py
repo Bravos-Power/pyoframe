@@ -75,13 +75,8 @@ x1 * x1 <= 5"""
     )
 
 
-@pytest.mark.parametrize("use_var_names", [True, False])
 def test_write_lp(use_var_names, solver):
     with TemporaryDirectory() as tmpdir:
-        if use_var_names and solver == "highs":
-            with pytest.raises(NotImplementedError):
-                m = Model(use_var_names=use_var_names)
-            return
         m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(
             {
@@ -111,10 +106,7 @@ def test_write_lp(use_var_names, solver):
                 assert "population[CAN,Toronto]" not in f.read()
 
 
-@pytest.mark.parametrize("use_var_names", [True, False])
 def test_write_sol(use_var_names, solver):
-    if solver == "highs" and use_var_names:
-        pytest.skip("Highs does not support variable names")
     with TemporaryDirectory() as tmpdir:
         m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(

@@ -78,11 +78,8 @@ def test_examples(solver, example: Example):
             dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
 
         if solver != "highs":
-            symbolic_kwargs = dict(
-                directory=symbolic_output_dir,
-                use_var_names=True,
-            )
-        dense_kwargs = dict(directory=dense_output_dir)
+            symbolic_kwargs = dict(directory=symbolic_output_dir, use_var_names=True)
+        dense_kwargs = dict(directory=dense_output_dir, use_var_names=False)
 
         if input_dir.exists():
             if solver != "highs":
