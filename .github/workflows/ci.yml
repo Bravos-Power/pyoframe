@@ -44,21 +44,13 @@ jobs:
           username: ${{ github.triggering_actor }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # If neither has permissions throw error
+      # If neither has permissions and no 'safe to test' label throw error
       - name: Check User Permission
-        if: steps.checkAccess.outputs.require-result == 'false' && steps.checkTriggeringAccess.outputs.require-result == 'false'
+        if: steps.checkAccess.outputs.require-result == 'false' && steps.checkTriggeringAccess.outputs.require-result == 'false' && !contains(github.event.pull_request.labels.*.name, 'safe to test')
         shell: bash
         run: |
           echo "${{ github.triggering_actor }} does not have permissions on this repo."
-          echo "Current permission level is ${{ steps.checkAccess.outputs.user-permission }}"
-          echo "Job originally triggered by ${{ github.actor }}"
-          exit 1
-      # If no 'safe to test' label also throw error
-      - name: Check Label
-        if: steps.checkAccess.outputs.require-result == 'false' && !contains(github.event.pull_request.labels.*.name, 'safe to test')
-        shell: bash
-        run: |
-          echo "The 'safe to test' label is required to run this workflow since ${{ github.actor }} does not have permissions on this repo."
+          echo "Re-run the test yourself if you have write permissions. Alternatively, add the label 'safe to test' to the PR to give the user write permissions (only if you trust them)."
           exit 1
       - name: Checkout
         uses: actions/checkout@v4
