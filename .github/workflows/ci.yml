@@ -9,7 +9,6 @@ on:
   push:
     branches: [ main ]
   pull_request_target:
-    types: [labeled]
     branches: [ '*' ]
   schedule:
   - cron: "0 5 * * WED"
