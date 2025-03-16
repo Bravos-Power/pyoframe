@@ -6,8 +6,8 @@ import polars as pl
 import pyoframe as pf
 
 
-def main(G=4, F=3, solver=None, **kwargs):
-    model = pf.Model(solver=solver, sense="min")
+def solve_model(use_var_names, G=4, F=3):
+    model = pf.Model(use_var_names=use_var_names, sense="min")
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))

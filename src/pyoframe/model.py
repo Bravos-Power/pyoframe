@@ -8,6 +8,7 @@ import pyoptinterface as poi
 from pyoframe.constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
+    SUPPORTED_SOLVERS,
     Config,
     ObjSense,
     ObjSenseValue,
@@ -110,7 +111,7 @@ class Model:
     ):
         if solver is None:
             if Config.default_solver is None:
-                for solver_option in ["highs", "gurobi"]:
+                for solver_option in SUPPORTED_SOLVERS:
                     try:
                         return cls.create_poi_model(solver_option, solver_env)
                     except RuntimeError:
