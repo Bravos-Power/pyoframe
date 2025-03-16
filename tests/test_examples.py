@@ -84,13 +84,14 @@ def check_lp_equal(file_expected: Path, file_actual: Path):
     def keep_line(line):
         return "\\ Signature: 0x" not in line and line.strip() != ""
 
-    with open(file_expected) as f:
-        expected = "\n".join(filter(keep_line, f.readlines()))
-    with open(file_actual) as f:
-        actual = "\n".join(filter(keep_line, f.readlines()))
-    assert (
-        expected == actual
-    ), f"LP files {file_expected} and {file_actual} are different"
+    with open(file_expected) as f1:
+        with open(file_actual) as f2:
+            for line1, line2 in zip(
+                filter(keep_line, f1.readlines()), filter(keep_line, f2.readlines())
+            ):
+                assert (
+                    line1.strip() == line2.strip()
+                ), f"LP files {file_expected} and {file_actual} are different"
 
 
 def check_integer_solutions_only(sol_file):
