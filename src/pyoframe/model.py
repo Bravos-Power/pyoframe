@@ -35,6 +35,7 @@ class Model:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
             Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+            Does not work with HiGHS (see [here](https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430)).
         sense:
             Either "min" or "max". Indicates whether it's a minmization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
