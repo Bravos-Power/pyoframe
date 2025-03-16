@@ -95,6 +95,10 @@ class Model:
         self.params = Container(self._set_param, self._get_param)
         self.attr = Container(self._set_attr, self._get_attr)
         self._use_var_names = use_var_names
+        if self.solver_name == "highs" and use_var_names:
+            raise NotImplementedError(
+                "HiGHS does not support use_var_names=True yet. See https://github.com/Bravos-Power/pyoframe/issues/102"
+            )
 
     @property
     def use_var_names(self):
@@ -259,9 +263,16 @@ class Model:
     def write(self, file_path: Union[Path, str]):
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
+        if self.solver_name == "highs" and file_path.suffix == ".sol":
+            raise NotImplementedError(
+                "HiGHS solver interface does not support writing .sol files yet."
+            )
         self.poi.write(str(file_path))
 
     def optimize(self):
+        """
+        Optimize the model using your selected solver (e.g. Gurobi, HiGHS).
+        """
         self.poi.optimize()
 
     @for_solvers("gurobi")
@@ -370,11 +381,17 @@ class Model:
     def _set_attr(self, name, value):
         try:
             self.poi.set_model_attribute(poi.ModelAttribute[name], value)
-        except KeyError:
-            self.poi.set_model_raw_attribute(name, value)
+        except KeyError as e:
+            if self.solver_name == "gurobi":
+                self.poi.set_model_raw_attribute(name, value)
+            else:
+                raise e
 
     def _get_attr(self, name):
         try:
             return self.poi.get_model_attribute(poi.ModelAttribute[name])
-        except KeyError:
-            return self.poi.get_model_raw_attribute(name)
+        except KeyError as e:
+            if self.solver_name == "gurobi":
+                return self.poi.get_model_raw_attribute(name)
+            else:
+                raise e

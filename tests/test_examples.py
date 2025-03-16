@@ -77,19 +77,23 @@ def test_examples(solver, example: Example):
             symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
             dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
 
-        symbolic_kwargs = dict(
-            directory=symbolic_output_dir,
-            use_var_names=True,
-        )
+        if solver != "highs":
+            symbolic_kwargs = dict(
+                directory=symbolic_output_dir,
+                use_var_names=True,
+            )
         dense_kwargs = dict(directory=dense_output_dir)
 
         if input_dir.exists():
-            symbolic_kwargs["input_dir"] = input_dir
+            if solver != "highs":
+                symbolic_kwargs["input_dir"] = input_dir
             dense_kwargs["input_dir"] = input_dir
 
-        symbolic_model = main_module.main(**symbolic_kwargs)
+        if solver != "highs":
+            symbolic_model = main_module.main(**symbolic_kwargs)
         dense_model = main_module.main(**dense_kwargs)
-        assert symbolic_model.objective.value == dense_model.objective.value
+        if solver != "highs":
+            assert symbolic_model.objective.value == dense_model.objective.value
         if is_gurobi:
             symbolic_model.write(symbolic_solution_file)
             dense_model.write(dense_solution_file)
@@ -99,7 +103,8 @@ def test_examples(solver, example: Example):
                 assert getattr(dense_model.params, param) == value
                 assert getattr(symbolic_model.params, param) == value
 
-        assert dense_model.objective.value == symbolic_model.objective.value
+        if solver != "highs":
+            assert dense_model.objective.value == symbolic_model.objective.value
         check_results_dir_equal(
             expected_output_dir,
             symbolic_output_dir,
