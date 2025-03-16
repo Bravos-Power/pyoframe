@@ -29,11 +29,7 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
     m.Y = pf.Variable(cube9x9x9, vtype=pf.VType.BINARY)
 
     m.given_values = m.Y.drop_unmatched() == init_values.to_expr().add_dim("box")
-
-    # model.just_one_digit_is_set_to_rxc = model.Y.sum(['digit', 'box']) == 1
-    # model.each_row_all_digits = model.Y.sum(['column', 'box']) == 1
-    # model.each_column_all_digits = model.Y.sum(['row', 'box']) == 1
-    # model.each_box_has_all_digits = model.Y.sum(['row', 'column']) == 1
+    
     m.just_one_digit_is_set_to_rxc = sum(["digit", "box"], m.Y) == 1
     m.each_row_all_digits = sum(["column", "box"], m.Y) == 1
     m.each_column_all_digits = sum(["row", "box"], m.Y) == 1
