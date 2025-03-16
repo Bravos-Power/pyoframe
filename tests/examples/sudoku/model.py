@@ -1,7 +1,5 @@
 # Based on example at page 112 in book:
 #       N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
-
-import os
 from pathlib import Path
 
 import polars as pl
@@ -10,8 +8,10 @@ import pyoframe as pf
 from pyoframe import sum
 
 
-def main(input_dir, directory, use_var_names=True, **kwargs):
-    init_values = pl.read_csv(input_dir / "initial_numbers.csv")
+def solve_model(use_var_names=True):
+    init_values = pl.read_csv(
+        Path(__file__).parent / "input_data" / "initial_numbers.csv"
+    )
     init_values = init_values.with_columns(init_values=1)
 
     digits = pl.int_range(1, 10, eager=True)
@@ -29,7 +29,7 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
     m.Y = pf.Variable(cube9x9x9, vtype=pf.VType.BINARY)
 
     m.given_values = m.Y.drop_unmatched() == init_values.to_expr().add_dim("box")
-    
+
     m.just_one_digit_is_set_to_rxc = sum(["digit", "box"], m.Y) == 1
     m.each_row_all_digits = sum(["column", "box"], m.Y) == 1
     m.each_column_all_digits = sum(["row", "box"], m.Y) == 1
@@ -37,21 +37,11 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
 
     if m.solver_name == "gurobi":
         m.params.Method = 2
-    m.write(directory / "pyoframe-problem.lp")
-    m.optimize(**kwargs)
-    if m.solver_name == "gurobi":
-        m.write(directory / "pyoframe-problem.sol")
 
-    # Write results to CSV files
-    (
-        m.Y.solution.filter(pl.col("solution") == 1)
-        .select(["row", "column", "digit"])
-        .write_csv(directory / "Y.csv")
-    )
+    m.optimize()
 
     return m
 
 
 if __name__ == "__main__":
-    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", directory=working_dir / "results")
+    main()

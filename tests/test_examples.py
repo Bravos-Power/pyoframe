@@ -30,7 +30,7 @@ class Example:
         return importlib.import_module(
             f"tests.examples.{self.folder_name}.model"
         ).solve_model
-      
+
     def get_results_path(self):
         path = Path("tests/examples") / self.folder_name / "results"
         assert (
@@ -168,9 +168,10 @@ def write_results(model, results_dir, unique_solution):
     if unique_solution and model.solver_name != "highs":
         model.write(results_dir / f"solution-{model.solver_name}-{readability}.sol")
 
-    pl.DataFrame({"value": [model.objective.value]}).write_csv(
-        results_dir / "objective.csv"
-    )
+    if model.objective is not None:
+        pl.DataFrame({"value": [model.objective.value]}).write_csv(
+            results_dir / "objective.csv"
+        )
 
     if unique_solution:
         for v in model.variables:
