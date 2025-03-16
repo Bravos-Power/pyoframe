@@ -1,18 +1,19 @@
 # pyright: reportAttributeAccessIssue=false
 import os
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 
 from pyoframe import Model, Variable, sum
 
+_input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
-def main(input_dir, directory, use_var_names=True, **kwargs):
-    plants = pd.read_csv(input_dir / "plants.csv").set_index("plant")
-    warehouses = pd.read_csv(input_dir / "wharehouses.csv").set_index("wharehouse")
+
+def solve_model(use_var_names):
+    plants = pd.read_csv(_input_dir / "plants.csv").set_index("plant")
+    warehouses = pd.read_csv(_input_dir / "wharehouses.csv").set_index("wharehouse")
     transport_costs = (
-        pd.read_csv(input_dir / "transport_costs.csv")
+        pd.read_csv(_input_dir / "transport_costs.csv")
         .melt(id_vars="wharehouse", var_name="plant", value_name="cost")
         .astype({"plant": "int64"})
         .set_index(["wharehouse", "plant"])["cost"]
@@ -29,18 +30,11 @@ def main(input_dir, directory, use_var_names=True, **kwargs):
 
     if m.solver_name == "gurobi":
         m.params.Method = 2
-    m.write(directory / "pyoframe-problem.lp")
-    m.optimize(**kwargs)
-    if m.solver_name == "gurobi":
-        m.write(directory / "pyoframe-problem.sol")
 
-    # Write results to CSV files
-    m.open.solution.write_csv(directory / "open.csv")  # type: ignore
-    m.transport.solution.write_csv(directory / "transport.csv")  # type: ignore
+    m.optimize()
 
     return m
 
 
 if __name__ == "__main__":
-    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", directory=working_dir / "results")
+    main(use_var_names=True)

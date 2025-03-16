@@ -8,6 +8,7 @@ import pyoptinterface as poi
 from pyoframe.constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
+    SUPPORTED_SOLVERS,
     Config,
     ObjSense,
     ObjSenseValue,
@@ -34,6 +35,7 @@ class Model:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
             Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+            Does not work with HiGHS (see [here](https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430)).
         sense:
             Either "min" or "max". Indicates whether it's a minmization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
@@ -95,6 +97,10 @@ class Model:
         self.params = Container(self._set_param, self._get_param)
         self.attr = Container(self._set_attr, self._get_attr)
         self._use_var_names = use_var_names
+        if self.solver_name == "highs" and use_var_names:
+            raise NotImplementedError(
+                "HiGHS does not support use_var_names=True yet. See https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430"
+            )
 
     @property
     def use_var_names(self):
@@ -106,7 +112,7 @@ class Model:
     ):
         if solver is None:
             if Config.default_solver is None:
-                for solver_option in ["highs", "gurobi"]:
+                for solver_option in SUPPORTED_SOLVERS:
                     try:
                         return cls.create_poi_model(solver_option, solver_env)
                     except RuntimeError:
@@ -259,9 +265,16 @@ class Model:
     def write(self, file_path: Union[Path, str]):
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
+        if self.solver_name == "highs" and file_path.suffix == ".sol":
+            raise NotImplementedError(
+                "HiGHS solver interface does not support writing .sol files yet."
+            )
         self.poi.write(str(file_path))
 
     def optimize(self):
+        """
+        Optimize the model using your selected solver (e.g. Gurobi, HiGHS).
+        """
         self.poi.optimize()
 
     @for_solvers("gurobi")
@@ -370,11 +383,17 @@ class Model:
     def _set_attr(self, name, value):
         try:
             self.poi.set_model_attribute(poi.ModelAttribute[name], value)
-        except KeyError:
-            self.poi.set_model_raw_attribute(name, value)
+        except KeyError as e:
+            if self.solver_name == "gurobi":
+                self.poi.set_model_raw_attribute(name, value)
+            else:
+                raise e
 
     def _get_attr(self, name):
         try:
             return self.poi.get_model_attribute(poi.ModelAttribute[name])
-        except KeyError:
-            return self.poi.get_model_raw_attribute(name)
+        except KeyError as e:
+            if self.solver_name == "gurobi":
+                return self.poi.get_model_raw_attribute(name)
+            else:
+                raise e
