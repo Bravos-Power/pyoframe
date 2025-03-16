@@ -32,7 +32,11 @@ class Example:
         ).solve_model
 
     def get_results_path(self):
-        return Path("tests/examples") / self.folder_name / "results"
+        path = Path("tests/examples") / self.folder_name / "results"
+        assert (
+            path.exists()
+        ), f"Results directory {path} does not exist. Working directory: {os.getcwd()}"
+        return path
 
     def get_solve_with_gurobipy(self) -> Optional[Any]:
         parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
