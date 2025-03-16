@@ -97,7 +97,7 @@ class Model:
         self._use_var_names = use_var_names
         if self.solver_name == "highs" and use_var_names:
             raise NotImplementedError(
-                "HiGHS does not support use_var_names=True yet. See https://github.com/Bravos-Power/pyoframe/issues/102"
+                "HiGHS does not support use_var_names=True yet. See https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430"
             )
 
     @property
