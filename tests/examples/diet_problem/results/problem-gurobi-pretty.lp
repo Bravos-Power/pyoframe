@@ -1,4 +1,5 @@
 \ LP format - for model browsing. Use MPS format to capture full model detail.
+\ Signature: 0x286caa6ff8905913
 Minimize
   2.49 Buy[hamburger] + 2.89 Buy[chicken] + 1.5 Buy[hot_dog]
    + 1.89 Buy[fries] + 2.09 Buy[macaroni] + 1.99 Buy[pizza]

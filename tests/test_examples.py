@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib
+import os
 import shutil
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -11,126 +13,55 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
+import pyoframe as pf
+from pyoframe.constants import SUPPORTED_SOLVERS
+
 
 @dataclass
 class Example:
     folder_name: str
-    integer_results_only: bool = False
-    many_valid_solutions: bool = False
-    has_gurobi_version: bool = True
-    check_params: Optional[Dict[str, Any]] = None
+    unique_solution: bool = True
     skip_solvers: List[str] | None = None
 
+    def import_solve_func(self):
+        parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        return importlib.import_module(
+            f"tests.examples.{self.folder_name}.model"
+        ).solve_model
 
-@pytest.mark.parametrize(
-    "example",
-    [
-        Example("diet_problem"),
-        Example("facility_problem", check_params={"Method": 2}),
-        Example(
-            "cutting_stock_problem",
-            integer_results_only=True,
-            many_valid_solutions=True,
-            has_gurobi_version=False,
-        ),
-        Example(
-            "facility_location",
-            has_gurobi_version=False,
-            many_valid_solutions=True,
-            skip_solvers=["highs"],
-        ),
-    ],
-    ids=lambda x: x.folder_name,
-)
-def test_examples(solver, example: Example):
-    """
-    For each example, we
-    1. Run it twice in a temp directory, once with use_var_names=True and the other time with =False.
-    2. Check that their objective values are equal.
-    3. Check that the .lp file is the same as in the example directory (only for use_var_names=True).
-    4. Check that the .sol file is the same (only when many_valid_solutions=False).
-    5. Check that all values in .sol are integers (when integer_results_only=True).
-    6. Check that the .sol from the gurobipy version (if it exists) is the same.
-    """
-    if example.skip_solvers is not None and solver in example.skip_solvers:
-        pytest.skip(f"Skipping {solver} for example {example.folder_name}")
+    def get_results_path(self):
+        return Path("tests/examples") / self.folder_name / "results"
 
-    example_dir = Path("tests/examples") / example.folder_name
-    input_dir = example_dir / "input_data"
-    expected_output_dir = example_dir / "results"
-    is_gurobi = solver == "gurobi"
-    with TemporaryDirectory(prefix=example.folder_name) as working_dir_str:
-        working_dir = Path(working_dir_str)
-        symbolic_output_dir = working_dir / "results"
-        dense_output_dir = working_dir / "results_dense"
-
-        if working_dir.exists():
-            shutil.rmtree(working_dir)
-        working_dir.mkdir(parents=True)
-
-        # Dynamically import the main function of the example
-        main_module = importlib.import_module(
-            f"tests.examples.{example.folder_name}.model"
-        )
-
-        if is_gurobi:
-            symbolic_solution_file = symbolic_output_dir / "pyoframe-problem.sol"
-            dense_solution_file = dense_output_dir / "pyoframe-problem.sol"
-
-        symbolic_kwargs = dict(
-            directory=symbolic_output_dir,
-            use_var_names=True,
-        )
-        dense_kwargs = dict(directory=dense_output_dir)
-
-        if input_dir.exists():
-            symbolic_kwargs["input_dir"] = input_dir
-            dense_kwargs["input_dir"] = input_dir
-
-        symbolic_model = main_module.main(**symbolic_kwargs)
-        dense_model = main_module.main(**dense_kwargs)
-        assert symbolic_model.objective.value == dense_model.objective.value
-        if is_gurobi:
-            symbolic_model.write(symbolic_solution_file)
-            dense_model.write(dense_solution_file)
-
-        if example.check_params is not None and is_gurobi:
-            for param, value in example.check_params.items():
-                assert getattr(dense_model.params, param) == value
-                assert getattr(symbolic_model.params, param) == value
-
-        assert dense_model.objective.value == symbolic_model.objective.value
-        check_results_dir_equal(
-            expected_output_dir,
-            symbolic_output_dir,
-            check_sol=not example.many_valid_solutions and is_gurobi,
-            check_lp=is_gurobi,
-        )
-        check_results_dir_equal(
-            dense_output_dir,
-            symbolic_output_dir,
-            check_sol=not example.many_valid_solutions and is_gurobi,
-            check_lp=False,
-        )
-
-        if example.integer_results_only and is_gurobi:
-            check_integer_solutions_only(symbolic_solution_file)
-            check_integer_solutions_only(dense_solution_file)
-
-        gurobi_module = None
-        if example.has_gurobi_version and is_gurobi:
-            gurobi_module = importlib.import_module(
-                f"tests.examples.{example.folder_name}.model_gurobipy"
-            )
-
-            gurobi_module.main(input_dir, symbolic_output_dir)
-            if not example.many_valid_solutions:
-                check_sol_equal(
-                    expected_output_dir / "gurobipy.sol", symbolic_solution_file
-                )
+    def get_solve_with_gurobipy(self) -> Optional[Any]:
+        parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        try:
+            return importlib.import_module(
+                f"tests.examples.{self.folder_name}.model_gurobipy"
+            ).main
+        except ModuleNotFoundError:
+            return None
 
 
-def check_results_dir_equal(expected_dir, actual_dir, check_sol, check_lp=True):
+EXAMPLES = [
+    Example("diet_problem"),
+    Example("facility_problem"),
+    Example(
+        "cutting_stock_problem",
+        unique_solution=False,
+    ),
+    Example(
+        "facility_location",
+        unique_solution=False,
+        skip_solvers=["highs"],  # Has quadratics
+    ),
+]
+
+
+def compare_results_dir(expected_dir, actual_dir):
     for file in actual_dir.iterdir():
         assert (
             expected_dir / file.name
@@ -138,16 +69,15 @@ def check_results_dir_equal(expected_dir, actual_dir, check_sol, check_lp=True):
 
         expected = expected_dir / file.name
         if file.suffix == ".sol":
-            if check_sol:
-                check_sol_equal(expected, file)
+            check_sol_equal(expected, file)
         elif file.suffix == ".lp":
-            if check_lp:
-                check_lp_equal(expected, file)
+            check_lp_equal(expected, file)
+        elif file.suffix == ".csv":
+            df1 = pl.read_csv(expected)
+            df2 = pl.read_csv(file)
+            assert_frame_equal(df1, df2, check_row_order=False)
         else:
-            if check_sol:
-                df1 = pl.read_csv(expected)
-                df2 = pl.read_csv(file)
-                assert_frame_equal(df1, df2, check_row_order=False)
+            raise ValueError(f"Unexpected file {file}")
 
 
 def check_lp_equal(file_expected: Path, file_actual: Path):
@@ -196,3 +126,82 @@ def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
         assert sol["ONE"] == 1
         del sol["ONE"]
     return list(sol.items())
+
+
+@pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
+def test_examples(example, solver, use_var_names):
+    if example.skip_solvers and solver in example.skip_solvers:
+        pytest.skip(f"Skipping {solver} for example {example.folder_name}")
+
+    solver_func = example.import_solve_func()
+    model = solver_func(use_var_names)
+    with TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        write_results(model, tmpdir, unique_solution=example.unique_solution)
+        compare_results_dir(example.get_results_path(), tmpdir)
+
+
+@pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
+def test_gurobi_model_matches(example, solver):
+    if solver != "gurobi":
+        pytest.skip("This test only runs for gurobi")
+    gurobipy_solve = example.get_solve_with_gurobipy()
+    if gurobipy_solve is None:
+        pytest.skip("No gurobi model found")
+    result = gurobipy_solve()
+    with TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        write_results_gurobipy(result, tmpdir)
+        compare_results_dir(example.get_results_path(), tmpdir)
+
+
+def write_results(model, results_dir, unique_solution):
+    readability = "pretty" if model.use_var_names else "machine"
+    model.write(results_dir / f"problem-{model.solver_name}-{readability}.lp")
+
+    if unique_solution and model.solver_name != "highs":
+        model.write(results_dir / f"solution-{model.solver_name}-{readability}.sol")
+
+    pl.DataFrame({"value": [model.objective.value]}).write_csv(
+        results_dir / "objective.csv"
+    )
+
+    if unique_solution:
+        for v in model.variables:
+            v.solution.write_csv(results_dir / f"{v.name}.csv")  # type: ignore
+        for c in model.constraints:
+            try:
+                c.dual.write_csv(results_dir / f"{c.name}.csv")
+            except:
+                pass
+
+
+def write_results_gurobipy(model_gpy, results_dir):
+    model_gpy.write(str(results_dir / "solution-gurobi-pretty.sol"))
+    pl.DataFrame({"value": [model_gpy.getObjective().getValue()]}).write_csv(
+        results_dir / "objective.csv"
+    )
+
+
+if __name__ == "__main__":
+    input(
+        "Are you sure you want to rewrite all the test results? Press enter to continue..."
+    )
+
+    for example in EXAMPLES:
+        results_dir = example.get_results_path()
+        if results_dir.exists():
+            shutil.rmtree(results_dir)
+        solve_model = example.import_solve_func()
+        for solver in SUPPORTED_SOLVERS:
+            if example.skip_solvers and solver in example.skip_solvers:
+                continue
+            pf.Config.default_solver = solver
+            for use_var_names in [True, False]:
+                if use_var_names and solver == "highs":
+                    continue
+                write_results(
+                    solve_model(use_var_names),
+                    results_dir,
+                    unique_solution=example.unique_solution,
+                )

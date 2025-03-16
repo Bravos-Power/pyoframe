@@ -1,4 +1,5 @@
 \ LP format - for model browsing. Use MPS format to capture full model detail.
+\ Signature: 0xe4c6729e27150a7
 Minimize
   is_used[0] + is_used[1] + is_used[2] + is_used[3] + is_used[4]
    + is_used[5] + is_used[6] + is_used[7] + is_used[8] + is_used[9]
