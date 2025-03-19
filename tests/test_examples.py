@@ -30,7 +30,7 @@ class Example:
         return importlib.import_module(
             f"tests.examples.{self.folder_name}.model"
         ).solve_model
-
+      
     def get_results_path(self):
         path = Path("tests/examples") / self.folder_name / "results"
         assert (
@@ -62,6 +62,7 @@ EXAMPLES = [
         unique_solution=False,
         skip_solvers=["highs"],  # Has quadratics
     ),
+    Example("sudoku"),
 ]
 
 
