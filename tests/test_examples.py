@@ -99,15 +99,15 @@ def check_lp_equal(file_expected: Path, file_actual: Path):
 
 
 def check_integer_solutions_only(sol_file):
-    sol = parse_gurobi_sol(sol_file)
+    sol = parse_sol(sol_file)
     for name, value in sol:
         assert value.is_integer(), f"Variable {name} has non-integer value {value}"
 
 
 def check_sol_equal(expected_sol_file, actual_sol_file):
     # Remove comments and empty lines
-    expected_result = parse_gurobi_sol(expected_sol_file)
-    actual_result = parse_gurobi_sol(actual_sol_file)
+    expected_result = parse_sol(expected_sol_file)
+    actual_result = parse_sol(actual_sol_file)
 
     tol = 1e-8
     for (expected_name, expected_value), (actual_name, actual_value) in zip(
@@ -119,17 +119,17 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
         ), f"Solution file does not match expected values {expected_sol_file}"
 
 
-def parse_gurobi_sol(sol_file_path) -> List[Tuple[str, float]]:
+def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
     with open(sol_file_path, mode="r") as f:
-        sol = f.readlines()
-    sol = [line.strip() for line in sol]
+        sol = f.read()
+    sol = sol.partition("\nHiGHS v1\n")[0]  # Cut out everything after this
+    sol = [line.strip() for line in sol.split("\n")]
     sol = [line for line in sol if not (line.startswith("#") or line == "")]
     sol = sorted(sol)
     sol = [line.partition(" ") for line in sol]
-    sol = {name: float(value) for name, _, value in sol}
+    sol = {name: float(value) for name, _, value in sol if value.isnumeric()}
     if "ONE" in sol:
         assert sol["ONE"] == 1
-        del sol["ONE"]
     return list(sol.items())
 
 
