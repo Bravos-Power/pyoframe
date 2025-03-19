@@ -164,14 +164,13 @@ def write_results(model, results_dir, unique_solution):
     readability = "pretty" if model.use_var_names else "machine"
     model.write(results_dir / f"problem-{model.solver_name}-{readability}.lp")
 
-    if unique_solution and model.solver_name != "highs":
-        model.write(results_dir / f"solution-{model.solver_name}-{readability}.sol")
-
     pl.DataFrame({"value": [model.objective.value]}).write_csv(
         results_dir / "objective.csv"
     )
 
     if unique_solution:
+        model.write(results_dir / f"solution-{model.solver_name}-{readability}.sol")
+
         for v in model.variables:
             v.solution.write_csv(results_dir / f"{v.name}.csv")  # type: ignore
         for c in model.constraints:
@@ -203,8 +202,6 @@ if __name__ == "__main__":
                 continue
             pf.Config.default_solver = solver
             for use_var_names in [True, False]:
-                if use_var_names and solver == "highs":
-                    continue
                 write_results(
                     solve_model(use_var_names),
                     results_dir,

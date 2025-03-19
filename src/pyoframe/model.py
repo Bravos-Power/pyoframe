@@ -97,10 +97,6 @@ class Model:
         self.params = Container(self._set_param, self._get_param)
         self.attr = Container(self._set_attr, self._get_attr)
         self._use_var_names = use_var_names
-        if self.solver_name == "highs" and use_var_names:
-            raise NotImplementedError(
-                "HiGHS does not support use_var_names=True yet. See https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430"
-            )
 
     @property
     def use_var_names(self):
@@ -262,14 +258,27 @@ class Model:
             objective=bool(self.objective),
         )
 
-    def write(self, file_path: Union[Path, str]):
+    def write(self, file_path: Union[Path, str], pretty: bool = False):
+        """
+        Output the model to a file.
+
+        Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
+        Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
+
+        Parameters:
+            file_path:
+                The path to the file to write to.
+            pretty:
+                Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
+        """
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        if self.solver_name == "highs" and file_path.suffix == ".sol":
-            raise NotImplementedError(
-                "HiGHS solver interface does not support writing .sol files yet."
-            )
-        self.poi.write(str(file_path))
+        kwargs = {}
+        if self.solver_name == "highs":
+            if self.use_var_names:
+                self.params.write_solution_style = 1
+            kwargs["pretty"] = pretty
+        self.poi.write(str(file_path), **kwargs)
 
     def optimize(self):
         """

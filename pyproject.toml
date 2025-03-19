@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyoframe"
-version = "0.1.4"
+version = "0.1.5"
 authors = [{ name = "Bravos Power", email = "dev@bravospower.com" }]
 description = "Blazing fast linear program interface"
 readme = "README.md"
@@ -22,7 +22,7 @@ dependencies = [
     "pyarrow",
     "pandas",
     "packaging",
-    "pyoptinterface~=0.4",
+    "pyoptinterface>=0.4.1,<1",
 ]
 
 [project.optional-dependencies]
