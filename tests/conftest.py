@@ -15,9 +15,5 @@ def _apply_solver(solver):
 
 
 @pytest.fixture(params=[True, False])
-def use_var_names(request, solver):
-    if solver == "highs" and request.param:
-        pytest.skip(
-            "Highs does not support variable names. See https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430"
-        )
+def use_var_names(request):
     return request.param

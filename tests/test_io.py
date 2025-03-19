@@ -106,7 +106,7 @@ def test_write_lp(use_var_names, solver):
                 assert "population[CAN,Toronto]" not in f.read()
 
 
-def test_write_sol(use_var_names, solver):
+def test_write_sol(use_var_names):
     with TemporaryDirectory() as tmpdir:
         m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(
@@ -124,10 +124,6 @@ def test_write_sol(use_var_names, solver):
 
         file_path = os.path.join(tmpdir, "test.sol")
         m.optimize()
-        if solver == "highs":
-            with pytest.raises(NotImplementedError):
-                m.write(file_path)
-            return
         m.write(file_path)
 
         with open(file_path) as f:
