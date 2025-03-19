@@ -1,183 +1,183 @@
 \ File written by HiGHS .lp file handler
 min
- obj: +1 x132 +1 x133 +1 x134 +1 x135 +1 x136 +1 x137 +1 x138 +1 x139 +1 x140 +1 x141
+ obj: +1 col_ekk_130 +1 col_ekk_131 +1 col_ekk_132 +1 col_ekk_133 +1 col_ekk_134 +1 col_ekk_135 +1 col_ekk_136 +1 col_ekk_137 +1 col_ekk_138 +1 col_ekk_139
 st
- con1: +1380 x2 +1520 x3 +1560 x4 +1710 x5 +1820 x6 +1880 x7 +1930 x8 +2000 x9 +2050 x10 +2100 x11 +2140 x12 +2150 x13 +2200 x14 -5600 x132 <= +0
- con2: +1380 x15 +1520 x16 +1560 x17 +1710 x18 +1820 x19 +1880 x20 +1930 x21 +2000 x22 +2050 x23 +2100 x24 +2140 x25 +2150 x26 +2200 x27 -5600 x133 <= +0
- con3: +1380 x28 +1520 x29 +1560 x30 +1710 x31 +1820 x32 +1880 x33 +1930 x34 +2000 x35 +2050 x36 +2100 x37 +2140 x38 +2150 x39 +2200 x40 -5600 x134 <= +0
- con4: +1380 x41 +1520 x42 +1560 x43 +1710 x44 +1820 x45 +1880 x46 +1930 x47 +2000 x48 +2050 x49 +2100 x50 +2140 x51 +2150 x52 +2200 x53 -5600 x135 <= +0
- con5: +1380 x54 +1520 x55 +1560 x56 +1710 x57 +1820 x58 +1880 x59 +1930 x60 +2000 x61 +2050 x62 +2100 x63 +2140 x64 +2150 x65 +2200 x66 -5600 x136 <= +0
- con6: +1380 x67 +1520 x68 +1560 x69 +1710 x70 +1820 x71 +1880 x72 +1930 x73 +2000 x74 +2050 x75 +2100 x76 +2140 x77 +2150 x78 +2200 x79 -5600 x137 <= +0
- con7: +1380 x80 +1520 x81 +1560 x82 +1710 x83 +1820 x84 +1880 x85 +1930 x86 +2000 x87 +2050 x88 +2100 x89 +2140 x90 +2150 x91 +2200 x92 -5600 x138 <= +0
- con8: +1380 x93 +1520 x94 +1560 x95 +1710 x96 +1820 x97 +1880 x98 +1930 x99 +2000 x100 +2050 x101 +2100 x102 +2140 x103 +2150 x104 +2200 x105 -5600 x139 <= +0
- con9: +1380 x106 +1520 x107 +1560 x108 +1710 x109 +1820 x110 +1880 x111 +1930 x112 +2000 x113 +2050 x114 +2100 x115 +2140 x116 +2150 x117 +2200 x118 -5600 x140 <= +0
- con10: +1380 x119 +1520 x120 +1560 x121 +1710 x122 +1820 x123 +1880 x124 +1930 x125 +2000 x126 +2050 x127 +2100 x128 +2140 x129 +2150 x130 +2200 x131 -5600 x141 <= +0
- con11: -2 x1 +1 x2 +1 x15 +1 x28 +1 x41 +1 x54 +1 x67 +1 x80 +1 x93 +1 x106 +1 x119 >= +0
- con12: -2 x1 +1 x3 +1 x16 +1 x29 +1 x42 +1 x55 +1 x68 +1 x81 +1 x94 +1 x107 +1 x120 >= +0
- con13: -1 x1 +1 x4 +1 x17 +1 x30 +1 x43 +1 x56 +1 x69 +1 x82 +1 x95 +1 x108 +1 x121 >= +0
- con14: -1 x1 +1 x5 +1 x18 +1 x31 +1 x44 +1 x57 +1 x70 +1 x83 +1 x96 +1 x109 +1 x122 >= +0
- con15: -1 x1 +1 x6 +1 x19 +1 x32 +1 x45 +1 x58 +1 x71 +1 x84 +1 x97 +1 x110 +1 x123 >= +0
- con16: -1 x1 +1 x7 +1 x20 +1 x33 +1 x46 +1 x59 +1 x72 +1 x85 +1 x98 +1 x111 +1 x124 >= +0
- con17: -2 x1 +1 x8 +1 x21 +1 x34 +1 x47 +1 x60 +1 x73 +1 x86 +1 x99 +1 x112 +1 x125 >= +0
- con18: -1 x1 +1 x9 +1 x22 +1 x35 +1 x48 +1 x61 +1 x74 +1 x87 +1 x100 +1 x113 +1 x126 >= +0
- con19: -1 x1 +1 x10 +1 x23 +1 x36 +1 x49 +1 x62 +1 x75 +1 x88 +1 x101 +1 x114 +1 x127 >= +0
- con20: -1 x1 +1 x11 +1 x24 +1 x37 +1 x50 +1 x63 +1 x76 +1 x89 +1 x102 +1 x115 +1 x128 >= +0
- con21: -1 x1 +1 x12 +1 x25 +1 x38 +1 x51 +1 x64 +1 x77 +1 x90 +1 x103 +1 x116 +1 x129 >= +0
- con22: -1 x1 +1 x13 +1 x26 +1 x39 +1 x52 +1 x65 +1 x78 +1 x91 +1 x104 +1 x117 +1 x130 >= +0
- con23: -2 x1 +1 x14 +1 x27 +1 x40 +1 x53 +1 x66 +1 x79 +1 x92 +1 x105 +1 x118 +1 x131 >= +0
+ con1: +1380 col_ekk_0 +1520 col_ekk_1 +1560 col_ekk_2 +1710 col_ekk_3 +1820 col_ekk_4 +1880 col_ekk_5 +1930 col_ekk_6 +2000 col_ekk_7 +2050 col_ekk_8 +2100 col_ekk_9 +2140 col_ekk_10 +2150 col_ekk_11 +2200 col_ekk_12 -5600 col_ekk_130 <= +0
+ con2: +1380 col_ekk_13 +1520 col_ekk_14 +1560 col_ekk_15 +1710 col_ekk_16 +1820 col_ekk_17 +1880 col_ekk_18 +1930 col_ekk_19 +2000 col_ekk_20 +2050 col_ekk_21 +2100 col_ekk_22 +2140 col_ekk_23 +2150 col_ekk_24 +2200 col_ekk_25 -5600 col_ekk_131 <= +0
+ con3: +1380 col_ekk_26 +1520 col_ekk_27 +1560 col_ekk_28 +1710 col_ekk_29 +1820 col_ekk_30 +1880 col_ekk_31 +1930 col_ekk_32 +2000 col_ekk_33 +2050 col_ekk_34 +2100 col_ekk_35 +2140 col_ekk_36 +2150 col_ekk_37 +2200 col_ekk_38 -5600 col_ekk_132 <= +0
+ con4: +1380 col_ekk_39 +1520 col_ekk_40 +1560 col_ekk_41 +1710 col_ekk_42 +1820 col_ekk_43 +1880 col_ekk_44 +1930 col_ekk_45 +2000 col_ekk_46 +2050 col_ekk_47 +2100 col_ekk_48 +2140 col_ekk_49 +2150 col_ekk_50 +2200 col_ekk_51 -5600 col_ekk_133 <= +0
+ con5: +1380 col_ekk_52 +1520 col_ekk_53 +1560 col_ekk_54 +1710 col_ekk_55 +1820 col_ekk_56 +1880 col_ekk_57 +1930 col_ekk_58 +2000 col_ekk_59 +2050 col_ekk_60 +2100 col_ekk_61 +2140 col_ekk_62 +2150 col_ekk_63 +2200 col_ekk_64 -5600 col_ekk_134 <= +0
+ con6: +1380 col_ekk_65 +1520 col_ekk_66 +1560 col_ekk_67 +1710 col_ekk_68 +1820 col_ekk_69 +1880 col_ekk_70 +1930 col_ekk_71 +2000 col_ekk_72 +2050 col_ekk_73 +2100 col_ekk_74 +2140 col_ekk_75 +2150 col_ekk_76 +2200 col_ekk_77 -5600 col_ekk_135 <= +0
+ con7: +1380 col_ekk_78 +1520 col_ekk_79 +1560 col_ekk_80 +1710 col_ekk_81 +1820 col_ekk_82 +1880 col_ekk_83 +1930 col_ekk_84 +2000 col_ekk_85 +2050 col_ekk_86 +2100 col_ekk_87 +2140 col_ekk_88 +2150 col_ekk_89 +2200 col_ekk_90 -5600 col_ekk_136 <= +0
+ con8: +1380 col_ekk_91 +1520 col_ekk_92 +1560 col_ekk_93 +1710 col_ekk_94 +1820 col_ekk_95 +1880 col_ekk_96 +1930 col_ekk_97 +2000 col_ekk_98 +2050 col_ekk_99 +2100 col_ekk_100 +2140 col_ekk_101 +2150 col_ekk_102 +2200 col_ekk_103 -5600 col_ekk_137 <= +0
+ con9: +1380 col_ekk_104 +1520 col_ekk_105 +1560 col_ekk_106 +1710 col_ekk_107 +1820 col_ekk_108 +1880 col_ekk_109 +1930 col_ekk_110 +2000 col_ekk_111 +2050 col_ekk_112 +2100 col_ekk_113 +2140 col_ekk_114 +2150 col_ekk_115 +2200 col_ekk_116 -5600 col_ekk_138 <= +0
+ con10: +1380 col_ekk_117 +1520 col_ekk_118 +1560 col_ekk_119 +1710 col_ekk_120 +1820 col_ekk_121 +1880 col_ekk_122 +1930 col_ekk_123 +2000 col_ekk_124 +2050 col_ekk_125 +2100 col_ekk_126 +2140 col_ekk_127 +2150 col_ekk_128 +2200 col_ekk_129 -5600 col_ekk_139 <= +0
+ con11: -2 ONE +1 col_ekk_0 +1 col_ekk_13 +1 col_ekk_26 +1 col_ekk_39 +1 col_ekk_52 +1 col_ekk_65 +1 col_ekk_78 +1 col_ekk_91 +1 col_ekk_104 +1 col_ekk_117 >= +0
+ con12: -2 ONE +1 col_ekk_1 +1 col_ekk_14 +1 col_ekk_27 +1 col_ekk_40 +1 col_ekk_53 +1 col_ekk_66 +1 col_ekk_79 +1 col_ekk_92 +1 col_ekk_105 +1 col_ekk_118 >= +0
+ con13: -1 ONE +1 col_ekk_2 +1 col_ekk_15 +1 col_ekk_28 +1 col_ekk_41 +1 col_ekk_54 +1 col_ekk_67 +1 col_ekk_80 +1 col_ekk_93 +1 col_ekk_106 +1 col_ekk_119 >= +0
+ con14: -1 ONE +1 col_ekk_3 +1 col_ekk_16 +1 col_ekk_29 +1 col_ekk_42 +1 col_ekk_55 +1 col_ekk_68 +1 col_ekk_81 +1 col_ekk_94 +1 col_ekk_107 +1 col_ekk_120 >= +0
+ con15: -1 ONE +1 col_ekk_4 +1 col_ekk_17 +1 col_ekk_30 +1 col_ekk_43 +1 col_ekk_56 +1 col_ekk_69 +1 col_ekk_82 +1 col_ekk_95 +1 col_ekk_108 +1 col_ekk_121 >= +0
+ con16: -1 ONE +1 col_ekk_5 +1 col_ekk_18 +1 col_ekk_31 +1 col_ekk_44 +1 col_ekk_57 +1 col_ekk_70 +1 col_ekk_83 +1 col_ekk_96 +1 col_ekk_109 +1 col_ekk_122 >= +0
+ con17: -2 ONE +1 col_ekk_6 +1 col_ekk_19 +1 col_ekk_32 +1 col_ekk_45 +1 col_ekk_58 +1 col_ekk_71 +1 col_ekk_84 +1 col_ekk_97 +1 col_ekk_110 +1 col_ekk_123 >= +0
+ con18: -1 ONE +1 col_ekk_7 +1 col_ekk_20 +1 col_ekk_33 +1 col_ekk_46 +1 col_ekk_59 +1 col_ekk_72 +1 col_ekk_85 +1 col_ekk_98 +1 col_ekk_111 +1 col_ekk_124 >= +0
+ con19: -1 ONE +1 col_ekk_8 +1 col_ekk_21 +1 col_ekk_34 +1 col_ekk_47 +1 col_ekk_60 +1 col_ekk_73 +1 col_ekk_86 +1 col_ekk_99 +1 col_ekk_112 +1 col_ekk_125 >= +0
+ con20: -1 ONE +1 col_ekk_9 +1 col_ekk_22 +1 col_ekk_35 +1 col_ekk_48 +1 col_ekk_61 +1 col_ekk_74 +1 col_ekk_87 +1 col_ekk_100 +1 col_ekk_113 +1 col_ekk_126 >= +0
+ con21: -1 ONE +1 col_ekk_10 +1 col_ekk_23 +1 col_ekk_36 +1 col_ekk_49 +1 col_ekk_62 +1 col_ekk_75 +1 col_ekk_88 +1 col_ekk_101 +1 col_ekk_114 +1 col_ekk_127 >= +0
+ con22: -1 ONE +1 col_ekk_11 +1 col_ekk_24 +1 col_ekk_37 +1 col_ekk_50 +1 col_ekk_63 +1 col_ekk_76 +1 col_ekk_89 +1 col_ekk_102 +1 col_ekk_115 +1 col_ekk_128 >= +0
+ con23: -2 ONE +1 col_ekk_12 +1 col_ekk_25 +1 col_ekk_38 +1 col_ekk_51 +1 col_ekk_64 +1 col_ekk_77 +1 col_ekk_90 +1 col_ekk_103 +1 col_ekk_116 +1 col_ekk_129 >= +0
 bounds
- x1 = 1
- x132 <= 1
- x133 <= 1
- x134 <= 1
- x135 <= 1
- x136 <= 1
- x137 <= 1
- x138 <= 1
- x139 <= 1
- x140 <= 1
- x141 <= 1
+ ONE = 1
+ col_ekk_130 <= 1
+ col_ekk_131 <= 1
+ col_ekk_132 <= 1
+ col_ekk_133 <= 1
+ col_ekk_134 <= 1
+ col_ekk_135 <= 1
+ col_ekk_136 <= 1
+ col_ekk_137 <= 1
+ col_ekk_138 <= 1
+ col_ekk_139 <= 1
 bin
- x132
- x133
- x134
- x135
- x136
- x137
- x138
- x139
- x140
- x141
+ col_ekk_130
+ col_ekk_131
+ col_ekk_132
+ col_ekk_133
+ col_ekk_134
+ col_ekk_135
+ col_ekk_136
+ col_ekk_137
+ col_ekk_138
+ col_ekk_139
 gen
- x2
- x3
- x4
- x5
- x6
- x7
- x8
- x9
- x10
- x11
- x12
- x13
- x14
- x15
- x16
- x17
- x18
- x19
- x20
- x21
- x22
- x23
- x24
- x25
- x26
- x27
- x28
- x29
- x30
- x31
- x32
- x33
- x34
- x35
- x36
- x37
- x38
- x39
- x40
- x41
- x42
- x43
- x44
- x45
- x46
- x47
- x48
- x49
- x50
- x51
- x52
- x53
- x54
- x55
- x56
- x57
- x58
- x59
- x60
- x61
- x62
- x63
- x64
- x65
- x66
- x67
- x68
- x69
- x70
- x71
- x72
- x73
- x74
- x75
- x76
- x77
- x78
- x79
- x80
- x81
- x82
- x83
- x84
- x85
- x86
- x87
- x88
- x89
- x90
- x91
- x92
- x93
- x94
- x95
- x96
- x97
- x98
- x99
- x100
- x101
- x102
- x103
- x104
- x105
- x106
- x107
- x108
- x109
- x110
- x111
- x112
- x113
- x114
- x115
- x116
- x117
- x118
- x119
- x120
- x121
- x122
- x123
- x124
- x125
- x126
- x127
- x128
- x129
- x130
- x131
+ col_ekk_0
+ col_ekk_1
+ col_ekk_2
+ col_ekk_3
+ col_ekk_4
+ col_ekk_5
+ col_ekk_6
+ col_ekk_7
+ col_ekk_8
+ col_ekk_9
+ col_ekk_10
+ col_ekk_11
+ col_ekk_12
+ col_ekk_13
+ col_ekk_14
+ col_ekk_15
+ col_ekk_16
+ col_ekk_17
+ col_ekk_18
+ col_ekk_19
+ col_ekk_20
+ col_ekk_21
+ col_ekk_22
+ col_ekk_23
+ col_ekk_24
+ col_ekk_25
+ col_ekk_26
+ col_ekk_27
+ col_ekk_28
+ col_ekk_29
+ col_ekk_30
+ col_ekk_31
+ col_ekk_32
+ col_ekk_33
+ col_ekk_34
+ col_ekk_35
+ col_ekk_36
+ col_ekk_37
+ col_ekk_38
+ col_ekk_39
+ col_ekk_40
+ col_ekk_41
+ col_ekk_42
+ col_ekk_43
+ col_ekk_44
+ col_ekk_45
+ col_ekk_46
+ col_ekk_47
+ col_ekk_48
+ col_ekk_49
+ col_ekk_50
+ col_ekk_51
+ col_ekk_52
+ col_ekk_53
+ col_ekk_54
+ col_ekk_55
+ col_ekk_56
+ col_ekk_57
+ col_ekk_58
+ col_ekk_59
+ col_ekk_60
+ col_ekk_61
+ col_ekk_62
+ col_ekk_63
+ col_ekk_64
+ col_ekk_65
+ col_ekk_66
+ col_ekk_67
+ col_ekk_68
+ col_ekk_69
+ col_ekk_70
+ col_ekk_71
+ col_ekk_72
+ col_ekk_73
+ col_ekk_74
+ col_ekk_75
+ col_ekk_76
+ col_ekk_77
+ col_ekk_78
+ col_ekk_79
+ col_ekk_80
+ col_ekk_81
+ col_ekk_82
+ col_ekk_83
+ col_ekk_84
+ col_ekk_85
+ col_ekk_86
+ col_ekk_87
+ col_ekk_88
+ col_ekk_89
+ col_ekk_90
+ col_ekk_91
+ col_ekk_92
+ col_ekk_93
+ col_ekk_94
+ col_ekk_95
+ col_ekk_96
+ col_ekk_97
+ col_ekk_98
+ col_ekk_99
+ col_ekk_100
+ col_ekk_101
+ col_ekk_102
+ col_ekk_103
+ col_ekk_104
+ col_ekk_105
+ col_ekk_106
+ col_ekk_107
+ col_ekk_108
+ col_ekk_109
+ col_ekk_110
+ col_ekk_111
+ col_ekk_112
+ col_ekk_113
+ col_ekk_114
+ col_ekk_115
+ col_ekk_116
+ col_ekk_117
+ col_ekk_118
+ col_ekk_119
+ col_ekk_120
+ col_ekk_121
+ col_ekk_122
+ col_ekk_123
+ col_ekk_124
+ col_ekk_125
+ col_ekk_126
+ col_ekk_127
+ col_ekk_128
+ col_ekk_129
 semi
 end
