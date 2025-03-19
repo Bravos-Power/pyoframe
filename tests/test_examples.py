@@ -130,6 +130,7 @@ def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = {name: float(value) for name, _, value in sol if value.isnumeric()}
     if "ONE" in sol:
         assert sol["ONE"] == 1
+        del sol["ONE"]  # So that comparisons with gurobipy work
     return list(sol.items())
 
 
