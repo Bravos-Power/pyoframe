@@ -6,6 +6,7 @@ import polars as pl
 
 import pyoframe as pf
 from pyoframe import sum_by
+from pyoframe.constants import POLARS_VERSION
 
 
 def solve_model(use_var_names=True):
@@ -39,12 +40,12 @@ def solve_model(use_var_names=True):
 
 def write_solution(m, output_dir: Path):
     sol: pl.DataFrame = m.Y.solution
-    sol = (
-        sol.filter(pl.col("solution") == 1)
-        .drop("solution")
-        .pivot(on="column", values="digit", sort_columns=True)
-        .sort(by="row")
-    )
+    sol = sol.filter(pl.col("solution") == 1).drop("solution")
+    if POLARS_VERSION.major < 1:
+        sol = sol.pivot(columns="column", values="digit", sort_columns=True)
+    else:
+        sol = sol.pivot(on="column", values="digit", sort_columns=True)
+    sol = sol.sort(by="row")
     sol.write_csv(output_dir / "solution.csv")
 
 
