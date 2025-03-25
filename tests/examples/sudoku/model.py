@@ -42,7 +42,9 @@ def write_solution(m, output_dir: Path):
     sol: pl.DataFrame = m.Y.solution
     sol = sol.filter(pl.col("solution") == 1).drop("solution")
     if POLARS_VERSION.major < 1:
-        sol = sol.pivot(columns="column", values="digit", sort_columns=True)
+        sol = sol.pivot(
+            columns="column", values="digit", index="row", sort_columns=True
+        )
     else:
         sol = sol.pivot(on="column", values="digit", sort_columns=True)
     sol = sol.sort(by="row")
