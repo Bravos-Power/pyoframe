@@ -115,7 +115,9 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
     for (expected_name, expected_value), (actual_name, actual_value) in zip(
         expected_result, actual_result
     ):
-        assert expected_name == actual_name
+        assert (
+            expected_name == actual_name
+        ), f"Variable names do not match: {expected_name} != {actual_name}, ({expected_result}, {actual_result})"
         assert (
             expected_value - tol <= actual_value <= expected_value + tol
         ), f"Solution file does not match expected values {expected_sol_file}"
