@@ -127,8 +127,8 @@ def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = sol.partition("\nHiGHS v1\n")[0]  # Cut out everything after this
     sol = [line.strip() for line in sol.split("\n")]
     sol = [line for line in sol if not (line.startswith("#") or line == "")]
-    sol = sorted(sol)
     sol = [line.partition(" ") for line in sol]
+    sol = sorted(sol, key=lambda x: x[0])
     sol = {name: float(value) for name, _, value in sol if value.isnumeric()}
     if "ONE" in sol:
         assert sol["ONE"] == 1
