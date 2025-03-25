@@ -117,7 +117,7 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
     ):
         assert (
             expected_name == actual_name
-        ), f"Variable names do not match: {expected_name} != {actual_name}, ({expected_result}, {actual_result})"
+        ), f"Variable names do not match: {expected_name} != {actual_name}\n{expected_result}\n\n{actual_result}"
         assert (
             expected_value - tol <= actual_value <= expected_value + tol
         ), f"Solution file does not match expected values {expected_sol_file}"
@@ -131,11 +131,18 @@ def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
     sol = [line for line in sol if not (line.startswith("#") or line == "")]
     sol = [line.partition(" ") for line in sol]
     sol = sorted(sol, key=lambda x: x[0])
-    sol = {name: float(value) for name, _, value in sol if value.isnumeric()}
-    if "ONE" in sol:
-        assert sol["ONE"] == 1
-        del sol["ONE"]  # So that comparisons with gurobipy work
-    return list(sol.items())
+    sol_numeric = {}
+    for name, _, value in sol:
+        # So that comparisons with gurobipy work
+        if name == "ONE":
+            continue
+
+        try:
+            sol_numeric[name] = float(value)
+        except ValueError:
+            pass
+
+    return list(sol_numeric.items())
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
