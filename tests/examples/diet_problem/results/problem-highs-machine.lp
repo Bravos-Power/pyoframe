@@ -1,21 +1,21 @@
 \ File written by HiGHS .lp file handler
 min
- obj: +2.49 x2 +2.89 x3 +1.5 x4 +1.89 x5 +2.09 x6 +1.99 x7 +2.49 x8 +0.89 x9 +1.59 x10
+ obj: +2.49 col_ekk_0 +2.89 col_ekk_1 +1.5 col_ekk_2 +1.89 col_ekk_3 +2.09 col_ekk_4 +1.99 col_ekk_5 +2.49 col_ekk_6 +0.89 col_ekk_7 +1.59 col_ekk_8
 st
- con1: -40 x1 +1 x2 <= +0
- con2: -30 x1 +1 x3 <= +0
- con3: -20 x1 +1 x4 <= +0
- con4: -20 x1 +1 x5 <= +0
- con5: -40 x1 +1 x6 <= +0
- con6: -50 x1 +1 x7 <= +0
- con7: -60 x1 +1 x8 <= +0
- con8: -6.8 x1 +1 x9 <= +0
- con9: -80 x1 +1 x10 <= +0
- con10: +1800 x1 -410 x2 -420 x3 -560 x4 -380 x5 -320 x6 -320 x7 -320 x8 -100 x9 -330 x10 <= +0
- con11: +91 x1 -24 x2 -32 x3 -20 x4 -4 x5 -12 x6 -15 x7 -31 x8 -8 x9 -8 x10 <= +0
- con12: -2200 x1 +410 x2 +420 x3 +560 x4 +380 x5 +320 x6 +320 x7 +320 x8 +100 x9 +330 x10 <= +0
- con13: -65 x1 +26 x2 +10 x3 +32 x4 +19 x5 +10 x6 +12 x7 +12 x8 +2.5 x9 +10 x10 <= +0
- con14: -1779 x1 +730 x2 +1190 x3 +1800 x4 +270 x5 +930 x6 +820 x7 +1230 x8 +125 x9 +180 x10 <= +0
+ con1: -40 ONE +1 col_ekk_0 <= +0
+ con2: -30 ONE +1 col_ekk_1 <= +0
+ con3: -20 ONE +1 col_ekk_2 <= +0
+ con4: -20 ONE +1 col_ekk_3 <= +0
+ con5: -40 ONE +1 col_ekk_4 <= +0
+ con6: -50 ONE +1 col_ekk_5 <= +0
+ con7: -60 ONE +1 col_ekk_6 <= +0
+ con8: -6.8 ONE +1 col_ekk_7 <= +0
+ con9: -80 ONE +1 col_ekk_8 <= +0
+ con10: +1800 ONE -410 col_ekk_0 -420 col_ekk_1 -560 col_ekk_2 -380 col_ekk_3 -320 col_ekk_4 -320 col_ekk_5 -320 col_ekk_6 -100 col_ekk_7 -330 col_ekk_8 <= +0
+ con11: +91 ONE -24 col_ekk_0 -32 col_ekk_1 -20 col_ekk_2 -4 col_ekk_3 -12 col_ekk_4 -15 col_ekk_5 -31 col_ekk_6 -8 col_ekk_7 -8 col_ekk_8 <= +0
+ con12: -2200 ONE +410 col_ekk_0 +420 col_ekk_1 +560 col_ekk_2 +380 col_ekk_3 +320 col_ekk_4 +320 col_ekk_5 +320 col_ekk_6 +100 col_ekk_7 +330 col_ekk_8 <= +0
+ con13: -65 ONE +26 col_ekk_0 +10 col_ekk_1 +32 col_ekk_2 +19 col_ekk_3 +10 col_ekk_4 +12 col_ekk_5 +12 col_ekk_6 +2.5 col_ekk_7 +10 col_ekk_8 <= +0
+ con14: -1779 ONE +730 col_ekk_0 +1190 col_ekk_1 +1800 col_ekk_2 +270 col_ekk_3 +930 col_ekk_4 +820 col_ekk_5 +1230 col_ekk_6 +125 col_ekk_7 +180 col_ekk_8 <= +0
 bounds
- x1 = 1
+ ONE = 1
 end

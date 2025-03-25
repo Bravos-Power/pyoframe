@@ -1,29 +1,29 @@
 \ File written by HiGHS .lp file handler
 min
- obj: +12000 x2 +15000 x3 +17000 x4 +13000 x5 +16000 x6 +4000 x7 +2000 x8 +3000 x9 +2500 x10 +4500 x11 +2500 x12 +2600 x13 +3400 x14 +3000 x15 +4000 x16 +1200 x17 +1800 x18 +2600 x19 +41400 x20 +3000 x21 +2200 x22 +2600 x23 +3100 x24 +3700 x25 +3200 x26
+ obj: +12000 col_ekk_0 +15000 col_ekk_1 +17000 col_ekk_2 +13000 col_ekk_3 +16000 col_ekk_4 +4000 col_ekk_5 +2000 col_ekk_6 +3000 col_ekk_7 +2500 col_ekk_8 +4500 col_ekk_9 +2500 col_ekk_10 +2600 col_ekk_11 +3400 col_ekk_12 +3000 col_ekk_13 +4000 col_ekk_14 +1200 col_ekk_15 +1800 col_ekk_16 +2600 col_ekk_17 +41400 col_ekk_18 +3000 col_ekk_19 +2200 col_ekk_20 +2600 col_ekk_21 +3100 col_ekk_22 +3700 col_ekk_23 +3200 col_ekk_24
 st
- con1: -20 x2 +1 x7 +1 x12 +1 x17 +1 x22 <= +0
- con2: -22 x3 +1 x8 +1 x13 +1 x18 +1 x23 <= +0
- con3: -17 x4 +1 x9 +1 x14 +1 x19 +1 x24 <= +0
- con4: -19 x5 +1 x10 +1 x15 +1 x20 +1 x25 <= +0
- con5: -18 x6 +1 x11 +1 x16 +1 x21 +1 x26 <= +0
- con6: -15 x1 +1 x7 +1 x8 +1 x9 +1 x10 +1 x11 = +0
- con7: -18 x1 +1 x12 +1 x13 +1 x14 +1 x15 +1 x16 = +0
- con8: -14 x1 +1 x17 +1 x18 +1 x19 +1 x20 +1 x21 = +0
- con9: -20 x1 +1 x22 +1 x23 +1 x24 +1 x25 +1 x26 = +0
+ con1: -20 col_ekk_0 +1 col_ekk_5 +1 col_ekk_10 +1 col_ekk_15 +1 col_ekk_20 <= +0
+ con2: -22 col_ekk_1 +1 col_ekk_6 +1 col_ekk_11 +1 col_ekk_16 +1 col_ekk_21 <= +0
+ con3: -17 col_ekk_2 +1 col_ekk_7 +1 col_ekk_12 +1 col_ekk_17 +1 col_ekk_22 <= +0
+ con4: -19 col_ekk_3 +1 col_ekk_8 +1 col_ekk_13 +1 col_ekk_18 +1 col_ekk_23 <= +0
+ con5: -18 col_ekk_4 +1 col_ekk_9 +1 col_ekk_14 +1 col_ekk_19 +1 col_ekk_24 <= +0
+ con6: -15 ONE +1 col_ekk_5 +1 col_ekk_6 +1 col_ekk_7 +1 col_ekk_8 +1 col_ekk_9 = +0
+ con7: -18 ONE +1 col_ekk_10 +1 col_ekk_11 +1 col_ekk_12 +1 col_ekk_13 +1 col_ekk_14 = +0
+ con8: -14 ONE +1 col_ekk_15 +1 col_ekk_16 +1 col_ekk_17 +1 col_ekk_18 +1 col_ekk_19 = +0
+ con9: -20 ONE +1 col_ekk_20 +1 col_ekk_21 +1 col_ekk_22 +1 col_ekk_23 +1 col_ekk_24 = +0
 bounds
- x1 = 1
- x2 <= 1
- x3 <= 1
- x4 <= 1
- x5 <= 1
- x6 <= 1
+ ONE = 1
+ col_ekk_0 <= 1
+ col_ekk_1 <= 1
+ col_ekk_2 <= 1
+ col_ekk_3 <= 1
+ col_ekk_4 <= 1
 bin
- x2
- x3
- x4
- x5
- x6
+ col_ekk_0
+ col_ekk_1
+ col_ekk_2
+ col_ekk_3
+ col_ekk_4
 gen
 semi
 end
