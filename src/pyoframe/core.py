@@ -1581,6 +1581,30 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         solution = self.attr.Value
         if isinstance(solution, pl.DataFrame):
             solution = solution.rename({"Value": SOLUTION_KEY})
+
+        if self.vtype in [VType.BINARY, VType.INTEGER]:
+            if isinstance(solution, pl.DataFrame):
+                solution = solution.with_columns(
+                    pl.col("solution").alias("solution_float"),
+                    pl.col("solution").round().cast(pl.Int64),
+                )
+                if Config.integer_tolerance != 0:
+                    df = solution.filter(
+                        (pl.col("solution_float") - pl.col("solution")).abs()
+                        > Config.integer_tolerance
+                    )
+                    assert (
+                        df.is_empty()
+                    ), f"Variable {self.name} has a non-integer value: {df}\nThis should not happen."
+                solution = solution.drop("solution_float")
+            else:
+                solution_float = solution
+                solution = int(round(solution))
+                if Config.integer_tolerance != 0:
+                    assert (
+                        abs(solution - solution_float) < Config.integer_tolerance
+                    ), f"Value of variable {self.name} is not an integer: {solution}. This should not happen."
+
         return solution
 
     def __repr__(self):

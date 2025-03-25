@@ -23,13 +23,14 @@ class Example:
     unique_solution: bool = True
     skip_solvers: List[str] | None = None
 
-    def import_solve_func(self):
+    def import_model_module(self):
         parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
-        return importlib.import_module(
-            f"tests.examples.{self.folder_name}.model"
-        ).solve_model
+        return importlib.import_module(f"tests.examples.{self.folder_name}.model")
+
+    def import_solve_func(self):
+        return self.import_model_module().solve_model
 
     def get_results_path(self):
         path = Path("tests/examples") / self.folder_name / "results"
@@ -144,7 +145,7 @@ def test_examples(example, solver, use_var_names):
     model = solver_func(use_var_names)
     with TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
-        write_results(model, tmpdir, unique_solution=example.unique_solution)
+        write_results(example, model, tmpdir)
         compare_results_dir(example.get_results_path(), tmpdir)
 
 
@@ -162,7 +163,7 @@ def test_gurobi_model_matches(example, solver):
         compare_results_dir(example.get_results_path(), tmpdir)
 
 
-def write_results(model, results_dir, unique_solution):
+def write_results(example: Example, model, results_dir):
     readability = "pretty" if model.use_var_names else "machine"
     model.write(results_dir / f"problem-{model.solver_name}-{readability}.lp")
 
@@ -171,16 +172,20 @@ def write_results(model, results_dir, unique_solution):
             results_dir / "objective.csv"
         )
 
-    if unique_solution:
+    if example.unique_solution:
         model.write(results_dir / f"solution-{model.solver_name}-{readability}.sol")
 
-        for v in model.variables:
-            v.solution.write_csv(results_dir / f"{v.name}.csv")  # type: ignore
-        for c in model.constraints:
-            try:
-                c.dual.write_csv(results_dir / f"{c.name}.csv")
-            except:
-                pass
+        module = example.import_model_module()
+        if hasattr(module, "write_solution"):
+            module.write_solution(model, results_dir)
+        else:
+            for v in model.variables:
+                v.solution.write_csv(results_dir / f"{v.name}.csv")  # type: ignore
+            for c in model.constraints:
+                try:
+                    c.dual.write_csv(results_dir / f"{c.name}.csv")
+                except:
+                    pass
 
 
 def write_results_gurobipy(model_gpy, results_dir):
@@ -191,11 +196,23 @@ def write_results_gurobipy(model_gpy, results_dir):
 
 
 if __name__ == "__main__":
-    input(
-        "Are you sure you want to rewrite all the test results? Press enter to continue..."
+    selection = int(
+        input(
+            f"Choose which of the following results you'd like to rewrite.\n0: ALL\n"
+            + "\n".join(
+                str(i + 1) + ": " + example.folder_name
+                for i, example in enumerate(EXAMPLES)
+            )
+            + "\n"
+        )
     )
 
-    for example in EXAMPLES:
+    if selection == 0:
+        selection = EXAMPLES
+    else:
+        selection = [EXAMPLES[selection - 1]]
+
+    for example in selection:
         results_dir = example.get_results_path()
         if results_dir.exists():
             shutil.rmtree(results_dir)
@@ -206,7 +223,7 @@ if __name__ == "__main__":
             pf.Config.default_solver = solver
             for use_var_names in [True, False]:
                 write_results(
+                    example,
                     solve_model(use_var_names),
                     results_dir,
-                    unique_solution=example.unique_solution,
                 )

@@ -60,9 +60,18 @@ class Config(metaclass=_ConfigMeta):
     print_uses_variable_names: bool = True
     print_max_line_length: int = 80
     print_max_lines: int = 15
-    # Number of elements to show when printing a set to the console (additional elements are replaced with ...)
     print_max_set_elements: int = 50
+    "Number of elements to show when printing a set to the console (additional elements are replaced with ...)"
+
     enable_is_duplicated_expression_safety_check: bool = False
+
+    integer_tolerance: float = 1e-8
+    """
+    For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
+    To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
+    Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
+    unexpected errors. Setting the tolerance to zero disables the check.
+    """
 
     @classmethod
     def reset_defaults(cls):
