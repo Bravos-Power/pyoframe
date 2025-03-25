@@ -304,7 +304,7 @@ class Model:
             >>> m.maximize = 3 * m.X + 2 * m.Y + m.Z
             >>> m.optimize()
             >>> m.X.solution, m.Y.solution, m.Z.solution
-            (1.0, 9.0, 0.0)
+            (1, 9, 0.0)
             >>> m.my_constraint.dual
             Traceback (most recent call last):
             ...
