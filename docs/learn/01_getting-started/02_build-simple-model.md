@@ -64,7 +64,7 @@ Nothing special here. Load your data using your favourite dataframe library. We 
 
 ### Create the model
 
-```python
+```{.python continuation}
 import pyoframe as pf
 m = pf.Model()
 ```
@@ -72,7 +72,7 @@ m = pf.Model()
 ### Create an dimensioned variable
 Previously, we created two variables: `m.tofu` and `m.chickpeas`. Instead, we now create a single variable dimensioned over `food`.
 
-```python
+```{.python continuation}
 m.Buy = pf.Variable(data[["food"]], lb=0)
 ```
 
@@ -120,7 +120,7 @@ Second, notice that our `Expression` still has a `food` dimension—it really co
 
 This works and since `food` is the only dimensions we don't even need to specify it. Putting it all together:
 
-```python
+```{.python continuation}
 m.maximize = pf.sum(data[["food", "protein"]] * m.Buy)
 ```
 
@@ -128,7 +128,7 @@ m.maximize = pf.sum(data[["food", "protein"]] * m.Buy)
 
 This is similar to how we created the objective, except now we're using `cost` and we turn our `Expression` into a `Constraint` by with the `<=` operation.
 
-```python
+```{.python continuation}
 m.budget_constraint = pf.sum(data[["food", "cost"]] * m.Buy) <= 10
 ```
 
@@ -138,7 +138,7 @@ m.budget_constraint = pf.sum(data[["food", "cost"]] * m.Buy) <= 10
 import pandas as pd
 import pyoframe as pf
 
-data = pd.read_csv("food_data.csv")
+data = pd.read_csv("./inputs/food_data.csv")
 
 m = pf.Model()
 m.Buy = pf.Variable(data[["food"]], lb=0)

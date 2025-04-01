@@ -36,7 +36,8 @@ dev = [
     "gurobipy",
     "highsbox",
     "coverage",
-    "ipykernel"
+    "ipykernel",
+    "pytest-markdown-docs"
 ]
 docs = [
     "mkdocs-material==9.*",

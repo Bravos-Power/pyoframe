@@ -35,6 +35,6 @@ If the variable or constraint is dimensioned, the attribute can accept/return a 
 
 Gurobi supports model attributes (see above) and model parameters ([full list here](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html)). You can read or set model parameters with `model.params.<your-parameter>`. For example:
 
-```python
+```{.python continuation}
 m.params.method = 2  # Use a barrier method to solve
 ```
