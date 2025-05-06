@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3  # Default is linter
       - uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
+      
