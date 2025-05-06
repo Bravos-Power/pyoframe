@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import polars as pl
 import pytest
@@ -34,9 +34,9 @@ class Example:
 
     def get_results_path(self):
         path = Path("tests/examples") / self.folder_name / "results"
-        assert (
-            path.exists()
-        ), f"Results directory {path} does not exist. Working directory: {os.getcwd()}"
+        assert path.exists(), (
+            f"Results directory {path} does not exist. Working directory: {os.getcwd()}"
+        )
         return path
 
     def get_solve_with_gurobipy(self) -> Optional[Any]:
@@ -69,9 +69,9 @@ EXAMPLES = [
 
 def compare_results_dir(expected_dir, actual_dir):
     for file in actual_dir.iterdir():
-        assert (
-            expected_dir / file.name
-        ).exists(), f"File {file.name} not found in expected directory"
+        assert (expected_dir / file.name).exists(), (
+            f"File {file.name} not found in expected directory"
+        )
 
         expected = expected_dir / file.name
         if file.suffix == ".sol":
@@ -95,9 +95,9 @@ def check_lp_equal(file_expected: Path, file_actual: Path):
             for line1, line2 in zip(
                 filter(keep_line, f1.readlines()), filter(keep_line, f2.readlines())
             ):
-                assert (
-                    line1.strip() == line2.strip()
-                ), f"LP files {file_expected} and {file_actual} are different"
+                assert line1.strip() == line2.strip(), (
+                    f"LP files {file_expected} and {file_actual} are different"
+                )
 
 
 def check_integer_solutions_only(sol_file):
@@ -115,12 +115,12 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
     for (expected_name, expected_value), (actual_name, actual_value) in zip(
         expected_result, actual_result
     ):
-        assert (
-            expected_name == actual_name
-        ), f"Variable names do not match: {expected_name} != {actual_name}\n{expected_result}\n\n{actual_result}"
-        assert (
-            expected_value - tol <= actual_value <= expected_value + tol
-        ), f"Solution file does not match expected values {expected_sol_file}"
+        assert expected_name == actual_name, (
+            f"Variable names do not match: {expected_name} != {actual_name}\n{expected_result}\n\n{actual_result}"
+        )
+        assert expected_value - tol <= actual_value <= expected_value + tol, (
+            f"Solution file does not match expected values {expected_sol_file}"
+        )
 
 
 def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
@@ -207,7 +207,7 @@ def write_results_gurobipy(model_gpy, results_dir):
 if __name__ == "__main__":
     selection = int(
         input(
-            f"Choose which of the following results you'd like to rewrite.\n0: ALL\n"
+            "Choose which of the following results you'd like to rewrite.\n0: ALL\n"
             + "\n".join(
                 str(i + 1) + ": " + example.folder_name
                 for i, example in enumerate(EXAMPLES)

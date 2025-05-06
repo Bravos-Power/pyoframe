@@ -294,9 +294,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         over_merged = over_frames[0]
 
         for df in over_frames[1:]:
-            assert (
-                set(over_merged.columns) & set(df.columns) == set()
-            ), "All coordinates must have unique column names."
+            assert set(over_merged.columns) & set(df.columns) == set(), (
+                "All coordinates must have unique column names."
+            )
             over_merged = over_merged.join(df, how="cross")
         return over_merged
 
@@ -309,9 +309,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __mul__(self, other):
         if isinstance(other, Set):
-            assert (
-                set(self.data.columns) & set(other.data.columns) == set()
-            ), "Cannot multiply two sets with columns in common."
+            assert set(self.data.columns) & set(other.data.columns) == set(), (
+                "Cannot multiply two sets with columns in common."
+            )
             return Set(self.data, other.data)
         return super().__mul__(other)
 
@@ -620,13 +620,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         df: pl.DataFrame = Set(set).data
         set_dims = _get_dimensions(df)
-        assert (
-            set_dims is not None
-        ), "Cannot use .within() with a set with no dimensions."
+        assert set_dims is not None, (
+            "Cannot use .within() with a set with no dimensions."
+        )
         dims = self.dimensions
-        assert (
-            dims is not None
-        ), "Cannot use .within() with an expression with no dimensions."
+        assert dims is not None, (
+            "Cannot use .within() with an expression with no dimensions."
+        )
         dims_in_common = [dim for dim in dims if dim in set_dims]
         by_dims = df.select(dims_in_common).unique(maintain_order=True)
         return self._new(self.data.join(by_dims, on=dims_in_common))
@@ -870,9 +870,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_2.evaluate()
             63.0
         """
-        assert (
-            self._model is not None
-        ), "Expression must be added to the model to use .value"
+        assert self._model is not None, (
+            "Expression must be added to the model to use .value"
+        )
 
         df = self.data
         sm = self._model.poi
@@ -1073,9 +1073,9 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
         by = [by]
     expr = expr.to_expr()
     dimensions = expr.dimensions
-    assert (
-        dimensions is not None
-    ), "Cannot sum by dimensions with an expression with no dimensions."
+    assert dimensions is not None, (
+        "Cannot sum by dimensions with an expression with no dimensions."
+    )
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
 
@@ -1329,9 +1329,9 @@ class Constraint(ModelElementWithId):
             return self
 
         var_name = f"{self.name}_relaxation"
-        assert not hasattr(
-            m, var_name
-        ), "Conflicting names, relaxation variable already exists on the model."
+        assert not hasattr(m, var_name), (
+            "Conflicting names, relaxation variable already exists on the model."
+        )
         var = Variable(self, lb=0, ub=max)
         setattr(m, var_name, var)
 
@@ -1459,9 +1459,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         equals: Optional[SupportsMath] = None,
     ):
         if equals is not None:
-            assert (
-                len(indexing_sets) == 0
-            ), "Cannot specify both 'equals' and 'indexing_sets'"
+            assert len(indexing_sets) == 0, (
+                "Cannot specify both 'equals' and 'indexing_sets'"
+            )
             indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -1593,17 +1593,17 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                         (pl.col("solution_float") - pl.col("solution")).abs()
                         > Config.integer_tolerance
                     )
-                    assert (
-                        df.is_empty()
-                    ), f"Variable {self.name} has a non-integer value: {df}\nThis should not happen."
+                    assert df.is_empty(), (
+                        f"Variable {self.name} has a non-integer value: {df}\nThis should not happen."
+                    )
                 solution = solution.drop("solution_float")
             else:
                 solution_float = solution
                 solution = int(round(solution))
                 if Config.integer_tolerance != 0:
-                    assert (
-                        abs(solution - solution_float) < Config.integer_tolerance
-                    ), f"Value of variable {self.name} is not an integer: {solution}. This should not happen."
+                    assert abs(solution - solution_float) < Config.integer_tolerance, (
+                        f"Value of variable {self.name} is not an integer: {solution}. This should not happen."
+                    )
 
         return solution
 
