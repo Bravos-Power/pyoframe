@@ -7,17 +7,13 @@ import polars as pl
 import pyoframe as pf
 from pyoframe import sum_by
 
+_input_dir = Path(__file__).parent / "input_data"
+
 
 def solve_model(use_var_names=True):
-    processing_times = pl.read_csv(
-        Path(__file__).parent / "input_data" / "processing_times.csv"
-    )
-    machines_availability = pl.read_csv(
-        Path(__file__).parent / "input_data" / "machines_availability.csv"
-    )
-    products_profit = pl.read_csv(
-        Path(__file__).parent / "input_data" / "products_profit.csv"
-    )
+    processing_times = pl.read_csv(_input_dir / "processing_times.csv")
+    machines_availability = pl.read_csv(_input_dir / "machines_availability.csv")
+    products_profit = pl.read_csv(_input_dir / "products_profit.csv")
 
     m = pf.Model(use_var_names=use_var_names)
     m.Production = pf.Variable(products_profit[["products"]], lb=0)
