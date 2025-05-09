@@ -45,7 +45,7 @@ class _ConfigMeta(type):
         cls._defaults = {
             k: v
             for k, v in dct.items()
-            if not k.startswith("_") and type(v) != classmethod
+            if not k.startswith("_") and type(v) != classmethod  # noqa: E721 (didn't want to mess with it since it works)
         }
 
 
