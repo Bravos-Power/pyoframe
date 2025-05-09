@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import polars as pl
 import pytest
@@ -64,6 +64,7 @@ EXAMPLES = [
         skip_solvers=["highs"],  # Has quadratics
     ),
     Example("sudoku"),
+    Example("pumped_storage"),
 ]
 
 
