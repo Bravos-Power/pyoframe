@@ -67,8 +67,8 @@ runs:
       if: ${{ inputs.CHECK_LICENSE == 'true' }}
       uses: nick-fields/retry@v3    # retry if the license server is at max capacity
       with:
-        max_attempts: 3
-        timeout_seconds: 30
+        max_attempts: 5
+        retry_wait_seconds: 30
         command: gurobi_cl
 
     # - name: Setup COPT Installation
