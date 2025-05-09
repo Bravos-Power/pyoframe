@@ -4,7 +4,7 @@
 # See more details here:
 #   - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 #   - https://michaelheap.com/access-secrets-from-forks/
-name: Build and Test
+name: Run tests with pytest
 on:
   push:
     branches: [ main ]
