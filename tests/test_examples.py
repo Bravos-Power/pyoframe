@@ -193,8 +193,11 @@ def write_results(example: Example, model, results_dir):
             for c in model.constraints:
                 try:
                     c.dual.write_csv(results_dir / f"{c.name}.csv")
-                except:
-                    pass
+                except pl.exceptions.ComputeError as e:
+                    if "Unable to retrieve attribute 'Pi'" in str(e):
+                        pass
+                    else:
+                        raise e
 
 
 def write_results_gurobipy(model_gpy, results_dir):

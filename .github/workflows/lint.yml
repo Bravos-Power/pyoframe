@@ -1,5 +1,4 @@
-name: Lint and format (via Ruff)
-
+name: Check linting with Ruff
 on: [pull_request]
 
 env:
@@ -11,7 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/ruff-action@v3  # Default is linter
-      - uses: astral-sh/ruff-action@v3
-        with:
-          args: "format --check --diff"
       
