@@ -37,4 +37,4 @@ def solve_model(use_var_names):
 
 
 if __name__ == "__main__":
-    main(use_var_names=True)
+    solve_model(use_var_names=True)

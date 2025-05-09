@@ -1,5 +1,4 @@
-name: Black and isort
-
+name: Check linting with Ruff
 on: [pull_request]
 
 env:
@@ -10,5 +9,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
-      - uses: isort/isort-action@v1
+      - uses: astral-sh/ruff-action@v3  # Default is linter
+      

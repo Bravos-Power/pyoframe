@@ -97,7 +97,7 @@ def draw_results(model, G, F):
 if __name__ == "__main__":
     G, F = 4, 3
     working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    model = main(
+    model = solve_model(
         G,
         F,
         solver="gurobi",

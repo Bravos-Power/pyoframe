@@ -81,14 +81,14 @@ def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expr
         self, other = other, self
         self_degree, other_degree = other_degree, self_degree
     if other_degree == 1:
-        assert (
-            self_degree == 1
-        ), "This should always be true since the sum of degrees must be <=2."
+        assert self_degree == 1, (
+            "This should always be true since the sum of degrees must be <=2."
+        )
         return _quadratic_multiplication(self, other)
 
-    assert (
-        other_degree == 0
-    ), "This should always be true since other cases have already been handled."
+    assert other_degree == 0, (
+        "This should always be true since other cases have already been handled."
+    )
     multiplier = other.data.drop(
         VAR_KEY
     )  # QUAD_VAR_KEY doesn't need to be dropped since we know it doesn't exist
@@ -248,9 +248,9 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
             left_data = left.data.join(get_indices(right), how="inner", on=dims)
             right_data = right.data.join(get_indices(left), how="inner", on=dims)
         elif strat == (UnmatchedStrategy.UNSET, UnmatchedStrategy.UNSET):
-            assert (
-                not Config.disable_unmatched_checks
-            ), "This code should not be reached when unmatched checks are disabled."
+            assert not Config.disable_unmatched_checks, (
+                "This code should not be reached when unmatched checks are disabled."
+            )
             outer_join = get_indices(left).join(
                 get_indices(right),
                 how="full" if POLARS_VERSION.major >= 1 else "outer",
@@ -280,9 +280,9 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
                     + str(left_data.filter(left_data.get_column(COEF_KEY).is_null()))
                 )
         elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET):
-            assert (
-                not Config.disable_unmatched_checks
-            ), "This code should not be reached when unmatched checks are disabled."
+            assert not Config.disable_unmatched_checks, (
+                "This code should not be reached when unmatched checks are disabled."
+            )
             unmatched = right.data.join(get_indices(left), how="anti", on=dims)
             if len(unmatched) > 0:
                 raise PyoframeError(

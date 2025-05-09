@@ -27,17 +27,16 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black[jupyter]",
+    "ruff",
     "bumpver",
-    "isort",
     "pip-tools",
     "pytest",
     "pytest-cov",
     "pre-commit",
     "gurobipy",
     "highsbox",
-    "pre-commit",
-    "coverage"
+    "coverage",
+    "ipykernel"
 ]
 docs = [
     "mkdocs-material==9.*",
@@ -51,8 +50,8 @@ docs = [
 ]
 highs = ["highsbox"]
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+lint.select = ["E4", "E7", "E9", "F", "I", "W292", "W291"]
 
 [tool.coverage.run]
 include = ["src/pyoframe/*"]

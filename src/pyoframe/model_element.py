@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import polars as pl
@@ -22,9 +21,9 @@ if TYPE_CHECKING:  # pragma: no cover
 class ModelElement(ABC):
     def __init__(self, data: pl.DataFrame, **kwargs) -> None:
         # Sanity checks, no duplicate column names
-        assert len(data.columns) == len(
-            set(data.columns)
-        ), "Duplicate column names found."
+        assert len(data.columns) == len(set(data.columns)), (
+            "Duplicate column names found."
+        )
 
         cols = _get_dimensions(data)
         if cols is None:
