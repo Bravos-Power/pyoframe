@@ -69,6 +69,7 @@ runs:
       with:
         max_attempts: 5
         retry_wait_seconds: 30
+        timeout_minutes: 1
         command: gurobi_cl
 
     # - name: Setup COPT Installation
