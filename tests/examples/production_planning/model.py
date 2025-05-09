@@ -1,5 +1,5 @@
 # Based on example at page 20 in book:
-#       H.A Eiselt and Carl-Louis Sandblom: Operations Research - A Model-Baesed Approach 3rd Edition, Springer, 2022
+#       H.A Eiselt and Carl-Louis Sandblom: Operations Research - A Model-Based Approach 3rd Edition, Springer, 2022
 from pathlib import Path
 
 import polars as pl
