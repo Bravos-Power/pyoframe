@@ -235,9 +235,9 @@ class Model:
             and __name not in Model._reserved_attributes
         ):
             if isinstance(__value, ModelElementWithId):
-                assert not hasattr(
-                    self, __name
-                ), f"Cannot create {__name} since it was already created."
+                assert not hasattr(self, __name), (
+                    f"Cannot create {__name} since it was already created."
+                )
 
             __value.on_add_to_model(self, __name)
 
