@@ -4,7 +4,7 @@
 # See more details here:
 #   - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
 #   - https://michaelheap.com/access-secrets-from-forks/
-name: Run tests with pytest
+name: Tests
 on:
   push:
     branches: [ main ]
@@ -16,17 +16,17 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.older_version }}
+    continue-on-error: ! ${{ matrix.latest }}
     strategy:
       fail-fast: true
       matrix:
         python-version: ["3.12"]
         polars-version: ["1.17.1"]
-        older_version: [false]
+        latest: [true]
         include:
           - python-version: "3.9"
             polars-version: "0.20.27"
-            older_version: true
+            latest: false
     steps:
       # Important checks to ensure that the user has the required permissions. See note above.
       # Step 1: If user has current permissions we're good!
