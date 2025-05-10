@@ -6,7 +6,7 @@ env:
   INPUT_JUPYTER: true
 
 jobs:
-  lint:
+  format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
