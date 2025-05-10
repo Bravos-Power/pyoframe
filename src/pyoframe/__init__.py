@@ -9,7 +9,7 @@ from pyoframe.model import Model
 from pyoframe.monkey_patch import patch_dataframe_libraries
 
 try:
-    from pyoframe._version import __version__, __version_tuple__
+    from pyoframe._version import __version__, __version_tuple__  # noqa: F401
 except ImportError:
     pass
 
