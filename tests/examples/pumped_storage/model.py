@@ -1,3 +1,5 @@
+# Based on example at page 120 in book:
+#       N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
 from pathlib import Path
 
 import polars as pl
@@ -94,7 +96,6 @@ def read_hourly_prices():
         )
     )
     # fix a DST problem at the end of March where one hour is "missing" so it is filled with null
-    # kids, please do not do use dates without time zone at home
     df = df.drop_nulls()
     hourly_prices = pl.concat((time_tick, df), how="horizontal").select(
         pl.col("tick"),
