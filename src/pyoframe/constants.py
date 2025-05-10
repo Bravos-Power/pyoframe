@@ -1,36 +1,39 @@
 """
 File containing shared constants used across the package.
-
-Code is heavily based on the `linopy` package by Fabian Hofmann.
-
-MIT License
 """
 
-from dataclasses import dataclass
-from enum import Enum
 import typing
-from typing import Literal, Optional, Union
-import polars as pl
+from enum import Enum
+from typing import Literal, Optional
 
+import polars as pl
+import pyoptinterface as poi
+from packaging import version
+
+# Constant to help split our logic depending on the polars version in use.
+# This approach is compatible with polars-lts-cpu.
+POLARS_VERSION = version.parse(pl.__version__)
 
 COEF_KEY = "__coeff"
 VAR_KEY = "__variable_id"
+QUAD_VAR_KEY = "__quadratic_variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
-RC_COL = "RC"
-SLACK_COL = "slack"
+SUPPORTED_SOLVERS = ["gurobi", "highs"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs"]
+KEY_TYPE = pl.UInt32
 
+# Variable ID for constant terms. This variable ID is reserved.
 CONST_TERM = 0
 
 RESERVED_COL_KEYS = (
     COEF_KEY,
     VAR_KEY,
+    QUAD_VAR_KEY,
     CONSTRAINT_KEY,
     SOLUTION_KEY,
     DUAL_KEY,
-    RC_COL,
-    SLACK_COL,
 )
 
 
@@ -42,17 +45,33 @@ class _ConfigMeta(type):
         cls._defaults = {
             k: v
             for k, v in dct.items()
-            if not k.startswith("_") and type(v) != classmethod
+            if not k.startswith("_") and type(v) != classmethod  # noqa: E721 (didn't want to mess with it since it works)
         }
 
 
 class Config(metaclass=_ConfigMeta):
+    """
+    Configuration options that apply to the entire library.
+    """
+
+    default_solver: Optional[SUPPORTED_SOLVER_TYPES] = None
     disable_unmatched_checks: bool = False
-    print_float_precision: Optional[int] = 5
+    float_to_str_precision: Optional[int] = 5
     print_uses_variable_names: bool = True
-    # Number of elements to show when printing a set to the console (additional elements are replaced with ...)
+    print_max_line_length: int = 80
+    print_max_lines: int = 15
     print_max_set_elements: int = 50
+    "Number of elements to show when printing a set to the console (additional elements are replaced with ...)"
+
     enable_is_duplicated_expression_safety_check: bool = False
+
+    integer_tolerance: float = 1e-8
+    """
+    For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
+    To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
+    Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
+    unexpected errors. Setting the tolerance to zero disables the check.
+    """
 
     @classmethod
     def reset_defaults(cls):
@@ -68,16 +87,44 @@ class ConstraintSense(Enum):
     GE = ">="
     EQ = "="
 
+    def to_poi(self):
+        if self == ConstraintSense.LE:
+            return poi.ConstraintSense.LessEqual
+        elif self == ConstraintSense.EQ:
+            return poi.ConstraintSense.Equal
+        elif self == ConstraintSense.GE:
+            return poi.ConstraintSense.GreaterEqual
+        else:
+            raise ValueError(f"Invalid constraint type: {self}")  # pragma: no cover
+
 
 class ObjSense(Enum):
     MIN = "min"
     MAX = "max"
+
+    def to_poi(self):
+        if self == ObjSense.MIN:
+            return poi.ObjectiveSense.Minimize
+        elif self == ObjSense.MAX:
+            return poi.ObjectiveSense.Maximize
+        else:
+            raise ValueError(f"Invalid objective sense: {self}")  # pragma: no cover
 
 
 class VType(Enum):
     CONTINUOUS = "continuous"
     BINARY = "binary"
     INTEGER = "integer"
+
+    def to_poi(self):
+        if self == VType.CONTINUOUS:
+            return poi.VariableDomain.Continuous
+        elif self == VType.BINARY:
+            return poi.VariableDomain.Binary
+        elif self == VType.INTEGER:
+            return poi.VariableDomain.Integer
+        else:
+            raise ValueError(f"Invalid variable type: {self}")  # pragma: no cover
 
 
 class UnmatchedStrategy(Enum):
@@ -92,194 +139,6 @@ ObjSenseValue = Literal["min", "max"]
 VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
-
-
-class ModelStatus(Enum):
-    """
-    Model status.
-
-    The set of possible model status is a superset of the solver status
-    set.
-    """
-
-    ok = "ok"
-    warning = "warning"
-    error = "error"
-    aborted = "aborted"
-    unknown = "unknown"
-    initialized = "initialized"
-
-
-class SolverStatus(Enum):
-    """
-    Solver status.
-    """
-
-    ok = "ok"
-    warning = "warning"
-    error = "error"
-    aborted = "aborted"
-    unknown = "unknown"
-
-    @classmethod
-    def process(cls, status: str) -> "SolverStatus":
-        try:
-            return cls(status)
-        except ValueError:
-            return cls("unknown")
-
-    @classmethod
-    def from_termination_condition(
-        cls, termination_condition: "TerminationCondition"
-    ) -> "SolverStatus":
-        for (
-            status,
-            termination_conditions,
-        ) in STATUS_TO_TERMINATION_CONDITION_MAP.items():
-            if termination_condition in termination_conditions:
-                return status
-        return cls("unknown")
-
-
-class TerminationCondition(Enum):
-    """
-    Termination condition of the solver.
-    """
-
-    # UNKNOWN
-    unknown = "unknown"
-
-    # OK
-    optimal = "optimal"
-    time_limit = "time_limit"
-    iteration_limit = "iteration_limit"
-    terminated_by_limit = "terminated_by_limit"
-    suboptimal = "suboptimal"
-
-    # WARNING
-    unbounded = "unbounded"
-    infeasible = "infeasible"
-    infeasible_or_unbounded = "infeasible_or_unbounded"
-    other = "other"
-
-    # ERROR
-    internal_solver_error = "internal_solver_error"
-    error = "error"
-
-    # ABORTED
-    user_interrupt = "user_interrupt"
-    resource_interrupt = "resource_interrupt"
-    licensing_problems = "licensing_problems"
-
-    @classmethod
-    def process(
-        cls, termination_condition: Union[str, "TerminationCondition"]
-    ) -> "TerminationCondition":
-        try:
-            return cls(termination_condition)
-        except ValueError:
-            return cls("unknown")
-
-
-STATUS_TO_TERMINATION_CONDITION_MAP = {
-    SolverStatus.ok: [
-        TerminationCondition.optimal,
-        TerminationCondition.iteration_limit,
-        TerminationCondition.time_limit,
-        TerminationCondition.terminated_by_limit,
-        TerminationCondition.suboptimal,
-    ],
-    SolverStatus.warning: [
-        TerminationCondition.unbounded,
-        TerminationCondition.infeasible,
-        TerminationCondition.infeasible_or_unbounded,
-        TerminationCondition.other,
-    ],
-    SolverStatus.error: [
-        TerminationCondition.internal_solver_error,
-        TerminationCondition.error,
-    ],
-    SolverStatus.aborted: [
-        TerminationCondition.user_interrupt,
-        TerminationCondition.resource_interrupt,
-        TerminationCondition.licensing_problems,
-    ],
-    SolverStatus.unknown: [TerminationCondition.unknown],
-}
-
-
-@dataclass
-class Status:
-    """
-    Status and termination condition of the solver.
-    """
-
-    status: SolverStatus
-    termination_condition: TerminationCondition
-
-    @classmethod
-    def process(cls, status: str, termination_condition: str) -> "Status":
-        return cls(
-            status=SolverStatus.process(status),
-            termination_condition=TerminationCondition.process(termination_condition),
-        )
-
-    @classmethod
-    def from_termination_condition(
-        cls, termination_condition: Union["TerminationCondition", str]
-    ) -> "Status":
-        termination_condition = TerminationCondition.process(termination_condition)
-        solver_status = SolverStatus.from_termination_condition(termination_condition)
-        return cls(solver_status, termination_condition)
-
-    @property
-    def is_ok(self) -> bool:
-        return self.status == SolverStatus.ok
-
-
-@dataclass
-class Solution:
-    """
-    Solution returned by the solver.
-    """
-
-    primal: pl.DataFrame
-    dual: Optional[pl.DataFrame]
-    objective: float
-
-
-@dataclass
-class Result:
-    """
-    Result of the optimization.
-    """
-
-    status: Status
-    solution: Optional[Solution] = None
-
-    def __repr__(self) -> str:
-        res = (
-            f"Status: {self.status.status.value}\n"
-            f"Termination condition: {self.status.termination_condition.value}\n"
-        )
-        if self.solution is not None:
-            res += (
-                f"Solution: {len(self.solution.primal)} primals, {len(self.solution.dual) if self.solution.dual is not None else 0} duals\n"
-                f"Objective: {self.solution.objective:.2e}\n"
-            )
-
-        return res
-
-    def info(self):
-        status = self.status
-
-        if status.is_ok:
-            if status.termination_condition == TerminationCondition.suboptimal:
-                print(f"Optimization solution is sub-optimal: \n{self}\n")
-            else:
-                print(f" Optimization successful: \n{self}\n")
-        else:
-            print(f"Optimization failed: \n{self}\n")
 
 
 class PyoframeError(Exception):

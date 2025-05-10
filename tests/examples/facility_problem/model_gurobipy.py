@@ -12,24 +12,27 @@
 
 import os
 from pathlib import Path
+
 import gurobipy as gp
-from gurobipy import GRB
 import pandas as pd
+from gurobipy import GRB
+
+_input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
 
-def main(input_dir, output_dir: Path):
+def main():
     # Warehouse demand in thousands of units
-    demand = pd.read_csv(input_dir / "wharehouses.csv")["demand"].to_list()
+    demand = pd.read_csv(_input_dir / "wharehouses.csv")["demand"].to_list()
 
     # Plant capacity in thousands of units
-    capacity = pd.read_csv(input_dir / "plants.csv")["capacity"].to_list()
+    capacity = pd.read_csv(_input_dir / "plants.csv")["capacity"].to_list()
 
     # Fixed costs for each plant
-    fixedCosts = pd.read_csv(input_dir / "plants.csv")["fixed_cost"].to_list()
+    fixedCosts = pd.read_csv(_input_dir / "plants.csv")["fixed_cost"].to_list()
 
     # Transportation costs per thousand units
     transCosts = (
-        pd.read_csv(input_dir / "transport_costs.csv")
+        pd.read_csv(_input_dir / "transport_costs.csv")
         .set_index("wharehouse")
         .values.tolist()
     )
@@ -62,14 +65,7 @@ def main(input_dir, output_dir: Path):
     m.addConstrs((transport.sum(w) == demand[w] for w in warehouses), "Demand")
 
     # Use barrier to solve root relaxation
-    m.Params.Method = 2
+    m.params.Method = 2
 
-    m.write(str(output_dir / "gurobipy.lp"))
     m.optimize()
-    m.write(str(output_dir / "gurobipy.sol"))
-    return m.getObjective().getValue()
-
-
-if __name__ == "__main__":
-    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    main(working_dir / "input_data", working_dir / "results")
+    return m

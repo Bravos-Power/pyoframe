@@ -1,0 +1,16 @@
+name: Check formatting with Ruff
+
+on: [pull_request]
+
+env:
+  INPUT_JUPYTER: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v3
+        with:
+          args: "format --check --diff"
+      

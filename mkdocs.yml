@@ -1,23 +1,42 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: Pyoframe
 site_url: https://Bravos-Power.github.io/pyoframe/
 repo_url: https://github.com/Bravos-Power/pyoframe
 edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2024 Bravos Power
 theme:
   name: material
+  language: en
+  custom_dir: docs/overrides
+  palette:
+    - primary: red
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
     - navigation.tabs
-    - toc.follow
+    - navigation.sections
     - navigation.top
+    - navigation.footer
+    - toc.follow
+    - navigation.indexes
     - content.action.edit
     - content.action.view
     - content.code.copy
     - content.code.annotate
+    - content.tooltips
 
-nav:
-  - Reference: reference/
 markdown_extensions:
   - admonition
   - codehilite
@@ -28,8 +47,19 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - attr_list
+  - abbr
+  - md_in_html
+  - footnotes
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 plugins:
+  - search
+  - table-reader
   - mkdocstrings:
       handlers:
         python:
@@ -40,12 +70,20 @@ plugins:
               trim_doctest_flags: true
   - git-revision-date-localized:
       enable_creation_date: true
+      exclude:
+        - index.md
+      enabled: !ENV [ENABLED_GIT_REVISION_DATE, false]
   - git-committers:
       repository: Bravos-Power/pyoframe
       branch: main
+      exclude:
+        - index.md
+      enabled: !ENV [ENABLED_GIT_COMMITTERS, false]
   - literate-nav:
       nav_file: SUMMARY.md
   - gen-files:
       scripts:
         - scripts/gen_ref_pages.py
-  - section-index
+
+watch:
+  - src

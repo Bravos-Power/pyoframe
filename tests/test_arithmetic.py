@@ -1,14 +1,20 @@
 import re
-import pandas as pd
-import numpy as np
-import pytest
-from pyoframe._arithmetic import PyoframeError
-from polars.testing import assert_frame_equal
-import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
-from pyoframe import Variable, Model, sum, Set, Config, Expression, VType
+import numpy as np
+import pandas as pd
+import polars as pl
+import pytest
+from polars.testing import assert_frame_equal
+
+from pyoframe import Config, Expression, Model, Set, Variable, VType, sum
+from pyoframe._arithmetic import PyoframeError
+from pyoframe.constants import COEF_KEY, CONST_TERM, POLARS_VERSION, VAR_KEY
+
 from .util import csvs_to_expr
+
+check_dtypes_false = (
+    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtype": False}
+)
 
 
 def test_set_multiplication():
@@ -51,15 +57,16 @@ def test_multiplication_no_common_dimensions():
                 VAR_KEY: [CONST_TERM] * 6,
             }
         ),
-        check_dtype=False,
+        **check_dtypes_false,
     )
 
 
 def test_within_set():
+    m = Model()
     small_set = Set(x=[1, 2], y=["a"])
     large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
-    v = Variable(large_set)
-    result = v.to_expr().within(small_set)
+    m.v = Variable(large_set)
+    result = m.v.to_expr().within(small_set)
     assert_frame_equal(
         result.data,
         pl.DataFrame(
@@ -71,7 +78,7 @@ def test_within_set():
                 VAR_KEY: [1, 4],
             }
         ),
-        check_dtype=False,
+        **check_dtypes_false,
     )
 
 
@@ -82,7 +89,7 @@ def test_filter_expression():
     assert_frame_equal(
         result.data,
         pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
-        check_dtype=False,
+        **check_dtypes_false,
     )
 
 
@@ -92,21 +99,22 @@ def test_filter_constraint():
     assert_frame_equal(
         result,
         pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
-        check_dtype=False,
+        **check_dtypes_false,
     )
 
 
 def test_filter_variable():
-    v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
-    result = v.filter(dim1=2)
+    m = Model()
+    m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
+    result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
-    assert str(result) == "[2]: x2"
+    assert str(result) == "[2]: v[2]"
 
 
 def test_filter_set():
     s = Set(x=[1, 2, 3])
     result = s.filter(x=2)
-    assert_frame_equal(result.data, pl.DataFrame({"x": [2]}), check_dtype=False)
+    assert_frame_equal(result.data, pl.DataFrame({"x": [2]}), **check_dtypes_false)
 
 
 def test_drops_na():
@@ -139,7 +147,7 @@ def test_add_expressions():
     assert_frame_equal(
         result.data,
         pl.DataFrame({VAR_KEY: [CONST_TERM], COEF_KEY: [2]}),
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -150,7 +158,7 @@ def test_add_expressions_with_vars():
     assert_frame_equal(
         result.data,
         pl.DataFrame({VAR_KEY: [1, 2], COEF_KEY: [2, 4]}),
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -167,7 +175,7 @@ def test_add_expressions_with_vars_and_dims():
         pl.DataFrame(
             {"dim1": [1, 1, 2, 2], VAR_KEY: [1, 2, 1, 2], COEF_KEY: [2, 4, 6, 8]}
         ),
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -213,8 +221,10 @@ def test_add_expression_with_add_dim():
 
 
 def test_add_expression_with_vars_and_add_dim():
+    m = Model()
+    m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
-    lhs = (1 + 2 * Variable()).add_dim("dim1")
+    lhs = (1 + 2 * m.v).add_dim("dim1")
     result = lhs + expr_with_dim
     expected_result = pl.DataFrame(
         {
@@ -226,7 +236,7 @@ def test_add_expression_with_vars_and_add_dim():
     assert_frame_equal(
         result.data,
         expected_result,
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
         check_row_order=False,
     )
@@ -236,7 +246,7 @@ def test_add_expression_with_vars_and_add_dim():
     assert_frame_equal(
         result.data,
         expected_result,
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
         check_row_order=False,
     )
@@ -246,8 +256,11 @@ def test_add_expression_with_vars_and_add_dim_many():
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
-    lhs = 1 + 2 * Variable(dim1, dim2)
-    rhs = 3 + 4 * Variable(dim3, dim2)
+    m = Model()
+    m.v1 = Variable(dim1, dim2)
+    m.v2 = Variable(dim3, dim2)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
 
     with pytest.raises(
         PyoframeError,
@@ -268,22 +281,25 @@ def test_add_expression_with_vars_and_add_dim_many():
     result = lhs + rhs
     assert (
         str(result)
-        == """[1,a,4]: 4  +2 x1 +4 x5
-[1,a,5]: 4  +2 x1 +4 x7
-[1,b,4]: 4  +2 x2 +4 x6
-[1,b,5]: 4  +2 x2 +4 x8
-[2,a,4]: 4  +2 x3 +4 x5
-[2,a,5]: 4  +2 x3 +4 x7
-[2,b,4]: 4  +2 x4 +4 x6
-[2,b,5]: 4  +2 x4 +4 x8"""
+        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[4,a]
+[1,a,5]: 4  +2 v1[1,a] +4 v2[5,a]
+[1,b,4]: 4  +2 v1[1,b] +4 v2[4,b]
+[1,b,5]: 4  +2 v1[1,b] +4 v2[5,b]
+[2,a,4]: 4  +2 v1[2,a] +4 v2[4,a]
+[2,a,5]: 4  +2 v1[2,a] +4 v2[5,a]
+[2,b,4]: 4  +2 v1[2,b] +4 v2[4,b]
+[2,b,5]: 4  +2 v1[2,b] +4 v2[5,b]"""
     )
 
 
 def test_add_expression_with_missing():
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    lhs = 1 + 2 * Variable(dim2)
-    rhs = 3 + 4 * Variable(dim2_large)
+    m = Model()
+    m.v1 = Variable(dim2)
+    m.v2 = Variable(dim2_large)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
 
     with pytest.raises(
         PyoframeError,
@@ -296,34 +312,37 @@ def test_add_expression_with_missing():
     result = lhs + rhs.drop_unmatched()
     assert (
         str(result)
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2"""
+        == """[a]: 4  +4 v2[a] +2 v1[a]
+[b]: 4  +4 v2[b] +2 v1[b]"""
     )
     result = lhs + rhs.keep_unmatched()
     assert (
         str(result)
-        == """[a]: 4  +4 x3 +2 x1
-[b]: 4  +4 x4 +2 x2
-[c]: 3  +4 x5"""
+        == """[a]: 4  +4 v2[a] +2 v1[a]
+[b]: 4  +4 v2[b] +2 v1[b]
+[c]: 3  +4 v2[c]"""
     )
 
     Config.disable_unmatched_checks = True
     result = lhs + rhs
     assert (
         str(result)
-        == """[a]: 4  +2 x1 +4 x3
-[b]: 4  +2 x2 +4 x4
-[c]: 3  +4 x5"""
+        == """[a]: 4  +2 v1[a] +4 v2[a]
+[b]: 4  +2 v1[b] +4 v2[b]
+[c]: 3  +4 v2[c]"""
     )
 
 
 def test_add_expressions_with_dims_and_missing():
+    m = Model()
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
     dim3 = Set(z=[4, 5])
-    lhs = 1 + 2 * Variable(dim, dim2)
-    rhs = 3 + 4 * Variable(dim2_large, dim3)
+    m.v1 = Variable(dim, dim2)
+    m.v2 = Variable(dim2_large, dim3)
+    lhs = 1 + 2 * m.v1
+    rhs = 3 + 4 * m.v2
     with pytest.raises(
         PyoframeError,
         match=re.escape(
@@ -358,14 +377,14 @@ def test_add_expressions_with_dims_and_missing():
     result = lhs + rhs.drop_unmatched()
     assert (
         str(result)
-        == """[1,a,4]: 4  +2 x1 +4 x5
-[1,a,5]: 4  +2 x1 +4 x6
-[1,b,4]: 4  +2 x2 +4 x7
-[1,b,5]: 4  +2 x2 +4 x8
-[2,a,4]: 4  +2 x3 +4 x5
-[2,a,5]: 4  +2 x3 +4 x6
-[2,b,4]: 4  +2 x4 +4 x7
-[2,b,5]: 4  +2 x4 +4 x8"""
+        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[a,4]
+[1,a,5]: 4  +2 v1[1,a] +4 v2[a,5]
+[1,b,4]: 4  +2 v1[1,b] +4 v2[b,4]
+[1,b,5]: 4  +2 v1[1,b] +4 v2[b,5]
+[2,a,4]: 4  +2 v1[2,a] +4 v2[a,4]
+[2,a,5]: 4  +2 v1[2,a] +4 v2[a,5]
+[2,b,4]: 4  +2 v1[2,b] +4 v2[b,4]
+[2,b,5]: 4  +2 v1[2,b] +4 v2[b,5]"""
     )
 
 
@@ -391,7 +410,7 @@ def test_three_way_add():
         pl.DataFrame(
             {"dim1": [1, 2], VAR_KEY: [CONST_TERM, CONST_TERM], COEF_KEY: [9, 4]}
         ),
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -402,7 +421,7 @@ def test_three_way_add():
     assert_frame_equal(
         result.data,
         pl.DataFrame({"dim1": [1], VAR_KEY: [CONST_TERM], COEF_KEY: [9]}),
-        check_dtype=False,
+        **check_dtypes_false,
         check_column_order=False,
     )
 
@@ -446,7 +465,7 @@ def test_no_propogate():
 
 
 def test_variable_equals():
-    m = Model("max")
+    m = Model()
     index = Set(x=[1, 2, 3])
     m.Choose = Variable(index, vtype=VType.BINARY)
     with pytest.raises(
@@ -455,6 +474,49 @@ def test_variable_equals():
     ):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
-    m.objective = sum(m.Choose100)
-    m.solve(log_to_console=False)
-    assert m.objective.value == 300
+    m.maximize = sum(m.Choose100)
+    m.attr.Silent = True
+    m.optimize()
+    assert m.maximize.value == 300
+    assert m.maximize.evaluate() == 300
+
+
+def test_adding_expressions_that_cancel():
+    m = Model()
+    m.x = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.y = Variable(pl.DataFrame({"t": [0, 1]}))
+
+    coef_1 = pl.DataFrame({"t": [0, 1], "value": [1, -1]})
+    coef_2 = pl.DataFrame({"t": [0, 1], "value": [1, 1]})
+
+    m.c = coef_1 * m.x + coef_2 * m.x + m.y >= 0
+
+
+def test_adding_cancelling_expressions_no_dim():
+    m = Model()
+    m.X = Variable()
+    m.c = m.X - m.X >= 0
+
+
+def test_adding_empty_expression():
+    m = Model()
+    m.x = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.y = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.z = Variable(pl.DataFrame({"t": [0, 1]}))
+    m.c = 0 * m.x + m.y >= 0
+    m.c_2 = 0 * m.x + 0 * m.y + m.z >= 0
+    m.c_3 = m.z + 0 * m.x + 0 * m.y >= 0
+
+
+def test_to_and_from_quadratic():
+    m = Model()
+    df = pl.DataFrame({"dim": [1, 2, 3], "value": [1, 2, 3]})
+    m.x1 = Variable()
+    m.x2 = Variable()
+    expr1 = df * m.x1
+    expr2 = df * m.x2 * 2 + 4
+    expr3 = expr1 * expr2
+    expr4 = expr3 - df * m.x1 * df * m.x2 * 2
+    assert expr3.is_quadratic
+    assert not expr4.is_quadratic
+    assert expr4.terms == 3
