@@ -64,6 +64,7 @@ EXAMPLES = [
         skip_solvers=["highs"],  # Has quadratics
     ),
     Example("sudoku"),
+    Example("pumped_storage"),
     Example("production_planning"),
 ]
 
