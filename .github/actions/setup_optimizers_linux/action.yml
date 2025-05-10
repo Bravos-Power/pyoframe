@@ -65,9 +65,12 @@ runs:
         echo "GRB_LICENSE_FILE=${HOME}/gurobi.lic" >> $GITHUB_ENV
     - name: Test Gurobi
       if: ${{ inputs.CHECK_LICENSE == 'true' }}
-      shell: bash
-      run: |
-        gurobi_cl
+      uses: nick-fields/retry@v3    # wait 30 seconds (5x) if all licenses are already in use
+      with:
+        max_attempts: 5
+        retry_wait_seconds: 30
+        timeout_minutes: 1
+        command: gurobi_cl
 
     # - name: Setup COPT Installation
     #   shell: bash

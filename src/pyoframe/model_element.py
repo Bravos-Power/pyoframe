@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import polars as pl
@@ -22,9 +21,9 @@ if TYPE_CHECKING:  # pragma: no cover
 class ModelElement(ABC):
     def __init__(self, data: pl.DataFrame, **kwargs) -> None:
         # Sanity checks, no duplicate column names
-        assert len(data.columns) == len(
-            set(data.columns)
-        ), "Duplicate column names found."
+        assert len(data.columns) == len(set(data.columns)), (
+            "Duplicate column names found."
+        )
 
         cols = _get_dimensions(data)
         if cols is None:
@@ -145,7 +144,7 @@ class SupportPolarsMethodMixin(ABC):
         """
         Filters elements by the given criteria and then drops the filtered dimensions.
 
-        Example:
+        Examples:
             >>> m = pf.Model()
             >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
             >>> m.v.pick(hour="06:00")

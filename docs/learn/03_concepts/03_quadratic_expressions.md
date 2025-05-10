@@ -16,8 +16,11 @@ model.limit_perimter = 2 * (model.w + model.h) <= 20
 model.objective = model.w * model.h
 model.optimize()
 print(f"It's a square: {model.w.solution==model.h.solution}")
+print(f"With area: {model.objective.evaluate()}")
 
-# Outputs: It's a square: True
+# Outputs:
+# It's a square: True
+# With area: 25.0
 ```
 ### Facility Location Problem
 

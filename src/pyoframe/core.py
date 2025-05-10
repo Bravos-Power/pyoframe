@@ -25,6 +25,7 @@ from pyoframe._arithmetic import (
     _add_expressions,
     _get_dimensions,
     _multiply_expressions,
+    _simplify_expr_df,
 )
 from pyoframe.constants import (
     COEF_KEY,
@@ -293,9 +294,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         over_merged = over_frames[0]
 
         for df in over_frames[1:]:
-            assert (
-                set(over_merged.columns) & set(df.columns) == set()
-            ), "All coordinates must have unique column names."
+            assert set(over_merged.columns) & set(df.columns) == set(), (
+                "All coordinates must have unique column names."
+            )
             over_merged = over_merged.join(df, how="cross")
         return over_merged
 
@@ -308,9 +309,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __mul__(self, other):
         if isinstance(other, Set):
-            assert (
-                set(self.data.columns) & set(other.data.columns) == set()
-            ), "Cannot multiply two sets with columns in common."
+            assert set(self.data.columns) & set(other.data.columns) == set(), (
+                "Cannot multiply two sets with columns in common."
+            )
             return Set(self.data, other.data)
         return super().__mul__(other)
 
@@ -424,21 +425,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                     f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
                 )
 
-        super().__init__(data)
+        data = _simplify_expr_df(data)
 
-    # Might add this in later
-    # @classmethod
-    # def empty(cls, dimensions=[], type=None):
-    #     data = {COEF_KEY: [], VAR_KEY: []}
-    #     data.update({d: [] for d in dimensions})
-    #     schema = {COEF_KEY: pl.Float64, VAR_KEY: pl.UInt32}
-    #     if type is not None:
-    #         schema.update({d: t for d, t in zip(dimensions, type)})
-    #     return Expression(
-    #         pl.DataFrame(data).with_columns(
-    #             *[pl.col(c).cast(t) for c, t in schema.items()]
-    #         )
-    #     )
+        super().__init__(data)
 
     @classmethod
     def constant(cls, constant: int | float) -> "Expression":
@@ -631,13 +620,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         df: pl.DataFrame = Set(set).data
         set_dims = _get_dimensions(df)
-        assert (
-            set_dims is not None
-        ), "Cannot use .within() with a set with no dimensions."
+        assert set_dims is not None, (
+            "Cannot use .within() with a set with no dimensions."
+        )
         dims = self.dimensions
-        assert (
-            dims is not None
-        ), "Cannot use .within() with an expression with no dimensions."
+        assert dims is not None, (
+            "Cannot use .within() with an expression with no dimensions."
+        )
         dims_in_common = [dim for dim in dims if dim in set_dims]
         by_dims = df.select(dims_in_common).unique(maintain_order=True)
         return self._new(self.data.join(by_dims, on=dims_in_common))
@@ -881,9 +870,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.expr_2.evaluate()
             63.0
         """
-        assert (
-            self._model is not None
-        ), "Expression must be added to the model to use .value"
+        assert self._model is not None, (
+            "Expression must be added to the model to use .value"
+        )
 
         df = self.data
         sm = self._model.poi
@@ -1011,7 +1000,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 self,
                 size=len(self),
                 dimensions=self.shape,
-                terms=len(self.data),
+                terms=self.terms,
                 degree=2 if self.degree() == 2 else None,
             )
         if include_header and include_data:
@@ -1030,6 +1019,27 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __str__(self) -> str:
         return self.to_str()
+
+    @property
+    def terms(self) -> int:
+        """
+        Number of terms across all subexpressions.
+
+        Expressions equal to zero count as one term.
+
+        Examples:
+            >>> import polars as pl
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable({"t": [1, 2]})
+            >>> coef = pl.DataFrame({"t": [1, 2], "coef": [0, 1]})
+            >>> coef*(m.v+4)
+            <Expression size=2 dimensions={'t': 2} terms=3>
+            [1]: 0
+            [2]: 4  + v[2]
+            >>> (coef*(m.v+4)).terms
+            3
+        """
+        return len(self.data)
 
 
 @overload
@@ -1063,9 +1073,9 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
         by = [by]
     expr = expr.to_expr()
     dimensions = expr.dimensions
-    assert (
-        dimensions is not None
-    ), "Cannot sum by dimensions with an expression with no dimensions."
+    assert dimensions is not None, (
+        "Cannot sum by dimensions with an expression with no dimensions."
+    )
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
 
@@ -1319,9 +1329,9 @@ class Constraint(ModelElementWithId):
             return self
 
         var_name = f"{self.name}_relaxation"
-        assert not hasattr(
-            m, var_name
-        ), "Conflicting names, relaxation variable already exists on the model."
+        assert not hasattr(m, var_name), (
+            "Conflicting names, relaxation variable already exists on the model."
+        )
         var = Variable(self, lb=0, ub=max)
         setattr(m, var_name, var)
 
@@ -1449,9 +1459,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         equals: Optional[SupportsMath] = None,
     ):
         if equals is not None:
-            assert (
-                len(indexing_sets) == 0
-            ), "Cannot specify both 'equals' and 'indexing_sets'"
+            assert len(indexing_sets) == 0, (
+                "Cannot specify both 'equals' and 'indexing_sets'"
+            )
             indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -1571,6 +1581,30 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         solution = self.attr.Value
         if isinstance(solution, pl.DataFrame):
             solution = solution.rename({"Value": SOLUTION_KEY})
+
+        if self.vtype in [VType.BINARY, VType.INTEGER]:
+            if isinstance(solution, pl.DataFrame):
+                solution = solution.with_columns(
+                    pl.col("solution").alias("solution_float"),
+                    pl.col("solution").round().cast(pl.Int64),
+                )
+                if Config.integer_tolerance != 0:
+                    df = solution.filter(
+                        (pl.col("solution_float") - pl.col("solution")).abs()
+                        > Config.integer_tolerance
+                    )
+                    assert df.is_empty(), (
+                        f"Variable {self.name} has a non-integer value: {df}\nThis should not happen."
+                    )
+                solution = solution.drop("solution_float")
+            else:
+                solution_float = solution
+                solution = int(round(solution))
+                if Config.integer_tolerance != 0:
+                    assert abs(solution - solution_float) < Config.integer_tolerance, (
+                        f"Value of variable {self.name} is not an integer: {solution}. This should not happen."
+                    )
+
         return solution
 
     def __repr__(self):
