@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyoframe"
-version = "0.1.5"
 authors = [{ name = "Bravos Power", email = "dev@bravospower.com" }]
 description = "Blazing fast linear program interface"
 readme = "README.md"
 requires-python = ">=3.9"
+dynamic = ["version"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -58,6 +58,10 @@ include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules --ignore=scripts"
+
+[tool.setuptools_scm]
+version_file = "src/pyoframe/_version.py"
+local_scheme = "no-local-version"
 
 [project.urls]
 Homepage = "https://bravos-power.github.io/pyoframe/"
