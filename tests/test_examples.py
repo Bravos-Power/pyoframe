@@ -65,6 +65,7 @@ EXAMPLES = [
     ),
     Example("sudoku"),
     Example("pumped_storage"),
+    Example("production_planning"),
 ]
 
 
