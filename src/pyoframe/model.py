@@ -8,6 +8,7 @@ import pyoptinterface as poi
 from pyoframe.constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
+    SUPPORTED_SOLVERS,
     Config,
     ObjSense,
     ObjSenseValue,
@@ -34,12 +35,13 @@ class Model:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
             Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+            Does not work with HiGHS (see [here](https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430)).
         sense:
             Either "min" or "max". Indicates whether it's a minmization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
             set when the objective is set using `.minimize` or `.maximize`.
 
-    Example:
+    Examples:
         >>> m = pf.Model()
         >>> m.X = pf.Variable()
         >>> m.my_constraint = m.X <= 10
@@ -106,7 +108,7 @@ class Model:
     ):
         if solver is None:
             if Config.default_solver is None:
-                for solver_option in ["highs", "gurobi"]:
+                for solver_option in SUPPORTED_SOLVERS:
                     try:
                         return cls.create_poi_model(solver_option, solver_env)
                     except RuntimeError:
@@ -233,9 +235,9 @@ class Model:
             and __name not in Model._reserved_attributes
         ):
             if isinstance(__value, ModelElementWithId):
-                assert not hasattr(
-                    self, __name
-                ), f"Cannot create {__name} since it was already created."
+                assert not hasattr(self, __name), (
+                    f"Cannot create {__name} since it was already created."
+                )
 
             __value.on_add_to_model(self, __name)
 
@@ -256,12 +258,32 @@ class Model:
             objective=bool(self.objective),
         )
 
-    def write(self, file_path: Union[Path, str]):
+    def write(self, file_path: Union[Path, str], pretty: bool = False):
+        """
+        Output the model to a file.
+
+        Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
+        Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
+
+        Parameters:
+            file_path:
+                The path to the file to write to.
+            pretty:
+                Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
+        """
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        self.poi.write(str(file_path))
+        kwargs = {}
+        if self.solver_name == "highs":
+            if self.use_var_names:
+                self.params.write_solution_style = 1
+            kwargs["pretty"] = pretty
+        self.poi.write(str(file_path), **kwargs)
 
     def optimize(self):
+        """
+        Optimize the model using your selected solver (e.g. Gurobi, HiGHS).
+        """
         self.poi.optimize()
 
     @for_solvers("gurobi")
@@ -273,7 +295,7 @@ class Model:
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
-        Example:
+        Examples:
             >>> m = pf.Model(solver="gurobi")
             >>> m.X = pf.Variable(vtype=pf.VType.BINARY, lb=0)
             >>> m.Y = pf.Variable(vtype=pf.VType.INTEGER, lb=0)
@@ -282,7 +304,7 @@ class Model:
             >>> m.maximize = 3 * m.X + 2 * m.Y + m.Z
             >>> m.optimize()
             >>> m.X.solution, m.Y.solution, m.Z.solution
-            (1.0, 9.0, 0.0)
+            (1, 9, 0.0)
             >>> m.my_constraint.dual
             Traceback (most recent call last):
             ...
@@ -310,7 +332,7 @@ class Model:
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
-        Example:
+        Examples:
             >>> m = pf.Model(solver="gurobi")
             >>> m.X = pf.Variable(lb=0, ub=2)
             >>> m.Y = pf.Variable(lb=0, ub=2)
@@ -329,6 +351,38 @@ class Model:
         """
         self.poi.computeIIS()
 
+    @for_solvers("gurobi")
+    def dispose(self):
+        """
+        Tries to close the solver connection by deleting the model and forcing the garbage collector to run.
+
+        Gurobi only. Once this method is called, this model is no longer usable.
+
+        This method will not work if you have a variable that references self.poi.
+        Unfortunately, this is a limitation from the underlying solver interface library.
+        See https://github.com/metab0t/PyOptInterface/issues/36 for context.
+
+        Examples:
+            >>> m = pf.Model(solver="gurobi")
+            >>> m.X = pf.Variable(ub=1)
+            >>> m.maximize = m.X
+            >>> m.optimize()
+            >>> m.X.solution
+            1.0
+            >>> m.dispose()
+            >>> m.X.solution
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'Model' object has no attribute 'poi'
+        """
+        import gc
+
+        env = self.poi._env
+        del self.poi
+        gc.collect()
+        del env
+        gc.collect()
+
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
 
@@ -338,11 +392,17 @@ class Model:
     def _set_attr(self, name, value):
         try:
             self.poi.set_model_attribute(poi.ModelAttribute[name], value)
-        except KeyError:
-            self.poi.set_model_raw_attribute(name, value)
+        except KeyError as e:
+            if self.solver_name == "gurobi":
+                self.poi.set_model_raw_attribute(name, value)
+            else:
+                raise e
 
     def _get_attr(self, name):
         try:
             return self.poi.get_model_attribute(poi.ModelAttribute[name])
-        except KeyError:
-            return self.poi.get_model_raw_attribute(name)
+        except KeyError as e:
+            if self.solver_name == "gurobi":
+                return self.poi.get_model_raw_attribute(name)
+            else:
+                raise e

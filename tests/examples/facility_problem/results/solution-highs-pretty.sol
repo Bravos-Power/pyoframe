@@ -1,5 +1,11 @@
-# Solution for model facility
-# Objective value = 210500
+Model status
+Optimal
+
+# Primal solution values
+Feasible
+Objective 210500
+# Columns 26
+ONE 1
 open[0] 1
 open[1] 1
 open[2] 0
@@ -25,3 +31,20 @@ transport[3,1] 8
 transport[3,2] 0
 transport[3,3] 0
 transport[3,4] 6
+# Rows 9
+con_max_capacity[0] 0
+con_max_capacity[1] 0
+con_max_capacity[2] 0
+con_max_capacity[3] 0
+con_max_capacity[4] -12
+con_meet_demand[0] 0
+con_meet_demand[1] 0
+con_meet_demand[2] 0
+con_meet_demand[3] 0
+
+# Dual solution values
+None
+
+# Basis
+HiGHS v1
+None

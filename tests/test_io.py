@@ -1,7 +1,11 @@
+import os
+from tempfile import TemporaryDirectory
+
+import gurobipy as gp
 import polars as pl
 import pytest
 
-from pyoframe import Expression, Model, Variable
+from pyoframe import Model, Variable, sum
 
 
 def test_variables_to_string():
@@ -69,6 +73,64 @@ x1 * x1 <= 5"""
 [2]: x2[2] * x1 <= 5
 [3]: x2[3] * x1 <= 5"""
     )
+
+
+def test_write_lp(use_var_names, solver):
+    with TemporaryDirectory() as tmpdir:
+        m = Model(use_var_names=use_var_names)
+        cities = pl.DataFrame(
+            {
+                "city": ["Toronto", "Montreal", "Vancouver"],
+                "country": ["CAN", "CAN", "CAN"],
+                "rent": [1000, 800, 1200],
+                "capacity": [100, 200, 150],
+            }
+        )
+        m.population = Variable(cities[["country", "city"]])
+        m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
+        m.total_pop = sum(m.population) >= 310
+        m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
+
+        file_path = os.path.join(tmpdir, "test.lp")
+        m.write(file_path)
+        m.optimize()
+        obj_value = m.objective.value
+        gp_model = gp.read(file_path)
+        gp_model.optimize()
+        assert gp_model.ObjVal == obj_value
+
+        with open(file_path) as f:
+            if use_var_names:
+                assert "population[CAN,Toronto]" in f.read()
+            else:
+                assert "population[CAN,Toronto]" not in f.read()
+
+
+def test_write_sol(use_var_names):
+    with TemporaryDirectory() as tmpdir:
+        m = Model(use_var_names=use_var_names)
+        cities = pl.DataFrame(
+            {
+                "city": ["Toronto", "Montreal", "Vancouver"],
+                "country": ["CAN", "CAN", "CAN"],
+                "rent": [1000, 800, 1200],
+                "capacity": [100, 200, 150],
+            }
+        )
+        m.population = Variable(cities[["country", "city"]])
+        m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
+        m.total_pop = sum(m.population) >= 310
+        m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
+
+        file_path = os.path.join(tmpdir, "test.sol")
+        m.optimize()
+        m.write(file_path)
+
+        with open(file_path) as f:
+            if use_var_names:
+                assert "population[CAN,Toronto]" in f.read()
+            else:
+                assert "population[CAN,Toronto]" not in f.read()
 
 
 if __name__ == "__main__":

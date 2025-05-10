@@ -1,6 +1,6 @@
 # MIT License
 # Copyright (c) 2021 Viacheslav Poturaev
-name: line-count
+name: Comment on PR with lines changed
 on:
   pull_request:
 
