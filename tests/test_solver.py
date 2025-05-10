@@ -203,8 +203,7 @@ def test_setting_model_attr(solver):
     assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
-@pytest.mark.parametrize("use_var_names", [True, False])
-def test_const_term_in_objective(use_var_names):
+def test_const_term_in_objective(use_var_names, solver):
     m = pf.Model(use_var_names=use_var_names)
     m.A = pf.Variable(ub=10)
     m.maximize = 10 + m.A

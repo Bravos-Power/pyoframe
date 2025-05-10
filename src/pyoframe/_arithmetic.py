@@ -81,14 +81,14 @@ def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expr
         self, other = other, self
         self_degree, other_degree = other_degree, self_degree
     if other_degree == 1:
-        assert (
-            self_degree == 1
-        ), "This should always be true since the sum of degrees must be <=2."
+        assert self_degree == 1, (
+            "This should always be true since the sum of degrees must be <=2."
+        )
         return _quadratic_multiplication(self, other)
 
-    assert (
-        other_degree == 0
-    ), "This should always be true since other cases have already been handled."
+    assert other_degree == 0, (
+        "This should always be true since other cases have already been handled."
+    )
     multiplier = other.data.drop(
         VAR_KEY
     )  # QUAD_VAR_KEY doesn't need to be dropped since we know it doesn't exist
@@ -248,9 +248,9 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
             left_data = left.data.join(get_indices(right), how="inner", on=dims)
             right_data = right.data.join(get_indices(left), how="inner", on=dims)
         elif strat == (UnmatchedStrategy.UNSET, UnmatchedStrategy.UNSET):
-            assert (
-                not Config.disable_unmatched_checks
-            ), "This code should not be reached when unmatched checks are disabled."
+            assert not Config.disable_unmatched_checks, (
+                "This code should not be reached when unmatched checks are disabled."
+            )
             outer_join = get_indices(left).join(
                 get_indices(right),
                 how="full" if POLARS_VERSION.major >= 1 else "outer",
@@ -280,9 +280,9 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
                     + str(left_data.filter(left_data.get_column(COEF_KEY).is_null()))
                 )
         elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET):
-            assert (
-                not Config.disable_unmatched_checks
-            ), "This code should not be reached when unmatched checks are disabled."
+            assert not Config.disable_unmatched_checks, (
+                "This code should not be reached when unmatched checks are disabled."
+            )
             unmatched = right.data.join(get_indices(left), how="anti", on=dims)
             if len(unmatched) > 0:
                 raise PyoframeError(
@@ -363,16 +363,67 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
 
 
 def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
-    """Combines terms with the same variables. Removes quadratic column if they all happen to cancel."""
+    """Combines terms with the same variables."""
     dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
     var_cols = [VAR_KEY] + ([QUAD_VAR_KEY] if QUAD_VAR_KEY in df.columns else [])
-    df = (
-        df.group_by(dims + var_cols, maintain_order=True)
-        .sum()
-        .filter(pl.col(COEF_KEY) != 0)
-    )
+    df = df.group_by(dims + var_cols, maintain_order=True).sum()
+    return df
+
+
+def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
+    """
+    Removes the quadratic column and terms with a zero coefficient, when applicable.
+
+    Specifically, zero coefficient terms are always removed, except if they're the only terms in which case the expression contains a single term.
+    The quadratic column is removed if the expression is not a quadratic.
+
+    Examples:
+
+        >>> import polars as pl
+        >>> df = pl.DataFrame({ VAR_KEY: [CONST_TERM, 1], QUAD_VAR_KEY: [CONST_TERM, 1], COEF_KEY: [1.0, 0]})
+        >>> _simplify_expr_df(df)
+        shape: (1, 2)
+        ┌───────────────┬─────────┐
+        │ __variable_id ┆ __coeff │
+        │ ---           ┆ ---     │
+        │ i64           ┆ f64     │
+        ╞═══════════════╪═════════╡
+        │ 0             ┆ 1.0     │
+        └───────────────┴─────────┘
+        >>> df = pl.DataFrame({"t": [1, 1, 2, 2, 3, 3], VAR_KEY: [CONST_TERM, 1, CONST_TERM, 1, 1, 2], QUAD_VAR_KEY: [CONST_TERM, CONST_TERM, CONST_TERM, CONST_TERM, CONST_TERM, 1], COEF_KEY: [1, 0, 0, 0, 1, 0]})
+        >>> _simplify_expr_df(df)
+        shape: (3, 3)
+        ┌─────┬───────────────┬─────────┐
+        │ t   ┆ __variable_id ┆ __coeff │
+        │ --- ┆ ---           ┆ ---     │
+        │ i64 ┆ i64           ┆ i64     │
+        ╞═════╪═══════════════╪═════════╡
+        │ 1   ┆ 0             ┆ 1       │
+        │ 2   ┆ 0             ┆ 0       │
+        │ 3   ┆ 1             ┆ 1       │
+        └─────┴───────────────┴─────────┘
+    """
+    df_filtered = df.filter(pl.col(COEF_KEY) != 0)
+    if len(df_filtered) < len(df):
+        dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
+        if dims:
+            dim_values = df.select(dims).unique(maintain_order=True)
+            df = (
+                dim_values.join(df_filtered, on=dims, how="left")
+                .with_columns(pl.col(COEF_KEY).fill_null(0))
+                .fill_null(CONST_TERM)
+            )
+        else:
+            df = df_filtered
+            if df.is_empty():
+                df = pl.DataFrame(
+                    {VAR_KEY: [CONST_TERM], COEF_KEY: [0]},
+                    schema={VAR_KEY: KEY_TYPE, COEF_KEY: pl.Float64},
+                )
+
     if QUAD_VAR_KEY in df.columns and (df.get_column(QUAD_VAR_KEY) == CONST_TERM).all():
         df = df.drop(QUAD_VAR_KEY)
+
     return df
 
 

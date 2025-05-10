@@ -14,7 +14,7 @@ model.w = pf.Variable(lb=0)
 model.h = pf.Variable(lb=0)
 model.limit_perimter = 2 * (model.w + model.h) <= 20
 model.objective = model.w * model.h
-model.solve()
+model.optimize()
 print(f"It's a square: {model.w.solution==model.h.solution}")
 print(f"With area: {model.objective.evaluate()}")
 

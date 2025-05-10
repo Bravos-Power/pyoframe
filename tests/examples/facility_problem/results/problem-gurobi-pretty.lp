@@ -1,4 +1,5 @@
 \ LP format - for model browsing. Use MPS format to capture full model detail.
+\ Signature: 0x13f1dc31c723ad33
 Minimize
   12000 open[0] + 15000 open[1] + 17000 open[2] + 13000 open[3]
    + 16000 open[4] + 4000 transport[0,0] + 2000 transport[0,1]
