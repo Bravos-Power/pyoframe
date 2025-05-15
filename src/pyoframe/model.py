@@ -277,6 +277,16 @@ class Model:
         """
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # If using IPOPT, raise an informative exception
+        if self.solver_name == "ipopt":
+            extension = file_path.suffix.lower()
+            raise NotImplementedError(
+                f"IPOPT does not support writing models to {extension} files. "
+                "Use another solver like Gurobi or HiGHS if you need file export capabilities."
+            )
+
+        # Default handling for other solvers
         kwargs = {}
         if self.solver_name == "highs":
             if self.use_var_names:
