@@ -1540,6 +1540,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             warnings.warn(
                 f"IPOPT only supports continuous variables, but {self.vtype} was specified. The variable will be treated as continuous."
             )
+            # Should we raise a Pyoframe exception instead?
 
         # Rest of the method remains the same as original
         if self.dimensions is not None and self._model.use_var_names:

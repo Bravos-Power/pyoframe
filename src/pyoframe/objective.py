@@ -3,6 +3,7 @@ from __future__ import annotations
 import pyoptinterface as poi
 
 from pyoframe.core import Expression, SupportsToExpr
+from pyoframe.constants import ObjSense
 
 
 class Objective(Expression):
@@ -59,6 +60,10 @@ class Objective(Expression):
         self, expr: SupportsToExpr | int | float, _constructive: bool = False
     ) -> None:
         self._constructive = _constructive
+        self._negated_for_ipopt = (
+            False  # Add this flag to track if we negated the objective
+        )
+
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
@@ -74,10 +79,15 @@ class Objective(Expression):
     def value(self) -> float:
         """
         The value of the objective function (only available after solving the model).
-
         This value is obtained by directly querying the solver.
         """
-        return self._model.poi.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
+        obj_value = self._model.poi.get_model_attribute(
+            poi.ModelAttribute.ObjectiveValue
+        )
+        # If we're using IPOPT with maximization, negate the result back
+        if self._negated_for_ipopt:
+            return -obj_value
+        return obj_value
 
     def on_add_to_model(self, model, name):
         super().on_add_to_model(model, name)
@@ -86,7 +96,39 @@ class Objective(Expression):
             raise ValueError(
                 "Can't set an objective without specifying the sense. Did you use .objective instead of .minimize or .maximize ?"
             )
-        self._model.poi.set_objective(self.to_poi(), sense=self._model.sense.to_poi())
+
+        # Check if we're using IPOPT and maximizing
+        solver_name = self._model.solver_name
+        is_ipopt = "ipopt" in solver_name
+        is_maximizing = self._model.sense == ObjSense.MAX
+
+        # Handle IPOPT maximization case
+        if is_ipopt and is_maximizing:
+            print("womp womp")
+            # Get the original objective function
+            original_obj = self.to_poi()
+
+            # Extract the data
+            coefficients = original_obj.coefficients
+            variables = original_obj.variables
+
+            # Create a new objective function with negated coefficients
+            negated_obj = poi.ScalarAffineFunction(
+                coefficients=[-c for c in coefficients], variables=variables
+            )
+
+            # Set flag to remind us to negate the solution later
+            self._negated_for_ipopt = True
+
+            # Always use minimize for IPOPT
+            self._model.poi.set_objective(
+                negated_obj, sense=poi.ObjectiveSense.Minimize
+            )
+        else:
+            # Normal case for other solvers
+            self._model.poi.set_objective(
+                self.to_poi(), sense=self._model.sense.to_poi()
+            )
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)
