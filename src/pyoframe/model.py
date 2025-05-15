@@ -135,6 +135,10 @@ class Model:
             from pyoptinterface import highs
 
             model = highs.Model()
+        elif solver == "ipopt":
+            from pyoptinterface import ipopt
+
+            model = ipopt.Model()
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."

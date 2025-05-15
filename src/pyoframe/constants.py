@@ -20,8 +20,8 @@ QUAD_VAR_KEY = "__quadratic_variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
-SUPPORTED_SOLVERS = ["gurobi", "highs"]
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs"]
+SUPPORTED_SOLVERS = ["gurobi", "highs", "ipopt"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt"]
 KEY_TYPE = pl.UInt32
 
 # Variable ID for constant terms. This variable ID is reserved.
