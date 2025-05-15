@@ -1523,12 +1523,25 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             ).select(self.dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
-        kwargs = dict(domain=self.vtype.to_poi())
+        # Create base kwargs
+        kwargs = {}
         if self.lb is not None:
-            kwargs["lb"] = self.lb
+            kwargs["lb"] = float(self.lb)  # Convert to float for IPOPT
         if self.ub is not None:
-            kwargs["ub"] = self.ub
+            kwargs["ub"] = float(self.ub)  # Convert to float for IPOPT
 
+        # Check solver type and adjust kwargs accordingly
+        solver_name = self._model.solver_name
+        # Only add domain for solvers that support it (not IPOPT)
+        if "ipopt" not in solver_name:
+            kwargs["domain"] = self.vtype.to_poi()
+        elif self.vtype != VType.CONTINUOUS:
+            # If using IPOPT but trying to add non-continuous variables, warn the user
+            warnings.warn(
+                f"IPOPT only supports continuous variables, but {self.vtype} was specified. The variable will be treated as continuous."
+            )
+
+        # Rest of the method remains the same as original
         if self.dimensions is not None and self._model.use_var_names:
             df = (
                 concat_dimensions(self.data, prefix=self.name)
