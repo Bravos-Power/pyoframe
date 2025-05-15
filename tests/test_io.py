@@ -75,9 +75,21 @@ x1 * x1 <= 5"""
     )
 
 
+@pytest.mark.parametrize("use_var_names", [True, False])
+@pytest.mark.parametrize(
+    "solver",
+    [
+        "gurobi",
+        "highs",
+        pytest.param(
+            "ipopt",
+            marks=pytest.mark.skip(reason="IPOPT doesn't support writing LP files"),
+        ),
+    ],
+)
 def test_write_lp(use_var_names, solver):
     with TemporaryDirectory() as tmpdir:
-        m = Model(use_var_names=use_var_names)
+        m = Model(use_var_names=use_var_names, solver=solver)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -90,7 +102,6 @@ def test_write_lp(use_var_names, solver):
         m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
         m.total_pop = sum(m.population) >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
-
         file_path = os.path.join(tmpdir, "test.lp")
         m.write(file_path)
         m.optimize()
@@ -98,7 +109,6 @@ def test_write_lp(use_var_names, solver):
         gp_model = gp.read(file_path)
         gp_model.optimize()
         assert gp_model.ObjVal == obj_value
-
         with open(file_path) as f:
             if use_var_names:
                 assert "population[CAN,Toronto]" in f.read()
@@ -106,9 +116,23 @@ def test_write_lp(use_var_names, solver):
                 assert "population[CAN,Toronto]" not in f.read()
 
 
-def test_write_sol(use_var_names):
+@pytest.mark.parametrize("use_var_names", [True, False])
+@pytest.mark.parametrize(
+    "solver",
+    [
+        "gurobi",
+        "highs",
+        pytest.param(
+            "ipopt",
+            marks=pytest.mark.skip(
+                reason="IPOPT doesn't support writing solution files"
+            ),
+        ),
+    ],
+)
+def test_write_sol(use_var_names, solver):
     with TemporaryDirectory() as tmpdir:
-        m = Model(use_var_names=use_var_names)
+        m = Model(use_var_names=use_var_names, solver=solver)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -121,11 +145,9 @@ def test_write_sol(use_var_names):
         m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
         m.total_pop = sum(m.population) >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
-
         file_path = os.path.join(tmpdir, "test.sol")
         m.optimize()
         m.write(file_path)
-
         with open(file_path) as f:
             if use_var_names:
                 assert "population[CAN,Toronto]" in f.read()
