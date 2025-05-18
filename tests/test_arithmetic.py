@@ -464,9 +464,17 @@ def test_no_propogate():
     assert str(result) == "[1]: 10"
 
 
-def test_variable_equals():
-    m = Model()
+def test_variable_equals(solver):
+    m = Model(solver=solver)
     index = Set(x=[1, 2, 3])
+
+    # If using IPOPT, we should expect an exception when using binary variables
+    if "ipopt" in solver:
+        pytest.skip(
+            "IPOPT doesn't support binary variables, skipping remainder of test"
+        )
+
+    # For other solvers, continue with the original test
     m.Choose = Variable(index, vtype=VType.BINARY)
     with pytest.raises(
         AssertionError,
