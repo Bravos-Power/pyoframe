@@ -33,6 +33,7 @@ from pyoframe.constants import (
     CONSTRAINT_KEY,
     DUAL_KEY,
     KEY_TYPE,
+    POLARS_VERSION,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
@@ -345,11 +346,18 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         elif isinstance(set, Constraint):
             df = set.data.select(set.dimensions_unsafe)
         elif isinstance(set, SupportsMath):
-            df = (
-                set.to_expr()
-                .data.drop(RESERVED_COL_KEYS, strict=False)
-                .unique(maintain_order=True)
-            )
+            if POLARS_VERSION.major < 1:
+                df = (
+                    set.to_expr()
+                    .data.drop(RESERVED_COL_KEYS)
+                    .unique(maintain_order=True)
+                )
+            else:
+                df = (
+                    set.to_expr()
+                    .data.drop(RESERVED_COL_KEYS, strict=False)
+                    .unique(maintain_order=True)
+                )
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
         elif isinstance(set, pd.DataFrame):
@@ -792,9 +800,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 keys = keys.with_columns(
                     pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
                 )
-            data = data.join(
-                keys, on=dim + self._variable_columns, how="full", coalesce=True
-            ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
+            if POLARS_VERSION.major >= 1:
+                data = data.join(
+                    keys, on=dim + self._variable_columns, how="full", coalesce=True
+                )
+            else:
+                data = data.join(
+                    keys, on=dim + self._variable_columns, how="outer_coalesce"
+                )
+            data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
             pl.when(pl.col(VAR_KEY) == CONST_TERM)
@@ -812,7 +826,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
             dims_df = self.data.select(dims).unique(maintain_order=True)
-            df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
+            if POLARS_VERSION.major >= 1:
+                df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
+            else:
+                df = constant_terms.join(dims_df, on=dims, how="outer_coalesce")
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
@@ -1613,7 +1630,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
     def to_expr(self) -> Expression:
         self._assert_has_ids()
-        return self._new(self.data.drop(SOLUTION_KEY, strict=False))
+        if POLARS_VERSION.major < 1:
+            return self._new(self.data.drop(SOLUTION_KEY))
+        else:
+            return self._new(self.data.drop(SOLUTION_KEY, strict=False))
 
     def _new(self, data: pl.DataFrame):
         self._assert_has_ids()
@@ -1690,7 +1710,12 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         expr = self.to_expr()
         data = expr.data.rename({dim: "__prev"})
 
-        data = data.join(
-            wrapped, left_on="__prev", right_on="__next", how="inner"
-        ).drop(["__prev", "__next"], strict=False)
+        if POLARS_VERSION.major < 1:
+            data = data.join(
+                wrapped, left_on="__prev", right_on="__next", how="inner"
+            ).drop(["__prev", "__next"])
+        else:
+            data = data.join(
+                wrapped, left_on="__prev", right_on="__next", how="inner"
+            ).drop(["__prev", "__next"], strict=False)
         return expr._new(data)

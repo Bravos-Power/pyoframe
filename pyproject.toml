@@ -17,10 +17,11 @@ classifiers = [
     "Natural Language :: English",
 ]
 dependencies = [
-    "polars~=1.0",
+    "polars>=0.20,<2",
     "numpy",
     "pyarrow",
     "pandas",
+    "packaging",
     "pyoptinterface>=0.4.1,<1",
 ]
 
