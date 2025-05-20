@@ -10,7 +10,6 @@ from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     KEY_TYPE,
-    POLARS_VERSION,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
@@ -253,7 +252,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
             )
             outer_join = get_indices(left).join(
                 get_indices(right),
-                how="full" if POLARS_VERSION.major >= 1 else "outer",
+                how="full",
                 on=dims,
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
