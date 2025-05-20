@@ -124,13 +124,13 @@ class Model:
             from pyoptinterface import gurobi
 
             if solver_env is None:
-                model = gurobi.Model()
+                env = gurobi.Env()
             else:
                 env = gurobi.Env(empty=True)
                 for key, value in solver_env.items():
                     env.set_raw_parameter(key, value)
                 env.start()
-                model = gurobi.Model(env)
+            model = gurobi.Model(env)
         elif solver == "highs":
             from pyoptinterface import highs
 
@@ -351,16 +351,17 @@ class Model:
         """
         self.poi.computeIIS()
 
-    @for_solvers("gurobi")
     def dispose(self):
         """
-        Closes the connection to the solver and disposes of the model (Gurobi only).
+        Disposes of the model and cleans up the solver environment.
 
-        Once this method is called, the model cannot be used anymore.
-        You can alternatively use `del model` to achieve the same effect.
+        When using Gurobi compute server, this cleanup will
+        ensure your run is not marked as 'ABORTED'.
+
+        Note that once the model is disposed, it cannot be used anymore.
 
         Examples:
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model()
             >>> m.X = pf.Variable(ub=1)
             >>> m.maximize = m.X
             >>> m.optimize()
@@ -372,13 +373,11 @@ class Model:
             ...
             AttributeError: 'Model' object has no attribute 'poi'
         """
-        env = self.poi._env
-        self.poi.close()
-        env.close()
-
-    def __del__(self):
         if self.solver_name == "gurobi":
-            self.dispose()
+            env = self.poi._env
+        self.poi.close()
+        if self.solver_name == "gurobi":
+            env.close()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
