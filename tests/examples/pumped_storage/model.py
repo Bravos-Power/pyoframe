@@ -75,10 +75,7 @@ def read_hourly_prices():
             .then(pl.lit("earliest"))
             .otherwise(pl.lit("latest")),
         ).alias("tick"),
-        pl.col("DE-LU")
-        .str.replace(",", ".", literal=True)
-        .str.to_decimal()
-        .alias("price"),
+        pl.col("DE-LU").str.replace(",", ".", literal=True).cast(float).alias("price"),
     )
 
     return df

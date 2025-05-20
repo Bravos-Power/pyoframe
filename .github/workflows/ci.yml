@@ -25,7 +25,7 @@ jobs:
         latest: [true]
         include:
           - python-version: "3.9"
-            polars-version: "0.20.27"
+            polars-version: "0.20.31"
             latest: false
     steps:
       # Important checks to ensure that the user has the required permissions. See note above.
