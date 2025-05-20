@@ -1,5 +1,10 @@
+# Note: We use the insecure pull_request_target to allow running workflows from forks.
+# However, we've added checks (see below) for safety.
+# In short, the 'safe to test' label must exist AND the workflow must be run by someone with write access.
+# See more details here:
+#   - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
+#   - https://michaelheap.com/access-secrets-from-forks/
 name: Tests
-
 on:
   push:
     branches: [main]
