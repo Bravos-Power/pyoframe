@@ -4,16 +4,16 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ "*" ]
+    branches: [ '*' ]
   workflow_call:
     inputs:
       pr_ref:
-        required: true
+        required: false
         type: string
     secrets:
       GUROBI_WLS:
         required: true
-      GITHUB_TOKEN:
+      CODECOV_TOKEN:
         required: true
   schedule:
   - cron: "0 5 * * WED"
@@ -23,7 +23,7 @@ jobs:
   run:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    continue-on-error: ! ${{ matrix.latest }}
+    continue-on-error:  ${{ !matrix.latest }}
     strategy:
       fail-fast: true
       matrix:

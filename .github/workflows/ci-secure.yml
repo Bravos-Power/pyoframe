@@ -10,7 +10,7 @@ on:
     branches: [ '*' ]
   workflow_dispatch:
 jobs:
-  secure_test:
+  run_safety_checks:
     if: github.event.pull_request.head.repo.full_name != github.repository
       # Important checks to ensure that the user has the required permissions. See note above.
       # Step 1: If user has current permissions we're good!
@@ -42,9 +42,11 @@ jobs:
           echo "${{ github.triggering_actor }} does not have permissions on this repo."
           echo "Re-run the test yourself if you have write permissions. Alternatively, add the label 'safe to test' to the PR to give the user write permissions (only if you trust them)."
           exit 1
-      - name: Run tests    
-        uses: ./.github/workflows/tests.yml
-        with:
-          pr_ref: ${{ github.event.pull_request.head.sha }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
+  run:
+    needs: run_safety_checks
+    uses: ./.github/workflows/ci.yml
+    with:
+      pr_ref: ${{ github.event.pull_request.head.sha }}
+    secrets:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
