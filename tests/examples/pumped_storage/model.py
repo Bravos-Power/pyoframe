@@ -7,59 +7,47 @@ import polars as pl
 import pyoframe as pf
 
 
-def solve_model(use_var_names=True):
-    hourly_prices = read_hourly_prices()
-    pump_max = 70
-    turb_max = 90
-    effic = 0.75
-    storage_capacity = 630
-    storage_lower_bound = 100
-    storage_level_init = 300
-    storage_level_final = 300
-    tick_with_initial = pl.concat(
-        (
-            hourly_prices[["tick"]]
-            .min()
-            .with_columns(pl.col("tick").dt.offset_by("-1h")),
-            hourly_prices[["tick"]],
-        )
+def solve_model(
+    use_var_names: bool = True, hourly_timestep: int = 6, **kwargs
+) -> pf.Model:
+    """
+    Solve a pump storage model.
+
+    Parameters:
+        use_var_names: Whether to use variable names in the model.
+        resolution_hours: By increasing the timestep, the model will be solved faster. The default is high so that the tests run faster.
+        **kwargs: Additional arguments for the pyoframe Model.
+
+    """
+    hourly_prices = read_hourly_prices().filter(
+        pl.col("tick").dt.hour() % hourly_timestep == 0
     )
+    pump_max, turb_max = 70, 90
+    storage_min, storage_max = 100, 630
+    storage_level_init_and_final = 300
+    efficiency = 0.75
 
-    m = pf.Model("unit commitment problem", use_var_names=True)
-
+    m = pf.Model(use_var_names=use_var_names, **kwargs)
     m.Pump = pf.Variable(hourly_prices[["tick"]], vtype=pf.VType.BINARY)
-    # ub is redundant since it will be set also in logical condition that pump and turbine cannot work at the same time
     m.Turb = pf.Variable(hourly_prices[["tick"]], lb=0, ub=turb_max)
     m.Storage_level = pf.Variable(
-        tick_with_initial, lb=storage_lower_bound, ub=storage_capacity
+        hourly_prices[["tick"]], lb=storage_min, ub=storage_max
     )
     m.initial_storage_level = (
-        m.Storage_level.filter(
-            pl.col("tick") == tick_with_initial[["tick"]].min().item(0, 0)
-        )
-        == storage_level_init
-    )
-    m.final_storage_level = (
-        m.Storage_level.filter(
-            pl.col("tick") == hourly_prices[["tick"]].max().item(0, 0)
-        )
-        == storage_level_final
-    )
-
-    previous_hour_storage_level = m.Storage_level.with_columns(
-        pl.col("tick").dt.offset_by("1h")
+        m.Storage_level.filter(pl.col("tick") == hourly_prices["tick"].min())
+        == storage_level_init_and_final
     )
 
     m.intermediate_storage_level = (
-        m.Storage_level.drop_unmatched()
-        == (
-            previous_hour_storage_level.drop_unmatched()
-            + (m.Pump * pump_max * effic - m.Turb).drop_unmatched()
-        ).drop_unmatched()
+        m.Storage_level.next(dim="tick", wrap_around=True)
+        == m.Storage_level + m.Pump * pump_max * efficiency - m.Turb
     )
+
     m.pump_and_turbine_xor = m.Turb <= (1 - m.Pump) * turb_max
 
     m.maximize = pf.sum((m.Turb - pump_max * m.Pump) * hourly_prices)
+
+    m.attr.RelativeGap = 1e-5
 
     m.optimize()
 
@@ -67,41 +55,34 @@ def solve_model(use_var_names=True):
 
 
 def read_hourly_prices():
+    """Read hourly prices from CSV file and return a DataFrame.
+    Special attention is paid to properly parse daylight saving time (DST) changes."""
     df = pl.read_csv(
         Path(__file__).parent / "input_data" / "elspot-prices_2021_hourly_eur.csv",
         try_parse_dates=True,
-    )
-    # use time zone to fix a DST problem at the end of October where one hour is "duplicated"
-    range_of_time = df.select(
-        pl.col("Date").min().alias("start_timestamp") - pl.duration(hours=3),
-        pl.col("Date").max().alias("end_timestamp") + pl.duration(days=1),
-    )
-    time_tick = (
-        pl.datetime_range(
-            start=range_of_time["start_timestamp"],
-            end=range_of_time["end_timestamp"],
-            interval="1h",
-            eager=True,
+    ).drop_nulls(subset=["DE-LU"])
+
+    df = df.select(
+        pl.datetime(
+            pl.col("Date").dt.year(),
+            pl.col("Date").dt.month(),
+            pl.col("Date").dt.day(),
+            pl.col("Hours").str.slice(0, 2).cast(pl.Int32),
             time_zone="Europe/Prague",
-            closed="none",
-        )
-        .alias("tick")
-        .to_frame()
-        .filter(
-            pl.col("tick").is_between(
-                pl.datetime(2021, 1, 1, time_zone="Europe/Prague"),
-                pl.datetime(2022, 1, 1, time_zone="Europe/Prague"),
-                closed="left",
+            ambiguous=pl.when(
+                pl.concat_str(pl.col("Date"), pl.col("Hours")).is_first_distinct()
             )
-        )
-    )
-    # fix a DST problem at the end of March where one hour is "missing" so it is filled with null
-    df = df.drop_nulls()
-    hourly_prices = pl.concat((time_tick, df), how="horizontal").select(
-        pl.col("tick"),
+            .then(pl.lit("earliest"))
+            .otherwise(pl.lit("latest")),
+        ).alias("tick"),
         pl.col("DE-LU")
         .str.replace(",", ".", literal=True)
         .str.to_decimal()
         .alias("price"),
     )
-    return hourly_prices
+
+    return df
+
+
+if __name__ == "__main__":
+    print(solve_model().objective.value)
