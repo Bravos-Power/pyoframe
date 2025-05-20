@@ -20,12 +20,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.12"]
-        polars-version: ["1.17.1"]
+        python-version: ["3.13"]
         latest: [true]
         include:
           - python-version: "3.9"
-            polars-version: "0.20.27"
             latest: false
     steps:
       # Important checks to ensure that the user has the required permissions. See note above.
@@ -73,13 +71,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --editable .[dev]
-          pip install polars==${{ matrix.polars-version }}
       - name: Run tests and collect coverage
         run: pytest --cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         with:
-          name: coverage-polars-${{ matrix.polars-version }}
+          name: coverage-python-${{ matrix.python-version }}
           flags: smart-tests
           verbose: true
         env:
