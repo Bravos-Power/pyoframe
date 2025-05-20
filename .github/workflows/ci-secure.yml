@@ -6,16 +6,16 @@
 #   - https://michaelheap.com/access-secrets-from-forks/
 name: Tests
 on:
-  pull_request_target:
+  pull_request:
     branches: [ '*' ]
   workflow_dispatch:
 jobs:
-  run_safety_checks:
+  check_permissions:
     if: github.event.pull_request.head.repo.full_name != github.repository
-      # Important checks to ensure that the user has the required permissions. See note above.
-      # Step 1: If user has current permissions we're good!
     runs-on: ubuntu-latest
     steps:
+      # Important checks to ensure that the user has the required permissions. See note above.
+      # Step 1: If user has current permissions we're good!
       - name: Get User Permission
         id: checkAccess
         uses: actions-cool/check-user-permission@v2
@@ -43,7 +43,7 @@ jobs:
           echo "Re-run the test yourself if you have write permissions. Alternatively, add the label 'safe to test' to the PR to give the user write permissions (only if you trust them)."
           exit 1
   run:
-    needs: run_safety_checks
+    needs: check_permissions
     uses: ./.github/workflows/ci.yml
     with:
       pr_ref: ${{ github.event.pull_request.head.sha }}
