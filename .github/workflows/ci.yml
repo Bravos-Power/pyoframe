@@ -1,14 +1,27 @@
 name: Tests
+
 on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ '*' ]
+    branches: [ "*" ]
+  workflow_call:
+    inputs:
+      pr_ref:
+        required: true
+        type: string
+    secrets:
+      GUROBI_WLS:
+        required: true
+      GITHUB_TOKEN:
+        required: true
   schedule:
   - cron: "0 5 * * WED"
   workflow_dispatch:
+
 jobs:
   run:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     continue-on-error: ! ${{ matrix.latest }}
     strategy:
@@ -24,6 +37,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ inputs.pr_ref }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
