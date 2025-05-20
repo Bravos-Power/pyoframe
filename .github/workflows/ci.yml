@@ -1,14 +1,8 @@
-# Note: We use the insecure pull_request_target to allow running workflows from forks.
-# However, we've added checks (see below) for safety.
-# In short, the 'safe to test' label must exist AND the workflow must be run by someone with write access.
-# See more details here:
-#   - https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
-#   - https://michaelheap.com/access-secrets-from-forks/
 name: Tests
 on:
   push:
     branches: [ main ]
-  pull_request_target:
+  pull_request:
     branches: [ '*' ]
   schedule:
   - cron: "0 5 * * WED"
@@ -20,47 +14,16 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.12"]
-        polars-version: ["1.17.1"]
+        python-version: ["3.13"]
         latest: [true]
         include:
           - python-version: "3.9"
-            polars-version: "0.20.31"
             latest: false
     steps:
-      # Important checks to ensure that the user has the required permissions. See note above.
-      # Step 1: If user has current permissions we're good!
-      - name: Get User Permission
-        id: checkAccess
-        uses: actions-cool/check-user-permission@v2
-        with:
-          require: write
-          username: ${{ github.actor }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Otherwise, get triggering user's permissions
-      - name: Get Triggering User Permission
-        if: steps.checkAccess.outputs.require-result == 'false'
-        id: checkTriggeringAccess
-        uses: actions-cool/check-user-permission@v2
-        with:
-          require: write
-          username: ${{ github.triggering_actor }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # If neither has permissions and no 'safe to test' label throw error
-      - name: Check User Permission
-        if: steps.checkAccess.outputs.require-result == 'false' && steps.checkTriggeringAccess.outputs.require-result == 'false' && !contains(github.event.pull_request.labels.*.name, 'safe to test')
-        shell: bash
-        run: |
-          echo "${{ github.triggering_actor }} does not have permissions on this repo."
-          echo "Re-run the test yourself if you have write permissions. Alternatively, add the label 'safe to test' to the PR to give the user write permissions (only if you trust them)."
-          exit 1
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }} # This is dangerous without the first access check. See note above.
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -73,13 +36,12 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --editable .[dev]
-          pip install polars==${{ matrix.polars-version }}
       - name: Run tests and collect coverage
         run: pytest --cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         with:
-          name: coverage-polars-${{ matrix.polars-version }}
+          name: coverage-python-${{ matrix.python-version }}
           flags: smart-tests
           verbose: true
         env:
