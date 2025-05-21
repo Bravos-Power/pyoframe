@@ -934,10 +934,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
-                pl.col("expr").str.concat(delimiter=" ")
+                pl.col("expr").str.join(delimiter=" ")
             )
         else:
-            data = data.select(pl.col("expr").str.concat(delimiter=" "))
+            data = data.select(pl.col("expr").str.join(delimiter=" "))
 
         # Remove leading +
         data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
@@ -993,7 +993,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 include_const_term=include_const_term,
             )
             str_table = self.to_str_create_prefix(str_table)
-            result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
+            result += str_table.select(pl.col("expr").str.join(delimiter="\n")).item()
 
         return result
 
@@ -1357,7 +1357,7 @@ class Constraint(ModelElementWithId):
             [str_table, rhs], how=("align" if dims else "horizontal")
         )
         constr_str = constr_str.select(
-            pl.concat_str("expr", pl.lit(f" {self.sense.value} "), "rhs").str.concat(
+            pl.concat_str("expr", pl.lit(f" {self.sense.value} "), "rhs").str.join(
                 delimiter="\n"
             )
         ).item()
