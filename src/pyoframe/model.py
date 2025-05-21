@@ -369,10 +369,11 @@ class Model:
             1.0
             >>> m.dispose()
         """
-        if self.solver_name == "gurobi":
+        env = None
+        if hasattr(self.poi, "_env"):
             env = self.poi._env
         self.poi.close()
-        if self.solver_name == "gurobi":
+        if env is not None:
             env.close()
 
     def _set_param(self, name, value):
