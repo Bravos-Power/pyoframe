@@ -371,13 +371,16 @@ class Model:
             >>> m.X.solution
             Traceback (most recent call last):
             ...
-            AttributeError: 'Model' object has no attribute 'poi'
+            polars.exceptions.ComputeError: RuntimeError:
         """
         if self.solver_name == "gurobi":
             env = self.poi._env
         self.poi.close()
         if self.solver_name == "gurobi":
             env.close()
+
+    def __del__(self):
+        self.dispose()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
