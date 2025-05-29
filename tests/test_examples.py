@@ -69,7 +69,11 @@ EXAMPLES = [
         is_mip=True,
     ),
     Example("sudoku", is_mip=True),  # Binary variables
-    Example("production_planning"),  # Linear continuous problem
+    Example("production_planning"),  # Linear continuous problem,
+    Example(
+        "portfolio_optim",
+        skip_solvers=["highs"],  # HiGHS doesn't support quadratic objectives
+    ),  # Quadratic continuous problem - works with Gurobi and IPOPT!
 ]
 
 
@@ -304,8 +308,4 @@ if __name__ == "__main__":
                 continue
             pf.Config.default_solver = solver
             for use_var_names in [True, False]:
-                write_results(
-                    example,
-                    solve_model(use_var_names),
-                    results_dir,
-                )
+                write_results(example, solve_model(use_var_names), results_dir, solver)
