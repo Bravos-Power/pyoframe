@@ -102,23 +102,30 @@ class Objective(Expression):
         is_ipopt = "ipopt" in solver_name
         is_maximizing = self._model.sense == ObjSense.MAX
 
+        # Get the original objective function
+        original_obj = self.to_poi()
+
+        # Check if it's quadratic
+        is_quadratic = isinstance(original_obj, poi.ScalarQuadraticFunction)
+
         # Handle IPOPT maximization case
         if is_ipopt and is_maximizing:
-            print("womp womp")
-            # Get the original objective function
-            original_obj = self.to_poi()
-
-            # Extract the data
-            coefficients = original_obj.coefficients
-            variables = original_obj.variables
-
-            # Create a new objective function with negated coefficients
-            negated_obj = poi.ScalarAffineFunction(
-                coefficients=[-c for c in coefficients], variables=variables
-            )
-
             # Set flag to remind us to negate the solution later
             self._negated_for_ipopt = True
+
+            if is_quadratic:
+                # For quadratic objectives, negate all coefficients
+                negated_obj = poi.ScalarQuadraticFunction(
+                    coefficients=[-c for c in original_obj.coefficients],
+                    var1s=original_obj.var1s,
+                    var2s=original_obj.var2s,
+                )
+            else:
+                # For linear objectives, negate coefficients
+                negated_obj = poi.ScalarAffineFunction(
+                    coefficients=[-c for c in original_obj.coefficients],
+                    variables=original_obj.variables,
+                )
 
             # Always use minimize for IPOPT
             self._model.poi.set_objective(
@@ -127,7 +134,7 @@ class Objective(Expression):
         else:
             # Normal case for other solvers
             self._model.poi.set_objective(
-                self.to_poi(), sense=self._model.sense.to_poi()
+                original_obj, sense=self._model.sense.to_poi()
             )
 
     def __iadd__(self, other):

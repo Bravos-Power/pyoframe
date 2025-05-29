@@ -899,16 +899,23 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = df.group_by(dims, maintain_order=True)
         return df.sum()
 
-    def to_poi(self) -> poi.ScalarAffineFunction:
+    def to_poi(self) -> Union[poi.ScalarAffineFunction, poi.ScalarQuadraticFunction]:
         if self.dimensions is not None:
             raise ValueError(
                 "Only non-dimensioned expressions can be converted to PyOptInterface."
             )  # pragma: no cover
 
-        return poi.ScalarAffineFunction(
-            coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-            variables=self.data.get_column(VAR_KEY).to_numpy(),
-        )
+        if self.is_quadratic:
+            return poi.ScalarQuadraticFunction(
+                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
+                var1s=self.data.get_column(VAR_KEY).to_numpy(),
+                var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),
+            )
+        else:
+            return poi.ScalarAffineFunction(
+                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
+                variables=self.data.get_column(VAR_KEY).to_numpy(),
+            )
 
     def to_str_table(self, include_const_term=True):
         data = self.data if include_const_term else self.variable_terms
