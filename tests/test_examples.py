@@ -195,7 +195,7 @@ def write_results(example: Example, model, results_dir):
             for c in model.constraints:
                 try:
                     c.dual.write_csv(results_dir / f"{c.name}.csv")
-                except pl.exceptions.ComputeError as e:
+                except RuntimeError as e:
                     if "Unable to retrieve attribute 'Pi'" in str(e):
                         pass
                     else:

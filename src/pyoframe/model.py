@@ -308,7 +308,7 @@ class Model:
             >>> m.my_constraint.dual
             Traceback (most recent call last):
             ...
-            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'Pi'
+            RuntimeError: Unable to retrieve attribute 'Pi'
             >>> m.convert_to_fixed()
             >>> m.optimize()
             >>> m.my_constraint.dual
@@ -344,7 +344,7 @@ class Model:
             >>> m.bad_constraint.attr.IIS
             Traceback (most recent call last):
             ...
-            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'IISConstr'
+            RuntimeError: Unable to retrieve attribute 'IISConstr'
             >>> m.compute_IIS()
             >>> m.bad_constraint.attr.IIS
             True
