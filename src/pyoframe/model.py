@@ -376,6 +376,12 @@ class Model:
         if env is not None:
             env.close()
 
+    def __del__(self):
+        # This ensures that the model is closed *before* the environment is. This avoids the Gurobi warning:
+        #   Warning: environment still referenced so free is deferred (Continue to use WLS)
+        if hasattr(self, "poi"):
+            self.poi.close()
+
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
 
