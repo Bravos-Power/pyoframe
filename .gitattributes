@@ -1,0 +1,3 @@
+# This avoids the generated files from showing up in the stats. Note that I don't use 'linguist-generated' because I still want to see the diffs.
+# More info at: https://github.com/github-linguist/linguist/blob/main/docs/overrides.md
+/tests/examples/*/results/* linguist-documentation
