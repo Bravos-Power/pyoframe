@@ -27,6 +27,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff",
+    "polars>=1.30.0",  # Some of the tests rely on the output format of polars exceptions which changed in 1.30.0
     "bumpver",
     "pip-tools",
     "pytest",

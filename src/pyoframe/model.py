@@ -308,7 +308,7 @@ class Model:
             >>> m.my_constraint.dual
             Traceback (most recent call last):
             ...
-            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'Pi'
+            RuntimeError: Unable to retrieve attribute 'Pi'
             >>> m.convert_to_fixed()
             >>> m.optimize()
             >>> m.my_constraint.dual
@@ -344,7 +344,7 @@ class Model:
             >>> m.bad_constraint.attr.IIS
             Traceback (most recent call last):
             ...
-            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'IISConstr'
+            RuntimeError: Unable to retrieve attribute 'IISConstr'
             >>> m.compute_IIS()
             >>> m.bad_constraint.attr.IIS
             True
@@ -375,6 +375,13 @@ class Model:
         self.poi.close()
         if env is not None:
             env.close()
+
+    def __del__(self):
+        # This ensures that the model is closed *before* the environment is. This avoids the Gurobi warning:
+        #   Warning: environment still referenced so free is deferred (Continue to use WLS)
+        # I include the hasattr check to avoid errors in case __init__ failed and poi was never set.
+        if hasattr(self, "poi"):
+            self.poi.close()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
