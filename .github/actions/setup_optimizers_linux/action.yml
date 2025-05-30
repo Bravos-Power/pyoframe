@@ -52,7 +52,7 @@ runs:
         GUROBI_WLS: ${{ inputs.GUROBI_WLS }}
       run: |
         tar xfz ~/installers/gurobi.tar.gz -C ~/
-        ls ~/gurobi1100/linux64
+        ls ~/gurobi1200/linux64
         # set environment variables
         export GUROBI_HOME="${HOME}/gurobi1100/linux64"
         echo "GUROBI_HOME=${GUROBI_HOME}" >> $GITHUB_ENV
