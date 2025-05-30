@@ -379,6 +379,7 @@ class Model:
     def __del__(self):
         # This ensures that the model is closed *before* the environment is. This avoids the Gurobi warning:
         #   Warning: environment still referenced so free is deferred (Continue to use WLS)
+        # I include the hasattr check to avoid errors in case __init__ failed and poi was never set.
         if hasattr(self, "poi"):
             self.poi.close()
 
