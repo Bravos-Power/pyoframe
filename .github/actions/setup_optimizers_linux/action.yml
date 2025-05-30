@@ -44,7 +44,7 @@ runs:
       shell: bash
       name: Download Installers
       run: |
-        curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/11.0/gurobi11.0.0_linux64.tar.gz
+        curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/12.0/gurobi12.0.2_linux64.tar.gz
 
     - name: Setup Gurobi Installation
       shell: bash
