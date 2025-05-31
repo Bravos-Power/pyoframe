@@ -48,6 +48,7 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
   - attr_list
+  - markdown_hide_code
   - abbr
   - md_in_html
   - footnotes

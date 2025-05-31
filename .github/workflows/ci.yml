@@ -83,7 +83,7 @@ jobs:
         run: |
           pip install --editable .[dev]
       - name: Run tests and collect coverage
-        run: pytest --cov --markdown-docs --markdown-docs-syntax=superfences
+        run: pytest --cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         with:
