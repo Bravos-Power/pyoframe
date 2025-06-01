@@ -46,7 +46,7 @@ dev = [
     "mkdocs-section-index",
     "mkdocs-literate-nav",
     "mkdocs-table-reader-plugin",
-    "markdown-hide-code",
+    "markdown-hide-code>=0.1.1",
 ]
 highs = ["highsbox"]
 

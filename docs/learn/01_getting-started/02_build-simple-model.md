@@ -24,15 +24,15 @@ print(f"\t{m.tofu.solution} blocks of tofu")
 print(f"\t{m.chickpeas.solution} cans of chickpeas")
 ```
 
-```{.python continuation hide}
-assert m.tofu.solution == 0
-assert m.chickpeas.solution == 5
-```
-
 1. Create a variable with a lower bound of zero (`lb=0`) so that you can't buy a negative quantity of tofu!
 2. Define your objective by setting the reserved variables `.maximize` or `.minimize`.
 3. Creates constraints by using `<=`, `>=`, or `==`.
 4. Pyoframe automatically detects your installed solver and optimizes your model!
+
+```{.python continuation hide}
+assert m.tofu.solution == 0
+assert m.chickpeas.solution == 5
+```
 
 ## Use dimensions
 
