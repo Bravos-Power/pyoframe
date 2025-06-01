@@ -14,8 +14,9 @@ def _setup_before_each_test(doctest_namespace):
 
 def pytest_collection_modifyitems(items):
     """
-    Exclude certain paths from contributing to reaching 100% test coverage.
-    For example, documentation tests aren't rigorous enough to count as coverage.
+    Exclude certain paths from contributing to the test coverage.
+    Specifically, the integration tests and documentation code snippets are not
+    counted towards the coverage metrics because they're not rigorous enough.
 
     See:
         - https://docs.pytest.org/en/stable/reference/reference.html#pytest.hookspec.pytest_collection_modifyitems
