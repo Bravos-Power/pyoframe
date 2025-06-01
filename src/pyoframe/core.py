@@ -1037,6 +1037,31 @@ def sum(
     over: Union[str, Sequence[str], SupportsToExpr],
     expr: Optional[SupportsToExpr] = None,
 ) -> "Expression":
+    """
+    Sum an expression over specified dimensions.
+    If no dimensions are specified, the sum is taken over all of the expression's dimensions.
+
+    Examples:
+        >>> expr = pl.DataFrame({
+        ...     "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...     "place": ["Toronto", "Toronto", "Toronto", "Vancouver", "Vancouver"],
+        ...     "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6]
+        ... }).to_expr()
+        >>> expr
+        <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
+        [mon,Toronto]: 1000000
+        [tue,Toronto]: 3000000
+        [wed,Toronto]: 2000000
+        [mon,Vancouver]: 1000000
+        [tue,Vancouver]: 2000000
+        >>> pf.sum("time", expr)
+        <Expression size=2 dimensions={'place': 2} terms=2>
+        [Toronto]: 6000000
+        [Vancouver]: 3000000
+        >>> pf.sum(expr)
+        <Expression size=1 dimensions={} terms=1>
+        9000000
+    """
     if expr is None:
         assert isinstance(over, SupportsMath)
         over = over.to_expr()
@@ -1052,6 +1077,27 @@ def sum(
 
 
 def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
+    """
+    Like `pf.sum()`, but the sum is taken over all dimensions except those specified in `by` (just like a groupby operation).
+
+    Examples:
+        >>> expr = pl.DataFrame({
+        ...     "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...     "place": ["Toronto", "Toronto", "Toronto", "Vancouver", "Vancouver"],
+        ...     "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6]
+        ... }).to_expr()
+        >>> expr
+        <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
+        [mon,Toronto]: 1000000
+        [tue,Toronto]: 3000000
+        [wed,Toronto]: 2000000
+        [mon,Vancouver]: 1000000
+        [tue,Vancouver]: 2000000
+        >>> pf.sum_by("place", expr)
+        <Expression size=2 dimensions={'place': 2} terms=2>
+        [Toronto]: 6000000
+        [Vancouver]: 3000000
+    """
     if isinstance(by, str):
         by = [by]
     expr = expr.to_expr()
@@ -1561,7 +1607,52 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     @property
     @unwrap_single_values
     def solution(self):
-        solution = self.attr.Value
+        """
+        Retrieve a variable's optimal value after the model has been solved.
+        Returned as a DataFrame if the variable has dimensions, otherwise as a single value.
+        Binary and integer variables are returned as integers.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)
+            >>> m.var_integer = pf.Variable({"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=VType.INTEGER)
+            >>> m.var_dimensionless = pf.Variable(lb=4.5, ub=5.5, vtype=VType.INTEGER)
+            >>> m.var_continuous.solution
+            Traceback (most recent call last):
+            ...
+            RuntimeError: Failed to retrieve solution for variable. Are you sure the model has been solved?
+            >>> m.optimize()
+            >>> m.var_continuous.solution
+            shape: (3, 2)
+            ┌──────┬──────────┐
+            │ dim1 ┆ solution │
+            │ ---  ┆ ---      │
+            │ i64  ┆ f64      │
+            ╞══════╪══════════╡
+            │ 1    ┆ 5.0      │
+            │ 2    ┆ 5.0      │
+            │ 3    ┆ 5.0      │
+            └──────┴──────────┘
+            >>> m.var_integer.solution
+            shape: (3, 2)
+            ┌──────┬──────────┐
+            │ dim1 ┆ solution │
+            │ ---  ┆ ---      │
+            │ i64  ┆ i64      │
+            ╞══════╪══════════╡
+            │ 1    ┆ 5        │
+            │ 2    ┆ 5        │
+            │ 3    ┆ 5        │
+            └──────┴──────────┘
+            >>> m.var_dimensionless.solution
+            5
+        """
+        try:
+            solution = self.attr.Value
+        except RuntimeError as e:
+            raise RuntimeError(
+                "Failed to retrieve solution for variable. Are you sure the model has been solved?"
+            ) from e
         if isinstance(solution, pl.DataFrame):
             solution = solution.rename({"Value": SOLUTION_KEY})
 

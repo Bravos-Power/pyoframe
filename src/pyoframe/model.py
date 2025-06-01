@@ -78,10 +78,10 @@ class Model:
 
     def __init__(
         self,
-        name=None,
+        name: Optional[str] = None,
         solver: Optional[SUPPORTED_SOLVER_TYPES] = None,
         solver_env: Optional[Dict[str, str]] = None,
-        use_var_names=False,
+        use_var_names: bool = False,
         sense: Union[ObjSense, ObjSenseValue, None] = None,
     ):
         self.poi, self.solver_name = Model.create_poi_model(solver, solver_env)
