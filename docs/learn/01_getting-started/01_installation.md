@@ -1,36 +1,51 @@
-## Install Pyoframe
+## 1. Install Pyoframe
 
 ```cmd
 pip install pyoframe
 ```
 
-## Install a solver
+## 2. Install a solver
 
-*[solver]: Solvers like HiGHS and Gurobi do the actual solving of your model. Pyoframe is a layer on top of the solver that makes it easy to build models and switch between solvers.
+Pyoframe makes it easy to build models but the actual solving of your model is done by a solver. You'll need to install one of the following solvers:
 
-=== "HiGHS (free)"
+=== "HiGHS (open-source)"
+
+    To install [HiGHS](https://highs.dev/) run:
 
     ```cmd
     pip install pyoframe[highs]
     ```
 
+    !!! warning "No support for quadratics in HiGHS"
+        Pyoframe does not support quadratic constraints when using HiGHS due to limitations in pyoptinterface, the library we use to communicate with HiGHS.
+
+
 === "Gurobi (commercial)"
 
-    1. [Install Gurobi](https://www.gurobi.com/downloads/gurobi-software/) from their website.
+    To install Gurobi:
+
+    1. [Download Gurobi](https://www.gurobi.com/downloads/gurobi-software/) from their website (login required) and follow the installation instructions.
     2. Ensure you have a valid Gurobi license installed on your machine.
 
-    Note: installing Gurobi via pip will not work since we access Gurobi through its C API not through Python.
+    !!! note "`pip` installation not possible"
+        Installing Gurobi via `pip` will not work. We use Gurobi's C API which is not available in the Python version of Gurobi.
 
 === "Ipopt (free, nonlinear)"
 
-    1. [Download Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from their releases. Version 3.14.x is the only one tested.
-    2. Ensure to add the bin/ folder from the installation to your Path variable, since the binaries need to be accesed. Refer to [PyOptInterface's documentation](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt) for more details.
-    3. 
-    ```cmd
-    pip install pyoframe[ipopt]
-    ```
-    Note: Ipopt is a nonlinear solver for continuous variables only, **do not** use Ipopt if your problem has integer variables. 
+    To install [ipopt](https://coin-or.github.io/Ipopt/):
 
-=== "Other Solvers"
+    1. Run: `pip install pyoframe[ipopt]`
+    2. Download the [Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from GitHub. Version 3.14.x is recommended since it is the only one that has been tested.
+    3. On Windows, unpack the zip and add the `bin` folder to your Path variable. If not on Windows, you may have to build the solver from source, see further details [here](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt).
 
-    We'd be glad to add more solvers! Just [let us know](https://github.com/Bravos-Power/pyoframe/pull/79) what you'd like :)
+    !!! warning "Continuous variables only"
+        Ipopt is a nonlinear solver for continuous variables only. Use another solver if you need to use binary or integer variables. 
+
+=== "Other solvers"
+
+    We'd be glad to consider adding more solvers. Create a [new issue](https://github.com/Bravos-Power/pyoframe/issues/new) or up-vote an existing one to show interest:
+
+    - Issue tracking interest in [COPT solver](https://github.com/Bravos-Power/pyoframe/issues/143)
+    - Issue tracking interest in [Mosek solver](https://github.com/Bravos-Power/pyoframe/issues/144)
+
+

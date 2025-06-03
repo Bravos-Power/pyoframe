@@ -47,6 +47,7 @@ dev = [
     "mkdocs-literate-nav",
     "mkdocs-table-reader-plugin",
     "markdown-hide-code>=0.1.1",
+    "pyoptinterface[nlp]"
 ]
 highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]

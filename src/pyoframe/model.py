@@ -136,9 +136,21 @@ class Model:
 
             model = highs.Model()
         elif solver == "ipopt":
-            from pyoptinterface import ipopt
+            try:
+                from pyoptinterface import ipopt
+            except ModuleNotFoundError as e:
+                raise ModuleNotFoundError(
+                    "Failed to import the Ipopt solver. Did you run `pip install pyoptinterface[ipopt]`?"
+                ) from e
 
-            model = ipopt.Model()
+            try:
+                model = ipopt.Model()
+            except RuntimeError as e:
+                if "IPOPT library is not loaded" in str(e):
+                    raise RuntimeError(
+                        "Could not find the Ipopt solver. Are you sure you've properly installed it and added it to your PATH?"
+                    ) from e
+                raise e
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."
