@@ -24,7 +24,7 @@ pip install pyoframe
 === "Ipopt (free, nonlinear)"
 
     1. [Download Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from their releases. Version 3.14.x is the only one tested.
-    2. Ensure to add the bin/ folder from the installation to your Path variable, since the binaries need to be accesed. Refer to [PyOptInterface's documentation](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt) for more detials.
+    2. Ensure to add the bin/ folder from the installation to your Path variable, since the binaries need to be accesed. Refer to [PyOptInterface's documentation](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt) for more details.
     3. 
     ```cmd
     pip install pyoframe[ipopt]
