@@ -74,7 +74,7 @@ EXAMPLES = [
         "portfolio_optim",
         skip_solvers=["highs"],  # HiGHS doesn't support quadratic objectives
     ),  # Quadratic continuous problem - works with Gurobi and IPOPT!
-    Example("pumped_storage", is_mip=True), # Binary variables
+    Example("pumped_storage", is_mip=True),  # Binary variables
 ]
 
 

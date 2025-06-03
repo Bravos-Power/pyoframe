@@ -1,8 +1,7 @@
-import polars as pl
 import pandas as pd
+import polars as pl
 import pyoptinterface as poi
 import pytest
-from polars.testing import assert_frame_equal
 
 import pyoframe as pf
 

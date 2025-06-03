@@ -27,8 +27,10 @@ since the problem has a unique global optimum.
 
 import os
 from pathlib import Path
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
 import pyoframe as pf
 
 _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
