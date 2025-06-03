@@ -21,6 +21,16 @@ pip install pyoframe
 
     Note: installing Gurobi via pip will not work since we access Gurobi through its C API not through Python.
 
+=== "Ipopt (free, nonlinear)"
+
+    1. [Download Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from their releases. Version 3.14.x is the only one tested.
+    2. Ensure to add the bin/ folder from the installation to your Path variable, since the binaries need to be accesed. Refer to [PyOptInterface's documentation](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt) for more detials.
+    3. 
+    ```cmd
+    pip install pyoframe[ipopt]
+    ```
+    Note: Ipopt is a nonlinear solver for continuous variables only, **do not** use Ipopt if your problem has integer variables. 
+
 === "Other Solvers"
 
     We'd be glad to add more solvers! Just [let us know](https://github.com/Bravos-Power/pyoframe/pull/79) what you'd like :)
