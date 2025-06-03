@@ -44,7 +44,7 @@ runs:
       shell: bash
       name: Download Installers
       run: |
-        curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/11.0/gurobi11.0.0_linux64.tar.gz
+        curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/12.0/gurobi12.0.2_linux64.tar.gz
 
     - name: Setup Gurobi Installation
       shell: bash
@@ -52,9 +52,9 @@ runs:
         GUROBI_WLS: ${{ inputs.GUROBI_WLS }}
       run: |
         tar xfz ~/installers/gurobi.tar.gz -C ~/
-        ls ~/gurobi1100/linux64
+        ls ~/gurobi1202/linux64
         # set environment variables
-        export GUROBI_HOME="${HOME}/gurobi1100/linux64"
+        export GUROBI_HOME="${HOME}/gurobi1202/linux64"
         echo "GUROBI_HOME=${GUROBI_HOME}" >> $GITHUB_ENV
         echo "PATH=${PATH}:${GUROBI_HOME}/bin" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GUROBI_HOME}/lib" >> $GITHUB_ENV

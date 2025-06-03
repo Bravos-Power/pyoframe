@@ -29,6 +29,11 @@ print(f"\t{m.chickpeas.solution} cans of chickpeas")
 3. Creates constraints by using `<=`, `>=`, or `==`.
 4. Pyoframe automatically detects your installed solver and optimizes your model!
 
+```{.python continuation hide}
+assert m.tofu.solution == 0
+assert m.chickpeas.solution == 5
+```
+
 ## Use dimensions
 
 The above model would quickly become unworkable if we had more than just tofu and chickpeas. I'll walk you through how we can make a `food` dimension to make this scalable. You can also skip to the end to see the example in full!
@@ -62,9 +67,15 @@ Nothing special here. Load your data using your favourite dataframe library. We 
     data = pl.read_csv("food_data.csv")
     ```
 
+```{.python continuation hide}
+import polars as pl
+import os
+data = pl.read_csv(os.path.join(os.getcwd(), "docs/learn/01_getting-started/inputs/food_data.csv"))
+```
+
 ### Create the model
 
-```python
+```{.python continuation}
 import pyoframe as pf
 m = pf.Model()
 ```
@@ -72,7 +83,7 @@ m = pf.Model()
 ### Create an dimensioned variable
 Previously, we created two variables: `m.tofu` and `m.chickpeas`. Instead, we now create a single variable dimensioned over `food`.
 
-```python
+```{.python continuation}
 m.Buy = pf.Variable(data[["food"]], lb=0)
 ```
 
@@ -85,13 +96,19 @@ If you print the variable, you'll see it actually contains a `tofu` and `chickpe
 [chickpeas]: Buy[chickpeas]
 ```
 
+```{.python hide continuation}
+assert repr(m.Buy) ==  """<Variable name=Buy lb=0 size=2 dimensions={'food': 2}>
+[tofu]: Buy[tofu]
+[chickpeas]: Buy[chickpeas]"""
+```
+
 !!! tip "Tip"
     Naming your model's decision variables with an uppercase first letter (e.g. `m.Buy`) makes it easier to remember what's a variable and what isn't.
 
 ### Create the objective
 
 Previously we had:
-```python
+```{.python notest}
 m.maximize = 10 * m.tofu + 8 * m.chickpeas
 ```
 
@@ -105,12 +122,19 @@ First, we multiply the variable by the protein amount.
 [tofu]: 10 Buy[tofu]
 [chickpeas]: 8 Buy[chickpeas]
 ```
+
+```{.python continuation hide}
+assert repr(data[["food", "protein"]] * m.Buy) == """<Expression size=2 dimensions={'food': 2} terms=2>
+[tofu]: 10 Buy[tofu]
+[chickpeas]: 8 Buy[chickpeas]"""
+```
+
 As you can see, Pyoframe with a bit of magic converted our `Variable` into an `Expression` where the coefficients are the protein amounts!
 
 *[with a bit of magic]:
     Pyoframe always converts dataframes into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.
 
-Second, notice that our `Expression` still has a `food` dimension—it really contains two seperate expressions, one for tofu and one for chickpeas. Our model's objective must be a single expression (without dimensions) so let's sum over the `food` dimensions using `pf.sum()`.
+Second, notice that our `Expression` still has a `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. Our model's objective must be a single expression (without dimensions) so let's sum over the `food` dimensions using `pf.sum()`.
 
 ```pycon
 >>> pf.sum("food", data[["food", "protein"]] * m.Buy)
@@ -120,7 +144,7 @@ Second, notice that our `Expression` still has a `food` dimension—it really co
 
 This works and since `food` is the only dimensions we don't even need to specify it. Putting it all together:
 
-```python
+```{.python continuation}
 m.maximize = pf.sum(data[["food", "protein"]] * m.Buy)
 ```
 
@@ -128,17 +152,23 @@ m.maximize = pf.sum(data[["food", "protein"]] * m.Buy)
 
 This is similar to how we created the objective, except now we're using `cost` and we turn our `Expression` into a `Constraint` by with the `<=` operation.
 
-```python
+```{.python continuation}
 m.budget_constraint = pf.sum(data[["food", "cost"]] * m.Buy) <= 10
 ```
 
 ### Putting it all together
 
-```python
+```{.python hide}
+import os
+from pathlib import Path
+data_folder = Path(os.path.join(os.getcwd(), "docs/learn/01_getting-started/inputs"))
+```
+
+```{.python continuation}
 import pandas as pd
 import pyoframe as pf
 
-data = pd.read_csv("food_data.csv")
+data = pd.read_csv(data_folder / "food_data.csv")
 
 m = pf.Model()
 m.Buy = pf.Variable(data[["food"]], lb=0)

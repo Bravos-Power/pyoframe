@@ -33,7 +33,6 @@ from pyoframe.constants import (
     CONSTRAINT_KEY,
     DUAL_KEY,
     KEY_TYPE,
-    POLARS_VERSION,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
@@ -346,18 +345,11 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         elif isinstance(set, Constraint):
             df = set.data.select(set.dimensions_unsafe)
         elif isinstance(set, SupportsMath):
-            if POLARS_VERSION.major < 1:
-                df = (
-                    set.to_expr()
-                    .data.drop(RESERVED_COL_KEYS)
-                    .unique(maintain_order=True)
-                )
-            else:
-                df = (
-                    set.to_expr()
-                    .data.drop(RESERVED_COL_KEYS, strict=False)
-                    .unique(maintain_order=True)
-                )
+            df = (
+                set.to_expr()
+                .data.drop(RESERVED_COL_KEYS, strict=False)
+                .unique(maintain_order=True)
+            )
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
         elif isinstance(set, pd.DataFrame):
@@ -800,15 +792,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 keys = keys.with_columns(
                     pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
                 )
-            if POLARS_VERSION.major >= 1:
-                data = data.join(
-                    keys, on=dim + self._variable_columns, how="full", coalesce=True
-                )
-            else:
-                data = data.join(
-                    keys, on=dim + self._variable_columns, how="outer_coalesce"
-                )
-            data = data.with_columns(pl.col(COEF_KEY).fill_null(0.0))
+            data = data.join(
+                keys, on=dim + self._variable_columns, how="full", coalesce=True
+            ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
             pl.when(pl.col(VAR_KEY) == CONST_TERM)
@@ -826,10 +812,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
             dims_df = self.data.select(dims).unique(maintain_order=True)
-            if POLARS_VERSION.major >= 1:
-                df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
-            else:
-                df = constant_terms.join(dims_df, on=dims, how="outer_coalesce")
+            df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
@@ -958,10 +941,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
-                pl.col("expr").str.concat(delimiter=" ")
+                pl.col("expr").str.join(delimiter=" ")
             )
         else:
-            data = data.select(pl.col("expr").str.concat(delimiter=" "))
+            data = data.select(pl.col("expr").str.join(delimiter=" "))
 
         # Remove leading +
         data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
@@ -1017,7 +1000,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 include_const_term=include_const_term,
             )
             str_table = self.to_str_create_prefix(str_table)
-            result += str_table.select(pl.col("expr").str.concat(delimiter="\n")).item()
+            result += str_table.select(pl.col("expr").str.join(delimiter="\n")).item()
 
         return result
 
@@ -1061,6 +1044,31 @@ def sum(
     over: Union[str, Sequence[str], SupportsToExpr],
     expr: Optional[SupportsToExpr] = None,
 ) -> "Expression":
+    """
+    Sum an expression over specified dimensions.
+    If no dimensions are specified, the sum is taken over all of the expression's dimensions.
+
+    Examples:
+        >>> expr = pl.DataFrame({
+        ...     "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...     "place": ["Toronto", "Toronto", "Toronto", "Vancouver", "Vancouver"],
+        ...     "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6]
+        ... }).to_expr()
+        >>> expr
+        <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
+        [mon,Toronto]: 1000000
+        [tue,Toronto]: 3000000
+        [wed,Toronto]: 2000000
+        [mon,Vancouver]: 1000000
+        [tue,Vancouver]: 2000000
+        >>> pf.sum("time", expr)
+        <Expression size=2 dimensions={'place': 2} terms=2>
+        [Toronto]: 6000000
+        [Vancouver]: 3000000
+        >>> pf.sum(expr)
+        <Expression size=1 dimensions={} terms=1>
+        9000000
+    """
     if expr is None:
         assert isinstance(over, SupportsMath)
         over = over.to_expr()
@@ -1076,6 +1084,27 @@ def sum(
 
 
 def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
+    """
+    Like `pf.sum()`, but the sum is taken over all dimensions except those specified in `by` (just like a groupby operation).
+
+    Examples:
+        >>> expr = pl.DataFrame({
+        ...     "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...     "place": ["Toronto", "Toronto", "Toronto", "Vancouver", "Vancouver"],
+        ...     "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6]
+        ... }).to_expr()
+        >>> expr
+        <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
+        [mon,Toronto]: 1000000
+        [tue,Toronto]: 3000000
+        [wed,Toronto]: 2000000
+        [mon,Vancouver]: 1000000
+        [tue,Vancouver]: 2000000
+        >>> pf.sum_by("place", expr)
+        <Expression size=2 dimensions={'place': 2} terms=2>
+        [Toronto]: 6000000
+        [Vancouver]: 3000000
+    """
     if isinstance(by, str):
         by = [by]
     expr = expr.to_expr()
@@ -1381,7 +1410,7 @@ class Constraint(ModelElementWithId):
             [str_table, rhs], how=("align" if dims else "horizontal")
         )
         constr_str = constr_str.select(
-            pl.concat_str("expr", pl.lit(f" {self.sense.value} "), "rhs").str.concat(
+            pl.concat_str("expr", pl.lit(f" {self.sense.value} "), "rhs").str.join(
                 delimiter="\n"
             )
         ).item()
@@ -1599,7 +1628,52 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     @property
     @unwrap_single_values
     def solution(self):
-        solution = self.attr.Value
+        """
+        Retrieve a variable's optimal value after the model has been solved.
+        Returned as a DataFrame if the variable has dimensions, otherwise as a single value.
+        Binary and integer variables are returned as integers.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)
+            >>> m.var_integer = pf.Variable({"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=VType.INTEGER)
+            >>> m.var_dimensionless = pf.Variable(lb=4.5, ub=5.5, vtype=VType.INTEGER)
+            >>> m.var_continuous.solution
+            Traceback (most recent call last):
+            ...
+            RuntimeError: Failed to retrieve solution for variable. Are you sure the model has been solved?
+            >>> m.optimize()
+            >>> m.var_continuous.solution
+            shape: (3, 2)
+            ┌──────┬──────────┐
+            │ dim1 ┆ solution │
+            │ ---  ┆ ---      │
+            │ i64  ┆ f64      │
+            ╞══════╪══════════╡
+            │ 1    ┆ 5.0      │
+            │ 2    ┆ 5.0      │
+            │ 3    ┆ 5.0      │
+            └──────┴──────────┘
+            >>> m.var_integer.solution
+            shape: (3, 2)
+            ┌──────┬──────────┐
+            │ dim1 ┆ solution │
+            │ ---  ┆ ---      │
+            │ i64  ┆ i64      │
+            ╞══════╪══════════╡
+            │ 1    ┆ 5        │
+            │ 2    ┆ 5        │
+            │ 3    ┆ 5        │
+            └──────┴──────────┘
+            >>> m.var_dimensionless.solution
+            5
+        """
+        try:
+            solution = self.attr.Value
+        except RuntimeError as e:
+            raise RuntimeError(
+                "Failed to retrieve solution for variable. Are you sure the model has been solved?"
+            ) from e
         if isinstance(solution, pl.DataFrame):
             solution = solution.rename({"Value": SOLUTION_KEY})
 
@@ -1651,10 +1725,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
     def to_expr(self) -> Expression:
         self._assert_has_ids()
-        if POLARS_VERSION.major < 1:
-            return self._new(self.data.drop(SOLUTION_KEY))
-        else:
-            return self._new(self.data.drop(SOLUTION_KEY, strict=False))
+        return self._new(self.data.drop(SOLUTION_KEY, strict=False))
 
     def _new(self, data: pl.DataFrame):
         self._assert_has_ids()
@@ -1731,12 +1802,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         expr = self.to_expr()
         data = expr.data.rename({dim: "__prev"})
 
-        if POLARS_VERSION.major < 1:
-            data = data.join(
-                wrapped, left_on="__prev", right_on="__next", how="inner"
-            ).drop(["__prev", "__next"])
-        else:
-            data = data.join(
-                wrapped, left_on="__prev", right_on="__next", how="inner"
-            ).drop(["__prev", "__next"], strict=False)
+        data = data.join(
+            wrapped, left_on="__prev", right_on="__next", how="inner"
+        ).drop(["__prev", "__next"], strict=False)
         return expr._new(data)

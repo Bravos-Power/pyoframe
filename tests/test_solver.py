@@ -5,11 +5,6 @@ import pytest
 from polars.testing import assert_frame_equal
 
 import pyoframe as pf
-from pyoframe.constants import POLARS_VERSION
-
-check_dtypes_false = (
-    {"check_dtypes": False} if POLARS_VERSION.major >= 1 else {"check_dtype": False}
-)
 
 
 def assert_with_solver_tolerance(
@@ -148,12 +143,14 @@ def test_retrieving_duals_vectorized(solver):
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
         solver,
         check_row_order=False,
+        check_dtypes=False,
     )
     assert_with_solver_tolerance(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         solver,
         check_row_order=False,
+        check_dtypes=False,
     )
 
     if solver == "gurobi":
@@ -162,6 +159,7 @@ def test_retrieving_duals_vectorized(solver):
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
             solver,
             check_row_order=False,
+            check_dtypes=False,
         )
         assert_with_solver_tolerance(
             m.X.attr.RC,
@@ -169,6 +167,7 @@ def test_retrieving_duals_vectorized(solver):
             # Somehow the reduced cost is 0 since we are no longer using a bound.
             solver,
             check_row_order=False,
+            check_dtypes=False,
         )
 
 
@@ -192,6 +191,7 @@ def test_support_variable_attributes(solver):
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
         solver,
         check_row_order=False,
+        check_dtypes=False,
     )
 
     if solver == "gurobi":
@@ -200,18 +200,21 @@ def test_support_variable_attributes(solver):
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
             solver,
             check_row_order=False,
+            check_dtypes=False,
         )
         assert_with_solver_tolerance(
             m.max_AB.attr.slack,
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
             solver,
             check_row_order=False,
+            check_dtypes=False,
         )
 
     assert_with_solver_tolerance(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         solver,
+        check_dtypes=False,
         check_row_order=False,
     )
 
@@ -238,6 +241,7 @@ def test_support_variable_raw_attributes(solver):
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
         solver,
         check_row_order=False,
+        check_dtypes=False,
     )
 
     if solver == "gurobi":
@@ -246,12 +250,14 @@ def test_support_variable_raw_attributes(solver):
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
             solver,
             check_row_order=False,
+            check_dtypes=False,
         )
 
     assert_with_solver_tolerance(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         solver,
+        check_dtypes=False,
         check_row_order=False,
     )
 

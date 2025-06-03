@@ -74,6 +74,7 @@ EXAMPLES = [
         "portfolio_optim",
         skip_solvers=["highs"],  # HiGHS doesn't support quadratic objectives
     ),  # Quadratic continuous problem - works with Gurobi and IPOPT!
+    Example("pumped_storage", is_mip=True), # Binary variables
 ]
 
 
@@ -267,7 +268,7 @@ def write_results(example: Example, model, results_dir, solver):
                         pl.DataFrame({c.name: [c.dual]}).write_csv(
                             results_dir / f"{c.name}.csv"
                         )
-                except pl.exceptions.ComputeError as e:
+                except (pl.exceptions.ComputeError, RuntimeError) as e:
                     if "Unable to retrieve attribute 'Pi'" in str(e):
                         pass
                     else:

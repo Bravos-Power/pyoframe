@@ -78,10 +78,10 @@ class Model:
 
     def __init__(
         self,
-        name=None,
+        name: Optional[str] = None,
         solver: Optional[SUPPORTED_SOLVER_TYPES] = None,
         solver_env: Optional[Dict[str, str]] = None,
-        use_var_names=False,
+        use_var_names: bool = False,
         sense: Union[ObjSense, ObjSenseValue, None] = None,
     ):
         self.poi, self.solver_name = Model.create_poi_model(solver, solver_env)
@@ -124,13 +124,13 @@ class Model:
             from pyoptinterface import gurobi
 
             if solver_env is None:
-                model = gurobi.Model()
+                env = gurobi.Env()
             else:
                 env = gurobi.Env(empty=True)
                 for key, value in solver_env.items():
                     env.set_raw_parameter(key, value)
                 env.start()
-                model = gurobi.Model(env)
+            model = gurobi.Model(env)
         elif solver == "highs":
             from pyoptinterface import highs
 
@@ -322,7 +322,7 @@ class Model:
             >>> m.my_constraint.dual
             Traceback (most recent call last):
             ...
-            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'Pi'
+            RuntimeError: Unable to retrieve attribute 'Pi'
             >>> m.convert_to_fixed()
             >>> m.optimize()
             >>> m.my_constraint.dual
@@ -358,44 +358,44 @@ class Model:
             >>> m.bad_constraint.attr.IIS
             Traceback (most recent call last):
             ...
-            polars.exceptions.ComputeError: RuntimeError: Unable to retrieve attribute 'IISConstr'
+            RuntimeError: Unable to retrieve attribute 'IISConstr'
             >>> m.compute_IIS()
             >>> m.bad_constraint.attr.IIS
             True
         """
         self.poi.computeIIS()
 
-    @for_solvers("gurobi")
     def dispose(self):
         """
-        Tries to close the solver connection by deleting the model and forcing the garbage collector to run.
+        Disposes of the model and cleans up the solver environment.
 
-        Gurobi only. Once this method is called, this model is no longer usable.
+        When using Gurobi compute server, this cleanup will
+        ensure your run is not marked as 'ABORTED'.
 
-        This method will not work if you have a variable that references self.poi.
-        Unfortunately, this is a limitation from the underlying solver interface library.
-        See https://github.com/metab0t/PyOptInterface/issues/36 for context.
+        Note that once the model is disposed, it cannot be used anymore.
 
         Examples:
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model()
             >>> m.X = pf.Variable(ub=1)
             >>> m.maximize = m.X
             >>> m.optimize()
             >>> m.X.solution
             1.0
             >>> m.dispose()
-            >>> m.X.solution
-            Traceback (most recent call last):
-            ...
-            AttributeError: 'Model' object has no attribute 'poi'
         """
-        import gc
+        env = None
+        if hasattr(self.poi, "_env"):
+            env = self.poi._env
+        self.poi.close()
+        if env is not None:
+            env.close()
 
-        env = self.poi._env
-        del self.poi
-        gc.collect()
-        del env
-        gc.collect()
+    def __del__(self):
+        # This ensures that the model is closed *before* the environment is. This avoids the Gurobi warning:
+        #   Warning: environment still referenced so free is deferred (Continue to use WLS)
+        # I include the hasattr check to avoid errors in case __init__ failed and poi was never set.
+        if hasattr(self, "poi"):
+            self.poi.close()
 
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)

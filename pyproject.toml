@@ -9,25 +9,25 @@ description = "Blazing fast linear program interface"
 readme = "README.md"
 requires-python = ">=3.9"
 dynamic = ["version"]
+license="MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
 ]
 dependencies = [
-    "polars>=0.20,<2",
+    "polars~=1.0",
     "numpy",
     "pyarrow",
     "pandas",
-    "packaging",
     "pyoptinterface>=0.4.1,<1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "ruff",
+    "polars>=1.30.0",                            # Some of the tests rely on the output format of polars exceptions which changed in 1.30.0
     "bumpver",
     "pip-tools",
     "pytest",
@@ -36,9 +36,8 @@ dev = [
     "gurobipy",
     "highsbox",
     "coverage",
-    "ipykernel"
-]
-docs = [
+    "ipykernel",
+    "pytest-markdown-docs",
     "mkdocs-material==9.*",
     "mkdocstrings[python]",
     "mkdocs-git-revision-date-localized-plugin",
@@ -46,7 +45,8 @@ docs = [
     "mkdocs-gen-files",
     "mkdocs-section-index",
     "mkdocs-literate-nav",
-    "mkdocs-table-reader-plugin"
+    "mkdocs-table-reader-plugin",
+    "markdown-hide-code>=0.1.1",
 ]
 highs = ["highsbox"]
 
@@ -57,7 +57,7 @@ lint.select = ["E4", "E7", "E9", "F", "I", "W292", "W291"]
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules --ignore=scripts"
+addopts = "--doctest-modules --ignore=scripts --markdown-docs --markdown-docs-syntax=superfences"
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"
