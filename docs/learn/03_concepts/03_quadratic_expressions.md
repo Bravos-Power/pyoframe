@@ -7,7 +7,7 @@ Quadratic expressions work as you'd expect. Simply multiply two linear expressio
 ### Maximize area of box
 Here's a short example that shows that a square maximizes the area of any box with a fixed perimeter.
 
-```python3
+```python
 import pyoframe as pf
 model = pf.Model(sense="max")
 model.w = pf.Variable(lb=0)
@@ -22,6 +22,12 @@ print(f"With area: {model.objective.evaluate()}")
 # It's a square: True
 # With area: 25.0
 ```
+
+```{.python continuation hide}
+assert model.w.solution == model.h.solution
+assert model.objective.evaluate() == 25
+```
+
 ### Facility Location Problem
 
 See [examples/facility_location](../tests/examples/facility_location/).
