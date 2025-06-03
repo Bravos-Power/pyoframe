@@ -882,7 +882,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = df.group_by(dims, maintain_order=True)
         return df.sum()
 
-    def to_poi(self) -> Union[poi.ScalarAffineFunction, poi.ScalarQuadraticFunction]:
+
+    def to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
         if self.dimensions is not None:
             raise ValueError(
                 "Only non-dimensioned expressions can be converted to PyOptInterface."

@@ -54,3 +54,17 @@ def test_set_objective():
         m = pf.Model()
         m.minimize = 3
         m.maximize
+
+
+def test_quadratic_objective(solver):
+    if solver == "highs":
+        pytest.skip("Highs solver does not support quadratic objectives.")
+    m = pf.Model()
+    m.A = pf.Variable(lb=0, ub=5)
+    m.B = pf.Variable(lb=0, ub=10)
+    m.maximize = m.A * m.B + 2
+    m.optimize()
+    assert m.A.solution == 5.0
+    assert m.B.solution == 10.0
+    assert m.objective.value == 52.0
+    assert m.objective.evaluate() == 52.0
