@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Union
 
@@ -13,7 +15,9 @@ from pyoframe.constants import (
     ObjSense,
     ObjSenseValue,
     PyoframeError,
+    Solver,
     VType,
+    get_solver,
 )
 from pyoframe.core import Constraint, Variable
 from pyoframe.model_element import ModelElement, ModelElementWithId
@@ -79,12 +83,13 @@ class Model:
     def __init__(
         self,
         name: Optional[str] = None,
-        solver: Optional[SUPPORTED_SOLVER_TYPES] = None,
+        solver: SUPPORTED_SOLVER_TYPES | Solver | None = None,
         solver_env: Optional[Dict[str, str]] = None,
         use_var_names: bool = False,
         sense: Union[ObjSense, ObjSenseValue, None] = None,
     ):
-        self.poi, self.solver_name = Model.create_poi_model(solver, solver_env)
+        self.poi, self.solver = Model.create_poi_model(solver, solver_env)
+        self.solver_name = self.solver.name
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
         self.sense = ObjSense(sense) if sense is not None else None
@@ -104,7 +109,7 @@ class Model:
 
     @classmethod
     def create_poi_model(
-        cls, solver: Optional[str], solver_env: Optional[Dict[str, str]]
+        cls, solver: Optional[str | Solver], solver_env: Optional[Dict[str, str]]
     ):
         if solver is None:
             if Config.default_solver is None:
@@ -119,8 +124,10 @@ class Model:
             else:
                 solver = Config.default_solver
 
-        solver = solver.lower()
-        if solver == "gurobi":
+        if isinstance(solver, str):
+            solver = get_solver(solver)
+
+        if solver.name == "gurobi":
             from pyoptinterface import gurobi
 
             if solver_env is None:
@@ -131,11 +138,11 @@ class Model:
                     env.set_raw_parameter(key, value)
                 env.start()
             model = gurobi.Model(env)
-        elif solver == "highs":
+        elif solver.name == "highs":
             from pyoptinterface import highs
 
             model = highs.Model()
-        elif solver == "ipopt":
+        elif solver.name == "ipopt":
             try:
                 from pyoptinterface import ipopt
             except ModuleNotFoundError as e:
@@ -287,20 +294,14 @@ class Model:
             pretty:
                 Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
         """
+        self.solver.check_supports_write()
+
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # If using IPOPT, raise an informative exception
-        if self.solver_name == "ipopt":
-            extension = file_path.suffix.lower()
-            raise NotImplementedError(
-                f"IPOPT does not support writing models to {extension} files. "
-                "Use another solver like Gurobi or HiGHS if you need file export capabilities."
-            )
-
         # Default handling for other solvers
         kwargs = {}
-        if self.solver_name == "highs":
+        if self.solver.name == "highs":
             if self.use_var_names:
                 self.params.write_solution_style = 1
             kwargs["pretty"] = pretty
@@ -419,7 +420,7 @@ class Model:
         try:
             self.poi.set_model_attribute(poi.ModelAttribute[name], value)
         except KeyError as e:
-            if self.solver_name == "gurobi":
+            if self.solver.name == "gurobi":
                 self.poi.set_model_raw_attribute(name, value)
             else:
                 raise e
@@ -428,7 +429,7 @@ class Model:
         try:
             return self.poi.get_model_attribute(poi.ModelAttribute[name])
         except KeyError as e:
-            if self.solver_name == "gurobi":
+            if self.solver.name == "gurobi":
                 return self.poi.get_model_raw_attribute(name)
             else:
                 raise e

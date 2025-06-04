@@ -461,14 +461,12 @@ def test_no_propogate():
 
 
 def test_variable_equals(solver):
+    if not solver.supports_integer_variables:
+        pytest.skip(
+            f"Solver {solver.name} does not support integer or binary variables, skipping test."
+        )
     m = Model(solver=solver)
     index = Set(x=[1, 2, 3])
-
-    # If using IPOPT, we should expect an exception when using binary variables
-    if "ipopt" in solver:
-        pytest.skip(
-            "IPOPT doesn't support binary variables, skipping remainder of test"
-        )
 
     # For other solvers, continue with the original test
     m.Choose = Variable(index, vtype=VType.BINARY)

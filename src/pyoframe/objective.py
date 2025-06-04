@@ -60,9 +60,6 @@ class Objective(Expression):
         self, expr: SupportsToExpr | int | float, _constructive: bool = False
     ) -> None:
         self._constructive = _constructive
-        self._negated_for_ipopt = (
-            False  # Add this flag to track if we negated the objective
-        )
 
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
@@ -81,12 +78,18 @@ class Objective(Expression):
         The value of the objective function (only available after solving the model).
         This value is obtained by directly querying the solver.
         """
-        obj_value = self._model.poi.get_model_attribute(
+        assert self._model is not None, (
+            "Objective must be part of a model before it is queried."
+        )
+
+        obj_value: float = self._model.poi.get_model_attribute(
             poi.ModelAttribute.ObjectiveValue
         )
-        # If we're using IPOPT with maximization, negate the result back
-        if self._negated_for_ipopt:
-            return -obj_value
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
+            obj_value *= -1
         return obj_value
 
     def on_add_to_model(self, model, name):
@@ -97,45 +100,17 @@ class Objective(Expression):
                 "Can't set an objective without specifying the sense. Did you use .objective instead of .minimize or .maximize ?"
             )
 
-        # Check if we're using IPOPT and maximizing
-        solver_name = self._model.solver_name
-        is_ipopt = "ipopt" in solver_name
-        is_maximizing = self._model.sense == ObjSense.MAX
-
-        # Get the original objective function
-        original_obj = self.to_poi()
-
-        # Check if it's quadratic
-        is_quadratic = isinstance(original_obj, poi.ScalarQuadraticFunction)
-
-        # Handle IPOPT maximization case
-        if is_ipopt and is_maximizing:
-            # Set flag to remind us to negate the solution later
-            self._negated_for_ipopt = True
-
-            if is_quadratic:
-                # For quadratic objectives, negate all coefficients
-                negated_obj = poi.ScalarQuadraticFunction(
-                    coefficients=[-c for c in original_obj.coefficients],
-                    var1s=original_obj.var1s,
-                    var2s=original_obj.var2s,
-                )
-            else:
-                # For linear objectives, negate coefficients
-                negated_obj = poi.ScalarAffineFunction(
-                    coefficients=[-c for c in original_obj.coefficients],
-                    variables=original_obj.variables,
-                )
-
-            # Always use minimize for IPOPT
-            self._model.poi.set_objective(
-                negated_obj, sense=poi.ObjectiveSense.Minimize
-            )
+        kwargs = {}
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
+            expr = (-self).to_poi()
+            kwargs["sense"] = poi.ObjectiveSense.Minimize
         else:
-            # Normal case for other solvers
-            self._model.poi.set_objective(
-                original_obj, sense=self._model.sense.to_poi()
-            )
+            expr = self.to_poi()
+            kwargs["sense"] = self._model.sense.to_poi()
+        self._model.poi.set_objective(expr, **kwargs)
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)

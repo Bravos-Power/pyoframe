@@ -882,7 +882,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = df.group_by(dims, maintain_order=True)
         return df.sum()
 
-
     def to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
         if self.dimensions is not None:
             raise ValueError(
@@ -1560,24 +1559,16 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             ).select(self.dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
-        # Create base kwargs
+        assert self._model is not None
+
         kwargs = {}
         if self.lb is not None:
             kwargs["lb"] = float(self.lb)  # Convert to float for IPOPT
         if self.ub is not None:
             kwargs["ub"] = float(self.ub)  # Convert to float for IPOPT
-
-        # Check solver type and adjust kwargs accordingly
-        solver_name = self._model.solver_name
-        # Only add domain for solvers that support it (not IPOPT)
-        if "ipopt" not in solver_name:
+        if self.vtype != VType.CONTINUOUS:
+            self._model.solver.check_supports_integer_variables()
             kwargs["domain"] = self.vtype.to_poi()
-        elif self.vtype != VType.CONTINUOUS:
-            # If using IPOPT but trying to add non-continuous variables, warn the user
-            warnings.warn(
-                f"IPOPT only supports continuous variables, but {self.vtype} was specified. The variable will be treated as continuous."
-            )
-            # Should we raise a Pyoframe exception instead?
 
         # Rest of the method remains the same as original
         if self.dimensions is not None and self._model.use_var_names:

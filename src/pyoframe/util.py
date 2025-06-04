@@ -399,9 +399,9 @@ def for_solvers(*solvers: str):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            if self.solver_name not in solvers:
+            if self.solver.name not in solvers:
                 raise NotImplementedError(
-                    f"Method '{func.__name__}' is not implemented for solver '{self.solver_name}'."
+                    f"Method '{func.__name__}' is not implemented for solver '{self.solver}'."
                 )
             return func(self, *args, **kwargs)
 

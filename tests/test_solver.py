@@ -1,101 +1,9 @@
-import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 import pytest
 
 import pyoframe as pf
-
-
-def assert_with_solver_tolerance(
-    actual,
-    expected,
-    solver,
-    abs_tol=1e-7,
-    rel_tol=1e-8,
-    check_dtypes=False,
-    check_row_order=False,
-):
-    """
-    Assert equality with appropriate tolerance based on solver.
-
-    Parameters:
-        actual: The actual value or DataFrame
-        expected: The expected value or DataFrame
-        solver: The solver name (string)
-        abs_tol: Absolute tolerance for numerical comparisons when using approximate solvers
-        rel_tol: Relative tolerance for numerical comparisons when using approximate solvers
-        check_dtypes: Whether to check DataFrame data types (for DataFrame comparisons)
-        check_row_order: Whether to check DataFrame row order (for DataFrame comparisons)
-    """
-    # Determine if solver needs tolerance
-    use_tolerance = "ipopt" in solver.lower()
-
-    # Handle different types of actual/expected values
-    if isinstance(actual, (int, float)) and isinstance(expected, (int, float)):
-        # Simple numeric comparison
-        if use_tolerance:
-            assert actual == pytest.approx(expected, abs=abs_tol, rel=rel_tol), (
-                f"Expected {expected}, got {actual} (with tolerance {abs_tol})"
-            )
-        else:
-            assert actual == expected, f"Expected {expected}, got {actual}"
-
-    elif isinstance(actual, pl.DataFrame) and isinstance(expected, pl.DataFrame):
-        # Polars DataFrame comparison
-        if actual.shape != expected.shape:
-            assert False, (
-                f"DataFrames have different shapes: {actual.shape} vs {expected.shape}"
-            )
-
-        # Check columns
-        assert set(actual.columns) == set(expected.columns), (
-            f"DataFrames have different columns: {actual.columns} vs {expected.columns}"
-        )
-
-        # If not checking row order, sort both dataframes by all columns for consistent comparison
-        if not check_row_order:
-            # Find a common column to sort by (prefer ID-like columns)
-            sort_cols = actual.columns
-            actual = actual.sort(sort_cols)
-            expected = expected.sort(sort_cols)
-
-        # Compare all values with appropriate tolerance
-        for col in expected.columns:
-            actual_col = actual.select(col).to_series()
-            expected_col = expected.select(col).to_series()
-
-            # For numeric columns with tolerance
-            if actual_col.dtype in [pl.Float32, pl.Float64] and use_tolerance:
-                for i, (a, e) in enumerate(zip(actual_col, expected_col)):
-                    assert a == pytest.approx(e, abs=abs_tol, rel=rel_tol), (
-                        f"Row {i}, column '{col}': Expected {e}, got {a} (with tolerance {abs_tol})"
-                    )
-            else:
-                # For non-numeric columns or when not using tolerance
-                assert actual_col.equals(expected_col), (
-                    f"Values differ in column '{col}': {actual_col} vs {expected_col}"
-                )
-
-        # Check dtypes if required
-        if check_dtypes:
-            for col in expected.columns:
-                assert actual[col].dtype == expected[col].dtype, (
-                    f"Different dtypes for column '{col}': {actual[col].dtype} vs {expected[col].dtype}"
-                )
-
-    elif isinstance(actual, pd.DataFrame) and isinstance(expected, pd.DataFrame):
-        # Pandas DataFrame comparison (similar to Polars version)
-        # Implement similar logic for pandas DataFrames if needed
-        raise NotImplementedError("Pandas DataFrame comparison not implemented yet")
-
-    else:
-        # Fallback for other types
-        if use_tolerance and hasattr(pytest, "approx"):
-            assert actual == pytest.approx(expected, abs=abs_tol), (
-                f"Expected {expected}, got {actual} (with tolerance {abs_tol})"
-            )
-        else:
-            assert actual == expected, f"Expected {expected}, got {actual}"
+from tests.util import assert_with_solver_tolerance
 
 
 def test_retrieving_duals(solver):
@@ -219,7 +127,7 @@ def test_support_variable_attributes(solver):
 
 
 def test_support_variable_raw_attributes(solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     m = pf.Model()
     data = pl.DataFrame(
@@ -262,7 +170,7 @@ def test_support_variable_raw_attributes(solver):
 
 
 def test_setting_constraint_attr(solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
     m = pf.Model()
@@ -286,7 +194,7 @@ def test_setting_constraint_attr(solver):
 
 
 def test_setting_model_attr(solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
     m = pf.Model()

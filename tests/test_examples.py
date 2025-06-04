@@ -14,16 +14,23 @@ import pytest
 from polars.testing import assert_frame_equal
 
 import pyoframe as pf
-from pyoframe.constants import SUPPORTED_SOLVERS
+from pyoframe.constants import SUPPORTED_SOLVERS, Solver
 
 
 @dataclass
 class Example:
     folder_name: str
     unique_solution: bool = True
-    skip_solvers: List[str] | None = None
     # Add a field to identify MIP problems that IPOPT can't solve
     is_mip: bool = False
+    is_quadratic: bool = False
+
+    def supports_solver(self, solver: Solver) -> bool:
+        if self.is_mip and not solver.supports_integer_variables:
+            return False
+        if self.is_quadratic and not solver.supports_quadratics:
+            return False
+        return True
 
     def import_model_module(self):
         parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -65,20 +72,20 @@ EXAMPLES = [
     Example(
         "facility_location",
         unique_solution=False,
-        skip_solvers=["highs", "ipopt"],  # Has quadratics and binary variables
         is_mip=True,
+        is_quadratic=True,
     ),
     Example("sudoku", is_mip=True),  # Binary variables
     Example("production_planning"),  # Linear continuous problem,
     Example(
         "portfolio_optim",
-        skip_solvers=["highs"],  # HiGHS doesn't support quadratic objectives
+        is_quadratic=True,
     ),  # Quadratic continuous problem - works with Gurobi and IPOPT!
     Example("pumped_storage", is_mip=True),  # Binary variables
 ]
 
 
-def compare_results_dir(expected_dir, actual_dir, solver):
+def compare_results_dir(expected_dir, actual_dir):
     for file in actual_dir.iterdir():
         assert (expected_dir / file.name).exists(), (
             f"File {file.name} not found in expected directory"
@@ -157,14 +164,11 @@ def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
-def test_examples(example, solver, use_var_names):
-    # Skip MIP problems for IPOPT
-    if "ipopt" in solver and example.is_mip:
-        pytest.skip(f"Skipping MIP example {example.folder_name} for IPOPT")
-
-    # Skip tests for examples that explicitly list this solver
-    if example.skip_solvers and solver in example.skip_solvers:
-        pytest.skip(f"Skipping {solver} for example {example.folder_name}")
+def test_examples(example, solver: Solver, use_var_names):
+    if not example.supports_solver(solver):
+        pytest.skip(
+            f"Skipping example {example.folder_name} for solver {solver.name} due to unsupported features"
+        )
 
     solver_func = example.import_solve_func()
     model = solver_func(use_var_names)
@@ -175,7 +179,7 @@ def test_examples(example, solver, use_var_names):
 
         # For IPOPT or other solvers without file writing capabilities,
         # modify the comparison approach
-        if solver == "ipopt":
+        if solver.name == "ipopt":
             # Only compare CSV files with appropriate tolerances
             for file in tmpdir.glob("*.csv"):
                 expected = example.get_results_path() / file.name
@@ -203,7 +207,7 @@ def test_examples(example, solver, use_var_names):
                     )
         else:
             # For other solvers, use normal comparison
-            compare_results_dir(example.get_results_path(), tmpdir, solver)
+            compare_results_dir(example.get_results_path(), tmpdir)
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
@@ -217,15 +221,15 @@ def test_gurobi_model_matches(example, solver):
     with TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         write_results_gurobipy(result, tmpdir)
-        compare_results_dir(example.get_results_path(), tmpdir, solver)
+        compare_results_dir(example.get_results_path(), tmpdir)
 
 
 def write_results(example: Example, model, results_dir, solver):
     # Skip writing LP and SOL files for IPOPT
-    if solver != "ipopt":
+    if solver.name != "ipopt":
         readability = "pretty" if model.use_var_names else "machine"
         try:
-            model.write(results_dir / f"problem-{model.solver_name}-{readability}.lp")
+            model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
         except NotImplementedError:
             pass
 
@@ -237,10 +241,10 @@ def write_results(example: Example, model, results_dir, solver):
 
     # ONLY if example has a unique solution, write SOL files and CSVs
     if example.unique_solution:
-        if solver != "ipopt":
+        if solver.name != "ipopt":
             try:
                 model.write(
-                    results_dir / f"solution-{model.solver_name}-{readability}.sol"
+                    results_dir / f"solution-{model.solver.name}-{readability}.sol"
                 )
             except NotImplementedError:
                 pass
@@ -305,8 +309,8 @@ if __name__ == "__main__":
             shutil.rmtree(results_dir)
         solve_model = example.import_solve_func()
         for solver in SUPPORTED_SOLVERS:
-            if example.skip_solvers and solver in example.skip_solvers:
+            if not example.supports_solver(solver):
                 continue
-            pf.Config.default_solver = solver
+            pf.Config.default_solver = solver.name
             for use_var_names in [True, False]:
                 write_results(example, solve_model(use_var_names), results_dir, solver)

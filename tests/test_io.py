@@ -52,7 +52,7 @@ def test_expression_with_const_to_str():
 
 
 def test_constraint_to_str(solver):
-    if solver == "highs":
+    if not solver.supports_quadratics:
         pytest.skip("Highs does not support quadratic constraints yet.")
     m = Model()
     m.x1 = Variable()
@@ -76,18 +76,9 @@ x1 * x1 <= 5"""
 
 
 @pytest.mark.parametrize("use_var_names", [True, False])
-@pytest.mark.parametrize(
-    "solver",
-    [
-        "gurobi",
-        "highs",
-        pytest.param(
-            "ipopt",
-            marks=pytest.mark.skip(reason="IPOPT doesn't support writing LP files"),
-        ),
-    ],
-)
 def test_write_lp(use_var_names, solver):
+    if not solver.supports_write:
+        pytest.skip(f"{solver.name} does not support writing LP files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(use_var_names=use_var_names, solver=solver)
         cities = pl.DataFrame(
@@ -117,20 +108,9 @@ def test_write_lp(use_var_names, solver):
 
 
 @pytest.mark.parametrize("use_var_names", [True, False])
-@pytest.mark.parametrize(
-    "solver",
-    [
-        "gurobi",
-        "highs",
-        pytest.param(
-            "ipopt",
-            marks=pytest.mark.skip(
-                reason="IPOPT doesn't support writing solution files"
-            ),
-        ),
-    ],
-)
 def test_write_sol(use_var_names, solver):
+    if not solver.supports_write:
+        pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(use_var_names=use_var_names, solver=solver)
         cities = pl.DataFrame(
