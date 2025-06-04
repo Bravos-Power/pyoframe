@@ -75,7 +75,6 @@ x1 * x1 <= 5"""
     )
 
 
-@pytest.mark.parametrize("use_var_names", [True, False])
 def test_write_lp(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing LP files.")
@@ -93,8 +92,8 @@ def test_write_lp(use_var_names, solver):
         m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
         m.total_pop = sum(m.population) >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
-        file_path = os.path.join(tmpdir, "test.lp")
 
+        file_path = os.path.join(tmpdir, "test.lp")
         m.write(file_path)
         m.optimize()
         obj_value = m.objective.value
@@ -109,7 +108,6 @@ def test_write_lp(use_var_names, solver):
                 assert "population[CAN,Toronto]" not in f.read()
 
 
-@pytest.mark.parametrize("use_var_names", [True, False])
 def test_write_sol(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing solution files.")

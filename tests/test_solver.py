@@ -26,7 +26,7 @@ def test_retrieving_duals(solver):
     assert m.max_AB.dual == approx(0.1, **get_tol(solver))
     assert m.extra_slack_constraint.dual == approx(0, **get_tol(solver))
 
-    if solver == "gurobi":
+    if solver.name == "gurobi":
         assert m.max_AB.attr.slack == approx(0, **get_tol(solver))
         assert m.extra_slack_constraint.attr.slack == approx(50, **get_tol(solver))
         assert m.A.attr.RC == approx(0, **get_tol(solver))
@@ -63,7 +63,7 @@ def test_retrieving_duals_vectorized(solver):
         **get_tol_pl(solver),
     )
 
-    if solver == "gurobi":
+    if solver.name == "gurobi":
         assert_frame_equal(
             m.max_AB.attr.slack,
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
@@ -104,7 +104,7 @@ def test_support_variable_attributes(solver):
         **get_tol_pl(solver),
     )
 
-    if solver == "gurobi":
+    if solver.name == "gurobi":
         assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
@@ -154,7 +154,7 @@ def test_support_variable_raw_attributes(solver):
         **get_tol_pl(solver),
     )
 
-    if solver == "gurobi":
+    if solver.name == "gurobi":
         assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
