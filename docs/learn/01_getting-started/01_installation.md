@@ -35,7 +35,7 @@ Pyoframe makes it easy to build models but the actual solving of your model is d
     To install [ipopt](https://coin-or.github.io/Ipopt/):
 
     1. Run: `pip install pyoframe[ipopt]`
-    2. Download the [Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from GitHub. Version 3.14.x is recommended since it is the only one that has been tested.
+    2. Download the [Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from GitHub. Version 3.14.x is recommended since it is the latest version that we've tested.
     3. On Windows, unpack the zip and add the `bin` folder to your Path variable. If not on Windows, you may have to build the solver from source, see further details [here](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt).
 
     !!! warning "Continuous variables only"

@@ -1132,12 +1132,19 @@ class Constraint(ModelElementWithId):
         self._model = lhs._model
         self.sense = sense
         self.to_relax: Optional[FuncArgs] = None
-        self.attr = Container(self._set_attribute, self._get_attribute)
+        self._attr = Container(self._set_attribute, self._get_attribute)
 
         dims = self.lhs.dimensions
         data = pl.DataFrame() if dims is None else self.lhs.data.select(dims).unique()
 
         super().__init__(data)
+
+    @property
+    def attr(self) -> Container:
+        """
+        Allows reading and writing constraint attributes similarly to [Model.attr][pyoframe.Model.attr].
+        """
+        return self._attr
 
     def _set_attribute(self, name, value):
         self._assert_has_ids()
@@ -1504,7 +1511,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
-        self.attr = Container(self._set_attribute, self._get_attribute)
+        self._attr = Container(self._set_attribute, self._get_attribute)
         self._equals = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
@@ -1515,6 +1522,13 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             self._ub_expr, self.ub = ub, None
         else:
             self._ub_expr, self.ub = None, ub
+
+    @property
+    def attr(self) -> Container:
+        """
+        Allows reading and writing variable attributes similarly to [Model.attr][pyoframe.Model.attr].
+        """
+        return self._attr
 
     def _set_attribute(self, name, value):
         self._assert_has_ids()

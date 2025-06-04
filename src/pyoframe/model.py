@@ -68,8 +68,10 @@ class Model:
         "name",
         "solver",
         "poi",
+        "_params",
         "params",
         "result",
+        "_attr",
         "attr",
         "sense",
         "objective",
@@ -99,13 +101,66 @@ class Model:
         )
         self.name = name
 
-        self.params = Container(self._set_param, self._get_param)
-        self.attr = Container(self._set_attr, self._get_attr)
+        self._params = Container(self._set_param, self._get_param)
+        self._attr = Container(self._set_attr, self._get_attr)
         self._use_var_names = use_var_names
 
     @property
     def use_var_names(self):
         return self._use_var_names
+
+    @property
+    def attr(self):
+        """
+        An object that allows reading and writing model attributes.
+
+        Several model attributes are common across all solvers making it easy to switch between solvers (see supported attributes for
+        [Gurobi](https://metab0t.github.io/PyOptInterface/gurobi.html#supported-model-attribute),
+        [HiGHS](https://metab0t.github.io/PyOptInterface/highs.html), and
+        [Ipopt](https://metab0t.github.io/PyOptInterface/ipopt.html)).
+
+        We additionally support all of [Gurobi's attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes.html#sec:Attributes) when using Gurobi.
+
+        Examples:
+            >>> m = pf.Model(solver="gurobi")
+            >>> m.v = pf.Variable(lb=1, ub=1, vtype="integer")
+            >>> m.attr.Silent = True  # Prevent solver output from being printed
+            >>> m.optimize()
+            >>> m.attr.TerminationStatus
+            <TerminationStatusCode.OPTIMAL: 2>
+
+            Some attributes, like `NumVars`, are solver-specific.
+            >>> m = pf.Model(solver="gurobi")
+            >>> m.attr.NumConstrs
+            0
+            >>> m = pf.Model(solver="highs")
+            >>> m.attr.NumConstrs
+            Traceback (most recent call last):
+            ...
+            KeyError: 'NumConstrs'
+
+        See also:
+            [Variable.attr][pyoframe.Variable.attr] for setting variable attributes and
+            [Constraint.attr][pyoframe.Constraint.attr] for setting constraint attributes.
+        """
+        return self._attr
+
+    @property
+    def params(self) -> Container:
+        """
+        An object that allows reading and writing solver-specific parameters.
+
+        See the list of available parameters for
+        [Gurobi](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#sec:Parameters),
+        [HiGHS](https://ergo-code.github.io/HiGHS/stable/options/definitions/),
+        and [Ipopt](https://coin-or.github.io/Ipopt/OPTIONS.html).
+
+        Examples:
+            For example, if you'd like to use Gurobi's barrier method, you can set the `Method` parameter:
+            >>> m = pf.Model(solver="gurobi")
+            >>> m.params.Method = 2
+        """
+        return self._params
 
     @classmethod
     def create_poi_model(
@@ -145,14 +200,14 @@ class Model:
         elif solver.name == "ipopt":
             try:
                 from pyoptinterface import ipopt
-            except ModuleNotFoundError as e:
+            except ModuleNotFoundError as e:  # pragma: no cover
                 raise ModuleNotFoundError(
                     "Failed to import the Ipopt solver. Did you run `pip install pyoptinterface[ipopt]`?"
                 ) from e
 
             try:
                 model = ipopt.Model()
-            except RuntimeError as e:
+            except RuntimeError as e:  # pragma: no cover
                 if "IPOPT library is not loaded" in str(e):
                     raise RuntimeError(
                         "Could not find the Ipopt solver. Are you sure you've properly installed it and added it to your PATH?"
