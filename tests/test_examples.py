@@ -168,7 +168,7 @@ def test_examples(example, solver: Solver, use_var_names):
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
 def test_gurobi_model_matches(example, solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("This test only runs for gurobi")
     gurobipy_solve = example.get_solve_with_gurobipy()
     if gurobipy_solve is None:

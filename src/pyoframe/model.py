@@ -121,7 +121,7 @@ class Model:
         We additionally support all of [Gurobi's attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes.html#sec:Attributes) when using Gurobi.
 
         Examples:
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model()
             >>> m.v = pf.Variable(lb=1, ub=1, vtype="integer")
             >>> m.attr.Silent = True  # Prevent solver output from being printed
             >>> m.optimize()
