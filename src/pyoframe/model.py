@@ -17,7 +17,6 @@ from pyoframe.constants import (
     PyoframeError,
     Solver,
     VType,
-    get_solver,
 )
 from pyoframe.core import Constraint, Variable
 from pyoframe.model_element import ModelElement, ModelElementWithId
@@ -180,7 +179,15 @@ class Model:
                 solver = Config.default_solver
 
         if isinstance(solver, str):
-            solver = get_solver(solver)
+            solver = solver.lower()
+            for s in SUPPORTED_SOLVERS:
+                if s.name == solver:
+                    solver = s
+                    break
+            else:
+                raise ValueError(
+                    f"Unsupported solver: '{solver}'. Supported solvers are: {', '.join(s.name for s in SUPPORTED_SOLVERS)}."
+                )
 
         if solver.name == "gurobi":
             from pyoptinterface import gurobi

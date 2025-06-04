@@ -57,16 +57,6 @@ SUPPORTED_SOLVERS = [
 ]
 
 
-def get_solver(name: str) -> Solver:
-    name = name.lower()
-    for solver in SUPPORTED_SOLVERS:
-        if solver.name == name:
-            return solver
-    raise ValueError(
-        f"Unsupported solver: {name}. Supported solvers are: {', '.join(s.name for s in SUPPORTED_SOLVERS)}"
-    )
-
-
 # Variable ID for constant terms. This variable ID is reserved.
 CONST_TERM = 0
 

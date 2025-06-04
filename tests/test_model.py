@@ -70,3 +70,10 @@ def test_quadratic_objective(solver):
     assert m.B.solution == approx(10, **get_tol(solver))
     assert m.objective.value == approx(52, **get_tol(solver))
     assert m.objective.evaluate() == approx(52, **get_tol(solver))
+
+
+def test_solver_detection():
+    pf.Model(solver="gurobi")
+    pf.Model(solver="Gurobi")
+    with pytest.raises(ValueError, match="Unsupported solver: 'g urobi'"):
+        pf.Model(solver="g urobi")
