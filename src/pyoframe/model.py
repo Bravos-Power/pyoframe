@@ -299,7 +299,6 @@ class Model:
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Default handling for other solvers
         kwargs = {}
         if self.solver.name == "highs":
             if self.use_var_names:

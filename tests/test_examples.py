@@ -15,13 +15,13 @@ from polars.testing import assert_frame_equal
 
 import pyoframe as pf
 from pyoframe.constants import SUPPORTED_SOLVERS, Solver
+from tests.util import get_tol_pl
 
 
 @dataclass
 class Example:
     folder_name: str
     unique_solution: bool = True
-    # Add a field to identify MIP problems that IPOPT can't solve
     is_mip: bool = False
     is_quadratic: bool = False
 
@@ -62,31 +62,19 @@ class Example:
 
 # Update the EXAMPLES list to indicate which ones are MIP problems
 EXAMPLES = [
-    Example("diet_problem"),  # Linear continuous problem
-    Example("facility_problem", is_mip=True),  # Binary variables
-    Example(
-        "cutting_stock_problem",
-        unique_solution=False,
-        is_mip=True,  # Integer variables
-    ),
-    Example(
-        "facility_location",
-        unique_solution=False,
-        is_mip=True,
-        is_quadratic=True,
-    ),
-    Example("sudoku", is_mip=True),  # Binary variables
-    Example("production_planning"),  # Linear continuous problem,
-    Example(
-        "portfolio_optim",
-        is_quadratic=True,
-    ),  # Quadratic continuous problem - works with Gurobi and IPOPT!
-    Example("pumped_storage", is_mip=True),  # Binary variables
+    Example("diet_problem"),
+    Example("facility_problem", is_mip=True),
+    Example("cutting_stock_problem", unique_solution=False, is_mip=True),
+    Example("facility_location", unique_solution=False, is_mip=True, is_quadratic=True),
+    Example("sudoku", is_mip=True),
+    Example("production_planning"),
+    Example("portfolio_optim", is_quadratic=True),
+    Example("pumped_storage", is_mip=True),
 ]
 
 
-def compare_results_dir(expected_dir, actual_dir):
-    for file in actual_dir.iterdir():
+def compare_results_dir(expected_dir, test_dir, solver):
+    for file in test_dir.iterdir():
         assert (expected_dir / file.name).exists(), (
             f"File {file.name} not found in expected directory"
         )
@@ -99,7 +87,7 @@ def compare_results_dir(expected_dir, actual_dir):
         elif file.suffix == ".csv":
             df1 = pl.read_csv(expected)
             df2 = pl.read_csv(file)
-            assert_frame_equal(df1, df2, check_row_order=False)
+            assert_frame_equal(df1, df2, check_row_order=False, **get_tol_pl(solver))
         else:
             raise ValueError(f"Unexpected file {file}")
 
@@ -176,38 +164,7 @@ def test_examples(example, solver: Solver, use_var_names):
     with TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         write_results(example, model, tmpdir, solver)
-
-        # For IPOPT or other solvers without file writing capabilities,
-        # modify the comparison approach
-        if solver.name == "ipopt":
-            # Only compare CSV files with appropriate tolerances
-            for file in tmpdir.glob("*.csv"):
-                expected = example.get_results_path() / file.name
-                if expected.exists():
-                    df1 = pl.read_csv(expected)
-                    df2 = pl.read_csv(file)
-
-                    # Use appropriate tolerance for IPOPT
-                    rtol = 1e-2 if "dual" in df1.columns else 1e-5
-                    atol = 1e-2 if "dual" in df1.columns else 1e-5
-
-                    # For diet_problem, be even more lenient with duals
-                    if example.folder_name == "diet_problem" and "dual" in df1.columns:
-                        # Skip exact comparison for duals in diet problem
-                        assert df1.shape == df2.shape
-                        continue
-
-                    assert_frame_equal(
-                        df1,
-                        df2,
-                        check_row_order=False,
-                        check_dtype=False,
-                        rtol=rtol,
-                        atol=atol,
-                    )
-        else:
-            # For other solvers, use normal comparison
-            compare_results_dir(example.get_results_path(), tmpdir)
+        compare_results_dir(example.get_results_path(), tmpdir, solver)
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
@@ -220,18 +177,18 @@ def test_gurobi_model_matches(example, solver):
     result = gurobipy_solve()
     with TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
-        write_results_gurobipy(result, tmpdir)
-        compare_results_dir(example.get_results_path(), tmpdir)
+        result.write(str(tmpdir / "solution-gurobi-pretty.sol"))
+        pl.DataFrame({"value": [result.getObjective().getValue()]}).write_csv(
+            tmpdir / "objective.csv"
+        )
+        compare_results_dir(example.get_results_path(), tmpdir, solver)
 
 
 def write_results(example: Example, model, results_dir, solver):
     # Skip writing LP and SOL files for IPOPT
-    if solver.name != "ipopt":
+    if solver.supports_write:
         readability = "pretty" if model.use_var_names else "machine"
-        try:
-            model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
-        except NotImplementedError:
-            pass
+        model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
     # Always write the objective value
     if model.objective is not None:
@@ -241,13 +198,8 @@ def write_results(example: Example, model, results_dir, solver):
 
     # ONLY if example has a unique solution, write SOL files and CSVs
     if example.unique_solution:
-        if solver.name != "ipopt":
-            try:
-                model.write(
-                    results_dir / f"solution-{model.solver.name}-{readability}.sol"
-                )
-            except NotImplementedError:
-                pass
+        if solver.supports_write:
+            model.write(results_dir / f"solution-{model.solver.name}-{readability}.sol")
 
         # CSV writing ONLY happens for unique_solution examples
         module = example.import_model_module()
@@ -263,27 +215,16 @@ def write_results(example: Example, model, results_dir, solver):
                         results_dir / f"{v.name}.csv"
                     )
 
-            for c in model.constraints:
-                try:
-                    if hasattr(c.dual, "write_csv"):
-                        c.dual.write_csv(results_dir / f"{c.name}.csv")
+            if solver.supports_duals and not example.is_mip:
+                for c in model.constraints:
+                    dual = c.dual
+                    if hasattr(dual, "write_csv"):
+                        dual.write_csv(results_dir / f"{c.name}.csv")
                     else:
                         # Handle scalar values
-                        pl.DataFrame({c.name: [c.dual]}).write_csv(
+                        pl.DataFrame({c.name: [dual]}).write_csv(
                             results_dir / f"{c.name}.csv"
                         )
-                except (pl.exceptions.ComputeError, RuntimeError) as e:
-                    if "Unable to retrieve attribute 'Pi'" in str(e):
-                        pass
-                    else:
-                        raise e
-
-
-def write_results_gurobipy(model_gpy, results_dir):
-    model_gpy.write(str(results_dir / "solution-gurobi-pretty.sol"))
-    pl.DataFrame({"value": [model_gpy.getObjective().getValue()]}).write_csv(
-        results_dir / "objective.csv"
-    )
 
 
 if __name__ == "__main__":

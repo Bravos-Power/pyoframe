@@ -465,10 +465,9 @@ def test_variable_equals(solver):
         pytest.skip(
             f"Solver {solver.name} does not support integer or binary variables, skipping test."
         )
-    m = Model(solver=solver)
+    m = Model()
     index = Set(x=[1, 2, 3])
 
-    # For other solvers, continue with the original test
     m.Choose = Variable(index, vtype=VType.BINARY)
     with pytest.raises(
         AssertionError,

@@ -1,9 +1,11 @@
 import polars as pl
 import pyoptinterface as poi
 import pytest
+from pytest import approx
+from polars.testing import assert_frame_equal
 
 import pyoframe as pf
-from tests.util import assert_with_solver_tolerance
+from tests.util import get_tol, get_tol_pl
 
 
 def test_retrieving_duals(solver):
@@ -17,17 +19,17 @@ def test_retrieving_duals(solver):
 
     m.optimize()
 
-    assert_with_solver_tolerance(m.A.solution, 45, solver)
-    assert_with_solver_tolerance(m.B.solution, 10, solver)
-    assert_with_solver_tolerance(m.maximize.value, 29, solver)
-    assert_with_solver_tolerance(m.max_AB.dual, 0.1, solver)
-    assert_with_solver_tolerance(m.extra_slack_constraint.dual, 0, solver)
+    assert m.A.solution == approx(45, **get_tol(solver))
+    assert m.B.solution == approx(10, **get_tol(solver))
+    assert m.maximize.value == approx(29, **get_tol(solver))
+    assert m.max_AB.dual == approx(0.1, **get_tol(solver))
+    assert m.extra_slack_constraint.dual == approx(0, **get_tol(solver))
 
     if solver == "gurobi":
-        assert_with_solver_tolerance(m.max_AB.attr.slack, 0, solver)
-        assert_with_solver_tolerance(m.extra_slack_constraint.attr.slack, 50, solver)
-        assert_with_solver_tolerance(m.A.attr.RC, 0, solver)
-        assert_with_solver_tolerance(m.B.attr.RC, 1.9, solver)
+        assert m.max_AB.attr.slack == approx(0, **get_tol(solver))
+        assert m.extra_slack_constraint.attr.slack == approx(50, **get_tol(solver))
+        assert m.A.attr.RC == approx(0, **get_tol(solver))
+        assert m.B.attr.RC == approx(1.9, **get_tol(solver))
 
 
 def test_retrieving_duals_vectorized(solver):
@@ -44,37 +46,37 @@ def test_retrieving_duals_vectorized(solver):
 
     m.optimize()
 
-    assert_with_solver_tolerance(m.maximize.value, 29, solver)
-    assert_with_solver_tolerance(
+    assert m.maximize.value == approx(29, **get_tol(solver))
+    assert_frame_equal(
         m.X.solution,
-        pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
-        solver,
+        pl.DataFrame({"t": [1, 2], "solution": [45.0, 10.0]}),
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
-    assert_with_solver_tolerance(
+    assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
-        solver,
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
 
     if solver == "gurobi":
-        assert_with_solver_tolerance(
+        assert_frame_equal(
             m.max_AB.attr.slack,
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
-            solver,
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
-        assert_with_solver_tolerance(
+        assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0, 0]}),
             # Somehow the reduced cost is 0 since we are no longer using a bound.
-            solver,
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
 
 
@@ -92,37 +94,37 @@ def test_support_variable_attributes(solver):
 
     m.optimize()
 
-    assert_with_solver_tolerance(m.maximize.value, 29, solver)
-    assert_with_solver_tolerance(
+    assert m.maximize.value == approx(29, **get_tol(solver))
+    assert_frame_equal(
         m.X.solution,
-        pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
-        solver,
+        pl.DataFrame({"t": [1, 2], "solution": [45.0, 10.0]}),
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
 
     if solver == "gurobi":
-        assert_with_solver_tolerance(
+        assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
-            solver,
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
-        assert_with_solver_tolerance(
+        assert_frame_equal(
             m.max_AB.attr.slack,
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
-            solver,
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
 
-    assert_with_solver_tolerance(
+    assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
-        solver,
         check_dtypes=False,
         check_row_order=False,
+        **get_tol_pl(solver),
     )
 
 
@@ -142,30 +144,30 @@ def test_support_variable_raw_attributes(solver):
 
     m.optimize()
 
-    assert_with_solver_tolerance(m.maximize.value, 29, solver)
-    assert_with_solver_tolerance(
+    assert m.maximize.value == approx(29, **get_tol(solver))
+    assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
-        solver,
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
 
     if solver == "gurobi":
-        assert_with_solver_tolerance(
+        assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
-            solver,
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
 
-    assert_with_solver_tolerance(
+    assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
-        solver,
         check_dtypes=False,
         check_row_order=False,
+        **get_tol_pl(solver),
     )
 
 
@@ -219,5 +221,5 @@ def test_const_term_in_objective(use_var_names, solver):
     m.maximize = 10 + m.A
 
     m.optimize()
-    assert_with_solver_tolerance(m.A.solution, 10, solver)
-    assert_with_solver_tolerance(m.maximize.value, 20, solver)
+    assert m.A.solution == approx(10, **get_tol(solver))
+    assert m.maximize.value == approx(20, **get_tol(solver))

@@ -1563,9 +1563,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
         kwargs = {}
         if self.lb is not None:
-            kwargs["lb"] = float(self.lb)  # Convert to float for IPOPT
+            kwargs["lb"] = float(self.lb)
         if self.ub is not None:
-            kwargs["ub"] = float(self.ub)  # Convert to float for IPOPT
+            kwargs["ub"] = float(self.ub)
         if self.vtype != VType.CONTINUOUS:
             self._model.solver.check_supports_integer_variables()
             kwargs["domain"] = self.vtype.to_poi()

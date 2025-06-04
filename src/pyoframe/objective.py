@@ -60,7 +60,6 @@ class Objective(Expression):
         self, expr: SupportsToExpr | int | float, _constructive: bool = False
     ) -> None:
         self._constructive = _constructive
-
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
@@ -105,12 +104,12 @@ class Objective(Expression):
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX
         ):
-            expr = (-self).to_poi()
+            poi_expr = (-self).to_poi()
             kwargs["sense"] = poi.ObjectiveSense.Minimize
         else:
-            expr = self.to_poi()
+            poi_expr = self.to_poi()
             kwargs["sense"] = self._model.sense.to_poi()
-        self._model.poi.set_objective(expr, **kwargs)
+        self._model.poi.set_objective(poi_expr, **kwargs)
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)

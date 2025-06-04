@@ -1,7 +1,8 @@
 import pytest
+from pytest import approx
 
 import pyoframe as pf
-from tests.util import assert_with_solver_tolerance
+from tests.util import get_tol
 
 
 def test_set_objective():
@@ -65,7 +66,7 @@ def test_quadratic_objective(solver):
     m.B = pf.Variable(lb=0, ub=10)
     m.maximize = m.A * m.B + 2
     m.optimize()
-    assert_with_solver_tolerance(m.A.solution, 5, solver)
-    assert_with_solver_tolerance(m.B.solution, 10, solver)
-    assert_with_solver_tolerance(m.objective.value, 52, solver)
-    assert_with_solver_tolerance(m.objective.evaluate(), 52, solver)
+    assert m.A.solution == approx(5, **get_tol(solver))
+    assert m.B.solution == approx(10, **get_tol(solver))
+    assert m.objective.value == approx(52, **get_tol(solver))
+    assert m.objective.evaluate() == approx(52, **get_tol(solver))
