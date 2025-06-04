@@ -63,10 +63,12 @@ _tolerances = {
 
 
 def get_tol_pl(solver) -> dict[Literal["atol"] | Literal["rtol"], float]:
+    """Return tolerances for Polars' assert_frame_equal()."""
     return _tolerances[solver.name]
 
 
 def get_tol(solver):
+    """Return tolerances for pytest's approx()."""
     tol = _tolerances[solver.name]
     return dict(
         rel=tol["rtol"],

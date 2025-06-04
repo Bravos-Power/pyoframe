@@ -1570,7 +1570,6 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             self._model.solver.check_supports_integer_variables()
             kwargs["domain"] = self.vtype.to_poi()
 
-        # Rest of the method remains the same as original
         if self.dimensions is not None and self._model.use_var_names:
             df = (
                 concat_dimensions(self.data, prefix=self.name)

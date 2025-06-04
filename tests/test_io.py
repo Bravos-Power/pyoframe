@@ -53,7 +53,7 @@ def test_expression_with_const_to_str():
 
 def test_constraint_to_str(solver):
     if not solver.supports_quadratics:
-        pytest.skip("Highs does not support quadratic constraints yet.")
+        pytest.skip("Solver does not support quadratic constraints.")
     m = Model()
     m.x1 = Variable()
     m.constraint = m.x1**2 <= 5
@@ -80,7 +80,7 @@ def test_write_lp(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing LP files.")
     with TemporaryDirectory() as tmpdir:
-        m = Model(use_var_names=use_var_names, solver=solver)
+        m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -94,12 +94,14 @@ def test_write_lp(use_var_names, solver):
         m.total_pop = sum(m.population) >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
         file_path = os.path.join(tmpdir, "test.lp")
+
         m.write(file_path)
         m.optimize()
         obj_value = m.objective.value
         gp_model = gp.read(file_path)
         gp_model.optimize()
         assert gp_model.ObjVal == obj_value
+
         with open(file_path) as f:
             if use_var_names:
                 assert "population[CAN,Toronto]" in f.read()
@@ -112,7 +114,7 @@ def test_write_sol(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
-        m = Model(use_var_names=use_var_names, solver=solver)
+        m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -125,9 +127,11 @@ def test_write_sol(use_var_names, solver):
         m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
         m.total_pop = sum(m.population) >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
+
         file_path = os.path.join(tmpdir, "test.sol")
         m.optimize()
         m.write(file_path)
+
         with open(file_path) as f:
             if use_var_names:
                 assert "population[CAN,Toronto]" in f.read()

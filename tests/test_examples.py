@@ -60,7 +60,6 @@ class Example:
             return None
 
 
-# Update the EXAMPLES list to indicate which ones are MIP problems
 EXAMPLES = [
     Example("diet_problem"),
     Example("facility_problem", is_mip=True),
@@ -185,23 +184,19 @@ def test_gurobi_model_matches(example, solver):
 
 
 def write_results(example: Example, model, results_dir, solver):
-    # Skip writing LP and SOL files for IPOPT
     if solver.supports_write:
         readability = "pretty" if model.use_var_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
-    # Always write the objective value
     if model.objective is not None:
         pl.DataFrame({"value": [model.objective.value]}).write_csv(
             results_dir / "objective.csv"
         )
 
-    # ONLY if example has a unique solution, write SOL files and CSVs
     if example.unique_solution:
         if solver.supports_write:
             model.write(results_dir / f"solution-{model.solver.name}-{readability}.sol")
 
-        # CSV writing ONLY happens for unique_solution examples
         module = example.import_model_module()
         if hasattr(module, "write_solution"):
             module.write_solution(model, results_dir)
