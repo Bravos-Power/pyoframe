@@ -1,8 +1,8 @@
 import polars as pl
 import pyoptinterface as poi
 import pytest
-from pytest import approx
 from polars.testing import assert_frame_equal
+from pytest import approx
 
 import pyoframe as pf
 from tests.util import get_tol, get_tol_pl

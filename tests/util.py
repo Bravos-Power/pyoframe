@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import pytest
 from typing import TYPE_CHECKING, Literal, Tuple, Union, overload
 
 import polars as pl

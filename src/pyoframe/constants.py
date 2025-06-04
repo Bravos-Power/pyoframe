@@ -100,7 +100,7 @@ class Config(metaclass=_ConfigMeta):
     default_solver: SUPPORTED_SOLVER_TYPES | Solver | None = None
     """
     The solver to use when `pf.Model()` is called without specifying a solver.
-    If default_solver is not set (`None`), 
+    If default_solver is not set (`None`),
     Pyoframe will choose the first solver in SUPPORTED_SOLVERS that doesn't produce an error.
 
     There is no reason why you set the solver here instead of passing it to the Model constructor.
