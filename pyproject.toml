@@ -59,7 +59,8 @@ lint.select = ["E4", "E7", "E9", "F", "I", "W292", "W291"]
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-addopts = "--doctest-modules --ignore=scripts --markdown-docs --markdown-docs-syntax=superfences --import-mode=importlib"
+pythonpath = "src"
+addopts = "--doctest-modules --ignore=scripts --markdown-docs --markdown-docs-syntax=superfences"
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"
