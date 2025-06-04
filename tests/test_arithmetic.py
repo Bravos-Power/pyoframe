@@ -460,9 +460,14 @@ def test_no_propogate():
     assert str(result) == "[1]: 10"
 
 
-def test_variable_equals():
+def test_variable_equals(solver):
+    if not solver.supports_integer_variables:
+        pytest.skip(
+            f"Solver {solver.name} does not support integer or binary variables, skipping test."
+        )
     m = Model()
     index = Set(x=[1, 2, 3])
+
     m.Choose = Variable(index, vtype=VType.BINARY)
     with pytest.raises(
         AssertionError,

@@ -1132,12 +1132,19 @@ class Constraint(ModelElementWithId):
         self._model = lhs._model
         self.sense = sense
         self.to_relax: Optional[FuncArgs] = None
-        self.attr = Container(self._set_attribute, self._get_attribute)
+        self._attr = Container(self._set_attribute, self._get_attribute)
 
         dims = self.lhs.dimensions
         data = pl.DataFrame() if dims is None else self.lhs.data.select(dims).unique()
 
         super().__init__(data)
+
+    @property
+    def attr(self) -> Container:
+        """
+        Allows reading and writing constraint attributes similarly to [Model.attr][pyoframe.Model.attr].
+        """
+        return self._attr
 
     def _set_attribute(self, name, value):
         self._assert_has_ids()
@@ -1504,7 +1511,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
-        self.attr = Container(self._set_attribute, self._get_attribute)
+        self._attr = Container(self._set_attribute, self._get_attribute)
         self._equals = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
@@ -1515,6 +1522,13 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             self._ub_expr, self.ub = ub, None
         else:
             self._ub_expr, self.ub = None, ub
+
+    @property
+    def attr(self) -> Container:
+        """
+        Allows reading and writing variable attributes similarly to [Model.attr][pyoframe.Model.attr].
+        """
+        return self._attr
 
     def _set_attribute(self, name, value):
         self._assert_has_ids()
@@ -1559,11 +1573,16 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             ).select(self.dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
-        kwargs = dict(domain=self.vtype.to_poi())
+        assert self._model is not None
+
+        kwargs = {}
         if self.lb is not None:
-            kwargs["lb"] = self.lb
+            kwargs["lb"] = float(self.lb)
         if self.ub is not None:
-            kwargs["ub"] = self.ub
+            kwargs["ub"] = float(self.ub)
+        if self.vtype != VType.CONTINUOUS:
+            self._model.solver.check_supports_integer_variables()
+            kwargs["domain"] = self.vtype.to_poi()
 
         if self.dimensions is not None and self._model.use_var_names:
             df = (

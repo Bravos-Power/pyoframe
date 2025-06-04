@@ -5,7 +5,7 @@
 name: "Install optimizers on linux"
 
 inputs:
-  GUROBI_WLS: 
+  GUROBI_WLS:
     description: "..."
     required: true
   # COPT_CLIENT_INI:
@@ -17,7 +17,7 @@ inputs:
   # GITHUB_TOKEN:
   #   description: "..."
   #   required: true
-  CHECK_LICENSE: 
+  CHECK_LICENSE:
     description: "..."
     required: true
 
@@ -33,18 +33,22 @@ runs:
       id: cache-installers-linux
       uses: actions/cache@v4
       env:
-        cache-name: cache-installers-linux
+        cache-name: cache-installers-linux-v2
       with:
         path: ~/installers
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('optimizer_version.toml') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-v2-${{ hashFiles('optimizer_version.toml') }}
         restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-${{ env.cache-name }}-v2-
 
-    - if: ${{ steps.cache-installers-linux.outputs.cache-hit != 'true' }}
+    - if: ${{ steps.cache-installers-linux-v2.outputs.cache-hit != 'true' }}
       shell: bash
       name: Download Installers
       run: |
         curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/12.0/gurobi12.0.2_linux64.tar.gz
+        curl -L -o ~/installers/idaes-solvers.tar.gz https://github.com/IDAES/idaes-ext/releases/download/3.4.2/idaes-solvers-ubuntu2204-x86_64.tar.gz
+
+    # curl -L -o ~/installers/copt.tar.gz https://pub.shanshu.ai/download/copt/7.2.8/linux64/CardinalOptimizer-7.2.8-lnx64.tar.gz
+    # curl -L -o ~/installers/mosek.tar.bz2 https://download.mosek.com/stable/10.2.0/mosektoolslinux64x86.tar.bz2
 
     - name: Setup Gurobi Installation
       shell: bash
@@ -59,13 +63,13 @@ runs:
         echo "PATH=${PATH}:${GUROBI_HOME}/bin" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${GUROBI_HOME}/lib" >> $GITHUB_ENV
         echo $GUROBI_HOME
-        
+
         # setup license using secrets
         echo "$GUROBI_WLS" > ~/gurobi.lic
         echo "GRB_LICENSE_FILE=${HOME}/gurobi.lic" >> $GITHUB_ENV
     - name: Test Gurobi
       if: ${{ inputs.CHECK_LICENSE == 'true' }}
-      uses: nick-fields/retry@v3    # wait 30 seconds (5x) if all licenses are already in use
+      uses: nick-fields/retry@v3 # wait 30 seconds (5x) if all licenses are already in use
       with:
         max_attempts: 5
         retry_wait_seconds: 30
@@ -118,15 +122,16 @@ runs:
     #   run: |
     #     msktestlic
 
-    # - name: Setup IPOPT Installation
-    #   shell: bash
-    #   run: |
-    #     mkdir -p ~/ipopt
-    #     tar xfz ~/installers/idaes-solvers.tar.gz -C ~/ipopt
-    #     echo "PATH=${PATH}:${HOME}/ipopt" >> $GITHUB_ENV
-    #     echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/ipopt" >> $GITHUB_ENV
-    #     ls ~/ipopt
-    # - name: Test IPOPT
-    #   shell: bash
-    #   run: |
-    #     ipopt -v
+    - name: Setup IPOPT Installation
+      shell: bash
+      run: |
+        sudo apt-get install -y libopenblas-dev liblapack3 libgfortran5
+        mkdir -p ~/ipopt
+        tar xfz ~/installers/idaes-solvers.tar.gz -C ~/ipopt
+        echo "PATH=${PATH}:${HOME}/ipopt" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/ipopt" >> $GITHUB_ENV
+        ls ~/ipopt
+    - name: Test IPOPT
+      shell: bash
+      run: |
+        ipopt -v

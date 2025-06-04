@@ -75,13 +75,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
+      - name: Install dependencies
+        run: |
+          pip install .[dev]
       - uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
           CHECK_LICENSE: true
-      - name: Install dependencies
-        run: |
-          pip install --editable .[dev]
       - name: Run tests and collect coverage
         run: pytest --cov
       - name: Upload coverage to Codecov

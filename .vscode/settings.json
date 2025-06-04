@@ -3,5 +3,11 @@
         "--markdown-docs", "--markdown-docs-syntax=superfences"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "cSpell.words": [
+        "Gurobi",
+        "Pyoframe",
+        "ipopt",
+        "highs"
+    ]
 }

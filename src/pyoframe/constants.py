@@ -2,7 +2,10 @@
 File containing shared constants used across the package.
 """
 
+from __future__ import annotations
+
 import typing
+from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, Optional
 
@@ -15,9 +18,44 @@ QUAD_VAR_KEY = "__quadratic_variable_id"
 CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
-SUPPORTED_SOLVERS = ["gurobi", "highs"]
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs"]
+
 KEY_TYPE = pl.UInt32
+
+
+@dataclass
+class Solver:
+    name: SUPPORTED_SOLVER_TYPES
+    supports_integer_variables: bool = True
+    supports_quadratics: bool = True
+    supports_duals: bool = True
+    supports_objective_sense: bool = True
+    supports_write: bool = True
+
+    def check_supports_integer_variables(self):
+        if not self.supports_integer_variables:
+            raise ValueError(
+                f"Solver {self.name} does not support integer or binary variables."
+            )
+
+    def check_supports_write(self):
+        if not self.supports_write:
+            raise ValueError(f"Solver {self.name} does not support .write()")
+
+    def __repr__(self):
+        return self.name
+
+
+SUPPORTED_SOLVERS = [
+    Solver("gurobi"),
+    Solver("highs", supports_quadratics=False, supports_duals=False),
+    Solver(
+        "ipopt",
+        supports_integer_variables=False,
+        supports_objective_sense=False,
+        supports_write=False,
+    ),
+]
+
 
 # Variable ID for constant terms. This variable ID is reserved.
 CONST_TERM = 0
@@ -49,7 +87,16 @@ class Config(metaclass=_ConfigMeta):
     Configuration options that apply to the entire library.
     """
 
-    default_solver: Optional[SUPPORTED_SOLVER_TYPES] = None
+    default_solver: SUPPORTED_SOLVER_TYPES | Solver | None = None
+    """
+    The solver to use when `pf.Model()` is called without specifying a solver.
+    If default_solver is not set (`None`),
+    Pyoframe will choose the first solver in SUPPORTED_SOLVERS that doesn't produce an error.
+
+    There is no reason why you set the solver here instead of passing it to the Model constructor.
+    This is mainly used for testing purposes.
+    """
+
     disable_unmatched_checks: bool = False
     float_to_str_precision: Optional[int] = 5
     print_uses_variable_names: bool = True
@@ -134,6 +181,11 @@ ObjSenseValue = Literal["min", "max"]
 VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
+
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt"]
+assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
+    s.name for s in SUPPORTED_SOLVERS
+}
 
 
 class PyoframeError(Exception):

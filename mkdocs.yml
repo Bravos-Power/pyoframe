@@ -65,6 +65,10 @@ plugins:
       handlers:
         python:
           options:
+            show_if_no_docstring: true
+            summary: true
+            extensions:
+              - dataclasses
             merge_init_into_class: true
             docstring_options:
               ignore_init_summary: true

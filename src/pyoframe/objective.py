@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pyoptinterface as poi
 
+from pyoframe.constants import ObjSense
 from pyoframe.core import Expression, SupportsToExpr
 
 
@@ -74,10 +75,21 @@ class Objective(Expression):
     def value(self) -> float:
         """
         The value of the objective function (only available after solving the model).
-
         This value is obtained by directly querying the solver.
         """
-        return self._model.poi.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
+        assert self._model is not None, (
+            "Objective must be part of a model before it is queried."
+        )
+
+        obj_value: float = self._model.poi.get_model_attribute(
+            poi.ModelAttribute.ObjectiveValue
+        )
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
+            obj_value *= -1
+        return obj_value
 
     def on_add_to_model(self, model, name):
         super().on_add_to_model(model, name)
@@ -86,7 +98,18 @@ class Objective(Expression):
             raise ValueError(
                 "Can't set an objective without specifying the sense. Did you use .objective instead of .minimize or .maximize ?"
             )
-        self._model.poi.set_objective(self.to_poi(), sense=self._model.sense.to_poi())
+
+        kwargs = {}
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
+            poi_expr = (-self).to_poi()
+            kwargs["sense"] = poi.ObjectiveSense.Minimize
+        else:
+            poi_expr = self.to_poi()
+            kwargs["sense"] = self._model.sense.to_poi()
+        self._model.poi.set_objective(poi_expr, **kwargs)
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)

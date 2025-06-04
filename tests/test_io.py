@@ -52,8 +52,8 @@ def test_expression_with_const_to_str():
 
 
 def test_constraint_to_str(solver):
-    if solver == "highs":
-        pytest.skip("Highs does not support quadratic constraints yet.")
+    if not solver.supports_quadratics:
+        pytest.skip("Solver does not support quadratic constraints.")
     m = Model()
     m.x1 = Variable()
     m.constraint = m.x1**2 <= 5
@@ -76,6 +76,8 @@ x1 * x1 <= 5"""
 
 
 def test_write_lp(use_var_names, solver):
+    if not solver.supports_write:
+        pytest.skip(f"{solver.name} does not support writing LP files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(
@@ -106,7 +108,9 @@ def test_write_lp(use_var_names, solver):
                 assert "population[CAN,Toronto]" not in f.read()
 
 
-def test_write_sol(use_var_names):
+def test_write_sol(use_var_names, solver):
+    if not solver.supports_write:
+        pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(use_var_names=use_var_names)
         cities = pl.DataFrame(

@@ -2,8 +2,11 @@ import polars as pl
 import pyoptinterface as poi
 import pytest
 from polars.testing import assert_frame_equal
+from pytest import approx
 
 import pyoframe as pf
+from pyoframe.constants import Solver
+from tests.util import get_tol, get_tol_pl
 
 
 def test_retrieving_duals(solver):
@@ -17,17 +20,17 @@ def test_retrieving_duals(solver):
 
     m.optimize()
 
-    assert m.A.solution == 45
-    assert m.B.solution == 10
-    assert m.maximize.value == 29
-    assert m.max_AB.dual == 0.1
-    assert m.extra_slack_constraint.dual == 0
-    if solver == "gurobi":
-        assert m.max_AB.attr.slack == 0
-        assert m.extra_slack_constraint.attr.slack == 50
-    if solver == "gurobi":
-        assert m.A.attr.RC == 0
-        assert m.B.attr.RC == 1.9
+    assert m.A.solution == approx(45, **get_tol(solver))
+    assert m.B.solution == approx(10, **get_tol(solver))
+    assert m.maximize.value == approx(29, **get_tol(solver))
+    assert m.max_AB.dual == approx(0.1, **get_tol(solver))
+    assert m.extra_slack_constraint.dual == approx(0, **get_tol(solver))
+
+    if solver.name == "gurobi":
+        assert m.max_AB.attr.slack == approx(0, **get_tol(solver))
+        assert m.extra_slack_constraint.attr.slack == approx(50, **get_tol(solver))
+        assert m.A.attr.RC == approx(0, **get_tol(solver))
+        assert m.B.attr.RC == approx(1.9, **get_tol(solver))
 
 
 def test_retrieving_duals_vectorized(solver):
@@ -44,33 +47,37 @@ def test_retrieving_duals_vectorized(solver):
 
     m.optimize()
 
-    assert m.maximize.value == 29
+    assert m.maximize.value == approx(29, **get_tol(solver))
     assert_frame_equal(
         m.X.solution,
-        pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
+        pl.DataFrame({"t": [1, 2], "solution": [45.0, 10.0]}),
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
     assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
-    if solver == "gurobi":
+
+    if solver.name == "gurobi":
         assert_frame_equal(
             m.max_AB.attr.slack,
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
         assert_frame_equal(
             m.X.attr.RC,
-            pl.DataFrame(
-                {"t": [1, 2], "RC": [0, 0]}
-            ),  # Somehow the reduced cost is 0 since we are no longer using a bound.
+            pl.DataFrame({"t": [1, 2], "RC": [0, 0]}),
+            # Somehow the reduced cost is 0 since we are no longer using a bound.
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
 
 
@@ -88,36 +95,42 @@ def test_support_variable_attributes(solver):
 
     m.optimize()
 
-    assert m.maximize.value == 29
+    assert m.maximize.value == approx(29, **get_tol(solver))
     assert_frame_equal(
         m.X.solution,
-        pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
+        pl.DataFrame({"t": [1, 2], "solution": [45.0, 10.0]}),
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
-    if solver == "gurobi":
+
+    if solver.name == "gurobi":
         assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
         assert_frame_equal(
             m.max_AB.attr.slack,
             pl.DataFrame({"c": [1, 2], "slack": [0, 50]}),
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
+
     assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         check_dtypes=False,
         check_row_order=False,
+        **get_tol_pl(solver),
     )
 
 
 def test_support_variable_raw_attributes(solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     m = pf.Model()
     data = pl.DataFrame(
@@ -132,30 +145,35 @@ def test_support_variable_raw_attributes(solver):
 
     m.optimize()
 
-    assert m.maximize.value == 29
+    assert m.maximize.value == approx(29, **get_tol(solver))
     assert_frame_equal(
         m.X.solution,
         pl.DataFrame({"t": [1, 2], "solution": [45, 10]}),
         check_row_order=False,
         check_dtypes=False,
+        **get_tol_pl(solver),
     )
-    if solver == "gurobi":
+
+    if solver.name == "gurobi":
         assert_frame_equal(
             m.X.attr.RC,
             pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
             check_row_order=False,
             check_dtypes=False,
+            **get_tol_pl(solver),
         )
+
     assert_frame_equal(
         m.max_AB.dual,
         pl.DataFrame({"c": [1, 2], "dual": [0.1, 0]}),
         check_dtypes=False,
         check_row_order=False,
+        **get_tol_pl(solver),
     )
 
 
 def test_setting_constraint_attr(solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
     m = pf.Model()
@@ -179,7 +197,7 @@ def test_setting_constraint_attr(solver):
 
 
 def test_setting_model_attr(solver):
-    if solver != "gurobi":
+    if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
     m = pf.Model()
@@ -204,5 +222,36 @@ def test_const_term_in_objective(use_var_names, solver):
     m.maximize = 10 + m.A
 
     m.optimize()
-    assert m.A.solution == 10
-    assert m.maximize.value == 20
+    assert m.A.solution == approx(10, **get_tol(solver))
+    assert m.maximize.value == approx(20, **get_tol(solver))
+
+
+def test_integers_throw_error(solver: Solver):
+    if solver.supports_integer_variables:
+        pytest.skip("This test is only valid for solvers that do not support integers")
+
+    m = pf.Model()
+    with pytest.raises(
+        ValueError, match="does not support integer or binary variables"
+    ):
+        m.A = pf.Variable(vtype=pf.VType.INTEGER)
+    with pytest.raises(
+        ValueError, match="does not support integer or binary variables"
+    ):
+        m.A = pf.Variable(vtype=pf.VType.BINARY)
+
+
+def test_write_throws_error(solver: Solver):
+    if solver.supports_write:
+        pytest.skip("This test is only valid for solvers that support writing models")
+
+    m = pf.Model()
+    m.A = pf.Variable(ub=10)
+    m.maximize = m.A
+    m.optimize()
+
+    with pytest.raises(ValueError, match="does not support .write()"):
+        m.write("test.lp")
+
+    with pytest.raises(ValueError, match="does not support .write()"):
+        m.write("test.sol")

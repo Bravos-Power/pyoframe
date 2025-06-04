@@ -28,7 +28,7 @@ def solve_model(use_var_names):
 
     m.minimize = sum(m.open * plants.fixed_cost) + sum(m.transport * transport_costs)
 
-    if m.solver_name == "gurobi":
+    if m.solver.name == "gurobi":
         m.params.Method = 2
 
     m.optimize()

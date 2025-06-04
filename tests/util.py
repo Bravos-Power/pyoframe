@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING, Tuple, Union, overload
+from typing import TYPE_CHECKING, Literal, Tuple, Union, overload
 
 import polars as pl
 
@@ -24,6 +24,7 @@ def csvs_to_dataframe(
 def csvs_to_dataframe(
     *csv_strings: str,
 ) -> Union[Tuple[pl.DataFrame, ...], pl.DataFrame]:
+    """Convert a sequence of CSV strings to Pyoframe expressions."""
     dfs = []
     for csv_string in csv_strings:
         csv_string = "\n".join(line.strip() for line in csv_string.splitlines())
@@ -51,3 +52,24 @@ def csvs_to_expr(
     if len(csv_strings) == 1:
         return csvs_to_dataframe(*csv_strings).to_expr()
     return tuple((df.to_expr() for df in csvs_to_dataframe(*csv_strings)))
+
+
+_tolerances = {
+    "gurobi": {"rtol": 1e-5, "atol": 1e-8},
+    "highs": {"rtol": 1e-5, "atol": 1e-8},
+    "ipopt": {"rtol": None, "atol": 1e-5},
+}
+
+
+def get_tol_pl(solver) -> dict[Literal["atol"] | Literal["rtol"], float]:
+    """Return tolerances for Polars' assert_frame_equal()."""
+    return _tolerances[solver.name]
+
+
+def get_tol(solver):
+    """Return tolerances for pytest's approx()."""
+    tol = _tolerances[solver.name]
+    return dict(
+        rel=tol["rtol"],
+        abs=tol["atol"],
+    )
