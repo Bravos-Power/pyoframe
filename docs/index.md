@@ -27,6 +27,14 @@ Here are some reasons we think you'd like Pyoframe:
 
     [:octicons-arrow-right-24: Get started](./learn/01_getting-started/01_installation.md)
 
+-   :octicons-light-bulb-16:{ .lg .middle } __Examples__
+
+    ---
+
+    Discover Pyoframe with our annotated examples.
+
+    [:octicons-arrow-right-24: Examples](./examples/index.md)
+
 <!-- -   :fontawesome-brands-markdown:{ .lg .middle } __Why Pyoframe?__
 
     ---

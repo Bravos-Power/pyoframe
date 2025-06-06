@@ -12,10 +12,10 @@ m.tofu = pf.Variable(lb=0)  # (1)!
 m.chickpeas = pf.Variable(lb=0)
 
 # You want to maximize your protein intake (10g per tofu, 8g per chickpeas)
-m.maximize = 10 * m.tofu + 8 * m.chickpeas # (2)!
+m.maximize = 10 * m.tofu + 8 * m.chickpeas  # (2)!
 
 # You must stay with your $10 budget (4$ per tofu, $2 per chickpeas)
-m.budget_constraint = 4 * m.tofu + 2 * m.chickpeas <= 10 # (3)!
+m.budget_constraint = 4 * m.tofu + 2 * m.chickpeas <= 10  # (3)!
 
 m.optimize()  # (4)!
 
