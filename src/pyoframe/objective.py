@@ -39,7 +39,9 @@ class Objective(Expression):
         Objectives cannot be created from dimensioned expressions since an objective must be a single expression.
 
         >>> m = pf.Model()
-        >>> m.dimensioned_variable = pf.Variable({"city": ["Toronto", "Berlin", "Paris"]})
+        >>> m.dimensioned_variable = pf.Variable(
+        ...     {"city": ["Toronto", "Berlin", "Paris"]}
+        ... )
         >>> m.maximize = m.dimensioned_variable
         Traceback (most recent call last):
         ...

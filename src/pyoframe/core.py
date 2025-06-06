@@ -110,10 +110,10 @@ class SupportsMath(ABC, SupportsToExpr):
         Support squaring expressions:
         >>> m = pf.Model()
         >>> m.v = pf.Variable()
-        >>> m.v ** 2
+        >>> m.v**2
         <Expression size=1 dimensions={} terms=1 degree=2>
         v * v
-        >>> m.v ** 3
+        >>> m.v**3
         Traceback (most recent call last):
         ...
         ValueError: Raising an expressions to **3 is not supported. Expressions can only be squared (**2).
@@ -134,7 +134,7 @@ class SupportsMath(ABC, SupportsToExpr):
         """
         >>> import polars as pl
         >>> m = pf.Model()
-        >>> df = pl.DataFrame({"dim1": [1,2,3], "value": [1,2,3]})
+        >>> df = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]})
         >>> m.v = pf.Variable(df["dim1"])
         >>> m.v - df
         <Expression size=3 dimensions={'dim1': 3} terms=6>
@@ -158,7 +158,7 @@ class SupportsMath(ABC, SupportsToExpr):
         Examples:
             Support division.
             >>> m = pf.Model()
-            >>> m.v = Variable({"dim1": [1,2,3]})
+            >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v / 2
             <Expression size=3 dimensions={'dim1': 3} terms=3>
             [1]: 0.5 v[1]
@@ -173,7 +173,7 @@ class SupportsMath(ABC, SupportsToExpr):
 
         Examples:
             >>> m = pf.Model()
-            >>> m.v = Variable({"dim1": [1,2,3]})
+            >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> 1 - m.v
             <Expression size=3 dimensions={'dim1': 3} terms=6>
             [1]: 1  - v[1]
@@ -390,7 +390,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import pandas as pd
-            >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
+            >>> df = pd.DataFrame(
+            ...     {
+            ...         "item": [1, 1, 1, 2, 2],
+            ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+            ...         "cost": [1, 2, 3, 4, 5],
+            ...     }
+            ... ).set_index(["item", "time"])
             >>> m = pf.Model()
             >>> m.Time = pf.Variable(df.index)
             >>> m.Size = pf.Variable(df.index)
@@ -444,7 +450,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> import pandas as pd
             >>> m = pf.Model()
-            >>> df = pd.DataFrame({"item" : [1, 1, 1, 2, 2], "time": ["mon", "tue", "wed", "mon", "tue"], "cost": [1, 2, 3, 4, 5]}).set_index(["item", "time"])
+            >>> df = pd.DataFrame(
+            ...     {
+            ...         "item": [1, 1, 1, 2, 2],
+            ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+            ...         "cost": [1, 2, 3, 4, 5],
+            ...     }
+            ... ).set_index(["item", "time"])
             >>> m.quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
             >>> expr = (m.quantity * df["cost"]).sum("time")
             >>> expr.data
@@ -501,8 +513,19 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import polars as pl
-            >>> pop_data = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "year": [2024, 2024, 2024], "population": [10, 2, 8]}).to_expr()
-            >>> cities_and_countries = pl.DataFrame({"city": ["Toronto", "Vancouver", "Boston"], "country": ["Canada", "Canada", "USA"]})
+            >>> pop_data = pl.DataFrame(
+            ...     {
+            ...         "city": ["Toronto", "Vancouver", "Boston"],
+            ...         "year": [2024, 2024, 2024],
+            ...         "population": [10, 2, 8],
+            ...     }
+            ... ).to_expr()
+            >>> cities_and_countries = pl.DataFrame(
+            ...     {
+            ...         "city": ["Toronto", "Vancouver", "Boston"],
+            ...         "country": ["Canada", "Canada", "USA"],
+            ...     }
+            ... )
             >>> pop_data.map(cities_and_countries)
             <Expression size=2 dimensions={'year': 1, 'country': 2} terms=2>
             [2024,Canada]: 12
@@ -561,7 +584,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> import polars as pl
-            >>> cost = pl.DataFrame({"item" : [1, 1, 1, 2, 2], "time": [1, 2, 3, 1, 2], "cost": [1, 2, 3, 4, 5]})
+            >>> cost = pl.DataFrame(
+            ...     {
+            ...         "item": [1, 1, 1, 2, 2],
+            ...         "time": [1, 2, 3, 1, 2],
+            ...         "cost": [1, 2, 3, 4, 5],
+            ...     }
+            ... )
             >>> m = pf.Model()
             >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
@@ -597,7 +626,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         Examples:
             >>> import pandas as pd
-            >>> general_expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+            >>> general_expr = pd.DataFrame(
+            ...     {"dim1": [1, 2, 3], "value": [1, 2, 3]}
+            ... ).to_expr()
             >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
             >>> general_expr.within(filter_expr).data
             shape: (2, 3)
@@ -657,7 +688,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> expr *= m.v1
             >>> expr.degree()
             1
-            >>> expr += (m.v2 ** 2).add_dim("dim1")
+            >>> expr += (m.v2**2).add_dim("dim1")
             >>> expr.degree()
             2
         """
@@ -673,7 +704,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> import pandas as pd
             >>> m = pf.Model()
-            >>> add = pd.DataFrame({"dim1": [1,2,3], "add": [10, 20, 30]}).to_expr()
+            >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
             >>> m.v = Variable(add)
             >>> m.v + add
             <Expression size=3 dimensions={'dim1': 3} terms=6>
@@ -685,7 +716,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             [1]: v[1] +12
             [2]: v[2] +22
             [3]: v[3] +32
-            >>> m.v + pd.DataFrame({"dim1": [1,2], "add": [10, 20]})
+            >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
             pyoframe.constants.PyoframeError: Failed to add expressions:
@@ -748,10 +779,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.x1 + 5
             <Expression size=1 dimensions={} terms=2>
             x1 +5
-            >>> m.x1 ** 2 + 5
+            >>> m.x1**2 + 5
             <Expression size=1 dimensions={} terms=2 degree=2>
             x1 * x1 +5
-            >>> m.x1 ** 2 + m.x2 + 5
+            >>> m.x1**2 + m.x2 + 5
             <Expression size=1 dimensions={} terms=3 degree=2>
             x1 * x1 + x2 +5
 
@@ -1022,11 +1053,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m = pf.Model()
             >>> m.v = pf.Variable({"t": [1, 2]})
             >>> coef = pl.DataFrame({"t": [1, 2], "coef": [0, 1]})
-            >>> coef*(m.v+4)
+            >>> coef * (m.v + 4)
             <Expression size=2 dimensions={'t': 2} terms=3>
             [1]: 0
             [2]: 4  + v[2]
-            >>> (coef*(m.v+4)).terms
+            >>> (coef * (m.v + 4)).terms
             3
         """
         return len(self.data)
@@ -1049,11 +1080,19 @@ def sum(
     If no dimensions are specified, the sum is taken over all of the expression's dimensions.
 
     Examples:
-        >>> expr = pl.DataFrame({
-        ...     "time": ["mon", "tue", "wed", "mon", "tue"],
-        ...     "place": ["Toronto", "Toronto", "Toronto", "Vancouver", "Vancouver"],
-        ...     "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6]
-        ... }).to_expr()
+        >>> expr = pl.DataFrame(
+        ...     {
+        ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...         "place": [
+        ...             "Toronto",
+        ...             "Toronto",
+        ...             "Toronto",
+        ...             "Vancouver",
+        ...             "Vancouver",
+        ...         ],
+        ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
+        ...     }
+        ... ).to_expr()
         >>> expr
         <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
         [mon,Toronto]: 1000000
@@ -1088,11 +1127,19 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     Like `pf.sum()`, but the sum is taken over all dimensions except those specified in `by` (just like a groupby operation).
 
     Examples:
-        >>> expr = pl.DataFrame({
-        ...     "time": ["mon", "tue", "wed", "mon", "tue"],
-        ...     "place": ["Toronto", "Toronto", "Toronto", "Vancouver", "Vancouver"],
-        ...     "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6]
-        ... }).to_expr()
+        >>> expr = pl.DataFrame(
+        ...     {
+        ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...         "place": [
+        ...             "Toronto",
+        ...             "Toronto",
+        ...             "Toronto",
+        ...             "Vancouver",
+        ...             "Vancouver",
+        ...         ],
+        ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
+        ...     }
+        ... ).to_expr()
         >>> expr
         <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
         [mon,Toronto]: 1000000
@@ -1336,9 +1383,22 @@ class Constraint(ModelElementWithId):
 
             And now an example with dimensions:
 
-            >>> homework_due_tomorrow = pl.DataFrame({"project": ["A", "B", "C"], "cost_per_hour_underdelivered": [10, 20, 30], "hours_to_finish": [9, 9, 9], "max_underdelivered": [1, 9, 9]})
+            >>> homework_due_tomorrow = pl.DataFrame(
+            ...     {
+            ...         "project": ["A", "B", "C"],
+            ...         "cost_per_hour_underdelivered": [10, 20, 30],
+            ...         "hours_to_finish": [9, 9, 9],
+            ...         "max_underdelivered": [1, 9, 9],
+            ...     }
+            ... )
             >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
-            >>> m.must_finish_project = (m.hours_spent >= homework_due_tomorrow[["project", "hours_to_finish"]]).relax(homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]], max=homework_due_tomorrow[["project", "max_underdelivered"]])
+            >>> m.must_finish_project = (
+            ...     m.hours_spent
+            ...     >= homework_due_tomorrow[["project", "hours_to_finish"]]
+            ... ).relax(
+            ...     homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]],
+            ...     max=homework_due_tomorrow[["project", "max_underdelivered"]],
+            ... )
             >>> m.only_one_day = sum("project", m.hours_spent) <= 24
             >>> # Relaxing a constraint after it has already been assigned will give an error
             >>> m.only_one_day.relax(1)
@@ -1458,7 +1518,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     Examples:
         >>> import pandas as pd
         >>> m = pf.Model()
-        >>> df = pd.DataFrame({"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]})
+        >>> df = pd.DataFrame(
+        ...     {"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]}
+        ... )
         >>> v = Variable(df)
         >>> v
         <Variable size=6 dimensions={'dim1': 3, 'dim2': 2} added_to_model=False>
@@ -1641,7 +1703,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         Examples:
             >>> m = pf.Model()
             >>> m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)
-            >>> m.var_integer = pf.Variable({"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=VType.INTEGER)
+            >>> m.var_integer = pf.Variable(
+            ...     {"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=VType.INTEGER
+            ... )
             >>> m.var_dimensionless = pf.Variable(lb=4.5, ub=5.5, vtype=VType.INTEGER)
             >>> m.var_continuous.solution
             Traceback (most recent call last):
@@ -1776,7 +1840,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
             └───────┴─────────┴────────────┴────────────┘
 
-            >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next("time")
+            >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
+            ...     "time"
+            ... )
             <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
             [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
             [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
@@ -1785,7 +1851,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
             [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
 
-            >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next("time", wrap_around=True)
+            >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next(
+            ...     "time", wrap_around=True
+            ... )
             <Constraint sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
             [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
             [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
