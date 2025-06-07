@@ -1107,6 +1107,16 @@ def sum(
         >>> pf.sum(expr)
         <Expression size=1 dimensions={} terms=1>
         9000000
+
+        If the given dimensions don't exist, an error will be raised:
+
+        >>> pf.sum("city", expr)
+        Traceback (most recent call last):
+        ...
+        AssertionError: Cannot sum over ['city'] as it is not in ['time', 'place']
+
+    See also:
+        [pyoframe.sum_by][] for summing over all dimensions _except_ those that are specified.
     """
     if expr is None:
         assert isinstance(over, SupportsMath)
@@ -1124,7 +1134,7 @@ def sum(
 
 def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
     """
-    Like `pf.sum()`, but the sum is taken over all dimensions except those specified in `by` (just like a groupby operation).
+    Like [`pf.sum()`][pyoframe.sum], but the sum is taken over all dimensions except those specified in `by` (just like a `group_by` operation).
 
     Examples:
         >>> expr = pl.DataFrame(
@@ -1151,13 +1161,35 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
         <Expression size=2 dimensions={'place': 2} terms=2>
         [Toronto]: 6000000
         [Vancouver]: 3000000
+        >>> total_sum = pf.sum_by([], expr)
+        >>> total_sum
+        <Expression size=1 dimensions={} terms=1>
+        9000000
+
+        If the specified dimensions don't exist, an error will be raised:
+
+        >>> pf.sum_by("city", expr)
+        Traceback (most recent call last):
+        ...
+        AssertionError: Cannot sum by ['city'] because the expression's dimensions are ['time', 'place'].
+
+        >>> pf.sum_by("time", total_sum)
+        Traceback (most recent call last):
+        ...
+        AssertionError: Cannot sum by ['time'] because the expression has no dimensions.
+
+    See also:
+        [pyoframe.sum][] for summing over specified dimensions.
     """
     if isinstance(by, str):
         by = [by]
     expr = expr.to_expr()
     dimensions = expr.dimensions
     assert dimensions is not None, (
-        "Cannot sum by dimensions with an expression with no dimensions."
+        f"Cannot sum by {by} because the expression has no dimensions."
+    )
+    assert set(by) <= set(dimensions), (
+        f"Cannot sum by {by} because the expression's dimensions are {dimensions}."
     )
     remaining_dims = [dim for dim in dimensions if dim not in by]
     return sum(over=remaining_dims, expr=expr)
