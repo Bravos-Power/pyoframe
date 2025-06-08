@@ -3,17 +3,18 @@ hide:
   - navigation
   - toc
   - actions
+  - footer
 template: home.html
 ---
-# Pyoframe: Formulate huge optimization models 
+# Pyoframe: A loved alternative to GAMS, Pyomo, and Linopy
 
-Tired of slow or archaic modelling frameworks like Pyomo and GAMS? 
-Here are some reasons we think you'd like Pyoframe:
-
-- Python library for building **LP and MILP models**
-- **Open-source** MIT License
-- **Works with Pandas** dataframes
-- **Powered by Rust** and Polars
+- Builds linear, non-linear, quadratic, continuous and mixed-integer optimization problems.
+- Seamlessly integrates with pandas thanks to its dataframe-centric design.
+- Extremely **fast and memory efficient** (even for sparse problems) thanks to Polars, Rust, and Pyoptinterface.
+- Clear Pythonic syntax for writing mathematical models.
+- Supports Gurobi, HiGHS, and Ipopt solvers.
+- Continuously used in high-stakes production environments.
+- 100% open-source (MIT License).
 
 ---
 
@@ -25,13 +26,13 @@ Here are some reasons we think you'd like Pyoframe:
 
     Install `pyoframe` and learn the library's basics.
 
-    [:octicons-arrow-right-24: Get started](./learn/01_getting-started/01_installation.md)
+    [:octicons-arrow-right-24: Get started](./learn/getting-started/installation.md)
 
 -   :octicons-light-bulb-16:{ .lg .middle } __Examples__
 
     ---
 
-    Discover Pyoframe with our annotated examples.
+    Jump right in with our annotated examples.
 
     [:octicons-arrow-right-24: Examples](./examples/index.md)
 
@@ -56,6 +57,6 @@ Here are some reasons we think you'd like Pyoframe:
 
     Your go-to reference for understanding our API.
 
-    [:octicons-arrow-right-24: Reference](./reference/)
+    [:octicons-arrow-right-24: Reference](./reference/public.md)
 
 </div>

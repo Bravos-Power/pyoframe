@@ -3,11 +3,16 @@ site_name: Pyoframe
 site_url: https://Bravos-Power.github.io/pyoframe/
 repo_url: https://github.com/Bravos-Power/pyoframe
 edit_uri: edit/main/docs/
-copyright: Copyright &copy; 2024 Bravos Power
+copyright: Copyright &copy; 2024-2025 Bravos Power
 theme:
   name: material
+  icon:
+    repo: fontawesome/brands/github
   language: en
   custom_dir: docs/overrides
+  font:
+    text: Roboto
+    code: monospace # Because the Google CDN has issues that make Polars display incorrectly https://github.com/google/fonts/issues/4235
   palette:
     - primary: red
     # Palette toggle for light mode
@@ -84,8 +89,7 @@ plugins:
       exclude:
         - index.md
       enabled: !ENV [ENABLED_GIT_COMMITTERS, false]
-  - literate-nav:
-      nav_file: SUMMARY.md
+  - awesome-nav
   - gen-files:
       scripts:
         - scripts/gen_ref_pages.py

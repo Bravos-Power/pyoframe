@@ -18,7 +18,7 @@ Contributions are more than welcome! Submit a pull request, or [open an issue](h
 
 ## Documentation
 
-We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please **follow the [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)** for docstrings.
+We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please **follow the [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)** for docstrings. Additionally, all Python code blocks in Markdown files are tested using Sybil. To properly setup the tests refer to this [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks).
 
 ## Helpful commands
 
@@ -28,7 +28,7 @@ We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documen
 - `python -m tests/test_examples.py`: Regenerate the files in the `results` folder of an example (e.g. `tests/examples/sudoku/results/**`). You should only run this if the result files need to be regenerated, for example, if model variable names have changed.
 - `ruff check`: Ensures all the linter tests pass
 - `ruff format`: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)
-- `doccmd --language=python --no-pad-file --no-pad-groups --command="ruff format" docs/`: to format the code in the documentation.
+- `doccmd --language=python --no-pad-file --command="ruff format" docs/`: to format the code in the documentation.
 
 ## Details for repository maintainers
 

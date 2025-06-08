@@ -1394,7 +1394,7 @@ class Constraint(ModelElementWithId):
             >>> m.hours_day.solution
             19.0
 
-            Note: .relax() can only be called after the sense of the model has been defined.
+            `relax` can only be called after the sense of the model has been defined.
 
             >>> m = pf.Model()
             >>> m.hours_sleep = pf.Variable(lb=0)
@@ -1780,6 +1780,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
         if self.vtype in [VType.BINARY, VType.INTEGER]:
             if isinstance(solution, pl.DataFrame):
+                # TODO handle values that are out of bounds of Int64 (i.e. when problem is unbounded)
                 solution = solution.with_columns(
                     pl.col("solution").alias("solution_float"),
                     pl.col("solution").round().cast(pl.Int64),

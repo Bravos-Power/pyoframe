@@ -1,5 +1,0 @@
-- [Home](index.md)
-- [Learn](learn/)
-- [Examples](examples/)
-- [Reference](reference/)
-- [Contribute](contribute/)

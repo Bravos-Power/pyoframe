@@ -1,2 +1,0 @@
-- [Examples](./index.md)
-- [Diet Problem](./diet.md)

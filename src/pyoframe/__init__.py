@@ -1,6 +1,9 @@
 """
-Pyoframe's public API.
-Also applies the monkey patch to the DataFrame libraries.
+Pyoframe's public API accessible via `import pyoframe`.
+
+Info:
+    `import pyoframe` will automatically monkey patch Polars and Pandas
+    to make `DataFrame.to_expr()` available.
 """
 
 from pyoframe.constants import Config, VType
