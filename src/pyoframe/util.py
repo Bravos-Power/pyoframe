@@ -304,7 +304,9 @@ class Container:
 
     Examples:
         >>> x = {}
-        >>> params = Container(setter=lambda n, v: x.__setitem__(n, v), getter=lambda n: x[n])
+        >>> params = Container(
+        ...     setter=lambda n, v: x.__setitem__(n, v), getter=lambda n: x[n]
+        ... )
         >>> params.a = 1
         >>> params.b = 2
         >>> params.a

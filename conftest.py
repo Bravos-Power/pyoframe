@@ -1,15 +1,28 @@
+import os
 from pathlib import Path
 
+import polars as pl
 import pytest
+from sybil import Sybil
+from sybil.parsers.markdown import (
+    ClearNamespaceParser,
+    PythonCodeBlockParser,
+    SkipParser,
+)
+from sybil.parsers.rest import DocTestParser
 
 import pyoframe as pf
 
 
-@pytest.fixture(autouse=True)
 def _setup_before_each_test(doctest_namespace):
     doctest_namespace["pf"] = pf
     pf.Config.reset_defaults()
     pf.Config.enable_is_duplicated_expression_safety_check = True
+
+
+@pytest.fixture(autouse=True)
+def _setup_fixture(doctest_namespace):
+    _setup_before_each_test(doctest_namespace)
 
 
 def pytest_collection_modifyitems(items):
@@ -34,5 +47,23 @@ def pytest_collection_modifyitems(items):
             item.add_marker(pytest.mark.no_cover)
 
 
-def pytest_markdown_docs_globals():
-    return {"pf": pf}
+@pytest.fixture(scope="module")
+def markdown_setup_fixture():
+    cwd = os.getcwd()
+    pl.Config.set_tbl_hide_dataframe_shape(True)
+    yield
+    os.chdir(cwd)
+    pl.Config.set_tbl_hide_dataframe_shape(False)
+
+
+pytest_collect_file = Sybil(
+    parsers=[
+        PythonCodeBlockParser(),
+        SkipParser(),
+        ClearNamespaceParser(),
+        DocTestParser(),
+    ],
+    patterns=["*.md"],
+    setup=_setup_before_each_test,
+    fixtures=["markdown_setup_fixture"],
+).pytest()

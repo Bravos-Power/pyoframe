@@ -12,7 +12,7 @@ A library to rapidly and memory-efficiently formulate large and sparse optimizat
 
 ## **[Documentation](https://bravos-power.github.io/pyoframe/)**
 
-[Read the documentation](https://bravos-power.github.io/pyoframe/) to get started or to learn how to [contribute](https://bravos-power.github.io/pyoframe/contribute/).
+[Read the documentation](https://bravos-power.github.io/pyoframe/) to get started or to learn how to [contribute](https://bravos-power.github.io/pyoframe/contribute/index.md).
 
 
 ## Acknowledgments

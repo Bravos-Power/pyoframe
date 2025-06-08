@@ -1,0 +1,7 @@
+nav:
+  - installation.md
+  - basic-example/example.md
+  - basic-example/example-with-dimensions.md
+  - building-blocks.md
+  - special-functions.md
+  - solver-access.md
