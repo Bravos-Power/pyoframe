@@ -9,7 +9,7 @@ description = "Blazing fast linear program interface"
 readme = "README.md"
 requires-python = ">=3.9"
 dynamic = ["version"]
-license="MIT"
+license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -27,7 +27,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "ruff",
-    "polars>=1.30.0",                            # Some of the tests rely on the output format of polars exceptions which changed in 1.30.0
+    "polars>=1.30.0",      # Some of the tests rely on the output format of polars exceptions which changed in 1.30.0
     "bumpver",
     "pip-tools",
     "pytest",
@@ -37,6 +37,10 @@ dev = [
     "highsbox",
     "coverage",
     "ipykernel",
+    "pyoptinterface[nlp]",
+]
+# We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
+docs = [
     "mkdocs-material==9.*",
     "mkdocstrings[python]",
     "mkdocs-git-revision-date-localized-plugin",
@@ -45,9 +49,8 @@ dev = [
     "mkdocs-section-index",
     "mkdocs-awesome-nav",
     "mkdocs-table-reader-plugin",
-    "pyoptinterface[nlp]",
     "sybil[pytest]",
-    "doccmd"
+    "doccmd",
 ]
 highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]

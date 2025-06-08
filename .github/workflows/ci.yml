@@ -75,9 +75,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-      - name: Install dependencies
+      - name: Install dependencies (without docs)
+        if: matrix.python-version == '3.9'
         run: |
           pip install .[dev]
+      - name: Install dependencies
+        if: matrix.python-version != '3.9'
+        run: |
+          pip install -e .[docs,dev]
       - uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}

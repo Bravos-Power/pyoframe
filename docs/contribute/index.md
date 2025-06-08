@@ -10,7 +10,7 @@ Contributions are more than welcome! Submit a pull request, or [open an issue](h
 
 1. Clone this repository. `git clone https://github.com/Bravos-Power/pyoframe`
 
-2. Install the dependencies. `pip install --editable .[dev]`
+2. Install the dependencies. `pip install --editable .[dev,docs]`
 
 3. Install the pre-commit hooks. `pre-commit install`
 

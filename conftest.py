@@ -3,13 +3,6 @@ from pathlib import Path
 
 import polars as pl
 import pytest
-from sybil import Sybil
-from sybil.parsers.markdown import (
-    ClearNamespaceParser,
-    PythonCodeBlockParser,
-    SkipParser,
-)
-from sybil.parsers.rest import DocTestParser
 
 import pyoframe as pf
 
@@ -56,14 +49,26 @@ def markdown_setup_fixture():
     pl.Config.set_tbl_hide_dataframe_shape(False)
 
 
-pytest_collect_file = Sybil(
-    parsers=[
-        PythonCodeBlockParser(),
-        SkipParser(),
-        ClearNamespaceParser(),
-        DocTestParser(),
-    ],
-    patterns=["*.md"],
-    setup=_setup_before_each_test,
-    fixtures=["markdown_setup_fixture"],
-).pytest()
+try:
+    from sybil import Sybil
+    from sybil.parsers.markdown import (
+        ClearNamespaceParser,
+        PythonCodeBlockParser,
+        SkipParser,
+    )
+    from sybil.parsers.rest import DocTestParser
+
+    pytest_collect_file = Sybil(
+        parsers=[
+            PythonCodeBlockParser(),
+            SkipParser(),
+            ClearNamespaceParser(),
+            DocTestParser(),
+        ],
+        patterns=["*.md"],
+        setup=_setup_before_each_test,
+        fixtures=["markdown_setup_fixture"],
+    ).pytest()
+except ImportError:
+    # Sybil is not installed, so we won't collect markdown files.
+    pass
