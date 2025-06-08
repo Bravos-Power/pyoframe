@@ -1,5 +1,0 @@
-- [Why Pyoframe?](index.md)
-- [Speed benchmarks](benchmarks.md)
-- [Memory benchmarks](benchmarks.md)
-- [Pyoframe syntax's](#)
-- [Why not Pyoframe?](#)

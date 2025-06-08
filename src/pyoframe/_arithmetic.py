@@ -379,7 +379,13 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
     Examples:
 
         >>> import polars as pl
-        >>> df = pl.DataFrame({ VAR_KEY: [CONST_TERM, 1], QUAD_VAR_KEY: [CONST_TERM, 1], COEF_KEY: [1.0, 0]})
+        >>> df = pl.DataFrame(
+        ...     {
+        ...         VAR_KEY: [CONST_TERM, 1],
+        ...         QUAD_VAR_KEY: [CONST_TERM, 1],
+        ...         COEF_KEY: [1.0, 0],
+        ...     }
+        ... )
         >>> _simplify_expr_df(df)
         shape: (1, 2)
         ┌───────────────┬─────────┐
@@ -389,7 +395,21 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
         ╞═══════════════╪═════════╡
         │ 0             ┆ 1.0     │
         └───────────────┴─────────┘
-        >>> df = pl.DataFrame({"t": [1, 1, 2, 2, 3, 3], VAR_KEY: [CONST_TERM, 1, CONST_TERM, 1, 1, 2], QUAD_VAR_KEY: [CONST_TERM, CONST_TERM, CONST_TERM, CONST_TERM, CONST_TERM, 1], COEF_KEY: [1, 0, 0, 0, 1, 0]})
+        >>> df = pl.DataFrame(
+        ...     {
+        ...         "t": [1, 1, 2, 2, 3, 3],
+        ...         VAR_KEY: [CONST_TERM, 1, CONST_TERM, 1, 1, 2],
+        ...         QUAD_VAR_KEY: [
+        ...             CONST_TERM,
+        ...             CONST_TERM,
+        ...             CONST_TERM,
+        ...             CONST_TERM,
+        ...             CONST_TERM,
+        ...             1,
+        ...         ],
+        ...         COEF_KEY: [1, 0, 0, 0, 1, 0],
+        ...     }
+        ... )
         >>> _simplify_expr_df(df)
         shape: (3, 3)
         ┌─────┬───────────────┬─────────┐

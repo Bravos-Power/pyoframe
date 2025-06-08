@@ -68,7 +68,12 @@ class ModelElement(ABC):
             >>> pf.Variable().dimensions
 
             >>> # A variable with dimensions of "hour" and "city"
-            >>> pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).dimensions
+            >>> pf.Variable(
+            ...     [
+            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...         {"city": ["Toronto", "Berlin", "Paris"]},
+            ...     ]
+            ... ).dimensions
             ['hour', 'city']
         """
         return _get_dimensions(self.data)
@@ -94,7 +99,12 @@ class ModelElement(ABC):
             >>> pf.Variable().shape
             {}
             >>> # A variable with dimensions of "hour" and "city"
-            >>> pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}]).shape
+            >>> pf.Variable(
+            ...     [
+            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...         {"city": ["Toronto", "Berlin", "Paris"]},
+            ...     ]
+            ... ).shape
             {'hour': 4, 'city': 3}
         """
         dims = self.dimensions
@@ -146,7 +156,12 @@ class SupportPolarsMethodMixin(ABC):
 
         Examples:
             >>> m = pf.Model()
-            >>> m.v = pf.Variable([{"hour": ["00:00", "06:00", "12:00", "18:00"]}, {"city": ["Toronto", "Berlin", "Paris"]}])
+            >>> m.v = pf.Variable(
+            ...     [
+            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...         {"city": ["Toronto", "Berlin", "Paris"]},
+            ...     ]
+            ... )
             >>> m.v.pick(hour="06:00")
             <Expression size=3 dimensions={'city': 3} terms=3>
             [Toronto]: v[06:00,Toronto]
