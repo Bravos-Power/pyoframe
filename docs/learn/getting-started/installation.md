@@ -1,12 +1,22 @@
-## 1. Install Pyoframe
+# Installation
 
-```cmd
-pip install pyoframe
-```
+## Step 1: Install Pyoframe
 
-## 2. Install a solver
+Install using your preferred package manager:
 
-Pyoframe makes it easy to build models but the actual solving of your model is done by a solver. You'll need to install one of the following solvers:
+=== "pip"
+    ```cmd
+    pip install pyoframe
+    ```
+=== "uv"
+    ```cmd
+    uv add pyoframe
+    ```
+
+## Step 2: Install a solver
+
+Pyoframe makes it easy to build models but the actual solving of your model is done by a separate solver. 
+You'll need to install one of the following:
 
 === "HiGHS (open-source)"
 
@@ -16,7 +26,7 @@ Pyoframe makes it easy to build models but the actual solving of your model is d
     pip install pyoframe[highs]
     ```
 
-    !!! warning "No support for quadratics in HiGHS"
+    !!! warning "Quadratics are unsupported in HiGHS"
         Pyoframe does not support quadratic constraints when using HiGHS due to limitations in pyoptinterface, the library we use to communicate with HiGHS.
 
 
@@ -27,10 +37,10 @@ Pyoframe makes it easy to build models but the actual solving of your model is d
     1. [Download Gurobi](https://www.gurobi.com/downloads/gurobi-software/) from their website (login required) and follow the installation instructions.
     2. Ensure you have a valid Gurobi license installed on your machine.
 
-    !!! note "`pip` installation not possible"
+    !!! info "pip installation not possible"
         Installing Gurobi via `pip` will not work. We use Gurobi's C API which is not available in the Python version of Gurobi.
 
-=== "Ipopt (free, nonlinear)"
+=== "Ipopt (open-source, nonlinear)"
 
     To install [ipopt](https://coin-or.github.io/Ipopt/):
 
@@ -43,7 +53,7 @@ Pyoframe makes it easy to build models but the actual solving of your model is d
 
 === "Other solvers"
 
-    We'd be glad to consider adding more solvers. Create a [new issue](https://github.com/Bravos-Power/pyoframe/issues/new) or up-vote an existing one to show interest:
+    We would gladly consider supporting other solvers. Create a [new issue](https://github.com/Bravos-Power/pyoframe/issues/new) or up-vote an existing one to show interest:
 
     - Issue tracking interest in [COPT solver](https://github.com/Bravos-Power/pyoframe/issues/143)
     - Issue tracking interest in [Mosek solver](https://github.com/Bravos-Power/pyoframe/issues/144)
