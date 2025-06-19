@@ -52,11 +52,10 @@ dev = [
 highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]
 benchmarks = [
-    "snakemake", 
-    "gdown",  # To download data from Google Drive
-    "papermill",  # To run notebooks
-    "snakemake-storage-plugin-http",
-    "altair"
+    "snakemake==9.6.0", 
+    "gdown==5.2.0",  # To download data from Google Drive
+    "papermill==2.6.0",  # To run notebooks
+    "altair==5.5.0"  # For plotting in notebooks
 ]
 
 [tool.ruff]

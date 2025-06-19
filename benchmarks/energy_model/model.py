@@ -1,6 +1,6 @@
 import polars as pl
 
-from scripts.utils import mock_snakemake
+from .scripts.utils import mock_snakemake
 
 if __name__ == "__main__":
     if "snakemake" not in globals() or hasattr(snakemake, "mock"):  # noqa: F821

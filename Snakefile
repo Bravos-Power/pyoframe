@@ -94,3 +94,7 @@ rule solve_energy_problem:
         ENERGY_BENCHMARKS / "solution.parquet",
     script:
         ENERGY_BENCHMARKS / "model.py"
+
+rule all:
+    input:
+        ENERGY_BENCHMARKS / "solution.parquet"
