@@ -33,7 +33,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pre-commit",
-    "gurobipy",
+    "gurobipy",  # Used only to compare results with Gurobi during testing
     "highsbox",
     "coverage",
     "ipykernel",
@@ -54,6 +54,12 @@ docs = [
 ]
 highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]
+benchmarks = [
+    "snakemake==9.6.0", 
+    "gdown==5.2.0",  # To download data from Google Drive
+    "papermill==2.6.0",  # To run notebooks
+    "altair==5.5.0"  # For plotting in notebooks
+]
 
 [tool.ruff]
 lint.select = ["E4", "E7", "E9", "F", "I", "W292", "W291"]
