@@ -48,7 +48,7 @@ rule process_load_data:
     output:
         POSTPROCESS_DIR / "loads.parquet",
     notebook:
-        SCRIPTS_DIR / "process_load_data.ipynb"
+        str(SCRIPTS_DIR / "process_load_data.py.ipynb")
 
 
 rule process_line_data:
@@ -58,7 +58,7 @@ rule process_line_data:
     output:
         POSTPROCESS_DIR / "lines.parquet",
     notebook:
-        str(SCRIPTS_DIR / "process_lines_json.ipynb")
+        str(SCRIPTS_DIR / "process_lines_json.py.ipynb")
 
 
 rule process_generator_data:
@@ -68,7 +68,8 @@ rule process_generator_data:
     output:
         POSTPROCESS_DIR / "generators.parquet",
     notebook:
-        str(SCRIPTS_DIR / "process_generator_data.ipynb")
+        str(SCRIPTS_DIR / "process_generator_data.py.ipynb")
+
 
 rule compute_capacity_factors:
     """Use the hourly generation data to create capacity factors by fuel type."""
@@ -79,4 +80,17 @@ rule compute_capacity_factors:
         yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
         vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
     notebook:
-        str(SCRIPTS_DIR / "compute_capacity_factors.ipynb")
+        str(SCRIPTS_DIR / "compute_capacity_factors.py.ipynb")
+
+
+rule solve_energy_problem:
+    input:
+        loads=POSTPROCESS_DIR / "loads.parquet",
+        lines=POSTPROCESS_DIR / "lines.parquet",
+        generators=POSTPROCESS_DIR / "generators.parquet",
+        yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
+        vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
+    output:
+        ENERGY_BENCHMARKS / "solution.parquet",
+    script:
+        ENERGY_BENCHMARKS / "model.py"
