@@ -1,0 +1,10 @@
+sort:
+  by: filename
+nav:
+  - Home: index.md
+  - Learn:
+    - learn/getting-started
+    - learn/advanced-concepts
+  - examples
+  - reference
+  - contribute
