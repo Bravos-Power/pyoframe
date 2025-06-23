@@ -97,5 +97,23 @@ plugins:
       scripts:
         - scripts/gen_ref_pages.py
 
+extra_javascript:
+  - javascripts/feedback.js
+
+extra:
+  analytics: 
+    provider: custom
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: Let us know how we can improve this page. 
+
 watch:
   - src

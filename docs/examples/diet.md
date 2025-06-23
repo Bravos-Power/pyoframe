@@ -48,7 +48,7 @@ def solve_model():
 m = solve_model()
 ```
 
-1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/getting-started/special-functions.md#expressiondrop_unmatched)
+1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)
 
 So what should you eat...
 
