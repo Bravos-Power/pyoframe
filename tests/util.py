@@ -98,7 +98,7 @@ def get_attr_docs(cls: type[Any]) -> dict[str, str]:
 
         # Must be an assignment then a constant string.
         if (
-            not isinstance(a, ast.Assign | ast.AnnAssign)
+            not isinstance(a, (ast.Assign, ast.AnnAssign))
             or not isinstance(b, ast.Expr)
             or not isinstance(b.value, ast.Constant)
             or not isinstance(b.value.value, str)
