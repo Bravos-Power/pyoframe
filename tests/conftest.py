@@ -3,8 +3,20 @@ import pytest
 import pyoframe as pf
 from pyoframe.constants import SUPPORTED_SOLVERS
 
+_installed_solvers = []
 
-@pytest.fixture(params=SUPPORTED_SOLVERS, ids=lambda s: s.name)
+for solver in SUPPORTED_SOLVERS:
+    try:
+        pf.Model(solver=solver)
+        _installed_solvers.append(solver)
+    except RuntimeError:
+        pass
+
+if _installed_solvers == []:
+    raise ValueError("No solvers detected.")
+
+
+@pytest.fixture(params=_installed_solvers, ids=lambda s: s.name)
 def solver(request):
     return request.param
 

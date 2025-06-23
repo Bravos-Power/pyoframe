@@ -59,8 +59,8 @@ def test_constraint_to_str(solver):
     m.constraint = m.x1**2 <= 5
     assert (
         str(m.constraint)
-        == """<Constraint name=constraint sense='<=' size=1 dimensions={} terms=2>
-x1 * x1 <= 5"""
+        == """<Constraint sense='<=' size=1 dimensions={} terms=2>
+constraint: x1 * x1 <= 5"""
     )
 
     # Now with dimensions
@@ -68,10 +68,10 @@ x1 * x1 <= 5"""
     m.constraint_2 = m.x2 * m.x1 <= 5
     assert (
         str(m.constraint_2)
-        == """<Constraint name=constraint_2 sense='<=' size=3 dimensions={'x': 3} terms=6>
-[1]: x2[1] * x1 <= 5
-[2]: x2[2] * x1 <= 5
-[3]: x2[3] * x1 <= 5"""
+        == """<Constraint sense='<=' size=3 dimensions={'x': 3} terms=6>
+constraint_2[1]: x2[1] * x1 <= 5
+constraint_2[2]: x2[2] * x1 <= 5
+constraint_2[3]: x2[3] * x1 <= 5"""
     )
 
 

@@ -26,14 +26,13 @@ from pyoframe.util import Container, NamedVariableMapper, for_solvers, get_obj_r
 
 class Model:
     """
-    The object that holds all the variables, constraints, and the objective.
+    An optimization model (containing variables, constraints, and an objective).
 
     Parameters:
         name:
             The name of the model. Currently it is not used for much.
         solver:
-            The solver to use. If `None`, `Config.default_solver` will be used.
-            If `Config.default_solver` has not been set (`None`), Pyoframe will try to detect whichever solver is already installed.
+            The solver to use. If `None`, Pyoframe will try to detect and use whichever solver is installed.
         solver_env:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:

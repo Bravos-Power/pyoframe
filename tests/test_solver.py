@@ -5,8 +5,14 @@ from polars.testing import assert_frame_equal
 from pytest import approx
 
 import pyoframe as pf
-from pyoframe.constants import Solver
+from pyoframe.constants import SUPPORTED_SOLVERS, Solver
 from tests.util import get_tol, get_tol_pl
+
+
+@pytest.mark.parametrize("supported_solver", SUPPORTED_SOLVERS, ids=lambda x: x.name)
+def test_solver_is_installed(supported_solver: Solver):
+    # TODO don't run for every installed solver...
+    pf.Model(solver=supported_solver)
 
 
 def test_retrieving_duals(solver):

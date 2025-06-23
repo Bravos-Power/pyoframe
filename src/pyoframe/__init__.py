@@ -1,8 +1,8 @@
 """
 Pyoframe's public API accessible via `import pyoframe`.
 
-Info:
-    `import pyoframe` will automatically monkey patch Polars and Pandas
+Tip:
+    `import pyoframe` will automatically patch Polars and Pandas
     to make `DataFrame.to_expr()` available.
 """
 
