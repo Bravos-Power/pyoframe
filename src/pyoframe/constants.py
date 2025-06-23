@@ -84,7 +84,7 @@ class _ConfigMeta(type):
 
 class Config(metaclass=_ConfigMeta):
     """
-    General settings for Pyoframe (for advanced users).
+    Global settings for Pyoframe (for advanced users).
     """
 
     default_solver: SUPPORTED_SOLVER_TYPES | Solver | None = None
@@ -107,7 +107,7 @@ class Config(metaclass=_ConfigMeta):
     !!! warning
         This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
         behaviors (see [here](../../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)).
-        Only enable once you've thoroughly tested your code to and know that it won't produce unmatched errors.
+        Only consider enabling after you have thoroughly tested your code.
 
     Examples:
         >>> import polars as pl
@@ -133,7 +133,7 @@ class Config(metaclass=_ConfigMeta):
         
         But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
         >>> pf.Config.disable_unmatched_checks = True
-        >>> population_influx + population
+        >>> population + population_influx
         <Expression size=3 dimensions={'city': 3} terms=3>
         [Toronto]: 2831571
         [Vancouver]: 681486
@@ -141,10 +141,22 @@ class Config(metaclass=_ConfigMeta):
     """
 
     print_max_line_length: int = 80
+    """
+    Maximum number of characters to print in a single line.
+
+    Examples:
+        >>> pf.Config.print_max_line_length = 20
+        >>> m = pf.Model()
+        >>> m.vars = pf.Variable({"x": range(1000)})
+        >>> pf.sum(m.vars)
+        <Expression size=1 dimensions={} terms=1000>
+        vars[0] + vars[1] + …
+
+    """
 
     print_max_lines: int = 15
     """
-    The maximum number of lines to print.
+    Maximum number of lines to print.
 
     Examples:
         >>> pf.Config.print_max_lines = 3
@@ -159,7 +171,15 @@ class Config(metaclass=_ConfigMeta):
     """
 
     print_max_set_elements: int = 50
-    "Number of elements to show when printing a set to the console (additional elements are replaced with ...)"
+    """
+    Maximum number of elements in a set to print.
+    
+    Examples:
+        >>> pf.Config.print_max_set_elements = 5
+        >>> pf.Set(x=range(1000))
+        <Set size=1000 dimensions={'x': 1000}>
+        [0, 1, 2, 3, 4, …]
+    """
 
     enable_is_duplicated_expression_safety_check: bool = False
     """
@@ -172,27 +192,27 @@ class Config(metaclass=_ConfigMeta):
     """
     Tolerance for checking if a floating point value is an integer.
 
-    For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
-    To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
-    Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
-    unexpected errors. Setting the tolerance to zero disables the check.
+    !!! info
+        For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
+        To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
+        Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
+        unexpected errors. Setting the tolerance to zero disables the check.
     """
 
     float_to_str_precision: Optional[int] = 5
-    """Number of decimal places to use when displaying expressions."""
+    """Number of decimal places to use when displaying mathematical expressions."""
 
     print_uses_variable_names: bool = True
     """
+    Improve performance by not tracking the link between variable IDs and variable names.
+
+    If set to `False`, printed expression will use variable IDs instead of variable names
+    which might make debugging difficult.
 
     !!! warning
-        This setting should only be changed before instantiating a [Model][pyoframe.Model].
+        This setting must be changed before instantiating a [Model][pyoframe.Model].
     
     Examples:
-        >>> m = pf.Model()
-        >>> m.my_var = pf.Variable()
-        >>> 2 * m.my_var
-        <Expression size=1 dimensions={} terms=1>
-        2 my_var
         >>> pf.Config.print_uses_variable_names = False
         >>> m = pf.Model()
         >>> m.my_var = pf.Variable()

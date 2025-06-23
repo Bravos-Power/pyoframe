@@ -989,7 +989,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .then(
                     pl.concat_str(
                         pl.col("expr").str.slice(0, Config.print_max_line_length),
-                        pl.lit("..."),
+                        pl.lit("…"),
                     )
                 )
                 .otherwise(pl.col("expr"))

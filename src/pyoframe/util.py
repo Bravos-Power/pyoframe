@@ -270,11 +270,11 @@ def dataframe_to_tupled_list(
         >>> dataframe_to_tupled_list(df)
         '[1, 2, 3, 4, 5]'
         >>> dataframe_to_tupled_list(df, 3)
-        '[1, 2, 3, ...]'
+        '[1, 2, 3, …]'
 
         >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 3, 4, 5, 6]})
         >>> dataframe_to_tupled_list(df, 3)
-        '[(1, 2), (2, 3), (3, 4), ...]'
+        '[(1, 2), (2, 3), (3, 4), …]'
     """
     elipse = False
     if num_max_elements is not None:
@@ -288,7 +288,7 @@ def dataframe_to_tupled_list(
 
     res = str(list(res))
     if elipse:
-        res = res[:-1] + ", ...]"
+        res = res[:-1] + ", …]"
     return res
 
 
