@@ -70,7 +70,11 @@ plugins:
         python:
           options:
             show_if_no_docstring: true
-            summary: true
+            summary:
+              attributes: true
+              functions: true
+              classes: true
+              modules: false
             extensions:
               - dataclasses
             merge_init_into_class: true

@@ -382,7 +382,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
 class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
-    """A linear or quadratic expression."""
+    """A mathematical expression (linear or quadratic)."""
 
     def __init__(self, data: pl.DataFrame):
         """
@@ -1196,7 +1196,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
 
 
 class Constraint(ModelElementWithId):
-    """A linear programming constraint."""
+    """An optimization constraint."""
 
     def __init__(self, lhs: Expression, sense: ConstraintSense):
         """Initialize a constraint.
@@ -1532,7 +1532,7 @@ class Constraint(ModelElementWithId):
 
 class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     """
-    Represents one or many decision variable in an optimization model.
+    A decision variable for an optimization model.
 
     Parameters:
         *indexing_sets:

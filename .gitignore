@@ -7,7 +7,6 @@ build
 tmp
 .coverage
 .cache
-docs/reference
 dist
 *.log
 site
