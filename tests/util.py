@@ -4,7 +4,6 @@ import ast
 import inspect
 import io
 import textwrap
-from itertools import pairwise
 from typing import TYPE_CHECKING, Any, Literal, Tuple, Union, overload
 
 import polars as pl
@@ -92,7 +91,11 @@ def get_attr_docs(cls: type[Any]) -> dict[str, str]:
     out = {}
 
     # Consider each pair of nodes.
-    for a, b in pairwise(cls_node.body):
+    nodes = cls_node.body
+    b = nodes[0]
+    for i in range(1, len(nodes)):
+        a, b = b, nodes[i]
+
         # Must be an assignment then a constant string.
         if (
             not isinstance(a, ast.Assign | ast.AnnAssign)
