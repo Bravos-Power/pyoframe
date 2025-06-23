@@ -980,7 +980,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         # Remove leading +
         data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
 
-        # TODO add vertical ... if too many rows, in the middle of the table
         if Config.print_max_lines:
             data = data.head(Config.print_max_lines)
 
@@ -996,18 +995,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 .otherwise(pl.col("expr"))
             )
         return data
-
-    def to_str_create_prefix(self, data):
-        if self.name is None and self.dimensions is None:
-            return data
-
-        return (
-            concat_dimensions(data, prefix=self.name, ignore_columns=["expr"])
-            .with_columns(
-                pl.concat_str("concated_dim", pl.lit(": "), "expr").alias("expr")
-            )
-            .drop("concated_dim")
-        )
 
     def to_str(
         self,
@@ -1032,7 +1019,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             )
             str_table = self.to_str_create_prefix(str_table)
             result += str_table.select(pl.col("expr").str.join(delimiter="\n")).item()
-
+            result = self._append_ellipsis(result)
         return result
 
     def __repr__(self) -> str:
@@ -1499,7 +1486,7 @@ class Constraint(ModelElementWithId):
     def to_str(self) -> str:
         dims = self.dimensions
         str_table = self.lhs.to_str_table(include_const_term=False)
-        str_table = self.lhs.to_str_create_prefix(str_table)
+        str_table = self.to_str_create_prefix(str_table)
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False)
         # Remove leading +
@@ -1513,13 +1500,15 @@ class Constraint(ModelElementWithId):
                 delimiter="\n"
             )
         ).item()
+
+        constr_str = self._append_ellipsis(constr_str)
+
         return constr_str
 
     def __repr__(self) -> str:
         return (
             get_obj_repr(
                 self,
-                ("name",),
                 sense=f"'{self.sense.value}'",
                 size=len(self),
                 dimensions=self.shape,

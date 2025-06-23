@@ -84,35 +84,121 @@ class _ConfigMeta(type):
 
 class Config(metaclass=_ConfigMeta):
     """
-    Configuration options that apply to the entire library.
+    General settings for Pyoframe (for advanced users).
     """
 
     default_solver: SUPPORTED_SOLVER_TYPES | Solver | None = None
     """
-    The solver to use when `pf.Model()` is called without specifying a solver.
-    If default_solver is not set (`None`),
-    Pyoframe will choose the first solver in SUPPORTED_SOLVERS that doesn't produce an error.
-
-    There is no reason why you set the solver here instead of passing it to the Model constructor.
-    This is mainly used for testing purposes.
+    Setting for internal testing purposes only.
+        
+    The solver to be used if no solver is specified while constructing a [Model][pyoframe.Model].
+    Overrides the default behavior of automatically trying to detect and use whichever solver is installed.
+    This setting is used for testing only; users should specify their preferred solver during Model construction.
     """
 
     disable_unmatched_checks: bool = False
-    float_to_str_precision: Optional[int] = 5
-    print_uses_variable_names: bool = True
+    """
+    Improve performance by skipping unmatched checks (not recommended).
+
+    When `True`, unmatched checks are disabled which effectively means that all expressions
+    are treated as if they contained [`.keep_unmatched()`][pyoframe.Expression.keep_unmatched]
+    (unless [`.drop_unmatched()`][pyoframe.Expression.drop_unmatched] was applied).
+
+    !!! warning
+        This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
+        behaviors (see [here](../../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)).
+        Only enable once you've thoroughly tested your code to and know that it won't produce unmatched errors.
+
+    Examples:
+        >>> import polars as pl
+        >>> population = pl.DataFrame({"city": ["Toronto", "Vancouver", "Montreal"], "pop": [2_731_571, 631_486, 1_704_694]}).to_expr()
+        >>> population_influx = pl.DataFrame({"city": ["Toronto", "Vancouver", "Montreal"],"influx": [100_000, 50_000, None],}).to_expr()
+        
+        Normally, an error warns users that the two expressions have conflicting indices:
+        >>> population + population_influx
+        Traceback (most recent call last):
+        ...
+        pyoframe.constants.PyoframeError: Failed to add expressions:
+        <Expression size=3 dimensions={'city': 3} terms=3> + <Expression size=2 dimensions={'city': 2} terms=2>
+        Due to error:
+        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+        shape: (1, 2)
+        ┌──────────┬────────────┐
+        │ city     ┆ city_right │
+        │ ---      ┆ ---        │
+        │ str      ┆ str        │
+        ╞══════════╪════════════╡
+        │ Montreal ┆ null       │
+        └──────────┴────────────┘
+        
+        But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
+        >>> pf.Config.disable_unmatched_checks = True
+        >>> population_influx + population
+        <Expression size=3 dimensions={'city': 3} terms=3>
+        [Toronto]: 2831571
+        [Vancouver]: 681486
+        [Montreal]: 1704694
+    """
+
     print_max_line_length: int = 80
+
     print_max_lines: int = 15
+    """
+    The maximum number of lines to print.
+
+    Examples:
+        >>> pf.Config.print_max_lines = 3
+        >>> import pandas as pd
+        >>> expr = pd.DataFrame({"day_of_year": list(range(365)), "value": list(range(365))}).to_expr()
+        >>> expr
+        <Expression size=365 dimensions={'day_of_year': 365} terms=365>
+        [0]: 0
+        [1]: 1
+        [2]: 2
+         ⋮
+    """
+
     print_max_set_elements: int = 50
     "Number of elements to show when printing a set to the console (additional elements are replaced with ...)"
 
     enable_is_duplicated_expression_safety_check: bool = False
+    """
+    Setting for internal testing purposes only.
+    
+    When `True`, pyoframe checks that there are no bugs leading to duplicated terms in expressions.
+    """
 
     integer_tolerance: float = 1e-8
     """
+    Tolerance for checking if a floating point value is an integer.
+
     For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
     To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
     Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
     unexpected errors. Setting the tolerance to zero disables the check.
+    """
+
+    float_to_str_precision: Optional[int] = 5
+    """Number of decimal places to use when displaying expressions."""
+
+    print_uses_variable_names: bool = True
+    """
+
+    !!! warning
+        This setting should only be changed before instantiating a [Model][pyoframe.Model].
+    
+    Examples:
+        >>> m = pf.Model()
+        >>> m.my_var = pf.Variable()
+        >>> 2 * m.my_var
+        <Expression size=1 dimensions={} terms=1>
+        2 my_var
+        >>> pf.Config.print_uses_variable_names = False
+        >>> m = pf.Model()
+        >>> m.my_var = pf.Variable()
+        >>> 2 * m.my_var
+        <Expression size=1 dimensions={} terms=1>
+        2 x1
     """
 
     @classmethod
@@ -154,6 +240,8 @@ class ObjSense(Enum):
 
 
 class VType(Enum):
+    """An enum to specify the variable type (continuous, binary, or integer)."""
+
     CONTINUOUS = "continuous"
     BINARY = "binary"
     INTEGER = "integer"

@@ -12,7 +12,9 @@ from pyoframe.constants import (
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
+    Config,
 )
+from pyoframe.util import concat_dimensions
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -117,6 +119,24 @@ class ModelElement(ABC):
         if dims is None:
             return 1
         return self.data.select(dims).n_unique()
+
+    def _append_ellipsis(self, input: str) -> str:
+        result = input
+        if Config.print_max_lines and Config.print_max_lines < len(self):
+            result += "\n" + " " * (len(self.name) if self.name else 0) + " ⋮"
+        return result
+
+    def to_str_create_prefix(self, data):
+        if self.name is None and self.dimensions is None:
+            return data
+
+        return (
+            concat_dimensions(data, prefix=self.name, ignore_columns=["expr"])
+            .with_columns(
+                pl.concat_str("concated_dim", pl.lit(": "), "expr").alias("expr")
+            )
+            .drop("concated_dim")
+        )
 
 
 def _support_polars_method(method_name: str):
