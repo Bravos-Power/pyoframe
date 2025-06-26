@@ -14,3 +14,4 @@ site
 .idea
 src/pyoframe/_version.py
 htmlcov/
+.snakemake/
