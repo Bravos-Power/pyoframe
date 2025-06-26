@@ -83,10 +83,21 @@ rule compute_capacity_factors:
         str(SCRIPTS_DIR / "compute_capacity_factors.py.ipynb")
 
 
+rule simplify_network:
+    input:
+        lines=POSTPROCESS_DIR / "lines.parquet",
+        generators=POSTPROCESS_DIR / "generators.parquet",
+        loads=POSTPROCESS_DIR / "loads.parquet",
+    output:
+        POSTPROCESS_DIR / "lines_simplified.parquet",
+    script:
+        SCRIPTS_DIR / "simplify_network.py"
+
+
 rule solve_energy_problem:
     input:
         loads=POSTPROCESS_DIR / "loads.parquet",
-        lines=POSTPROCESS_DIR / "lines.parquet",
+        lines=POSTPROCESS_DIR / "lines_simplified.parquet",
         generators=POSTPROCESS_DIR / "generators.parquet",
         yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
         vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
@@ -95,6 +106,7 @@ rule solve_energy_problem:
     script:
         ENERGY_BENCHMARKS / "model.py"
 
+
 rule all:
     input:
-        ENERGY_BENCHMARKS / "solution.parquet"
+        ENERGY_BENCHMARKS / "solution.parquet",
