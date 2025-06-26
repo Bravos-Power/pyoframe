@@ -1,3 +1,14 @@
+"""
+Simplifies the network topology by
+    - combining lines in parallel,
+    - removing lines that lead nowhere,
+    - and removing intermediary buses with no loads or generators.
+
+Line ratings and reactances are updated accordingly.
+
+As of June 25, 2025, this script reduces the number of lines by 25%.
+"""
+
 import polars as pl
 from util import mock_snakemake
 
@@ -30,10 +41,10 @@ def combine_parallel_lines(lines: pl.DataFrame):
     initial = lines.height
     lines = swap_direction(lines, condition=f_bus > t_bus)
     lines = (
-        lines.with_columns((1 / pl.col("resistance")).alias("resistance"))
+        lines.with_columns((1 / pl.col("reactance")).alias("reactance"))
         .group_by([f_bus, t_bus])
         .sum()
-        .with_columns((1 / pl.col("resistance")).alias("resistance"))
+        .with_columns((1 / pl.col("reactance")).alias("reactance"))
     )
     return lines, initial - lines.height
 
@@ -80,7 +91,7 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
             from_bus=f_bus.first(),
             to_bus=f_bus.last(),
             line_rating=pl.col("line_rating").min(),
-            resistance=pl.col("resistance").sum(),
+            reactance=pl.col("reactance").sum(),
         )
         .drop("mid_bus")
     )
@@ -97,7 +108,7 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
         f_bus,
         pl.col("from_bus_right").alias("to_bus"),
         pl.min_horizontal("line_rating", "line_rating_right").alias("line_rating"),
-        pl.sum_horizontal("resistance", "resistance_right").alias("resistance"),
+        pl.sum_horizontal("reactance", "reactance_right").alias("reactance"),
     )
 
     initial = lines.height
@@ -116,22 +127,22 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
 def remove_self_connections(lines):
     """Remove lines that connect a bus to itself (e.g., a line going from bus 1 to bus 1)."""
     initial = lines.height
-    lines = lines.filter(~(f_bus == t_bus))
+    lines = lines.filter(f_bus != t_bus)
     return lines, initial - lines.height
 
 
 def main(lines, buses_to_keep):
     """Simplify the network until there is no more simplification possible."""
-    expected_cols = {"from_bus", "to_bus", "resistance", "line_rating"}
+    expected_cols = {"from_bus", "to_bus", "reactance", "line_rating"}
     assert set(lines.columns) == expected_cols, (
         f"Unexpected columns in lines DataFrame ({set(lines.columns) - expected_cols})"
     )
 
-    num_lines = lines.height
+    num_lines_initial = lines.height
     lines_removed = 0
-    last_lines_removed = None
-    while last_lines_removed is None or lines_removed > last_lines_removed:
-        last_lines_removed = lines_removed
+    lines_removed_prev = float("-inf")
+    while lines_removed > lines_removed_prev:
+        lines_removed_prev = lines_removed
         lines, lines_merged = combine_parallel_lines(lines)
         if lines_merged != 0:
             print(f"Removed {lines_merged} lines in parallel...")
@@ -159,7 +170,9 @@ def main(lines, buses_to_keep):
             dead_ends + lines_merged + lines_concatenated + self_connections
         )
 
-    print(f"Removed {lines_removed / num_lines:.2%} of lines in total.")
+    print(
+        f"Removed {lines_removed / num_lines_initial:.2%} of lines in total (l={lines.height})."
+    )
 
     return lines
 

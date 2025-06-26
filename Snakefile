@@ -10,6 +10,15 @@ PREPROCESS_DIR = ENERGY_BENCHMARKS / "data/preprocess"
 POSTPROCESS_DIR = ENERGY_BENCHMARKS / "data/postprocess"
 SCRIPTS_DIR = ENERGY_BENCHMARKS / "scripts"
 
+rule all:
+    input:
+        loads=POSTPROCESS_DIR / "loads.parquet",
+        lines=POSTPROCESS_DIR / "lines_simplified.parquet",
+        generators=POSTPROCESS_DIR / "generators.parquet",
+        yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
+        vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
+    default_target: True
+
 
 rule fetch_load_data:
     """Downloads the load data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
@@ -94,19 +103,3 @@ rule simplify_network:
         SCRIPTS_DIR / "simplify_network.py"
 
 
-rule solve_energy_problem:
-    input:
-        loads=POSTPROCESS_DIR / "loads.parquet",
-        lines=POSTPROCESS_DIR / "lines_simplified.parquet",
-        generators=POSTPROCESS_DIR / "generators.parquet",
-        yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
-        vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
-    output:
-        ENERGY_BENCHMARKS / "solution.parquet",
-    script:
-        ENERGY_BENCHMARKS / "model.py"
-
-
-rule all:
-    input:
-        ENERGY_BENCHMARKS / "solution.parquet",
