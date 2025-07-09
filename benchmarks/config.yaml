@@ -1,0 +1,23 @@
+repeat: 3
+problems:
+  facility_problem:
+    size:
+      - 25
+      - 50
+      - 75
+      - 100
+  # energy_problem:
+
+solvers:
+  - gurobi
+  # - highs
+  # - mosek
+
+libraries:
+  - pyoframe
+  # - pyomo
+  # - cvxpy
+  # - gurobipy
+  # - jump
+  # - linopy
+  # - pyoptinterface

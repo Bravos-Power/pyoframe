@@ -1,105 +1,33 @@
-from shutil import move
-import gdown
-from urllib.request import urlretrieve
-from pathlib import Path
+configfile: "benchmarks/config.yaml"
 
-CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/GIS/"
+def generate_all_runs():
+    import itertools
 
-ENERGY_BENCHMARKS = Path("benchmarks/energy_model")
-PREPROCESS_DIR = ENERGY_BENCHMARKS / "data/preprocess"
-POSTPROCESS_DIR = ENERGY_BENCHMARKS / "data/postprocess"
-SCRIPTS_DIR = ENERGY_BENCHMARKS / "scripts"
+    problem_size_pairs = []
+    for problem, problem_data in config["problems"].items():
+        if problem_data is None or "size" not in problem_data:
+            problem_size_pairs.append((problem, "0"))
+        else:
+            for size in problem_data["size"]:
+                problem_size_pairs.append((problem, size))
+    
+    runs = [
+        (problem, size, library, solver)
+        for (problem, size), library, solver in itertools.product(
+            problem_size_pairs,
+            config["libraries"],
+            config["solvers"]
+        )
+    ]
+    return runs
 
 rule all:
     input:
-        loads=POSTPROCESS_DIR / "loads.parquet",
-        lines=POSTPROCESS_DIR / "lines_simplified.parquet",
-        generators=POSTPROCESS_DIR / "generators.parquet",
-        yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
-        vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
-    default_target: True
+        [f"benchmarks/{problem}/results/{library}_{solver}_{size}.tsv"
+         for problem, size, library, solver in generate_all_runs()]
 
-
-rule fetch_load_data:
-    """Downloads the load data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
-    output:
-        PREPROCESS_DIR / "CATS_loads.csv",
-    run:
-        gdown.download(id="1Sz8st7g4Us6oijy1UYMPUvkA1XeZlIr8", output=output[0])
-
-
-rule fetch_generation_data:
-    """Downloads the generation data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
-    output:
-        PREPROCESS_DIR / "CATS_generation.csv",
-    run:
-        gdown.download(id="1CxLlcwAEUy-JvJQdAfVydJ1p9Ecot-4d", output=output[0])
-
-
-rule fetch_line_data:
-    output:
-        PREPROCESS_DIR / "CATS_lines.json",
-    run:
-        urlretrieve(CATS_GITHUB_URL + "CATS_lines.json", output[0])
-
-
-rule fetch_generator_data:
-    output:
-        PREPROCESS_DIR / "CATS_generators.csv",
-    run:
-        urlretrieve(CATS_GITHUB_URL + "CATS_gens.csv", output[0])
-
-
-rule process_load_data:
-    """Convert the load data to narrow format and keep only the active loads."""
-    input:
-        PREPROCESS_DIR / "CATS_loads.csv",
-    output:
-        POSTPROCESS_DIR / "loads.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_load_data.py.ipynb")
-
-
-rule process_line_data:
-    """Convert from .json to .parquet and keep only relevant columns."""
-    input:
-        PREPROCESS_DIR / "CATS_lines.json",
-    output:
-        POSTPROCESS_DIR / "lines.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_lines_json.py.ipynb")
-
-
-rule process_generator_data:
-    """Group the generators by type and bus."""
-    input:
-        PREPROCESS_DIR / "CATS_generators.csv",
-    output:
-        POSTPROCESS_DIR / "generators.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_generator_data.py.ipynb")
-
-
-rule compute_capacity_factors:
-    """Use the hourly generation data to create capacity factors by fuel type."""
-    input:
-        gen_capacity=POSTPROCESS_DIR / "generators.parquet",
-        gen_dispatch=PREPROCESS_DIR / "CATS_generation.csv",
-    output:
-        yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
-        vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "compute_capacity_factors.py.ipynb")
-
-
-rule simplify_network:
-    input:
-        lines=POSTPROCESS_DIR / "lines.parquet",
-        generators=POSTPROCESS_DIR / "generators.parquet",
-        loads=POSTPROCESS_DIR / "loads.parquet",
-    output:
-        POSTPROCESS_DIR / "lines_simplified.parquet",
-    script:
-        SCRIPTS_DIR / "simplify_network.py"
-
-
+rule run_benchmark:
+    benchmark:
+        repeat("benchmarks/{problem}/results/{library}_{solver}_{size}.tsv", config["repeat"])
+    shell:
+        "python benchmarks/run_benchmarks {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"

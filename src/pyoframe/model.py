@@ -475,10 +475,20 @@ class Model:
             self.poi.close()
 
     def _set_param(self, name, value):
-        self.poi.set_raw_parameter(name, value)
+        try:
+            self.poi.set_raw_parameter(name, value)
+        except KeyError as e:
+            raise KeyError(
+                f"Parameter '{name}' does not exist. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+            ) from e
 
     def _get_param(self, name):
-        return self.poi.get_raw_parameter(name)
+        try:
+            return self.poi.get_raw_parameter(name)
+        except KeyError as e:
+            raise KeyError(
+                f"Parameter '{name}' does not exist. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+            ) from e
 
     def _set_attr(self, name, value):
         try:

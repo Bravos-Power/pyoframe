@@ -57,8 +57,8 @@ ipopt = ["pyoptinterface[nlp]"]
 benchmarks = [
     "snakemake==9.6.0", 
     "gdown==5.2.0",  # To download data from Google Drive
-    "papermill==2.6.0",  # To run notebooks
-    "altair==5.5.0"  # For plotting in notebooks
+    "papermill==2.6.0",  #  To run notebooks
+    "altair==5.5.0",  # For plotting in notebooks
 ]
 
 [tool.ruff]
