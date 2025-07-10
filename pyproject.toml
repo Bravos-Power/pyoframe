@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8"]
+requires = [
+    "setuptools>=61.0",
+    "setuptools-scm>=8", # Sets the package version based on git tags
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -33,7 +36,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pre-commit",
-    "gurobipy",  # Used only to compare results with Gurobi during testing
+    "gurobipy",            # Used only to compare results with Gurobi during testing
     "highsbox",
     "coverage",
     "ipykernel",
@@ -54,16 +57,6 @@ docs = [
 ]
 highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]
-benchmarks = [
-    "snakemake==9.6.0", 
-    "gdown==5.2.0",  # To download data from Google Drive
-    "papermill==2.6.0",  #  To run notebooks
-    "altair==5.5.0",  # For plotting in notebooks
-    "pyomo==6.9.2",
-    "linopy==0.5.5",
-    "pyoptinterface==0.4.1",
-    "numpy==2.3.1"
-]
 
 [tool.ruff]
 lint.select = ["E4", "E7", "E9", "F", "I", "W292", "W291"]
@@ -75,12 +68,15 @@ docstring-code-format = true
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"  # https://stackoverflow.com/a/50156706/5864903
+pythonpath = "src"                             # https://stackoverflow.com/a/50156706/5864903
 addopts = "--doctest-modules --ignore=scripts"
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"
 local_scheme = "no-local-version"
+
+[tool.setuptools.package-dir]
+pyoframe = "src/pyoframe"
 
 [project.urls]
 Homepage = "https://bravos-power.github.io/pyoframe/"

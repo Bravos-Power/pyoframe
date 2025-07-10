@@ -5,7 +5,7 @@ from pathlib import Path
 
 CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/GIS/"
 
-ENERGY_BENCHMARKS = Path("benchmarks/energy_model")
+ENERGY_BENCHMARKS = Path("benchmarks/energy_planning")
 PREPROCESS_DIR = ENERGY_BENCHMARKS / "data/preprocess"
 POSTPROCESS_DIR = ENERGY_BENCHMARKS / "data/postprocess"
 SCRIPTS_DIR = ENERGY_BENCHMARKS / "scripts"

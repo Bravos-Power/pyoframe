@@ -69,4 +69,4 @@ class Bench(PyomoBenchmark):
 
 
 if __name__ == "__main__":
-    solve("gurobi", 5)
+    Bench("gurobi", 5).run()

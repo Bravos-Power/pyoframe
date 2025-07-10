@@ -4,7 +4,7 @@ import sys
 
 def solve_model(use_var_names=False, G=4, F=3):
     sys.path.append(os.getcwd())
-    from benchmarks.facility_problem.bm_pyoframe import solve
+    from benchmarks.problem_facility_location.bm_pyoframe import solve
 
     return solve(
         G=G, F=F, solver=None, is_benchmarking=False, use_var_names=use_var_names

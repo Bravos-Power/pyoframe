@@ -7,13 +7,17 @@ from __future__ import annotations
 from pathlib import Path
 
 
-def mock_snakemake(rulename):
+def mock_snakemake(rulename, **wildcards):
     """
     This function is expected to be executed from the 'scripts'-directory of '
     the snakemake project. It returns a snakemake.script.Snakemake object,
     based on the Snakefile.
 
     If a rule has wildcards, you have to specify them in **wildcards.
+
+    **wildcards:
+        keyword arguments fixing the wildcards. Only necessary if wildcards are
+        needed.
 
     Parameters
     ----------
@@ -35,7 +39,7 @@ def mock_snakemake(rulename):
     )
 
     script_dir = Path(__file__).parent.resolve()
-    root_dir = script_dir.parent.parent.parent
+    root_dir = script_dir.parent.parent
     current_dir = os.getcwd()
     os.chdir(root_dir)
 
@@ -61,7 +65,7 @@ def mock_snakemake(rulename):
         workflow.global_resources = {}
         rule = workflow.get_rule(rulename)
         dag = sm.dag.DAG(workflow, rules=[rule])
-        job = sm.jobs.Job(rule, dag)
+        job = sm.jobs.Job(rule, dag, wildcards)
 
         def make_accessable(*ios):
             for io in ios:

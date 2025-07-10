@@ -15,7 +15,7 @@ def collect_benchmarks(input_files):
         size = name[2]
         dfs.append(
             pl.read_csv(input_file, separator="\t")
-            .mean()
+            .mean()  # TODO also compute std(). Maybe at the plotting stage.
             .with_columns(
                 problem=pl.lit(problem),
                 library=pl.lit(library),

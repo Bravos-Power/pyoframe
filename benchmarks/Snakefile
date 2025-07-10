@@ -1,4 +1,4 @@
-configfile: "src/benchmarks/config.yaml"
+configfile: "config.yaml"
 
 def generate_all_runs():
     import itertools
@@ -23,19 +23,29 @@ def generate_all_runs():
 
 rule all:
     input:
-        "src/benchmarks/results.csv"
+        expand("{problem}/results/{solver}.png", problem=config["problems"], solver=config["solvers"]),
+        "results.csv"
+
+rule plot_results:
+    input:
+        "results.csv"
+    output:
+        mem_plot="{problem}/results/memory_{solver}.png",
+        time_plot="{problem}/results/time_{solver}.png"
+    script:
+        "plot_results.py"
 
 rule collect_benchmarks:
     input:
-        [f"src/benchmarks/{problem}/results/{library}_{solver}_{size}.tsv"
+        [f"{problem}/results/{library}_{solver}_{size}.tsv"
          for problem, size, library, solver in generate_all_runs()]
     output:
-        "src/benchmarks/results.csv"
+        "results.csv"
     script:
-        "src/benchmarks/collect_benchmarks.py"
+        "collect_benchmarks.py"
 
 rule run_benchmark:
     benchmark:
-        repeat("src/benchmarks/{problem}/results/{library}_{solver}_{size}.tsv", config["repeat"])
+        repeat("{problem}/results/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:
-        "python src/benchmarks/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+        "python run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
