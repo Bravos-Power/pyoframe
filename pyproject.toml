@@ -59,6 +59,10 @@ benchmarks = [
     "gdown==5.2.0",  # To download data from Google Drive
     "papermill==2.6.0",  #  To run notebooks
     "altair==5.5.0",  # For plotting in notebooks
+    "pyomo==6.9.2",
+    "linopy==0.5.5",
+    "pyoptinterface==0.4.1",
+    "numpy==2.3.1"
 ]
 
 [tool.ruff]

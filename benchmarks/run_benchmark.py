@@ -20,12 +20,14 @@ if __name__ == "__main__":
         prog="run_benchmark", description="Run a benchmark with a given solver."
     )
     parser.add_argument("problem", choices=get_problems())
-    parser.add_argument("--solver", choices=SUPPORTED_SOLVERS)
+    parser.add_argument("--solver", choices=[s.name for s in SUPPORTED_SOLVERS])
     parser.add_argument("--size", type=int)
     parser.add_argument("--library")
     args = parser.parse_args()
 
     # import solve function dynamically
-    solve_func = importlib.import_module(f"benchmarks.bm_{args.library.lower()}").solve
+    solve_func = importlib.import_module(
+        f"{args.problem}.bm_{args.library.lower()}"
+    ).solve
 
     solve_func(solver=args.solver, size=args.size)

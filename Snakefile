@@ -23,11 +23,19 @@ def generate_all_runs():
 
 rule all:
     input:
+        "benchmarks/results.csv"
+
+rule collect_benchmarks:
+    input:
         [f"benchmarks/{problem}/results/{library}_{solver}_{size}.tsv"
          for problem, size, library, solver in generate_all_runs()]
+    output:
+        "benchmarks/results.csv"
+    script:
+        "benchmarks/collect_benchmarks.py"
 
 rule run_benchmark:
     benchmark:
         repeat("benchmarks/{problem}/results/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:
-        "python benchmarks/run_benchmarks {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+        "python benchmarks/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"

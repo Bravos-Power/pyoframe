@@ -1,4 +1,4 @@
-repeat: 3
+repeat: 1
 problems:
   facility_problem:
     size:
@@ -20,4 +20,4 @@ libraries:
   # - gurobipy
   # - jump
   # - linopy
-  # - pyoptinterface
+  - pyoptinterface

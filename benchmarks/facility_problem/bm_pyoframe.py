@@ -34,7 +34,6 @@ def solve(solver, size=None, G=None, F=None, is_benchmarking=True, use_var_names
         model.x_axis, model.y_axis, model.facilities, vtype="binary"
     )
     model.con_only_one_closest = model.is_closest.sum("f") == 1
-
     model.dist_x = Variable(model.x_axis, model.facilities)
     model.dist_y = Variable(model.y_axis, model.facilities)
     model.con_dist_x = model.dist_x == customer_position_x.to_expr().add_dim(
