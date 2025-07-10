@@ -17,7 +17,7 @@ libraries:
   - pyoframe
   # - pyomo
   # - cvxpy
-  # - gurobipy
+  - gurobipy
   # - jump
   # - linopy
   - pyoptinterface

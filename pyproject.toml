@@ -75,7 +75,7 @@ docstring-code-format = true
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"
+pythonpath = "src"  # https://stackoverflow.com/a/50156706/5864903
 addopts = "--doctest-modules --ignore=scripts"
 
 [tool.setuptools_scm]
