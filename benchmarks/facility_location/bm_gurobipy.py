@@ -8,7 +8,9 @@ from gurobipy import GRB, Model
 from benchmarks.util import GurobiPyBenchmark
 
 
-class FacilityGurobiPy(GurobiPyBenchmark):
+class Bench(GurobiPyBenchmark):
+    MAX_SIZE = 100
+
     def build(self):
         try:
             (G, F) = self.size
@@ -47,4 +49,4 @@ class FacilityGurobiPy(GurobiPyBenchmark):
 
 
 if __name__ == "__main__":
-    FacilityGurobiPy("gurobi", 5).run()
+    Bench("gurobi", 5).run()

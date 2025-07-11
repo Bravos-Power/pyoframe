@@ -1,50 +1,58 @@
+import importlib
+import os
+from snakemake.utils import available_cpu_count
+
 configfile: "config.yaml"
 
-def generate_all_runs():
+def generate_all_runs(problem):
     import itertools
 
-    problem_size_pairs = []
-    for problem, problem_data in config["problems"].items():
-        if problem_data is None or "size" not in problem_data:
-            problem_size_pairs.append((problem, "0"))
-        else:
-            for size in problem_data["size"]:
-                problem_size_pairs.append((problem, size))
+    problem_data = config["problems"][problem]
+    if problem_data is None or "size" not in problem_data:
+        sizes = ["0"]
+    else:
+        sizes = problem_data["size"]
     
     runs = [
-        (problem, size, library, solver)
-        for (problem, size), library, solver in itertools.product(
-            problem_size_pairs,
+        (size, library, solver)
+        for size, library, solver in itertools.product(
+            sizes,
             config["libraries"],
             config["solvers"]
         )
     ]
+
+    benchmarks = [
+        importlib.import_module(f"{problem}.bm_{library.lower()}").Bench
+        for size, library, solver in runs
+    ]
+
+    runs = [
+        r for r, benchmark in zip(
+            runs, benchmarks
+        ) if benchmark.MAX_SIZE == None or r[0] <= benchmark.MAX_SIZE
+    ]
+
     return runs
 
 rule all:
     input:
-        expand("{problem}/results/{solver}.png", problem=config["problems"], solver=config["solvers"]),
-        "results.csv"
+        expand("{problem}/results/benchmark_results.png", problem=config["problems"])
 
 rule plot_results:
     input:
-        "results.csv"
+        lambda wildcards: [
+            f"{wildcards.problem}/results/{library}_{solver}_{size}.tsv"
+            for size, library, solver in generate_all_runs(wildcards.problem)
+        ]
     output:
-        mem_plot="{problem}/results/memory_{solver}.png",
-        time_plot="{problem}/results/time_{solver}.png"
+        "{problem}/results/benchmark_results.csv",
+        "{problem}/results/benchmark_results.png"
     script:
         "plot_results.py"
 
-rule collect_benchmarks:
-    input:
-        [f"{problem}/results/{library}_{solver}_{size}.tsv"
-         for problem, size, library, solver in generate_all_runs()]
-    output:
-        "results.csv"
-    script:
-        "collect_benchmarks.py"
-
 rule run_benchmark:
+    threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
     benchmark:
         repeat("{problem}/results/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:

@@ -1,11 +1,12 @@
-repeat: 1
+repeat: 1  # TODO repeat
 problems:
-  facility_problem:
+  facility_location:
     size:
       - 25
       - 50
       - 75
       - 100
+      - 150
   # energy_problem:
 
 solvers:
@@ -15,7 +16,7 @@ solvers:
 
 libraries:
   - pyoframe
-  # - pyomo
+  - pyomo
   # - cvxpy
   - gurobipy
   # - jump

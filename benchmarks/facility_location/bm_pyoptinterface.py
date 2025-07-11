@@ -10,7 +10,7 @@ import pyoptinterface as poi
 from benchmarks.util import PyOptInterfaceBenchmark
 
 
-class Benchmark(PyOptInterfaceBenchmark):
+class Bench(PyOptInterfaceBenchmark):
     def build(self):
         try:
             G, F = self.size
@@ -59,4 +59,4 @@ def add_ndarray_variable(m, shape, **kwargs):
 
 
 if __name__ == "__main__":
-    Benchmark("gurobi", 5).run()
+    Bench("gurobi", 5).run()

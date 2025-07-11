@@ -21,13 +21,22 @@ if __name__ == "__main__":
     )
     parser.add_argument("problem", choices=get_problems())
     parser.add_argument("--solver", choices=[s.name for s in SUPPORTED_SOLVERS])
-    parser.add_argument("--size", type=int)
+    parser.add_argument("--size", type=int, default=None)
     parser.add_argument("--library")
     args = parser.parse_args()
 
     # import solve function dynamically
-    solve_func = importlib.import_module(
+    benchmark = importlib.import_module(
         f"{args.problem}.bm_{args.library.lower()}"
-    ).solve
+    ).Bench
 
-    solve_func(solver=args.solver, size=args.size)
+    if (
+        args.size is not None
+        and benchmark.MAX_SIZE is not None
+        and args.size > benchmark.MAX_SIZE
+    ):
+        raise ValueError(
+            f"Size {args.size} exceeds maximum size {benchmark.MAX_SIZE} for problem {args.problem}."
+        )
+
+    benchmark(solver=args.solver, size=args.size).run()

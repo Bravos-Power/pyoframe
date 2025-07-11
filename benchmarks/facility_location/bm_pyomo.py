@@ -10,6 +10,8 @@ from benchmarks.util import PyomoBenchmark
 
 
 class Bench(PyomoBenchmark):
+    MAX_SIZE = 75  # After that it gets too slow
+
     def build(self):
         try:
             G, F = self.size
