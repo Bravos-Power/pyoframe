@@ -19,6 +19,12 @@ libraries:
   - pyomo
   # - cvxpy
   - gurobipy
-  # - jump
+  - jump
   # - linopy
   - pyoptinterface
+
+profile:
+  - library: pyoframe
+    solver: gurobi
+    size: 150
+    problem: facility_location

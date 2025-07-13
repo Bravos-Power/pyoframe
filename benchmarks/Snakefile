@@ -1,8 +1,15 @@
 import importlib
 import os
 from snakemake.utils import available_cpu_count
+from pyoframe.constants import SUPPORTED_SOLVERS
 
 configfile: "config.yaml"
+
+wildcard_constraints:
+    problem="[a-z_]+",
+    library="[a-z]+",
+    solver="[a-z]+",
+    size="\d+"
 
 def generate_all_runs(problem):
     import itertools
@@ -23,37 +30,56 @@ def generate_all_runs(problem):
     ]
 
     benchmarks = [
-        importlib.import_module(f"{problem}.bm_{library.lower()}").Bench
-        for size, library, solver in runs
+            importlib.import_module(f"benchmarks.{problem}.bm_{library.lower()}").Bench 
+            if library not in ["jump"]
+            else None
+            for size, library, solver in runs
     ]
 
     runs = [
         r for r, benchmark in zip(
             runs, benchmarks
-        ) if benchmark.MAX_SIZE == None or r[0] <= benchmark.MAX_SIZE
+        ) if benchmark is None or benchmark.MAX_SIZE == None or r[0] <= benchmark.MAX_SIZE
     ]
 
     return runs
 
+
+
 rule all:
     input:
-        expand("{problem}/results/benchmark_results.png", problem=config["problems"])
+        expand("results/{problem}/combined_results.png", problem=config["problems"])
 
 rule plot_results:
     input:
         lambda wildcards: [
-            f"{wildcards.problem}/results/{library}_{solver}_{size}.tsv"
+            f"results/{wildcards.problem}/{library}_{solver}_{size}.tsv"
             for size, library, solver in generate_all_runs(wildcards.problem)
         ]
     output:
-        "{problem}/results/benchmark_results.csv",
-        "{problem}/results/benchmark_results.png"
+        "results/{problem}/combined_results.csv",
+        "results/{problem}/combined_results.png"
     script:
-        "plot_results.py"
+        "src/plot_results.py"
 
 rule run_benchmark:
     threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
     benchmark:
-        repeat("{problem}/results/{library}_{solver}_{size}.tsv", config["repeat"])
+        repeat("results/{problem}/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:
-        "python run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+        "python src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+
+
+
+rule profile:
+    threads: available_cpu_count()
+    output:
+        "results/{problem}/{library}_{solver}_{size}.prof"
+    shell:
+        "python -m cProfile -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+
+rule snakeviz:
+    input:
+        "results/{problem}/{library}_{solver}_{size}.prof"
+    shell:
+        "snakeviz results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof"

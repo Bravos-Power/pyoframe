@@ -1,13 +1,10 @@
 [build-system]
-requires = [
-    "setuptools>=61.0",
-    "setuptools-scm>=8", # Sets the package version based on git tags
-]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyoframe-benchmarks"
-dynamic = ["version"]
+version = "0.0.0"
 dependencies = [
     "snakemake==9.6.0",
     "gdown==5.2.0",             # To download data from Google Drive
@@ -18,7 +15,8 @@ dependencies = [
     "pyoptinterface==0.4.1",
     "numpy==2.3.1",
     "vl-convert-python==1.8.0", # For saving plots in altair
+    "snakeviz==2.2.2"
 ]
 
 [tool.setuptools]
-package-dir = { "benchmarks" = "" }
+package-dir = { "benchmarks" = "src" }
