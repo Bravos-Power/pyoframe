@@ -59,4 +59,4 @@ class Bench(PyoframeBenchmark):
 
 
 if __name__ == "__main__":
-    Bench("gurobi", 100).run()
+    Bench("gurobi", 5).run()

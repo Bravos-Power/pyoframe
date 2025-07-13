@@ -21,7 +21,6 @@ classifiers = [
 ]
 dependencies = [
     "polars~=1.0",
-    "numpy",
     "pyarrow",
     "pandas",
     "pyoptinterface>=0.4.1,<1",
@@ -41,6 +40,7 @@ dev = [
     "coverage",
     "ipykernel",
     "pyoptinterface[nlp]",
+    "numpy==2.3.1",  # for testing with np.nan
 ]
 # We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
 docs = [

@@ -16,7 +16,6 @@ from typing import (
     overload,
 )
 
-import numpy as np
 import pandas as pd
 import polars as pl
 import pyoptinterface as poi
@@ -1303,7 +1302,7 @@ class Constraint(ModelElementWithId):
                 pl.lit(
                     add_constraint(
                         ScalarFunction(
-                            *[self.lhs.data.get_column(c).to_numpy() for c in key_cols]
+                            *(self.lhs.data.get_column(c).to_numpy() for c in key_cols)
                         ),
                         **kwargs,
                     ).index
@@ -1322,7 +1321,7 @@ class Constraint(ModelElementWithId):
                         pl.struct(*key_cols_polars, pl.col("concated_dim"))
                         .map_elements(
                             lambda x: add_constraint(
-                                ScalarFunction(*[np.array(x[c]) for c in key_cols]),
+                                ScalarFunction(*(x[c] for c in key_cols)),
                                 name=x["concated_dim"],
                                 **kwargs,
                             ).index,
@@ -1337,8 +1336,7 @@ class Constraint(ModelElementWithId):
                     pl.struct(*key_cols_polars)
                     .map_elements(
                         lambda x: add_constraint(
-                            ScalarFunction(*[np.array(x[c]) for c in key_cols]),
-                            **kwargs,
+                            ScalarFunction(*(x[c] for c in key_cols)), **kwargs
                         ).index,
                         return_dtype=KEY_TYPE,
                     )

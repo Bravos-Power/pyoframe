@@ -76,10 +76,15 @@ rule profile:
     output:
         "results/{problem}/{library}_{solver}_{size}.prof"
     shell:
-        "python -m cProfile -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+        "py-spy record -s -t -f speedscope --rate 20 --native -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof -- python src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
 
-rule snakeviz:
-    input:
-        "results/{problem}/{library}_{solver}_{size}.prof"
+rule mem_profile:
+    threads: available_cpu_count()
+    output:
+        "results/{problem}/{library}_{solver}_{size}_memray.html"
     shell:
-        "snakeviz results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof"
+        """
+        memray run --trace-python-allocators --native --aggregate -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}
+        memray flamegraph -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.html results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin
+        """
+
