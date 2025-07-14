@@ -9,8 +9,6 @@ from benchmarks.utils import GurobiPyBenchmark
 
 
 class Bench(GurobiPyBenchmark):
-    MAX_SIZE = 100
-
     def build(self):
         if isinstance(self.size, int):
             G = F = self.size

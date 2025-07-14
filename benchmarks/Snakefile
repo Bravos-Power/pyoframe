@@ -16,7 +16,7 @@ def generate_all_runs(problem):
 
     problem_data = config["problems"][problem]
     if problem_data is None or "size" not in problem_data:
-        sizes = ["0"]
+        sizes = [0]
     else:
         sizes = problem_data["size"]
     
@@ -27,19 +27,7 @@ def generate_all_runs(problem):
             config["libraries"],
             config["solvers"]
         )
-    ]
-
-    benchmarks = [
-            importlib.import_module(f"benchmarks.{problem}.bm_{library.lower()}").Bench 
-            if library not in ["jump"]
-            else None
-            for size, library, solver in runs
-    ]
-
-    runs = [
-        r for r, benchmark in zip(
-            runs, benchmarks
-        ) if benchmark is None or benchmark.MAX_SIZE == None or r[0] <= benchmark.MAX_SIZE
+        if size <= problem_data["max_sizes"].get(library, float('inf'))
     ]
 
     return runs
@@ -84,7 +72,7 @@ rule mem_profile:
         "results/{problem}/{library}_{solver}_{size}_memray.html"
     shell:
         """
-        memray run --trace-python-allocators --native --aggregate -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}
+        memray run --trace-python-allocators --follow-fork --native --aggregate -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}
         memray flamegraph -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.html results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin
         """
 

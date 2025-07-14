@@ -1,4 +1,4 @@
-repeat: 1  # TODO repeat
+repeat: 1 # TODO repeat
 problems:
   facility_location:
     size:
@@ -7,6 +7,11 @@ problems:
       - 75
       - 100
       - 150
+      - 200
+    max_sizes:
+      # jump: 150
+      pyomo: 75
+      gurobipy: 150
   # energy_problem:
 
 solvers:

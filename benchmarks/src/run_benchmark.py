@@ -32,15 +32,6 @@ if __name__ == "__main__":
             f"benchmarks.{args.problem}.bm_{args.library.lower()}"
         ).Bench
 
-        if (
-            args.size is not None
-            and benchmark.MAX_SIZE is not None
-            and args.size > benchmark.MAX_SIZE
-        ):
-            raise ValueError(
-                f"Size {args.size} exceeds maximum size {benchmark.MAX_SIZE} for problem {args.problem}."
-            )
-
         benchmark(solver=args.solver, size=args.size).run()
     else:
         subprocess.run(

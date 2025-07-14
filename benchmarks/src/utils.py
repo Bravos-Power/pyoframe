@@ -8,8 +8,6 @@ from pyoframe.constants import SUPPORTED_SOLVERS
 
 
 class Benchmark(ABC):
-    MAX_SIZE = None
-
     def __init__(self, solver, size=None, block_solver=True):
         assert solver in self.get_supported_solvers(), (
             f"{solver} is not supported by {self.__class__.__name__}."
