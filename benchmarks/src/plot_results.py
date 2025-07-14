@@ -45,7 +45,7 @@ def normalize_results(results: pl.DataFrame):
     return results
 
 
-def plot(results):
+def plot(results, output):
     if results.get_column("max_pss").sum() == 0:
         results = results.rename({"max_uss": "memory"})
     else:
@@ -73,7 +73,7 @@ def plot(results):
             combined_plot = left_plot | right_plot
         else:
             combined_plot &= left_plot | right_plot
-    combined_plot.save(snakemake.output[1])
+    combined_plot.save(output)
 
 
 if __name__ == "__main__":
@@ -83,6 +83,8 @@ if __name__ == "__main__":
     results = collect_benchmarks(snakemake.input)
     results.write_csv(snakemake.output[0])
 
-    # results = normalize_results(results)
+    plot(results, snakemake.output[1])
 
-    plot(results)
+    results = normalize_results(results)
+
+    plot(results, snakemake.output[2])

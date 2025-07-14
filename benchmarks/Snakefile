@@ -46,7 +46,8 @@ rule plot_results:
         ]
     output:
         "results/{problem}/combined_results.csv",
-        "results/{problem}/combined_results.png"
+        "results/{problem}/combined_results.png",
+        "results/{problem}/normalized_results.png"
     script:
         "src/plot_results.py"
 
