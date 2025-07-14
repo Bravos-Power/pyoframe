@@ -235,7 +235,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
             left, right = right, left
 
         def get_indices(expr):
-            return expr.data.select(dims).unique(maintain_order=True)
+            return expr.data.select(dims).unique(maintain_order=Config.maintain_order)
 
         left_data, right_data = left.data, right.data
 
@@ -343,7 +343,9 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
             f"Dataframe has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
         )
 
-    target_data = target.data.select(target_dims).unique(maintain_order=True)
+    target_data = target.data.select(target_dims).unique(
+        maintain_order=Config.maintain_order
+    )
 
     if not dims_in_common:
         return self._new(self.data.join(target_data, how="cross"))
@@ -365,7 +367,7 @@ def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
     """Combines terms with the same variables."""
     dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
     var_cols = [VAR_KEY] + ([QUAD_VAR_KEY] if QUAD_VAR_KEY in df.columns else [])
-    df = df.group_by(dims + var_cols, maintain_order=True).sum()
+    df = df.group_by(dims + var_cols, maintain_order=Config.maintain_order).sum()
     return df
 
 
@@ -426,7 +428,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
     if len(df_filtered) < len(df):
         dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
         if dims:
-            dim_values = df.select(dims).unique(maintain_order=True)
+            dim_values = df.select(dims).unique(maintain_order=Config.maintain_order)
             df = (
                 dim_values.join(df_filtered, on=dims, how="left")
                 .with_columns(pl.col(COEF_KEY).fill_null(0))

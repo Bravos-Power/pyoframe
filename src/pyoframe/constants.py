@@ -115,6 +115,11 @@ class Config(metaclass=_ConfigMeta):
     unexpected errors. Setting the tolerance to zero disables the check.
     """
 
+    maintain_order: bool = True
+    """
+    If True, performance and memory usage may worsen, but the order of terms within expressions will not change across runs.
+    """
+
     @classmethod
     def reset_defaults(cls):
         """

@@ -42,6 +42,8 @@ class PyoframeBenchmark(Benchmark):
             import pyoframe as pf
 
             pf.Config.print_uses_variable_names = False
+            pf.Config.maintain_order = False
+            pf.Config.disable_unmatched_checks = True
 
     def solve(self, model):
         if self.block_solver:
