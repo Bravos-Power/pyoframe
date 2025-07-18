@@ -16,7 +16,6 @@ from typing import (
     overload,
 )
 
-import numpy as np
 import pandas as pd
 import polars as pl
 import pyoptinterface as poi
@@ -318,7 +317,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if isinstance(other, Set):
             try:
                 return self._new(
-                    pl.concat([self.data, other.data]).unique(maintain_order=True)
+                    pl.concat([self.data, other.data]).unique(
+                        maintain_order=Config.maintain_order
+                    )
                 )
             except pl.exceptions.ShapeError as e:
                 if "unable to vstack, column names don't match" in str(e):
@@ -348,7 +349,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = (
                 set.to_expr()
                 .data.drop(RESERVED_COL_KEYS, strict=False)
-                .unique(maintain_order=True)
+                .unique(maintain_order=Config.maintain_order)
             )
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
@@ -482,7 +483,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         return self._new(
             self.data.drop(over)
-            .group_by(remaining_dims + self._variable_columns, maintain_order=True)
+            .group_by(
+                remaining_dims + self._variable_columns,
+                maintain_order=Config.maintain_order,
+            )
             .sum()
         )
 
@@ -651,7 +655,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             "Cannot use .within() with an expression with no dimensions."
         )
         dims_in_common = [dim for dim in dims if dim in set_dims]
-        by_dims = df.select(dims_in_common).unique(maintain_order=True)
+        by_dims = df.select(dims_in_common).unique(maintain_order=Config.maintain_order)
         return self._new(self.data.join(by_dims, on=dims_in_common))
 
     @property
@@ -816,7 +820,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         else:
             keys = (
                 data.select(dim)
-                .unique(maintain_order=True)
+                .unique(maintain_order=Config.maintain_order)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
             )
             if self.is_quadratic:
@@ -842,7 +846,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if self.is_quadratic:
             constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
-            dims_df = self.data.select(dims).unique(maintain_order=True)
+            dims_df = self.data.select(dims).unique(
+                maintain_order=Config.maintain_order
+            )
             df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
@@ -910,7 +916,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         dims = self.dimensions
         if dims is not None:
-            df = df.group_by(dims, maintain_order=True)
+            df = df.group_by(dims, maintain_order=Config.maintain_order)
         return df.sum()
 
     def to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
@@ -971,7 +977,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         ).drop(COEF_KEY, VAR_KEY)
 
         if dimensions is not None:
-            data = data.group_by(dimensions, maintain_order=True).agg(
+            data = data.group_by(dimensions, maintain_order=Config.maintain_order).agg(
                 pl.col("expr").str.join(delimiter=" ")
             )
         else:
@@ -1303,7 +1309,7 @@ class Constraint(ModelElementWithId):
                 pl.lit(
                     add_constraint(
                         ScalarFunction(
-                            *[self.lhs.data.get_column(c).to_numpy() for c in key_cols]
+                            *(self.lhs.data.get_column(c).to_numpy() for c in key_cols)
                         ),
                         **kwargs,
                     ).index
@@ -1312,9 +1318,9 @@ class Constraint(ModelElementWithId):
                 .cast(KEY_TYPE)
             )
         else:
-            df = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
-                *key_cols_polars
-            )
+            df = self.lhs.data.group_by(
+                self.dimensions, maintain_order=Config.maintain_order
+            ).agg(*key_cols_polars)
             if use_var_names:
                 df = (
                     concat_dimensions(df, prefix=self.name)
@@ -1322,7 +1328,7 @@ class Constraint(ModelElementWithId):
                         pl.struct(*key_cols_polars, pl.col("concated_dim"))
                         .map_elements(
                             lambda x: add_constraint(
-                                ScalarFunction(*[np.array(x[c]) for c in key_cols]),
+                                ScalarFunction(*(x[c] for c in key_cols)),
                                 name=x["concated_dim"],
                                 **kwargs,
                             ).index,
@@ -1337,8 +1343,7 @@ class Constraint(ModelElementWithId):
                     pl.struct(*key_cols_polars)
                     .map_elements(
                         lambda x: add_constraint(
-                            ScalarFunction(*[np.array(x[c]) for c in key_cols]),
-                            **kwargs,
+                            ScalarFunction(*(x[c] for c in key_cols)), **kwargs
                         ).index,
                         return_dtype=KEY_TYPE,
                     )
@@ -1898,7 +1903,11 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
 
-        wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)
+        wrapped = (
+            self.data.select(dim)
+            .unique(maintain_order=Config.maintain_order)
+            .sort(by=dim)
+        )
         wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))
         if wrap_around:
             wrapped = wrapped.with_columns(pl.col("__next").fill_null(pl.first(dim)))

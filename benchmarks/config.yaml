@@ -1,0 +1,35 @@
+repeat: 1 # TODO repeat
+problems:
+  facility_location:
+    size:
+      - 25
+      - 50
+      - 75
+      - 100
+      - 150
+      - 200
+    max_sizes:
+      # jump: 150
+      pyomo: 75
+      gurobipy: 150
+  # energy_problem:
+
+solvers:
+  - gurobi
+  # - highs
+  # - mosek
+
+libraries:
+  - pyoframe
+  - pyomo
+  # - cvxpy
+  - gurobipy
+  - jump
+  # - linopy
+  - pyoptinterface
+
+profile:
+  - library: pyoframe
+    solver: gurobi
+    size: 150
+    problem: facility_location
