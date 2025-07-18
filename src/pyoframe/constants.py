@@ -84,7 +84,9 @@ class _ConfigMeta(type):
 
 class Config(metaclass=_ConfigMeta):
     """
-    Global settings for Pyoframe (for advanced users).
+    General settings for Pyoframe (for advanced users).
+
+    Accessible via `pf.Config` (see examples below).
     """
 
     default_solver: SUPPORTED_SOLVER_TYPES | Solver | Literal["raise", "auto"] = "auto"
@@ -225,6 +227,16 @@ class Config(metaclass=_ConfigMeta):
     def reset_defaults(cls):
         """
         Resets all configuration options to their default values.
+
+        Examples:
+            >>> pf.Config.print_uses_variable_names
+            True
+            >>> pf.Config.print_uses_variable_names = False
+            >>> pf.Config.print_uses_variable_names
+            False
+            >>> pf.Config.reset_defaults()
+            >>> pf.Config.print_uses_variable_names
+            True
         """
         for key, value in cls._defaults.items():
             setattr(cls, key, value)
