@@ -57,8 +57,8 @@ def test_multiplication_no_common_dimensions():
     )
 
 
-def test_within_set():
-    m = Model()
+def test_within_set(solver):
+    m = Model(solver=solver)
     small_set = Set(x=[1, 2], y=["a"])
     large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
     m.v = Variable(large_set)
@@ -99,8 +99,8 @@ def test_filter_constraint():
     )
 
 
-def test_filter_variable():
-    m = Model()
+def test_filter_variable(solver):
+    m = Model(solver=solver)
     m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
     result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
@@ -216,8 +216,8 @@ def test_add_expression_with_add_dim():
     expr_with_dim.add_dim("dim2") + expr_with_two_dim
 
 
-def test_add_expression_with_vars_and_add_dim():
-    m = Model()
+def test_add_expression_with_vars_and_add_dim(solver):
+    m = Model(solver=solver)
     m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
     lhs = (1 + 2 * m.v).add_dim("dim1")
@@ -248,11 +248,11 @@ def test_add_expression_with_vars_and_add_dim():
     )
 
 
-def test_add_expression_with_vars_and_add_dim_many():
+def test_add_expression_with_vars_and_add_dim_many(solver):
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
-    m = Model()
+    m = Model(solver=solver)
     m.v1 = Variable(dim1, dim2)
     m.v2 = Variable(dim3, dim2)
     lhs = 1 + 2 * m.v1
@@ -288,10 +288,10 @@ def test_add_expression_with_vars_and_add_dim_many():
     )
 
 
-def test_add_expression_with_missing():
+def test_add_expression_with_missing(solver):
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    m = Model()
+    m = Model(solver=solver)
     m.v1 = Variable(dim2)
     m.v2 = Variable(dim2_large)
     lhs = 1 + 2 * m.v1
@@ -329,8 +329,8 @@ def test_add_expression_with_missing():
     )
 
 
-def test_add_expressions_with_dims_and_missing():
-    m = Model()
+def test_add_expressions_with_dims_and_missing(solver):
+    m = Model(solver=solver)
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
@@ -465,7 +465,7 @@ def test_variable_equals(solver):
         pytest.skip(
             f"Solver {solver.name} does not support integer or binary variables, skipping test."
         )
-    m = Model()
+    m = Model(solver=solver)
     index = Set(x=[1, 2, 3])
 
     m.Choose = Variable(index, vtype=VType.BINARY)
@@ -482,8 +482,8 @@ def test_variable_equals(solver):
     assert m.maximize.evaluate() == 300
 
 
-def test_adding_expressions_that_cancel():
-    m = Model()
+def test_adding_expressions_that_cancel(solver):
+    m = Model(solver=solver)
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
     m.y = Variable(pl.DataFrame({"t": [0, 1]}))
 
@@ -493,14 +493,14 @@ def test_adding_expressions_that_cancel():
     m.c = coef_1 * m.x + coef_2 * m.x + m.y >= 0
 
 
-def test_adding_cancelling_expressions_no_dim():
-    m = Model()
+def test_adding_cancelling_expressions_no_dim(solver):
+    m = Model(solver=solver)
     m.X = Variable()
     m.c = m.X - m.X >= 0
 
 
-def test_adding_empty_expression():
-    m = Model()
+def test_adding_empty_expression(solver):
+    m = Model(solver=solver)
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
     m.y = Variable(pl.DataFrame({"t": [0, 1]}))
     m.z = Variable(pl.DataFrame({"t": [0, 1]}))
@@ -509,8 +509,8 @@ def test_adding_empty_expression():
     m.c_3 = m.z + 0 * m.x + 0 * m.y >= 0
 
 
-def test_to_and_from_quadratic():
-    m = Model()
+def test_to_and_from_quadratic(solver):
+    m = Model(solver=solver)
     df = pl.DataFrame({"dim": [1, 2, 3], "value": [1, 2, 3]})
     m.x1 = Variable()
     m.x2 = Variable()
