@@ -87,13 +87,13 @@ class Config(metaclass=_ConfigMeta):
     Global settings for Pyoframe (for advanced users).
     """
 
-    default_solver: SUPPORTED_SOLVER_TYPES | Solver | None = None
+    default_solver: SUPPORTED_SOLVER_TYPES | Solver | Literal["raise", "auto"] = "auto"
     """
-    Setting for internal testing purposes only.
-        
-    The solver to be used if no solver is specified while constructing a [Model][pyoframe.Model].
-    Overrides the default behavior of automatically trying to detect and use whichever solver is installed.
-    This setting is used for testing only; users should specify their preferred solver during Model construction.
+    The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
+    If `auto`, Pyoframe will choose the first solver in [SUPPORTED_SOLVERS][pyoframe.constants.SUPPORTED_SOLVERS] that doesn't produce an error.
+    If `raise`, an exception will be raised when [Model][pyoframe.Model] is instantiated without specifying a solver.
+
+    We recommend that users specify their solver when instantiating [Model][pyoframe.Model] rather than relying on this option.
     """
 
     disable_unmatched_checks: bool = False

@@ -8,8 +8,8 @@ import pytest
 from pyoframe import Model, Variable, sum
 
 
-def test_variables_to_string():
-    m = Model()
+def test_variables_to_string(solver):
+    m = Model(solver=solver)
     m.x1 = Variable()
     m.x2 = Variable()
     m.x3 = Variable()
@@ -18,14 +18,14 @@ def test_variables_to_string():
     assert str(expression) == "5 x1 +3.4 x2 -2.1 x3 +1.12312 x4"
 
 
-def test_variables_to_string_with_dimensions():
+def test_variables_to_string_with_dimensions(solver):
     df = pl.DataFrame(
         {
             "x": [1, 2, 1, 2],
             "y": [1, 1, 2, 2],
         }
     )
-    m = Model()
+    m = Model(solver=solver)
     m.v1 = Variable(df)
     m.v2 = Variable(df)
     m.v3 = Variable(df)
@@ -44,8 +44,8 @@ def test_variables_to_string_with_dimensions():
     )
 
 
-def test_expression_with_const_to_str():
-    m = Model()
+def test_expression_with_const_to_str(solver):
+    m = Model(solver=solver)
     m.x1 = Variable()
     expr = 5 + 2 * m.x1
     assert str(expr) == "2 x1 +5"
@@ -54,7 +54,7 @@ def test_expression_with_const_to_str():
 def test_constraint_to_str(solver):
     if not solver.supports_quadratics:
         pytest.skip("Solver does not support quadratic constraints.")
-    m = Model()
+    m = Model(solver=solver)
     m.x1 = Variable()
     m.constraint = m.x1**2 <= 5
     assert (
@@ -79,7 +79,7 @@ def test_write_lp(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing LP files.")
     with TemporaryDirectory() as tmpdir:
-        m = Model(use_var_names=use_var_names)
+        m = Model(solver=solver, use_var_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -112,7 +112,7 @@ def test_write_sol(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
-        m = Model(use_var_names=use_var_names)
+        m = Model(solver=solver, use_var_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],

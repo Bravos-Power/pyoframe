@@ -32,7 +32,8 @@ class Model:
         name:
             The name of the model. Currently it is not used for much.
         solver:
-            The solver to use. If `None`, Pyoframe will try to detect and use whichever solver is installed.
+            The solver to use. If `None`, Pyoframe will try to use whichever solver is installed
+            (unless [Config.default_solver][pyoframe.Config.default_solver] was changed from its default value of `auto`).
         solver_env:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
@@ -168,7 +169,16 @@ class Model:
         cls, solver: Optional[str | Solver], solver_env: Optional[Dict[str, str]]
     ):
         if solver is None:
-            if Config.default_solver is None:
+            # TODO remove this first condition after a few version releases
+            if Config.default_solver is None:  # pragma: no cover
+                raise ValueError(
+                    "None is no longer a valid value for Config.default_solver. Use 'auto' instead."
+                )
+            elif Config.default_solver == "raise":
+                raise ValueError(
+                    "No solver specified during model construction and automatic solver detection is disabled."
+                )
+            elif Config.default_solver == "auto":
                 for solver_option in SUPPORTED_SOLVERS:
                     try:
                         return cls.create_poi_model(solver_option, solver_env)
