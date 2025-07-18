@@ -145,9 +145,8 @@ def test_support_variable_attributes(solver):
     )
 
 
-def test_support_variable_raw_attributes(solver):
-    if solver.name != "gurobi":
-        pytest.skip("Only valid for gurobi")
+def test_support_variable_raw_attributes():
+    solver = "gurobi"
     m = pf.Model(solver=solver)
     data = pl.DataFrame(
         {"t": [1, 2], "UB": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
@@ -170,14 +169,13 @@ def test_support_variable_raw_attributes(solver):
         **get_tol_pl(solver),
     )
 
-    if solver.name == "gurobi":
-        assert_frame_equal(
-            m.X.attr.RC,
-            pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
-            check_row_order=False,
-            check_dtypes=False,
-            **get_tol_pl(solver),
-        )
+    assert_frame_equal(
+        m.X.attr.RC,
+        pl.DataFrame({"t": [1, 2], "RC": [0.0, 1.9]}),
+        check_row_order=False,
+        check_dtypes=False,
+        **get_tol_pl(solver),
+    )
 
     assert_frame_equal(
         m.max_AB.dual,
@@ -188,11 +186,9 @@ def test_support_variable_raw_attributes(solver):
     )
 
 
-def test_setting_constraint_attr(solver):
-    if solver.name != "gurobi":
-        pytest.skip("Only valid for gurobi")
+def test_setting_gurobi_constraint_attr():
     # Build an unbounded model
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver="gurobi")
     m.A = pf.Variable()
     m.B = pf.Variable(pf.Set(y=[1, 2, 3]))
     m.A_con = m.A >= 10
@@ -212,11 +208,9 @@ def test_setting_constraint_attr(solver):
     assert m.attr.TerminationStatus == poi.TerminationStatusCode.OPTIMAL
 
 
-def test_setting_model_attr(solver):
-    if solver.name != "gurobi":
-        pytest.skip("Only valid for gurobi")
+def test_setting_gurobi_model_attr():
     # Build an unbounded model
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver="gurobi")
     m.A = pf.Variable(lb=0)
     m.maximize = m.A
 

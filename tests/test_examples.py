@@ -169,9 +169,7 @@ def test_examples(example, solver: Solver, use_var_names):
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
-def test_gurobi_model_matches(example, solver):
-    if solver.name != "gurobi":
-        pytest.skip("This test only runs for gurobi")
+def test_gurobi_model_matches(example):
     gurobipy_solve = example.get_solve_with_gurobipy()
     if gurobipy_solve is None:
         pytest.skip("No gurobi model found")
@@ -182,7 +180,7 @@ def test_gurobi_model_matches(example, solver):
         pl.DataFrame({"value": [result.getObjective().getValue()]}).write_csv(
             tmpdir / "objective.csv"
         )
-        compare_results_dir(example.get_results_path(), tmpdir, solver)
+        compare_results_dir(example.get_results_path(), tmpdir, "gurobi")
 
 
 def write_results(example: Example, model, results_dir, solver):
