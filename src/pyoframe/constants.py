@@ -89,12 +89,11 @@ class Config(metaclass=_ConfigMeta):
 
     default_solver: SUPPORTED_SOLVER_TYPES | Solver | Literal["raise", "auto"] = "auto"
     """
-    The solver to use when `pf.Model()` is called without specifying a solver.
-    If "auto", Pyoframe will choose the first solver in `SUPPORTED_SOLVERS` that doesn't produce an error.
-    If "raise", an exception will be raised.
+    The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
+    If `auto`, Pyoframe will choose the first solver in [SUPPORTED_SOLVERS][pyoframe.constants.SUPPORTED_SOLVERS] that doesn't produce an error.
+    If `raise`, an exception will be raised when [Model][pyoframe.Model] is instantiated without specifying a solver.
 
-    This setting exists to help run our unit tests.
-    We recommend that users set the solver upon model construction instead.
+    We recommend that users specify their solver when instantiating [Model][pyoframe.Model] rather than relying on this option.
     """
 
     disable_unmatched_checks: bool = False

@@ -19,6 +19,12 @@ def test_solver_works(solver_all):
     pf.Model(solver=solver_all.name)
 
 
+def test_solver_required():
+    pf.Config.default_solver = "raise"
+    with pytest.raises(ValueError, match="No solver specified"):
+        pf.Model()
+
+
 def test_retrieving_duals(solver):
     m = pf.Model(solver=solver)
 
