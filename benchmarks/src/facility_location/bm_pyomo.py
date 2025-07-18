@@ -29,40 +29,43 @@ class Bench(PyomoBenchmark):
         model.d = pyo.Var()
         model.obj = pyo.Objective(expr=1.0 * model.d)
 
-        def assmt_rule(mod, i, j):
-            return sum([mod.z[i, j, f] for f in mod.Facs]) == 1
-
-        model.assmt = pyo.Constraint(model.Grid, model.Grid, rule=assmt_rule)
+        model.assmt = pyo.Constraint(
+            model.Grid,
+            model.Grid,
+            rule=lambda mod, i, j: sum([mod.z[i, j, f] for f in mod.Facs]) == 1,
+        )
         M = 2 * 1.414
 
-        def quadrhs_rule(mod, i, j, f):
-            return mod.s[i, j, f] == mod.d + M * (1 - mod.z[i, j, f])
-
         model.quadrhs = pyo.Constraint(
-            model.Grid, model.Grid, model.Facs, rule=quadrhs_rule
+            model.Grid,
+            model.Grid,
+            model.Facs,
+            rule=lambda mod, i, j, f: mod.s[i, j, f]
+            == mod.d + M * (1 - mod.z[i, j, f]),
         )
-
-        def quaddistk1_rule(mod, i, j, f):
-            return mod.r[i, j, f, 1] == (1.0 * i) / mod.G - mod.y[f, 1]
 
         model.quaddistk1 = pyo.Constraint(
-            model.Grid, model.Grid, model.Facs, rule=quaddistk1_rule
+            model.Grid,
+            model.Grid,
+            model.Facs,
+            rule=lambda mod, i, j, f: mod.r[i, j, f, 1]
+            == (1.0 * i) / mod.G - mod.y[f, 1],
         )
-
-        def quaddistk2_rule(mod, i, j, f):
-            return mod.r[i, j, f, 2] == (1.0 * j) / mod.G - mod.y[f, 2]
 
         model.quaddistk2 = pyo.Constraint(
-            model.Grid, model.Grid, model.Facs, rule=quaddistk2_rule
+            model.Grid,
+            model.Grid,
+            model.Facs,
+            rule=lambda mod, i, j, f: mod.r[i, j, f, 2]
+            == (1.0 * j) / mod.G - mod.y[f, 2],
         )
 
-        def quaddist_rule(mod, i, j, f):
-            return (
-                mod.r[i, j, f, 1] ** 2 + mod.r[i, j, f, 2] ** 2 <= mod.s[i, j, f] ** 2
-            )
-
         model.quaddist = pyo.Constraint(
-            model.Grid, model.Grid, model.Facs, rule=quaddist_rule
+            model.Grid,
+            model.Grid,
+            model.Facs,
+            rule=lambda mod, i, j, f: mod.r[i, j, f, 1] ** 2 + mod.r[i, j, f, 2] ** 2
+            <= mod.s[i, j, f] ** 2,
         )
 
         return model

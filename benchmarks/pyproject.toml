@@ -13,6 +13,7 @@ dependencies = [
     "pyomo==6.9.2",
     "linopy==0.5.5",
     "pyoptinterface==0.4.1",
+    "xarray==2025.7.1",
     "numpy==2.3.1",
     "vl-convert-python==1.8.0", # For saving plots in altair
     "snakeviz==2.2.2",  # For viewing profiling results

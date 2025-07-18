@@ -116,6 +116,19 @@ class PyOptInterfaceBenchmark(Benchmark):
         return model_constructor()
 
 
+class LinopyBenchmark(Benchmark):
+    def solve(self, model):
+        kwargs = {}
+
+        if self.block_solver:
+            kwargs["OutputFlag"] = 0
+            kwargs["TimeLimit"] = 0.0
+            kwargs["Presolve"] = 0
+
+        model.solve(self.solver, **kwargs)
+        return model
+
+
 def mock_snakemake(rulename, **wildcards):
     """
     `mock_snakemake` is inspired from PyPSA-Eur (MIT license, see https://github.com/PyPSA/pypsa-eur/blob/master/scripts/_helpers.py#L476)
