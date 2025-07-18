@@ -1,3 +1,7 @@
+"""
+Tests of all the code that converts Pyoframe objects to their string representations, which are often used for debugging.
+"""
+
 import polars as pl
 import pytest
 
@@ -21,8 +25,8 @@ def test_ellipsis_expression(cropped_expression):
     )
 
 
-def test_ellipsis_named(cropped_expression):
-    m = pf.Model()
+def test_ellipsis_named(solver, cropped_expression):
+    m = pf.Model(solver=solver)
     m.my_expr = cropped_expression
     assert (
         repr(m.my_expr)
@@ -33,8 +37,8 @@ my_expr[2]: 2
     )
 
 
-def test_ellipsis_constraint(cropped_expression):
-    m = pf.Model()
+def test_ellipsis_constraint(solver, cropped_expression):
+    m = pf.Model(solver=solver)
     m.v = pf.Variable()
     m.c = m.v.add_dim("t") <= cropped_expression
     assert (

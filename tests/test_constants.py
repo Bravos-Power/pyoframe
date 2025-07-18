@@ -18,6 +18,7 @@ def test_Config_doctests(param_doctest, doctest_namespace):
         filepath = os.path.join(tmp, "config_doctest.py")
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(param_doctest)
+        pf.Config.default_solver = "auto"
         failed_count, _ = doctest.testfile(
             filepath,
             module_relative=False,
