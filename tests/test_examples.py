@@ -157,6 +157,8 @@ def test_examples(example, solver: Solver, use_var_names):
             f"Skipping example {example.folder_name} for solver {solver.name} due to unsupported features"
         )
 
+    pf.Config.default_solver = solver
+
     solver_func = example.import_solve_func()
     model = solver_func(use_var_names)
 

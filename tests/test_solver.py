@@ -5,12 +5,22 @@ from polars.testing import assert_frame_equal
 from pytest import approx
 
 import pyoframe as pf
-from pyoframe.constants import Solver
+from pyoframe.constants import SUPPORTED_SOLVERS, Solver
 from tests.util import get_tol, get_tol_pl
 
 
+@pytest.mark.parametrize("solver_all", SUPPORTED_SOLVERS, ids=lambda s: s.name)
+def test_solver_works(solver_all):
+    """
+    Ensures the test suite fails if not all solvers could be tested.
+
+    Note that the function parameter cannot be named "solver" (otherwise it uses the fixture).
+    """
+    pf.Model(solver=solver_all.name)
+
+
 def test_retrieving_duals(solver):
-    m = pf.Model()
+    m = pf.Model(solver=solver)
 
     m.A = pf.Variable(ub=100)
     m.B = pf.Variable(ub=10)
@@ -34,7 +44,7 @@ def test_retrieving_duals(solver):
 
 
 def test_retrieving_duals_vectorized(solver):
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     data = pl.DataFrame(
         {"t": [1, 2], "ub": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -82,7 +92,7 @@ def test_retrieving_duals_vectorized(solver):
 
 
 def test_support_variable_attributes(solver):
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     data = pl.DataFrame(
         {"t": [1, 2], "UpperBound": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -132,7 +142,7 @@ def test_support_variable_attributes(solver):
 def test_support_variable_raw_attributes(solver):
     if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     data = pl.DataFrame(
         {"t": [1, 2], "UB": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -176,7 +186,7 @@ def test_setting_constraint_attr(solver):
     if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     m.A = pf.Variable()
     m.B = pf.Variable(pf.Set(y=[1, 2, 3]))
     m.A_con = m.A >= 10
@@ -200,7 +210,7 @@ def test_setting_model_attr(solver):
     if solver.name != "gurobi":
         pytest.skip("Only valid for gurobi")
     # Build an unbounded model
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     m.A = pf.Variable(lb=0)
     m.maximize = m.A
 
@@ -217,7 +227,7 @@ def test_setting_model_attr(solver):
 
 
 def test_const_term_in_objective(use_var_names, solver):
-    m = pf.Model(use_var_names=use_var_names)
+    m = pf.Model(solver=solver, use_var_names=use_var_names)
     m.A = pf.Variable(ub=10)
     m.maximize = 10 + m.A
 
@@ -230,7 +240,7 @@ def test_integers_throw_error(solver: Solver):
     if solver.supports_integer_variables:
         pytest.skip("This test is only valid for solvers that do not support integers")
 
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     with pytest.raises(
         ValueError, match="does not support integer or binary variables"
     ):
@@ -245,7 +255,7 @@ def test_write_throws_error(solver: Solver):
     if solver.supports_write:
         pytest.skip("This test is only valid for solvers that support writing models")
 
-    m = pf.Model()
+    m = pf.Model(solver=solver)
     m.A = pf.Variable(ub=10)
     m.maximize = m.A
     m.optimize()

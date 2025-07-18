@@ -87,14 +87,14 @@ class Config(metaclass=_ConfigMeta):
     Configuration options that apply to the entire library.
     """
 
-    default_solver: SUPPORTED_SOLVER_TYPES | Solver | None = None
+    default_solver: SUPPORTED_SOLVER_TYPES | Solver | Literal["raise", "auto"] = "auto"
     """
     The solver to use when `pf.Model()` is called without specifying a solver.
-    If default_solver is not set (`None`),
-    Pyoframe will choose the first solver in SUPPORTED_SOLVERS that doesn't produce an error.
+    If "auto", Pyoframe will choose the first solver in `SUPPORTED_SOLVERS` that doesn't produce an error.
+    If "raise", an exception will be raised.
 
-    There is no reason why you set the solver here instead of passing it to the Model constructor.
-    This is mainly used for testing purposes.
+    This setting exists to help run our unit tests.
+    We recommend that users set the solver upon model construction instead.
     """
 
     disable_unmatched_checks: bool = False
