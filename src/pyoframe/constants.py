@@ -108,7 +108,7 @@ class Config(metaclass=_ConfigMeta):
 
     !!! warning
         This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
-        behaviors (see [here](../../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)).
+        behaviors (see [here](/pyoframe/learn/getting-started/special-functions#drop_unmatched-and-keep_unmatched)).
         Only consider enabling after you have thoroughly tested your code.
 
     Examples:

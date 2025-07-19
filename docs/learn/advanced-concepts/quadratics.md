@@ -31,5 +31,5 @@ assert model.objective.evaluate() == 25
 
 ### Facility Location Problem
 
-See [examples/facility_location](../tests/examples/facility_location/).
+See [examples/facility_location](../../examples/facility_location.md).
 
