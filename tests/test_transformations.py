@@ -3,9 +3,10 @@
 import re
 
 import pytest
-from util import csvs_to_expr
 
 import pyoframe as pf
+
+from .util import csvs_to_expr
 
 
 def test_sum():
