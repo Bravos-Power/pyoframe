@@ -9,18 +9,18 @@ import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
-from pyoframe._constants import (
+from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
+from pyoframe.constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
     SUPPORTED_SOLVERS,
     Config,
-    ObjSense,
     ObjSenseValue,
     PyoframeError,
-    Solver,
     VType,
+    _ObjSense,
+    _Solver,
 )
-from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
 from pyoframe.core import Constraint, Variable
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.objective import Objective
@@ -88,16 +88,16 @@ class Model:
     def __init__(
         self,
         name: Optional[str] = None,
-        solver: SUPPORTED_SOLVER_TYPES | Solver | None = None,
+        solver: SUPPORTED_SOLVER_TYPES | _Solver | None = None,
         solver_env: Optional[Dict[str, str]] = None,
         use_var_names: bool = False,
-        sense: Union[ObjSense, ObjSenseValue, None] = None,
+        sense: Union[_ObjSense, ObjSenseValue, None] = None,
     ):
         self.poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name = self.solver.name
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
-        self.sense = ObjSense(sense) if sense is not None else None
+        self.sense = _ObjSense(sense) if sense is not None else None
         self._objective: Optional[Objective] = None
         self.var_map = (
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
@@ -166,7 +166,7 @@ class Model:
 
     @classmethod
     def _create_poi_model(
-        cls, solver: Optional[str | Solver], solver_env: Optional[Dict[str, str]]
+        cls, solver: Optional[str | _Solver], solver_env: Optional[Dict[str, str]]
     ):
         if solver is None:
             # TODO remove this first condition after a few version releases
@@ -299,30 +299,30 @@ class Model:
     @property
     def minimize(self):
         """Set or get the model's objective for minimization problems."""
-        if self.sense != ObjSense.MIN:
+        if self.sense != _ObjSense.MIN:
             raise ValueError("Can't get .minimize in a maximization problem.")
         return self._objective
 
     @minimize.setter
     def minimize(self, value):
         if self.sense is None:
-            self.sense = ObjSense.MIN
-        if self.sense != ObjSense.MIN:
+            self.sense = _ObjSense.MIN
+        if self.sense != _ObjSense.MIN:
             raise ValueError("Can't set .minimize in a maximization problem.")
         self.objective = value
 
     @property
     def maximize(self):
         """Set or get the model's objective for maximization problems."""
-        if self.sense != ObjSense.MAX:
+        if self.sense != _ObjSense.MAX:
             raise ValueError("Can't get .maximize in a minimization problem.")
         return self._objective
 
     @maximize.setter
     def maximize(self, value):
         if self.sense is None:
-            self.sense = ObjSense.MAX
-        if self.sense != ObjSense.MAX:
+            self.sense = _ObjSense.MAX
+        if self.sense != _ObjSense.MAX:
             raise ValueError("Can't set .maximize in a minimization problem.")
         self.objective = value
 

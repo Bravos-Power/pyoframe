@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 import polars as pl
 
-from pyoframe._constants import (
+from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     KEY_TYPE,

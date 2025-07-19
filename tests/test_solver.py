@@ -5,7 +5,7 @@ from polars.testing import assert_frame_equal
 from pytest import approx
 
 import pyoframe as pf
-from pyoframe._constants import SUPPORTED_SOLVERS, Solver
+from pyoframe.constants import SUPPORTED_SOLVERS, _Solver
 from tests.util import get_tol, get_tol_pl
 
 
@@ -235,7 +235,7 @@ def test_const_term_in_objective(use_var_names, solver):
     assert m.maximize.value == approx(20, **get_tol(solver))
 
 
-def test_integers_throw_error(solver: Solver):
+def test_integers_throw_error(solver: _Solver):
     if solver.supports_integer_variables:
         pytest.skip("This test is only valid for solvers that do not support integers")
 
@@ -250,7 +250,7 @@ def test_integers_throw_error(solver: Solver):
         m.A = pf.Variable(vtype=pf.VType.BINARY)
 
 
-def test_write_throws_error(solver: Solver):
+def test_write_throws_error(solver: _Solver):
     if solver.supports_write:
         pytest.skip("This test is only valid for solvers that support writing models")
 

@@ -21,7 +21,7 @@ KEY_TYPE = pl.UInt32
 
 
 @dataclass
-class Solver:
+class _Solver:
     name: SUPPORTED_SOLVER_TYPES
     supports_integer_variables: bool = True
     supports_quadratics: bool = True
@@ -44,9 +44,9 @@ class Solver:
 
 
 SUPPORTED_SOLVERS = [
-    Solver("gurobi"),
-    Solver("highs", supports_quadratics=False, supports_duals=False),
-    Solver(
+    _Solver("gurobi"),
+    _Solver("highs", supports_quadratics=False, supports_duals=False),
+    _Solver(
         "ipopt",
         supports_integer_variables=False,
         supports_objective_sense=False,
@@ -86,7 +86,7 @@ class Config(metaclass=_ConfigMeta):
     Accessible via `pf.Config` (see examples below).
     """
 
-    default_solver: SUPPORTED_SOLVER_TYPES | Solver | Literal["raise", "auto"] = "auto"
+    default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
     """
     The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
     If `auto`, Pyoframe will choose the first solver in [SUPPORTED_SOLVERS][pyoframe.constants.SUPPORTED_SOLVERS] that doesn't produce an error.
@@ -238,32 +238,32 @@ class Config(metaclass=_ConfigMeta):
             setattr(cls, key, value)
 
 
-class ConstraintSense(Enum):
+class _ConstraintSense(Enum):
     LE = "<="
     GE = ">="
     EQ = "="
 
     def to_poi(self):
         """Convert the constraint sense to its pyoptinterface equivalent."""
-        if self == ConstraintSense.LE:
+        if self == _ConstraintSense.LE:
             return poi.ConstraintSense.LessEqual
-        elif self == ConstraintSense.EQ:
+        elif self == _ConstraintSense.EQ:
             return poi.ConstraintSense.Equal
-        elif self == ConstraintSense.GE:
+        elif self == _ConstraintSense.GE:
             return poi.ConstraintSense.GreaterEqual
         else:
             raise ValueError(f"Invalid constraint type: {self}")  # pragma: no cover
 
 
-class ObjSense(Enum):
+class _ObjSense(Enum):
     MIN = "min"
     MAX = "max"
 
     def to_poi(self):
         """Convert the objective sense to its pyoptinterface equivalent."""
-        if self == ObjSense.MIN:
+        if self == _ObjSense.MIN:
             return poi.ObjectiveSense.Minimize
-        elif self == ObjSense.MAX:
+        elif self == _ObjSense.MAX:
             return poi.ObjectiveSense.Maximize
         else:
             raise ValueError(f"Invalid objective sense: {self}")  # pragma: no cover
@@ -300,7 +300,7 @@ class UnmatchedStrategy(Enum):
 # See: https://stackoverflow.com/questions/67292470/type-hinting-enum-member-value-in-python
 ObjSenseValue = Literal["min", "max"]
 VTypeValue = Literal["continuous", "binary", "integer"]
-for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
+for enum, type in [(_ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
 SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt"]

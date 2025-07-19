@@ -29,7 +29,17 @@ from pyoframe._arithmetic import (
     _multiply_expressions,
     _simplify_expr_df,
 )
-from pyoframe._constants import (
+from pyoframe._utils import (
+    Container,
+    FuncArgs,
+    cast_coef_to_string,
+    concat_dimensions,
+    dataframe_to_tupled_list,
+    get_obj_repr,
+    parse_inputs_as_iterable,
+    unwrap_single_values,
+)
+from pyoframe.constants import (
     COEF_KEY,
     CONST_TERM,
     CONSTRAINT_KEY,
@@ -40,22 +50,12 @@ from pyoframe._constants import (
     SOLUTION_KEY,
     VAR_KEY,
     Config,
-    ConstraintSense,
-    ObjSense,
     PyoframeError,
     UnmatchedStrategy,
     VType,
     VTypeValue,
-)
-from pyoframe._utils import (
-    Container,
-    FuncArgs,
-    cast_coef_to_string,
-    concat_dimensions,
-    dataframe_to_tupled_list,
-    get_obj_repr,
-    parse_inputs_as_iterable,
-    unwrap_single_values,
+    _ConstraintSense,
+    _ObjSense,
 )
 from pyoframe.model_element import (
     ModelElement,
@@ -205,7 +205,7 @@ class SupportsMath(ABC, SupportsToExpr):
             <Constraint sense='<=' size=1 dimensions={} terms=2>
             v <= 1
         """
-        return Constraint(self - other, ConstraintSense.LE)
+        return Constraint(self - other, _ConstraintSense.LE)
 
     def __ge__(self, other):
         """Equality constraint.
@@ -217,7 +217,7 @@ class SupportsMath(ABC, SupportsToExpr):
             <Constraint sense='>=' size=1 dimensions={} terms=2>
             v >= 1
         """
-        return Constraint(self - other, ConstraintSense.GE)
+        return Constraint(self - other, _ConstraintSense.GE)
 
     def __eq__(self, value: object):  # type: ignore
         """Equality constraint.
@@ -229,7 +229,7 @@ class SupportsMath(ABC, SupportsToExpr):
             <Constraint sense='=' size=1 dimensions={} terms=2>
             v = 1
         """
-        return Constraint(self - value, ConstraintSense.EQ)
+        return Constraint(self - value, _ConstraintSense.EQ)
 
 
 SetTypes = Union[
@@ -1202,7 +1202,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
 class Constraint(ModelElementWithId):
     """An optimization constraint."""
 
-    def __init__(self, lhs: Expression, sense: ConstraintSense):
+    def __init__(self, lhs: Expression, sense: _ConstraintSense):
         """Initialize a constraint.
 
         Parameters:
@@ -1473,9 +1473,9 @@ class Constraint(ModelElementWithId):
         var = Variable(self, lb=0, ub=max)
         setattr(m, var_name, var)
 
-        if self.sense == ConstraintSense.LE:
+        if self.sense == _ConstraintSense.LE:
             self.lhs -= var
-        elif self.sense == ConstraintSense.GE:
+        elif self.sense == _ConstraintSense.GE:
             self.lhs += var
         else:  # pragma: no cover
             # TODO
@@ -1490,7 +1490,7 @@ class Constraint(ModelElementWithId):
             raise ValueError(
                 "Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...)."
             )
-        elif m.sense == ObjSense.MAX:
+        elif m.sense == _ObjSense.MAX:
             penalty *= -1
         if m.objective is None:
             m.objective = penalty

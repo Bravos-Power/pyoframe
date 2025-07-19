@@ -17,7 +17,7 @@ from typing import (
 import pandas as pd
 import polars as pl
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Variable
