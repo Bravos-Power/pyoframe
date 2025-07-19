@@ -1,5 +1,9 @@
-# Based on example at page 120 in book:
-#       N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
+"""Pyoframe formulation of a pumped storage model.
+
+Based on example at page 120 in book:
+      N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
+"""
+
 from pathlib import Path
 
 import polars as pl
@@ -55,6 +59,7 @@ def solve_model(
 
 def read_hourly_prices():
     """Read hourly prices from CSV file and return a DataFrame.
+
     Special attention is paid to properly parse daylight saving time (DST) changes.
     """
     df = pl.read_csv(

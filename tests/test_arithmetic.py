@@ -1,3 +1,5 @@
+"""Tests related to Pyoframe's arithmetic operations."""
+
 import re
 
 import numpy as np

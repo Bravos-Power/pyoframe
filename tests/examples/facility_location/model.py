@@ -1,3 +1,8 @@
+"""Example Pyoframe formulation of a facility location problem.
+
+Inspired from the original JuMP paper.
+"""
+
 import os
 from pathlib import Path
 

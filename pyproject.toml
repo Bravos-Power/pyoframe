@@ -63,7 +63,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"{docs,tests}/**" = ["D"] # TODO switch to: ["D101", "D102", "D103", "D104"]
+"{docs,tests}/**" = ["D101", "D102", "D103", "D104"]
 "conftest.py" = ["D"]
 
 [tool.ruff.lint.pydocstyle]

@@ -1,3 +1,5 @@
+"""Tests related to interacting with solvers."""
+
 import polars as pl
 import pyoptinterface as poi
 import pytest

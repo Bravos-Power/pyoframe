@@ -1,3 +1,5 @@
+"""Tests related to converting Pyoframe objects to strings or writing them to files."""
+
 import os
 from tempfile import TemporaryDirectory
 
@@ -5,7 +7,8 @@ import gurobipy as gp
 import polars as pl
 import pytest
 
-from pyoframe import Model, Variable, sum
+from pyoframe import Config, Model, Variable, sum
+from tests.util import csvs_to_expr
 
 
 def test_variables_to_string(solver):
@@ -72,6 +75,31 @@ constraint: x1 * x1 <= 5"""
 constraint_2[1]: x2[1] * x1 <= 5
 constraint_2[2]: x2[2] * x1 <= 5
 constraint_2[3]: x2[3] * x1 <= 5"""
+    )
+
+
+def test_to_str():
+    expr = csvs_to_expr(
+        """
+    day,water_drank
+    1,2.00000000001
+    2,3
+    3,4
+"""
+    )
+    Config.float_to_str_precision = None
+    assert str(expr) == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
+    Config.float_to_str_precision = 6
+    assert str(expr) == "[1]: 2\n[2]: 3\n[3]: 4"
+    # repr() is what is used when the object is printed in the console
+    assert (
+        repr(expr)
+        == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2\n[2]: 3\n[3]: 4"
+    )
+    Config.float_to_str_precision = None
+    assert (
+        repr(expr)
+        == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2.00000000001\n[2]: 3\n[3]: 4"
     )
 
 

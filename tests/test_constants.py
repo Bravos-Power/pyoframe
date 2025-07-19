@@ -1,3 +1,5 @@
+"""Module that runs the doctests in pyoframe.Config which otherwise would go undetected."""
+
 import doctest
 import os
 import tempfile

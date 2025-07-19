@@ -1,3 +1,5 @@
+"""Module to automatically run and test the examples to ensure consistent results over time."""
+
 from __future__ import annotations
 
 import importlib
