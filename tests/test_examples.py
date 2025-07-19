@@ -14,7 +14,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 import pyoframe as pf
-from pyoframe.constants import SUPPORTED_SOLVERS, Solver
+from pyoframe._constants import SUPPORTED_SOLVERS, Solver
 from tests.util import get_tol_pl
 
 

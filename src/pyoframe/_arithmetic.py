@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 import polars as pl
 
-from pyoframe.constants import (
+from pyoframe._constants import (
     COEF_KEY,
     CONST_TERM,
     KEY_TYPE,
@@ -47,7 +47,8 @@ def _multiply_expressions(self: "Expression", other: "Expression") -> "Expressio
         raise PyoframeError(
             "Failed to multiply expressions:\n"
             + " * ".join(
-                e.to_str(include_header=True, include_data=False) for e in [self, other]
+                e._to_str(include_header=True, include_data=False)
+                for e in [self, other]
             )
             + "\nDue to error:\n"
             + str(error)
@@ -61,7 +62,7 @@ def _add_expressions(*expressions: "Expression") -> "Expression":
         raise PyoframeError(
             "Failed to add expressions:\n"
             + " + ".join(
-                e.to_str(include_header=True, include_data=False) for e in expressions
+                e._to_str(include_header=True, include_data=False) for e in expressions
             )
             + "\nDue to error:\n"
             + str(error)
@@ -441,8 +442,10 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
-    """Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
-    If there are no dimensions, returns None to force caller to handle this special case.
+    """Returns the dimensions of the DataFrame.
+
+    Reserved columns do not count as dimensions. If there are no dimensions,
+    returns `None` to force caller to handle this special case.
 
     Examples:
         >>> import polars as pl

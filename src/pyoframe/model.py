@@ -1,3 +1,5 @@
+"""Module defining the Model class for Pyoframe."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,7 +9,7 @@ import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
-from pyoframe.constants import (
+from pyoframe._constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
     SUPPORTED_SOLVERS,
@@ -18,10 +20,10 @@ from pyoframe.constants import (
     Solver,
     VType,
 )
+from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
 from pyoframe.core import Constraint, Variable
 from pyoframe.model_element import ModelElement, ModelElementWithId
 from pyoframe.objective import Objective
-from pyoframe.util import Container, NamedVariableMapper, for_solvers, get_obj_repr
 
 
 class Model:
@@ -91,7 +93,7 @@ class Model:
         use_var_names: bool = False,
         sense: Union[ObjSense, ObjSenseValue, None] = None,
     ):
-        self.poi, self.solver = Model.create_poi_model(solver, solver_env)
+        self.poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name = self.solver.name
         self._variables: List[Variable] = []
         self._constraints: List[Constraint] = []
@@ -108,6 +110,7 @@ class Model:
 
     @property
     def use_var_names(self):
+        """Whether to pass human-readable variable names to the solver."""
         return self._use_var_names
 
     @property
@@ -162,7 +165,7 @@ class Model:
         return self._params
 
     @classmethod
-    def create_poi_model(
+    def _create_poi_model(
         cls, solver: Optional[str | Solver], solver_env: Optional[Dict[str, str]]
     ):
         if solver is None:
@@ -178,7 +181,7 @@ class Model:
             elif Config.default_solver == "auto":
                 for solver_option in SUPPORTED_SOLVERS:
                     try:
-                        return cls.create_poi_model(solver_option, solver_env)
+                        return cls._create_poi_model(solver_option, solver_env)
                     except RuntimeError:
                         pass
                 raise ValueError(
@@ -243,36 +246,43 @@ class Model:
 
     @property
     def variables(self) -> List[Variable]:
+        """Returns a list of the model's variables."""
         return self._variables
 
     @property
     def binary_variables(self) -> Iterable[Variable]:
-        """Examples:
-        >>> m = pf.Model()
-        >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
-        >>> m.Y = pf.Variable()
-        >>> len(list(m.binary_variables))
-        1
+        """Returns the model's binary variables.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
+            >>> m.Y = pf.Variable()
+            >>> len(list(m.binary_variables))
+            1
         """
         return (v for v in self.variables if v.vtype == VType.BINARY)
 
     @property
     def integer_variables(self) -> Iterable[Variable]:
-        """Examples:
-        >>> m = pf.Model()
-        >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
-        >>> m.Y = pf.Variable()
-        >>> len(list(m.integer_variables))
-        1
+        """Returns the model's integer variables.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
+            >>> m.Y = pf.Variable()
+            >>> len(list(m.integer_variables))
+            1
         """
         return (v for v in self.variables if v.vtype == VType.INTEGER)
 
     @property
-    def constraints(self):
+    def constraints(self) -> List[Constraint]:
+        """Returns the model's constraints."""
         return self._constraints
 
     @property
-    def objective(self):
+    def objective(self) -> Objective:
+        """Returns the model's objective."""
         return self._objective
 
     @objective.setter
@@ -284,10 +294,11 @@ class Model:
         if not isinstance(value, Objective):
             value = Objective(value)
         self._objective = value
-        value.on_add_to_model(self, "objective")
+        value._on_add_to_model(self, "objective")
 
     @property
     def minimize(self):
+        """Set or get the model's objective for minimization problems."""
         if self.sense != ObjSense.MIN:
             raise ValueError("Can't get .minimize in a maximization problem.")
         return self._objective
@@ -302,6 +313,7 @@ class Model:
 
     @property
     def maximize(self):
+        """Set or get the model's objective for maximization problems."""
         if self.sense != ObjSense.MAX:
             raise ValueError("Can't get .maximize in a minimization problem.")
         return self._objective
@@ -331,7 +343,7 @@ class Model:
                     f"Cannot create {__name} since it was already created."
                 )
 
-            __value.on_add_to_model(self, __name)
+            __value._on_add_to_model(self, __name)
 
             if isinstance(__value, Variable):
                 self._variables.append(__value)
@@ -380,8 +392,7 @@ class Model:
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
-        """Turns a mixed integer program into a continuous one by fixing
-        all the integer and binary variables to their solution values.
+        """Converts a mixed integer program into a continuous one by fixing all the non-continuous variables to their solution values.
 
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.

@@ -17,7 +17,7 @@ from typing import (
 import pandas as pd
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Variable
@@ -37,7 +37,8 @@ def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
 def parse_inputs_as_iterable(
     *inputs: Union[Any, Iterable[Any]],
 ) -> Iterable[Any]:
-    """Converts a parameter *x: Any | Iteraable[Any] to a single Iterable[Any] object.
+    """Converts a parameter *x: Any | Iterable[Any] to a single Iterable[Any] object.
+
     This is helpful to support these two ways of passing arguments:
         - foo([1, 2, 3])
         - foo(1, 2, 3)

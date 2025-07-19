@@ -1,3 +1,5 @@
+"""Module defining base classes for Pyoframe."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -6,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 import polars as pl
 
 from pyoframe._arithmetic import _get_dimensions
-from pyoframe.constants import (
+from pyoframe._constants import (
     COEF_KEY,
     KEY_TYPE,
     QUAD_VAR_KEY,
@@ -14,13 +16,15 @@ from pyoframe.constants import (
     VAR_KEY,
     Config,
 )
-from pyoframe.util import concat_dimensions
+from pyoframe._utils import concat_dimensions
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
 
 
 class ModelElement(ABC):
+    """The base class for elements of a Model such as [][pyoframe.Variable] and [][pyoframe.Constraint]."""
+
     def __init__(self, data: pl.DataFrame, **kwargs) -> None:
         # Sanity checks, no duplicate column names
         assert len(data.columns) == len(set(data.columns)), (
@@ -48,16 +52,18 @@ class ModelElement(ABC):
         self.name = None
         super().__init__(**kwargs)
 
-    def on_add_to_model(self, model: "Model", name: str):
+    def _on_add_to_model(self, model: "Model", name: str):
         self.name = name
         self._model = model
 
     @property
     def data(self) -> pl.DataFrame:
+        """Returns the object's underlying Polars DataFrame."""
         return self._data
 
     @property
     def friendly_name(self) -> str:
+        """Returns the name of the element, or `'unnamed'` if it has no name."""
         return self.name if self.name is not None else "unnamed"
 
     @property
@@ -81,7 +87,8 @@ class ModelElement(ABC):
 
     @property
     def dimensions_unsafe(self) -> List[str]:
-        """Same as `dimensions` but returns an empty list if there are no dimensions instead of None.
+        """Same as `dimensions` but returns an empty list if there are no dimensions instead of `None`.
+
         When unsure, use `dimensions` instead since the type checker forces users to handle the None case (no dimensions).
         """
         dims = self.dimensions
@@ -123,7 +130,7 @@ class ModelElement(ABC):
             result += "\n" + " " * (len(self.name) if self.name else 0) + " ⋮"
         return result
 
-    def to_str_create_prefix(self, data):
+    def _to_str_create_prefix(self, data):
         if self.name is None and self.dimensions is None:
             return data
 
@@ -139,7 +146,7 @@ class ModelElement(ABC):
 def _support_polars_method(method_name: str):
     """Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute."""
 
-    def method(self: "SupportPolarsMethodMixin", *args, **kwargs) -> Any:
+    def method(self: "_SupportPolarsMethodMixin", *args, **kwargs) -> Any:
         result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
         if isinstance(result_from_polars, pl.DataFrame):
             return self._new(result_from_polars)
@@ -149,7 +156,7 @@ def _support_polars_method(method_name: str):
     return method
 
 
-class SupportPolarsMethodMixin(ABC):
+class _SupportPolarsMethodMixin(ABC):
     rename = _support_polars_method("rename")
     with_columns = _support_polars_method("with_columns")
     filter = _support_polars_method("filter")
@@ -187,14 +194,15 @@ class SupportPolarsMethodMixin(ABC):
 
 
 class ModelElementWithId(ModelElement):
-    """Provides a method that assigns a unique ID to each row in a DataFrame.
+    """Extends ModelElement with a method that assigns a unique ID to each row in a DataFrame.
+
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
     IDs are only unique for the subclass since different subclasses have different counters.
     """
 
     @property
     def _has_ids(self) -> bool:
-        return self.get_id_column_name() in self.data.columns
+        return self._get_id_column_name() in self.data.columns
 
     def _assert_has_ids(self):
         if not self._has_ids:
@@ -204,5 +212,5 @@ class ModelElementWithId(ModelElement):
 
     @classmethod
     @abstractmethod
-    def get_id_column_name(cls) -> str:
+    def _get_id_column_name(cls) -> str:
         """Returns the name of the column containing the IDs."""

@@ -34,7 +34,7 @@ def test_variables_to_string_with_dimensions(solver):
     expression_with_dimensions = (
         5 * m.v1 + 3.4 * m.v2 - 2.1 * m.v3 + 1.1231237019273 * m.v4
     )
-    result = expression_with_dimensions.to_str(include_header=False)
+    result = expression_with_dimensions._to_str(include_header=False)
     assert (
         result
         == """[1,1]: 5 v1[1,1] +3.4 v2[1,1] -2.1 v3[1,1] +1.12312 v4[1,1]

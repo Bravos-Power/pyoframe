@@ -37,10 +37,8 @@ def test_to_str():
     )
     pf.Config.float_to_str_precision = None
     assert str(expr) == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
-    # str() is the same as to_str()
-    assert expr.to_str() == str(expr)
     pf.Config.float_to_str_precision = 6
-    assert expr.to_str() == "[1]: 2\n[2]: 3\n[3]: 4"
+    assert str(expr) == "[1]: 2\n[2]: 3\n[3]: 4"
     # repr() is what is used when the object is printed in the console
     assert (
         repr(expr)

@@ -244,6 +244,7 @@ class ConstraintSense(Enum):
     EQ = "="
 
     def to_poi(self):
+        """Convert the constraint sense to its pyoptinterface equivalent."""
         if self == ConstraintSense.LE:
             return poi.ConstraintSense.LessEqual
         elif self == ConstraintSense.EQ:
@@ -259,6 +260,7 @@ class ObjSense(Enum):
     MAX = "max"
 
     def to_poi(self):
+        """Convert the objective sense to its pyoptinterface equivalent."""
         if self == ObjSense.MIN:
             return poi.ObjectiveSense.Minimize
         elif self == ObjSense.MAX:
@@ -275,6 +277,7 @@ class VType(Enum):
     INTEGER = "integer"
 
     def to_poi(self):
+        """Convert the Variable type to its pyoptinterface equivalent."""
         if self == VType.CONTINUOUS:
             return poi.VariableDomain.Continuous
         elif self == VType.BINARY:
@@ -286,6 +289,8 @@ class VType(Enum):
 
 
 class UnmatchedStrategy(Enum):
+    """An enum to specify how to handle unmatched values in expressions."""
+
     UNSET = "not_set"
     DROP = "drop"
     KEEP = "keep"
@@ -305,4 +310,6 @@ assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
 
 
 class PyoframeError(Exception):
+    """Class for all Pyoframe-specific errors."""
+
     pass
