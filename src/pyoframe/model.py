@@ -25,8 +25,7 @@ from pyoframe.util import Container, NamedVariableMapper, for_solvers, get_obj_r
 
 
 class Model:
-    """
-    An optimization model (containing variables, constraints, and an objective).
+    """An optimization model (containing variables, constraints, and an objective).
 
     Parameters:
         name:
@@ -113,8 +112,7 @@ class Model:
 
     @property
     def attr(self):
-        """
-        An object that allows reading and writing model attributes.
+        """An object that allows reading and writing model attributes.
 
         Several model attributes are common across all solvers making it easy to switch between solvers (see supported attributes for
         [Gurobi](https://metab0t.github.io/PyOptInterface/gurobi.html#supported-model-attribute),
@@ -141,7 +139,7 @@ class Model:
             ...
             KeyError: 'NumConstrs'
 
-        See also:
+        See Also:
             [Variable.attr][pyoframe.Variable.attr] for setting variable attributes and
             [Constraint.attr][pyoframe.Constraint.attr] for setting constraint attributes.
         """
@@ -149,8 +147,7 @@ class Model:
 
     @property
     def params(self) -> Container:
-        """
-        An object that allows reading and writing solver-specific parameters.
+        """An object that allows reading and writing solver-specific parameters.
 
         See the list of available parameters for
         [Gurobi](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#sec:Parameters),
@@ -250,25 +247,23 @@ class Model:
 
     @property
     def binary_variables(self) -> Iterable[Variable]:
-        """
-        Examples:
-            >>> m = pf.Model()
-            >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
-            >>> m.Y = pf.Variable()
-            >>> len(list(m.binary_variables))
-            1
+        """Examples:
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
+        >>> m.Y = pf.Variable()
+        >>> len(list(m.binary_variables))
+        1
         """
         return (v for v in self.variables if v.vtype == VType.BINARY)
 
     @property
     def integer_variables(self) -> Iterable[Variable]:
-        """
-        Examples:
-            >>> m = pf.Model()
-            >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
-            >>> m.Y = pf.Variable()
-            >>> len(list(m.integer_variables))
-            1
+        """Examples:
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
+        >>> m.Y = pf.Variable()
+        >>> len(list(m.integer_variables))
+        1
         """
         return (v for v in self.variables if v.vtype == VType.INTEGER)
 
@@ -356,8 +351,7 @@ class Model:
         )
 
     def write(self, file_path: Union[Path, str], pretty: bool = False):
-        """
-        Output the model to a file.
+        """Output the model to a file.
 
         Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
         Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
@@ -381,15 +375,12 @@ class Model:
         self.poi.write(str(file_path), **kwargs)
 
     def optimize(self):
-        """
-        Optimize the model using your selected solver (e.g. Gurobi, HiGHS).
-        """
+        """Optimize the model using your selected solver (e.g. Gurobi, HiGHS)."""
         self.poi.optimize()
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
-        """
-        Turns a mixed integer program into a continuous one by fixing
+        """Turns a mixed integer program into a continuous one by fixing
         all the integer and binary variables to their solution values.
 
         !!! warning "Gurobi only"
@@ -426,8 +417,7 @@ class Model:
 
     @for_solvers("gurobi", "copt")
     def compute_IIS(self):
-        """
-        Computes the Irreducible Infeasible Set (IIS) of the model.
+        """Computes the Irreducible Infeasible Set (IIS) of the model.
 
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
@@ -452,8 +442,7 @@ class Model:
         self.poi.computeIIS()
 
     def dispose(self):
-        """
-        Disposes of the model and cleans up the solver environment.
+        """Disposes of the model and cleans up the solver environment.
 
         When using Gurobi compute server, this cleanup will
         ensure your run is not marked as 'ABORTED'.

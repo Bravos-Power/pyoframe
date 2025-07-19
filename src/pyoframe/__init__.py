@@ -1,5 +1,4 @@
-"""
-Pyoframe's public API accessible via `import pyoframe`.
+"""Pyoframe's public API accessible via `import pyoframe`.
 
 Tip:
     `import pyoframe` will automatically patch Polars and Pandas

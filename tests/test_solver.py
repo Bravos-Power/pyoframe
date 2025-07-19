@@ -11,8 +11,7 @@ from tests.util import get_tol, get_tol_pl
 
 @pytest.mark.parametrize("solver_all", SUPPORTED_SOLVERS, ids=lambda s: s.name)
 def test_solver_works(solver_all):
-    """
-    Ensures the test suite fails if not all solvers could be tested.
+    """Ensures the test suite fails if not all solvers could be tested.
 
     Note that the function parameter cannot be named "solver" (otherwise it uses the fixture).
     """

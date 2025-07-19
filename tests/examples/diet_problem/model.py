@@ -1,6 +1,4 @@
-"""
-Diet module example
-"""
+"""Diet module example"""
 
 # pyright: reportAttributeAccessIssue=false
 

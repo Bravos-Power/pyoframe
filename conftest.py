@@ -19,8 +19,7 @@ def _setup_fixture(doctest_namespace):
 
 
 def pytest_collection_modifyitems(items):
-    """
-    Exclude certain paths from contributing to the test coverage.
+    """Exclude certain paths from contributing to the test coverage.
     Specifically, the integration tests and documentation code snippets are not
     counted towards the coverage metrics because they're not rigorous enough.
 

@@ -1,6 +1,4 @@
-"""
-Defines helper functions for doing arithmetic operations on expressions (e.g. addition).
-"""
+"""Defines helper functions for doing arithmetic operations on expressions (e.g. addition)."""
 
 from typing import TYPE_CHECKING, List, Optional
 
@@ -23,8 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _multiply_expressions(self: "Expression", other: "Expression") -> "Expression":
-    """
-    Multiply two or more expressions together.
+    """Multiply two or more expressions together.
 
     Examples:
         >>> import pyoframe as pf
@@ -110,8 +107,7 @@ def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expr
 
 
 def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expression":
-    """
-    Multiply two expressions of degree 1.
+    """Multiply two expressions of degree 1.
 
     Examples:
         >>> import polars as pl
@@ -370,14 +366,12 @@ def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
-    """
-    Removes the quadratic column and terms with a zero coefficient, when applicable.
+    """Removes the quadratic column and terms with a zero coefficient, when applicable.
 
     Specifically, zero coefficient terms are always removed, except if they're the only terms in which case the expression contains a single term.
     The quadratic column is removed if the expression is not a quadratic.
 
     Examples:
-
         >>> import polars as pl
         >>> df = pl.DataFrame(
         ...     {
@@ -447,8 +441,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
-    """
-    Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
+    """Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
     If there are no dimensions, returns None to force caller to handle this special case.
 
     Examples:

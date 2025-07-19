@@ -83,8 +83,7 @@ def get_tol(solver):
 
 
 def get_attr_docs(cls: type[Any]) -> dict[str, str]:
-    """
-    Copyright (c) David Lord under the MIT License (see: https://davidism.com/attribute-docstrings/).
+    """Copyright (c) David Lord under the MIT License (see: https://davidism.com/attribute-docstrings/).
 
     Get any docstrings placed after attribute assignments in a class body.
     """

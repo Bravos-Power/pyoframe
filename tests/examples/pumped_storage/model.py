@@ -10,8 +10,7 @@ import pyoframe as pf
 def solve_model(
     use_var_names: bool = True, hourly_timestep: int = 6, **kwargs
 ) -> pf.Model:
-    """
-    Solve a pump storage model.
+    """Solve a pump storage model.
 
     Parameters:
         use_var_names: Whether to use variable names in the model.
@@ -56,7 +55,8 @@ def solve_model(
 
 def read_hourly_prices():
     """Read hourly prices from CSV file and return a DataFrame.
-    Special attention is paid to properly parse daylight saving time (DST) changes."""
+    Special attention is paid to properly parse daylight saving time (DST) changes.
+    """
     df = pl.read_csv(
         Path(__file__).parent / "input_data" / "elspot-prices_2021_hourly_eur.csv",
         try_parse_dates=True,

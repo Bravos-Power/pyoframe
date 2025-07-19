@@ -62,8 +62,7 @@ class ModelElement(ABC):
 
     @property
     def dimensions(self) -> Optional[List[str]]:
-        """
-        The names of the data's dimensions.
+        """The names of the data's dimensions.
 
         Examples:
             >>> # A variable with no dimensions
@@ -82,8 +81,7 @@ class ModelElement(ABC):
 
     @property
     def dimensions_unsafe(self) -> List[str]:
-        """
-        Same as `dimensions` but returns an empty list if there are no dimensions instead of None.
+        """Same as `dimensions` but returns an empty list if there are no dimensions instead of None.
         When unsure, use `dimensions` instead since the type checker forces users to handle the None case (no dimensions).
         """
         dims = self.dimensions
@@ -93,8 +91,7 @@ class ModelElement(ABC):
 
     @property
     def shape(self) -> Dict[str, int]:
-        """
-        The number of indices in each dimension.
+        """The number of indices in each dimension.
 
         Examples:
             >>> # A variable with no dimensions
@@ -140,9 +137,7 @@ class ModelElement(ABC):
 
 
 def _support_polars_method(method_name: str):
-    """
-    Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute.
-    """
+    """Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute."""
 
     def method(self: "SupportPolarsMethodMixin", *args, **kwargs) -> Any:
         result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
@@ -162,17 +157,14 @@ class SupportPolarsMethodMixin(ABC):
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
-        """
-        Used to create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.).
-        """
+        """Used to create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
 
     @property
     @abstractmethod
     def data(self): ...
 
     def pick(self, **kwargs):
-        """
-        Filters elements by the given criteria and then drops the filtered dimensions.
+        """Filters elements by the given criteria and then drops the filtered dimensions.
 
         Examples:
             >>> m = pf.Model()
@@ -195,8 +187,7 @@ class SupportPolarsMethodMixin(ABC):
 
 
 class ModelElementWithId(ModelElement):
-    """
-    Provides a method that assigns a unique ID to each row in a DataFrame.
+    """Provides a method that assigns a unique ID to each row in a DataFrame.
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
     IDs are only unique for the subclass since different subclasses have different counters.
     """
@@ -214,6 +205,4 @@ class ModelElementWithId(ModelElement):
     @classmethod
     @abstractmethod
     def get_id_column_name(cls) -> str:
-        """
-        Returns the name of the column containing the IDs.
-        """
+        """Returns the name of the column containing the IDs."""

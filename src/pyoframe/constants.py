@@ -1,6 +1,4 @@
-"""
-File containing shared constants used across the package.
-"""
+"""File containing shared constants used across the package."""
 
 from __future__ import annotations
 
@@ -83,8 +81,7 @@ class _ConfigMeta(type):
 
 
 class Config(metaclass=_ConfigMeta):
-    """
-    General settings for Pyoframe (for advanced users).
+    """General settings for Pyoframe (for advanced users).
 
     Accessible via `pf.Config` (see examples below).
     """
@@ -225,8 +222,7 @@ class Config(metaclass=_ConfigMeta):
 
     @classmethod
     def reset_defaults(cls):
-        """
-        Resets all configuration options to their default values.
+        """Resets all configuration options to their default values.
 
         Examples:
             >>> pf.Config.print_uses_variable_names

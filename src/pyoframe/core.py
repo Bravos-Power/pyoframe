@@ -106,8 +106,7 @@ class SupportsMath(ABC, SupportsToExpr):
     map = _forward_to_expression("map")
 
     def __pow__(self, power: int):
-        """
-        Support squaring expressions:
+        """Support squaring expressions:
         >>> m = pf.Model()
         >>> m.v = pf.Variable()
         >>> m.v**2
@@ -131,8 +130,7 @@ class SupportsMath(ABC, SupportsToExpr):
         return res
 
     def __sub__(self, other):
-        """
-        >>> import polars as pl
+        """>>> import polars as pl
         >>> m = pf.Model()
         >>> df = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]})
         >>> m.v = pf.Variable(df["dim1"])
@@ -153,23 +151,20 @@ class SupportsMath(ABC, SupportsToExpr):
         return self.to_expr() + other
 
     def __truediv__(self, other):
-        """
-
-        Examples:
-            Support division.
-            >>> m = pf.Model()
-            >>> m.v = Variable({"dim1": [1, 2, 3]})
-            >>> m.v / 2
-            <Expression size=3 dimensions={'dim1': 3} terms=3>
-            [1]: 0.5 v[1]
-            [2]: 0.5 v[2]
-            [3]: 0.5 v[3]
+        """Examples:
+        Support division.
+        >>> m = pf.Model()
+        >>> m.v = Variable({"dim1": [1, 2, 3]})
+        >>> m.v / 2
+        <Expression size=3 dimensions={'dim1': 3} terms=3>
+        [1]: 0.5 v[1]
+        [2]: 0.5 v[2]
+        [3]: 0.5 v[3]
         """
         return self.to_expr() * (1 / other)
 
     def __rsub__(self, other):
-        """
-        Support right subtraction.
+        """Support right subtraction.
 
         Examples:
             >>> m = pf.Model()
@@ -231,8 +226,7 @@ SetTypes = Union[
 
 
 class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
-    """
-    A set which can then be used to index variables.
+    """A set which can then be used to index variables.
 
     Examples:
         >>> pf.Set(x=range(2), y=range(3))
@@ -260,30 +254,29 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def _parse_acceptable_sets(
         *over: SetTypes | Iterable[SetTypes],
     ) -> pl.DataFrame:
-        """
-        Examples:
-            >>> import pandas as pd
-            >>> dim1 = pd.Index([1, 2, 3], name="dim1")
-            >>> dim2 = pd.Index(["a", "b"], name="dim1")
-            >>> Set._parse_acceptable_sets([dim1, dim2])
-            Traceback (most recent call last):
-            ...
-            AssertionError: All coordinates must have unique column names.
-            >>> dim2.name = "dim2"
-            >>> Set._parse_acceptable_sets([dim1, dim2])
-            shape: (6, 2)
-            ┌──────┬──────┐
-            │ dim1 ┆ dim2 │
-            │ ---  ┆ ---  │
-            │ i64  ┆ str  │
-            ╞══════╪══════╡
-            │ 1    ┆ a    │
-            │ 1    ┆ b    │
-            │ 2    ┆ a    │
-            │ 2    ┆ b    │
-            │ 3    ┆ a    │
-            │ 3    ┆ b    │
-            └──────┴──────┘
+        """Examples:
+        >>> import pandas as pd
+        >>> dim1 = pd.Index([1, 2, 3], name="dim1")
+        >>> dim2 = pd.Index(["a", "b"], name="dim1")
+        >>> Set._parse_acceptable_sets([dim1, dim2])
+        Traceback (most recent call last):
+        ...
+        AssertionError: All coordinates must have unique column names.
+        >>> dim2.name = "dim2"
+        >>> Set._parse_acceptable_sets([dim1, dim2])
+        shape: (6, 2)
+        ┌──────┬──────┐
+        │ dim1 ┆ dim2 │
+        │ ---  ┆ ---  │
+        │ i64  ┆ str  │
+        ╞══════╪══════╡
+        │ 1    ┆ a    │
+        │ 1    ┆ b    │
+        │ 2    ┆ a    │
+        │ 2    ┆ b    │
+        │ 3    ┆ a    │
+        │ 3    ┆ b    │
+        └──────┴──────┘
         """
         assert len(over) > 0, "At least one set must be provided."
         over_iter: Iterable[SetTypes] = parse_inputs_as_iterable(*over)
@@ -385,8 +378,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     """A mathematical expression (linear or quadratic)."""
 
     def __init__(self, data: pl.DataFrame):
-        """
-        A linear expression.
+        """A linear expression.
 
         Examples:
             >>> import pandas as pd
@@ -429,11 +421,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @classmethod
     def constant(cls, constant: int | float) -> "Expression":
-        """
-        Examples:
-            >>> pf.Expression.constant(5)
-            <Expression size=1 dimensions={} terms=1>
-            5
+        """Examples:
+        >>> pf.Expression.constant(5)
+        <Expression size=1 dimensions={} terms=1>
+        5
         """
         return cls(
             pl.DataFrame(
@@ -446,29 +437,28 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def sum(self, over: Union[str, Iterable[str]]):
-        """
-        Examples:
-            >>> import pandas as pd
-            >>> m = pf.Model()
-            >>> df = pd.DataFrame(
-            ...     {
-            ...         "item": [1, 1, 1, 2, 2],
-            ...         "time": ["mon", "tue", "wed", "mon", "tue"],
-            ...         "cost": [1, 2, 3, 4, 5],
-            ...     }
-            ... ).set_index(["item", "time"])
-            >>> m.quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
-            >>> expr = (m.quantity * df["cost"]).sum("time")
-            >>> expr.data
-            shape: (2, 3)
-            ┌──────┬─────────┬───────────────┐
-            │ item ┆ __coeff ┆ __variable_id │
-            │ ---  ┆ ---     ┆ ---           │
-            │ i64  ┆ f64     ┆ u32           │
-            ╞══════╪═════════╪═══════════════╡
-            │ 1    ┆ 6.0     ┆ 1             │
-            │ 2    ┆ 9.0     ┆ 2             │
-            └──────┴─────────┴───────────────┘
+        """Examples:
+        >>> import pandas as pd
+        >>> m = pf.Model()
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "item": [1, 1, 1, 2, 2],
+        ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...         "cost": [1, 2, 3, 4, 5],
+        ...     }
+        ... ).set_index(["item", "time"])
+        >>> m.quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
+        >>> expr = (m.quantity * df["cost"]).sum("time")
+        >>> expr.data
+        shape: (2, 3)
+        ┌──────┬─────────┬───────────────┐
+        │ item ┆ __coeff ┆ __variable_id │
+        │ ---  ┆ ---     ┆ ---           │
+        │ i64  ┆ f64     ┆ u32           │
+        ╞══════╪═════════╪═══════════════╡
+        │ 1    ┆ 6.0     ┆ 1             │
+        │ 2    ┆ 9.0     ┆ 2             │
+        └──────┴─────────┴───────────────┘
         """
         if isinstance(over, str):
             over = [over]
@@ -494,8 +484,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return [VAR_KEY]
 
     def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True) -> Expression:
-        """
-        Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
+        """Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
 
         This is particularly useful to go from one type of dimensions to another. For example, to convert data that
         is indexed by city to data indexed by country (see example).
@@ -562,8 +551,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return mapped_expression
 
     def rolling_sum(self, over: str, window_size: int) -> Expression:
-        """
-        Calculates the rolling sum of the Expression over a specified window size for a given dimension.
+        """Calculates the rolling sum of the Expression over a specified window size for a given dimension.
 
         This method applies a rolling sum operation over the dimension specified by `over`,
         using a window defined by `window_size`.
@@ -623,23 +611,22 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def within(self, set: "SetTypes") -> Expression:
-        """
-        Examples:
-            >>> import pandas as pd
-            >>> general_expr = pd.DataFrame(
-            ...     {"dim1": [1, 2, 3], "value": [1, 2, 3]}
-            ... ).to_expr()
-            >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
-            >>> general_expr.within(filter_expr).data
-            shape: (2, 3)
-            ┌──────┬─────────┬───────────────┐
-            │ dim1 ┆ __coeff ┆ __variable_id │
-            │ ---  ┆ ---     ┆ ---           │
-            │ i64  ┆ f64     ┆ u32           │
-            ╞══════╪═════════╪═══════════════╡
-            │ 1    ┆ 1.0     ┆ 0             │
-            │ 3    ┆ 3.0     ┆ 0             │
-            └──────┴─────────┴───────────────┘
+        """Examples:
+        >>> import pandas as pd
+        >>> general_expr = pd.DataFrame(
+        ...     {"dim1": [1, 2, 3], "value": [1, 2, 3]}
+        ... ).to_expr()
+        >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
+        >>> general_expr.within(filter_expr).data
+        shape: (2, 3)
+        ┌──────┬─────────┬───────────────┐
+        │ dim1 ┆ __coeff ┆ __variable_id │
+        │ ---  ┆ ---     ┆ ---           │
+        │ i64  ┆ f64     ┆ u32           │
+        ╞══════╪═════════╪═══════════════╡
+        │ 1    ┆ 1.0     ┆ 0             │
+        │ 3    ┆ 3.0     ┆ 0             │
+        └──────┴─────────┴───────────────┘
         """
         df: pl.DataFrame = Set(set).data
         set_dims = _get_dimensions(df)
@@ -656,8 +643,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @property
     def is_quadratic(self) -> bool:
-        """
-        Returns True if the expression is quadratic, False otherwise.
+        """Returns True if the expression is quadratic, False otherwise.
 
         Computes in O(1) since expressions are quadratic if and
         only if self.data contain the QUAD_VAR_KEY column.
@@ -674,8 +660,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return QUAD_VAR_KEY in self.data.columns
 
     def degree(self) -> int:
-        """
-        Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
+        """Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
 
         Examples:
             >>> import pandas as pd
@@ -700,41 +685,40 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return 0
 
     def __add__(self, other):
-        """
-        Examples:
-            >>> import pandas as pd
-            >>> m = pf.Model()
-            >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
-            >>> m.v = Variable(add)
-            >>> m.v + add
-            <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] +10
-            [2]: v[2] +20
-            [3]: v[3] +30
-            >>> m.v + add + 2
-            <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] +12
-            [2]: v[2] +22
-            [3]: v[3] +32
-            >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
-            Traceback (most recent call last):
-            ...
-            pyoframe.constants.PyoframeError: Failed to add expressions:
-            <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
-            Due to error:
-            Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
-            shape: (1, 2)
-            ┌──────┬────────────┐
-            │ dim1 ┆ dim1_right │
-            │ ---  ┆ ---        │
-            │ i64  ┆ i64        │
-            ╞══════╪════════════╡
-            │ 3    ┆ null       │
-            └──────┴────────────┘
-            >>> m.v2 = Variable()
-            >>> 5 + 2 * m.v2
-            <Expression size=1 dimensions={} terms=2>
-            2 v2 +5
+        """Examples:
+        >>> import pandas as pd
+        >>> m = pf.Model()
+        >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
+        >>> m.v = Variable(add)
+        >>> m.v + add
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: v[1] +10
+        [2]: v[2] +20
+        [3]: v[3] +30
+        >>> m.v + add + 2
+        <Expression size=3 dimensions={'dim1': 3} terms=6>
+        [1]: v[1] +12
+        [2]: v[2] +22
+        [3]: v[3] +32
+        >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
+        Traceback (most recent call last):
+        ...
+        pyoframe.constants.PyoframeError: Failed to add expressions:
+        <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
+        Due to error:
+        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+        shape: (1, 2)
+        ┌──────┬────────────┐
+        │ dim1 ┆ dim1_right │
+        │ ---  ┆ ---        │
+        │ i64  ┆ i64        │
+        ╞══════╪════════════╡
+        │ 3    ┆ null       │
+        └──────┴────────────┘
+        >>> m.v2 = Variable()
+        >>> 5 + 2 * m.v2
+        <Expression size=1 dimensions={} terms=2>
+        2 v2 +5
         """
         if isinstance(other, str):
             raise ValueError(
@@ -771,30 +755,29 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def _add_const(self, const: int | float) -> Expression:
-        """
-        Examples:
-            >>> m = pf.Model()
-            >>> m.x1 = Variable()
-            >>> m.x2 = Variable()
-            >>> m.x1 + 5
-            <Expression size=1 dimensions={} terms=2>
-            x1 +5
-            >>> m.x1**2 + 5
-            <Expression size=1 dimensions={} terms=2 degree=2>
-            x1 * x1 +5
-            >>> m.x1**2 + m.x2 + 5
-            <Expression size=1 dimensions={} terms=3 degree=2>
-            x1 * x1 + x2 +5
+        """Examples:
+        >>> m = pf.Model()
+        >>> m.x1 = Variable()
+        >>> m.x2 = Variable()
+        >>> m.x1 + 5
+        <Expression size=1 dimensions={} terms=2>
+        x1 +5
+        >>> m.x1**2 + 5
+        <Expression size=1 dimensions={} terms=2 degree=2>
+        x1 * x1 +5
+        >>> m.x1**2 + m.x2 + 5
+        <Expression size=1 dimensions={} terms=3 degree=2>
+        x1 * x1 + x2 +5
 
-            It also works with dimensions
+        It also works with dimensions
 
-            >>> m = pf.Model()
-            >>> m.v = Variable({"dim1": [1, 2, 3]})
-            >>> m.v * m.v + 5
-            <Expression size=3 dimensions={'dim1': 3} terms=6 degree=2>
-            [1]: 5  + v[1] * v[1]
-            [2]: 5  + v[2] * v[2]
-            [3]: 5  + v[3] * v[3]
+        >>> m = pf.Model()
+        >>> m.v = Variable({"dim1": [1, 2, 3]})
+        >>> m.v * m.v + 5
+        <Expression size=3 dimensions={'dim1': 3} terms=6 degree=2>
+        [1]: 5  + v[1] * v[1]
+        [2]: 5  + v[2] * v[2]
+        [3]: 5  + v[3] * v[3]
         """
         dim = self.dimensions
         data = self.data
@@ -859,8 +842,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @unwrap_single_values
     def evaluate(self) -> pl.DataFrame:
-        """
-        The value of the expression. Only available after the model has been solved.
+        """The value of the expression. Only available after the model has been solved.
 
         Examples:
             >>> m = pf.Model()
@@ -1030,8 +1012,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @property
     def terms(self) -> int:
-        """
-        Number of terms across all subexpressions.
+        """Number of terms across all subexpressions.
 
         Expressions equal to zero count as one term.
 
@@ -1062,8 +1043,7 @@ def sum(
     over: Union[str, Sequence[str], SupportsToExpr],
     expr: Optional[SupportsToExpr] = None,
 ) -> "Expression":
-    """
-    Sum an expression over specified dimensions.
+    """Sum an expression over specified dimensions.
     If no dimensions are specified, the sum is taken over all of the expression's dimensions.
 
     Examples:
@@ -1102,7 +1082,7 @@ def sum(
         ...
         AssertionError: Cannot sum over ['city'] as it is not in ['time', 'place']
 
-    See also:
+    See Also:
         [pyoframe.sum_by][] for summing over all dimensions _except_ those that are specified.
     """
     if expr is None:
@@ -1120,8 +1100,7 @@ def sum(
 
 
 def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
-    """
-    Like [`pf.sum()`][pyoframe.sum], but the sum is taken over all dimensions except those specified in `by` (just like a `group_by` operation).
+    """Like [`pf.sum()`][pyoframe.sum], but the sum is taken over all dimensions except those specified in `by` (just like a `group_by` operation).
 
     Examples:
         >>> expr = pl.DataFrame(
@@ -1165,7 +1144,7 @@ def sum_by(by: Union[str, Sequence[str]], expr: SupportsToExpr) -> "Expression":
         ...
         AssertionError: Cannot sum by ['time'] because the expression has no dimensions.
 
-    See also:
+    See Also:
         [pyoframe.sum][] for summing over specified dimensions.
     """
     if isinstance(by, str):
@@ -1207,9 +1186,7 @@ class Constraint(ModelElementWithId):
 
     @property
     def attr(self) -> Container:
-        """
-        Allows reading and writing constraint attributes similarly to [Model.attr][pyoframe.Model.attr].
-        """
+        """Allows reading and writing constraint attributes similarly to [Model.attr][pyoframe.Model.attr]."""
         return self._attr
 
     def _set_attribute(self, name, value):
@@ -1353,8 +1330,7 @@ class Constraint(ModelElementWithId):
     def relax(
         self, cost: SupportsToExpr, max: Optional[SupportsToExpr] = None
     ) -> Constraint:
-        """
-        Relaxes the constraint by adding a variable to the constraint that can be non-zero at a cost.
+        """Relaxes the constraint by adding a variable to the constraint that can be non-zero at a cost.
 
         Parameters:
             cost:
@@ -1520,8 +1496,7 @@ class Constraint(ModelElementWithId):
 
 
 class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
-    """
-    A decision variable for an optimization model.
+    """A decision variable for an optimization model.
 
     Parameters:
         *indexing_sets:
@@ -1608,9 +1583,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
     @property
     def attr(self) -> Container:
-        """
-        Allows reading and writing variable attributes similarly to [Model.attr][pyoframe.Model.attr].
-        """
+        """Allows reading and writing variable attributes similarly to [Model.attr][pyoframe.Model.attr]."""
         return self._attr
 
     def _set_attribute(self, name, value):
@@ -1716,8 +1689,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     @property
     @unwrap_single_values
     def solution(self):
-        """
-        Retrieve a variable's optimal value after the model has been solved.
+        """Retrieve a variable's optimal value after the model has been solved.
         Returned as a DataFrame if the variable has dimensions, otherwise as a single value.
         Binary and integer variables are returned as integers.
 
@@ -1828,8 +1800,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def next(self, dim: str, wrap_around: bool = False) -> Expression:
-        """
-        Creates an expression where the variable at each index is the next variable in the specified dimension.
+        """Creates an expression where the variable at each index is the next variable in the specified dimension.
 
         Parameters:
             dim:
@@ -1886,7 +1857,6 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
             [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
-
         wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)
         wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))
         if wrap_around:

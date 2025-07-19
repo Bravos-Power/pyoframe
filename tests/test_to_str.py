@@ -1,6 +1,4 @@
-"""
-Tests of all the code that converts Pyoframe objects to their string representations, which are often used for debugging.
-"""
+"""Tests of all the code that converts Pyoframe objects to their string representations, which are often used for debugging."""
 
 import polars as pl
 import pytest
