@@ -1,6 +1,4 @@
-"""
-Adapted from https://www.gurobi.com/documentation/current/examples/diet_py.html. Copyright belongs there.
-"""
+"""Adapted from https://www.gurobi.com/documentation/current/examples/diet_py.html. Copyright belongs there."""
 
 import os
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""Tests related to converting Pyoframe objects to strings or writing them to files."""
+
 import os
 from tempfile import TemporaryDirectory
 
@@ -5,7 +7,8 @@ import gurobipy as gp
 import polars as pl
 import pytest
 
-from pyoframe import Model, Variable, sum
+from pyoframe import Config, Model, Variable, sum
+from tests.util import csvs_to_expr
 
 
 def test_variables_to_string(solver):
@@ -34,7 +37,7 @@ def test_variables_to_string_with_dimensions(solver):
     expression_with_dimensions = (
         5 * m.v1 + 3.4 * m.v2 - 2.1 * m.v3 + 1.1231237019273 * m.v4
     )
-    result = expression_with_dimensions.to_str(include_header=False)
+    result = expression_with_dimensions._to_str(include_header=False)
     assert (
         result
         == """[1,1]: 5 v1[1,1] +3.4 v2[1,1] -2.1 v3[1,1] +1.12312 v4[1,1]
@@ -59,8 +62,8 @@ def test_constraint_to_str(solver):
     m.constraint = m.x1**2 <= 5
     assert (
         str(m.constraint)
-        == """<Constraint name=constraint sense='<=' size=1 dimensions={} terms=2>
-x1 * x1 <= 5"""
+        == """<Constraint sense='<=' size=1 dimensions={} terms=2>
+constraint: x1 * x1 <= 5"""
     )
 
     # Now with dimensions
@@ -68,10 +71,35 @@ x1 * x1 <= 5"""
     m.constraint_2 = m.x2 * m.x1 <= 5
     assert (
         str(m.constraint_2)
-        == """<Constraint name=constraint_2 sense='<=' size=3 dimensions={'x': 3} terms=6>
-[1]: x2[1] * x1 <= 5
-[2]: x2[2] * x1 <= 5
-[3]: x2[3] * x1 <= 5"""
+        == """<Constraint sense='<=' size=3 dimensions={'x': 3} terms=6>
+constraint_2[1]: x2[1] * x1 <= 5
+constraint_2[2]: x2[2] * x1 <= 5
+constraint_2[3]: x2[3] * x1 <= 5"""
+    )
+
+
+def test_to_str():
+    expr = csvs_to_expr(
+        """
+    day,water_drank
+    1,2.00000000001
+    2,3
+    3,4
+"""
+    )
+    Config.float_to_str_precision = None
+    assert str(expr) == "[1]: 2.00000000001\n[2]: 3\n[3]: 4"
+    Config.float_to_str_precision = 6
+    assert str(expr) == "[1]: 2\n[2]: 3\n[3]: 4"
+    # repr() is what is used when the object is printed in the console
+    assert (
+        repr(expr)
+        == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2\n[2]: 3\n[3]: 4"
+    )
+    Config.float_to_str_precision = None
+    assert (
+        repr(expr)
+        == "<Expression size=3 dimensions={'day': 3} terms=3>\n[1]: 2.00000000001\n[2]: 3\n[3]: 4"
     )
 
 

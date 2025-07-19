@@ -1,5 +1,9 @@
-# Based on example at page 112 in book:
-#       N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
+"""Pyoframe formulation of a sudoku solver.
+
+Based on example at page 112 in book:
+      N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
+"""
+
 from pathlib import Path
 
 import polars as pl

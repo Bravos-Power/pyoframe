@@ -12,7 +12,5 @@ Pyoframe has a few special functions that make working with dataframes easy and 
 
 ## `Expression.add_dim()`
 
-## `Expression.drop_unmatched()`
-
-## `Expression.keep_unmatched()`
+## `drop_unmatched` and `keep_unmatched`
 

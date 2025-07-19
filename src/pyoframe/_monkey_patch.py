@@ -1,3 +1,5 @@
+"""Module defining the functions used to monkey patch polars and pandas."""
+
 from functools import wraps
 
 import pandas as pd
@@ -36,8 +38,8 @@ def _dataframe_to_expr(self: pl.DataFrame) -> Expression:
 
 
 def patch_dataframe_libraries():
-    """
-    Applies two patches to the DataFrame and Series classes of both pandas and polars.
+    """Patches the DataFrame and Series classes of both pandas and polars.
+
     1) Patches arithmetic operators (e.g. `__add__`) such that operations between DataFrames/Series and `Expressionable`s
         are not supported (i.e. `return NotImplemented`). This leads Python to try the reverse operation (e.g. `__radd__`)
         which is supported by the `Expressionable` class.

@@ -4,6 +4,7 @@ hide:
   - toc
   - actions
   - footer
+  - feedback
 template: home.html
 ---
 # Pyoframe: A loved alternative to GAMS, Pyomo, and Linopy

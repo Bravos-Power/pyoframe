@@ -1,6 +1,4 @@
-"""
-File containing utility functions and classes.
-"""
+"""File containing utility functions and classes."""
 
 from dataclasses import dataclass, field
 from functools import wraps
@@ -27,9 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
-    """
-    Helper function to generate __repr__ strings for classes. See usage for examples.
-    """
+    """Helper function to generate __repr__ strings for classes. See usage for examples."""
     props = {prop: getattr(obj, prop) for prop in _props}
     props_str = " ".join(f"{k}={v}" for k, v in props.items() if v is not None)
     if props_str:
@@ -41,8 +37,8 @@ def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
 def parse_inputs_as_iterable(
     *inputs: Union[Any, Iterable[Any]],
 ) -> Iterable[Any]:
-    """
-    Converts a parameter *x: Any | Iteraable[Any] to a single Iterable[Any] object.
+    """Converts a parameter *x: Any | Iterable[Any] to a single Iterable[Any] object.
+
     This is helpful to support these two ways of passing arguments:
         - foo([1, 2, 3])
         - foo(1, 2, 3)
@@ -85,8 +81,7 @@ def concat_dimensions(
     replace_spaces: bool = True,
     to_col: str = "concated_dim",
 ) -> pl.DataFrame:
-    """
-    Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
+    """Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
 
     Parameters:
         df:
@@ -187,8 +182,7 @@ def concat_dimensions(
 def cast_coef_to_string(
     df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
 ) -> pl.DataFrame:
-    """
-    Converts column `column_name` of the dataframe `df` to a string. Rounds to `Config.print_float_precision` decimal places if not None.
+    """Converts column `column_name` of the dataframe `df` to a string. Rounds to `Config.print_float_precision` decimal places if not None.
 
     Parameters:
         df:
@@ -262,19 +256,18 @@ def unwrap_single_values(func):
 def dataframe_to_tupled_list(
     df: pl.DataFrame, num_max_elements: Optional[int] = None
 ) -> str:
-    """
-    Converts a dataframe into a list of tuples. Used to print a Set to the console. See examples for behaviour.
+    """Converts a dataframe into a list of tuples. Used to print a Set to the console. See examples for behaviour.
 
     Examples:
         >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5]})
         >>> dataframe_to_tupled_list(df)
         '[1, 2, 3, 4, 5]'
         >>> dataframe_to_tupled_list(df, 3)
-        '[1, 2, 3, ...]'
+        '[1, 2, 3, …]'
 
         >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 3, 4, 5, 6]})
         >>> dataframe_to_tupled_list(df, 3)
-        '[(1, 2), (2, 3), (3, 4), ...]'
+        '[(1, 2), (2, 3), (3, 4), …]'
     """
     elipse = False
     if num_max_elements is not None:
@@ -288,7 +281,7 @@ def dataframe_to_tupled_list(
 
     res = str(list(res))
     if elipse:
-        res = res[:-1] + ", ...]"
+        res = res[:-1] + ", …]"
     return res
 
 
@@ -299,8 +292,7 @@ class FuncArgs:
 
 
 class Container:
-    """
-    A placeholder object that makes it easy to set and get attributes. Used in Model.attr and Model.params, for example.
+    """A placeholder object that makes it easy to set and get attributes. Used in Model.attr and Model.params, for example.
 
     Examples:
         >>> x = {}
@@ -331,8 +323,7 @@ class Container:
 
 
 class NamedVariableMapper:
-    """
-    Maps variables to a string representation using the object's name and dimensions.
+    """Maps variables to a string representation using the object's name and dimensions.
 
     Examples:
         >>> import polars as pl
@@ -394,9 +385,7 @@ class NamedVariableMapper:
 
 
 def for_solvers(*solvers: str):
-    """
-    Decorator that limits the function to only be called when the solver is in the `only` list.
-    """
+    """Decorator that limits the function to only be called when the solver is in the `only` list."""
 
     def decorator(func):
         @wraps(func)
