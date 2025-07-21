@@ -69,6 +69,9 @@ plugins:
       handlers:
         python:
           options:
+            inherited_members: true
+            # filters:
+            #   - ["!^_"]
             show_if_no_docstring: true
             summary:
               attributes: true
@@ -101,7 +104,7 @@ extra_javascript:
   - javascripts/feedback.js
 
 extra:
-  analytics: 
+  analytics:
     provider: custom
     feedback:
       title: Was this page helpful?
@@ -113,7 +116,7 @@ extra:
         - icon: material/emoticon-sad-outline
           name: This page could be improved
           data: 0
-          note: Let us know how we can improve this page. 
+          note: Let us know how we can improve this page.
 
 watch:
   - src
