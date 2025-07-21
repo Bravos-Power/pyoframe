@@ -1214,7 +1214,7 @@ class Constraint(ModelElementWithId):
         self.lhs = lhs
         self._model = lhs._model
         self.sense = sense
-        self.to_relax: Optional[FuncArgs] = None
+        self._to_relax: Optional[FuncArgs] = None
         self._attr = Container(self._set_attribute, self._get_attribute)
 
         dims = self.lhs.dimensions
@@ -1275,8 +1275,8 @@ class Constraint(ModelElementWithId):
 
     def _on_add_to_model(self, model: "Model", name: str):
         super()._on_add_to_model(model, name)
-        if self.to_relax is not None:
-            self.relax(*self.to_relax.args, **self.to_relax.kwargs)
+        if self._to_relax is not None:
+            self.relax(*self._to_relax.args, **self._to_relax.kwargs)
         self._assign_ids()
 
     def _assign_ids(self):
@@ -1364,7 +1364,7 @@ class Constraint(ModelElementWithId):
         return CONSTRAINT_KEY
 
     def filter(self, *args, **kwargs) -> pl.DataFrame:
-        """Syntactic sugar on Constraint.lhs.data.filter(), to help debugging."""
+        """Syntactic sugar on `Constraint.lhs.data.filter()`, to help debugging."""
         return self.lhs.data.filter(*args, **kwargs)
 
     def relax(
@@ -1463,7 +1463,7 @@ class Constraint(ModelElementWithId):
 
         m = self._model
         if m is None or self.name is None:
-            self.to_relax = FuncArgs(args=[cost, max])
+            self._to_relax = FuncArgs(args=[cost, max])
             return self
 
         var_name = f"{self.name}_relaxation"
