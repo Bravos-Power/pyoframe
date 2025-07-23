@@ -56,10 +56,21 @@ highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "I", "W292", "W291", "D"]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "W292",
+    "W291",
+    "D",
+    "UP",   # Ensures consistency with Union vs | for type hinting (and similar)
+    "TC",   # Forces type imports into a TYPE_CHECKING block
+]
 ignore = [
-    "D105",  # magic method docstring
-    "D107",  # __init__ docstring
+    "D105", # magic method docstring
+    "D107", # __init__ docstring
 ]
 
 [tool.ruff.lint.per-file-ignores]

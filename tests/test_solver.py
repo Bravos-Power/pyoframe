@@ -7,7 +7,7 @@ from polars.testing import assert_frame_equal
 from pytest import approx
 
 import pyoframe as pf
-from pyoframe.constants import SUPPORTED_SOLVERS, _Solver
+from pyoframe._constants import SUPPORTED_SOLVERS, _Solver
 from tests.util import get_tol, get_tol_pl
 
 

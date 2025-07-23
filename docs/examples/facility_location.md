@@ -7,11 +7,10 @@ the maximum distance between any customer and its nearest facility is minimized.
 
 ## Model
 
-
 ```python
 import pandas as pd
 
-from pyoframe import Model, Set, sum, Variable
+import pyoframe as pf
 
 G = 4
 F = 3
@@ -20,14 +19,14 @@ F = 3
 model = Model()
 
 # Define sets
-model.facilities = Set(f=range(F))
-model.x_axis = Set(x=range(G))
-model.y_axis = Set(y=range(G))
-model.axis = Set(d=[1, 2])
+model.facilities = pf.Set(f=range(F))
+model.x_axis = pf.Set(x=range(G))
+model.y_axis = pf.Set(y=range(G))
+model.axis = pf.Set(d=[1, 2])
 model.customers = model.x_axis * model.y_axis
 
 
-model.facility_position = Variable(model.facilities, model.axis, lb=0, ub=1)
+model.facility_position = pf.Variable(model.facilities, model.axis, lb=0, ub=1)
 model.customer_position_x = pd.DataFrame(
     {"x": range(G), "x_pos": [step / (G - 1) for step in range(G)]}
 ).to_expr()
@@ -35,13 +34,13 @@ model.customer_position_y = pd.DataFrame(
     {"y": range(G), "y_pos": [step / (G - 1) for step in range(G)]}
 ).to_expr()
 
-model.max_distance = Variable(lb=0)
+model.max_distance = pf.Variable(lb=0)
 
-model.is_closest = Variable(model.customers, model.facilities, vtype="binary")
-model.con_only_one_closest = sum("f", model.is_closest) == 1
+model.is_closest = pf.Variable(model.customers, model.facilities, vtype="binary")
+model.con_only_one_closest = pf.sum("f", model.is_closest) == 1
 
-model.dist_x = Variable(model.x_axis, model.facilities)
-model.dist_y = Variable(model.y_axis, model.facilities)
+model.dist_x = pf.Variable(model.x_axis, model.facilities)
+model.dist_y = pf.Variable(model.y_axis, model.facilities)
 model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
     "f"
 ) - model.facility_position.pick(d=1).add_dim("x")

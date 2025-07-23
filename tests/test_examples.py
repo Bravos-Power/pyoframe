@@ -9,14 +9,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
 import pyoframe as pf
-from pyoframe.constants import SUPPORTED_SOLVERS, _Solver
+from pyoframe._constants import SUPPORTED_SOLVERS, _Solver
 from tests.util import get_tol_pl
 
 
@@ -50,7 +50,7 @@ class Example:
         )
         return path
 
-    def get_solve_with_gurobipy(self) -> Optional[Any]:
+    def get_solve_with_gurobipy(self) -> Any | None:
         parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
@@ -130,8 +130,8 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
         )
 
 
-def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
-    with open(sol_file_path, mode="r") as f:
+def parse_sol(sol_file_path) -> list[tuple[str, float]]:
+    with open(sol_file_path) as f:
         sol = f.read()
     sol = sol.partition("\nHiGHS v1\n")[0]  # Cut out everything after this
     sol = [line.strip() for line in sol.split("\n")]

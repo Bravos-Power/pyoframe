@@ -58,6 +58,22 @@ template: home.html
 
     Your go-to reference for understanding our API.
 
-    [:octicons-arrow-right-24: Reference](./reference/public.md)
+    [:octicons-arrow-right-24: Reference](./reference/index.md)
+
+-   :octicons-discussion-closed-24:{ .lg .middle } __Ask a question__
+
+    ---
+
+    Ask questions and discuss on our forum.
+
+    [:octicons-arrow-right-24: GitHub Discussions](https://github.com/Bravos-Power/pyoframe/discussions)
+
+-   :material-bug:{ .lg .middle } __Report a bug__
+
+    ---
+
+    Bugs and feature requests can be submitted on GitHub.
+
+    [:octicons-arrow-right-24: GitHub Issues](https://github.com/Bravos-Power/pyoframe/issues)
 
 </div>

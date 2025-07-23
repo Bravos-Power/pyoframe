@@ -5,8 +5,8 @@ from functools import wraps
 import pandas as pd
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
-from pyoframe.core import Expression, SupportsMath
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe._core import Expression, SupportsMath
 
 # pyright: reportAttributeAccessIssue=false
 

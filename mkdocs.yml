@@ -69,8 +69,10 @@ plugins:
       handlers:
         python:
           options:
-            inherited_members: true
-            filters: ["!^_"]
+            unwrap_annotated: false
+            show_bases: false
+            inherited_members: true  # Include inherited methods in children classes.
+            filters: ["!^_"]  # Exclude dunder methods from documentation.
             show_if_no_docstring: true
             summary:
               attributes: true
@@ -80,6 +82,7 @@ plugins:
             extensions:
               - dataclasses
             merge_init_into_class: true
+            show_labels: false  # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
             docstring_options:
               ignore_init_summary: true
               trim_doctest_flags: true
@@ -97,7 +100,7 @@ plugins:
   - awesome-nav
   - gen-files:
       scripts:
-        - scripts/gen_ref_pages.py
+        - scripts/generate_api_reference.py
 
 extra_javascript:
   - javascripts/feedback.js

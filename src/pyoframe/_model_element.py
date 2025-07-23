@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import polars as pl
 
 from pyoframe._arithmetic import _get_dimensions
-from pyoframe._utils import concat_dimensions
-from pyoframe.constants import (
+from pyoframe._constants import (
     COEF_KEY,
     KEY_TYPE,
     QUAD_VAR_KEY,
@@ -17,6 +16,7 @@ from pyoframe.constants import (
     VAR_KEY,
     Config,
 )
+from pyoframe._utils import concat_dimensions
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe.model import Model
@@ -48,11 +48,11 @@ class ModelElement(ABC):
             data = data.cast({QUAD_VAR_KEY: KEY_TYPE})
 
         self._data = data
-        self._model: Optional[Model] = None
+        self._model: Model | None = None
         self.name = None
         super().__init__(**kwargs)
 
-    def _on_add_to_model(self, model: "Model", name: str):
+    def _on_add_to_model(self, model: Model, name: str):
         self.name = name
         self._model = model
 
@@ -62,12 +62,12 @@ class ModelElement(ABC):
         return self._data
 
     @property
-    def friendly_name(self) -> str:
+    def _friendly_name(self) -> str:
         """Returns the name of the element, or `'unnamed'` if it has no name."""
         return self.name if self.name is not None else "unnamed"
 
     @property
-    def dimensions(self) -> Optional[List[str]]:
+    def dimensions(self) -> list[str] | None:
         """The names of the data's dimensions.
 
         Examples:
@@ -86,7 +86,7 @@ class ModelElement(ABC):
         return _get_dimensions(self.data)
 
     @property
-    def dimensions_unsafe(self) -> List[str]:
+    def dimensions_unsafe(self) -> list[str]:
         """Same as `dimensions` but returns an empty list if there are no dimensions instead of `None`.
 
         When unsure, use `dimensions` instead since the type checker forces users to handle the None case (no dimensions).
@@ -97,7 +97,7 @@ class ModelElement(ABC):
         return dims
 
     @property
-    def shape(self) -> Dict[str, int]:
+    def shape(self) -> dict[str, int]:
         """The number of indices in each dimension.
 
         Examples:
@@ -146,7 +146,7 @@ class ModelElement(ABC):
 def _support_polars_method(method_name: str):
     """Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute."""
 
-    def method(self: "_SupportPolarsMethodMixin", *args, **kwargs) -> Any:
+    def method(self: SupportPolarsMethodMixin, *args, **kwargs) -> Any:
         result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
         if isinstance(result_from_polars, pl.DataFrame):
             return self._new(result_from_polars)
@@ -156,7 +156,7 @@ def _support_polars_method(method_name: str):
     return method
 
 
-class _SupportPolarsMethodMixin(ABC):
+class SupportPolarsMethodMixin(ABC):
     rename = _support_polars_method("rename")
     with_columns = _support_polars_method("with_columns")
     filter = _support_polars_method("filter")

@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 
 import polars as pl
 import pyoptinterface as poi
@@ -89,7 +89,7 @@ class Config(metaclass=_ConfigMeta):
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
     """
     The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
-    If `auto`, Pyoframe will choose the first solver in [SUPPORTED_SOLVERS][pyoframe.constants.SUPPORTED_SOLVERS] that doesn't produce an error.
+    If `auto`, Pyoframe will try to use whichever solver is installed.
     If `raise`, an exception will be raised when [Model][pyoframe.Model] is instantiated without specifying a solver.
 
     We recommend that users specify their solver when instantiating [Model][pyoframe.Model] rather than relying on this option.
@@ -105,7 +105,7 @@ class Config(metaclass=_ConfigMeta):
 
     !!! warning
         This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
-        behaviors (see [here](/pyoframe/learn/getting-started/special-functions#drop_unmatched-and-keep_unmatched)).
+        behaviors (see [here](../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)).
         Only consider enabling after you have thoroughly tested your code.
 
     Examples:
@@ -117,7 +117,7 @@ class Config(metaclass=_ConfigMeta):
         >>> population + population_influx
         Traceback (most recent call last):
         ...
-        pyoframe.constants.PyoframeError: Failed to add expressions:
+        pyoframe._constants.PyoframeError: Failed to add expressions:
         <Expression size=3 dimensions={'city': 3} terms=3> + <Expression size=2 dimensions={'city': 2} terms=2>
         Due to error:
         Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
@@ -198,7 +198,7 @@ class Config(metaclass=_ConfigMeta):
         unexpected errors. Setting the tolerance to zero disables the check.
     """
 
-    float_to_str_precision: Optional[int] = 5
+    float_to_str_precision: int | None = 5
     """Number of decimal places to use when displaying mathematical expressions."""
 
     print_uses_variable_names: bool = True
@@ -238,45 +238,57 @@ class Config(metaclass=_ConfigMeta):
             setattr(cls, key, value)
 
 
-class _ConstraintSense(Enum):
+class ConstraintSense(Enum):
     LE = "<="
     GE = ">="
     EQ = "="
 
     def to_poi(self):
         """Convert the constraint sense to its pyoptinterface equivalent."""
-        if self == _ConstraintSense.LE:
+        if self == ConstraintSense.LE:
             return poi.ConstraintSense.LessEqual
-        elif self == _ConstraintSense.EQ:
+        elif self == ConstraintSense.EQ:
             return poi.ConstraintSense.Equal
-        elif self == _ConstraintSense.GE:
+        elif self == ConstraintSense.GE:
             return poi.ConstraintSense.GreaterEqual
         else:
             raise ValueError(f"Invalid constraint type: {self}")  # pragma: no cover
 
 
-class _ObjSense(Enum):
+class ObjSense(Enum):
     MIN = "min"
     MAX = "max"
 
     def to_poi(self):
         """Convert the objective sense to its pyoptinterface equivalent."""
-        if self == _ObjSense.MIN:
+        if self == ObjSense.MIN:
             return poi.ObjectiveSense.Minimize
-        elif self == _ObjSense.MAX:
+        elif self == ObjSense.MAX:
             return poi.ObjectiveSense.Maximize
         else:
             raise ValueError(f"Invalid objective sense: {self}")  # pragma: no cover
 
 
 class VType(Enum):
-    """An enum to specify the variable type (continuous, binary, or integer)."""
+    """An [Enum](https://realpython.com/python-enum/) that can be used to specify the variable type.
+
+    Examples:
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(vtype=VType.BINARY)
+
+        The enum's string values can also be used directly although this is prone to typos:
+
+        >>> m.Y = pf.Variable(vtype="binary")
+    """
 
     CONTINUOUS = "continuous"
+    """Variables that can be any real value."""
     BINARY = "binary"
+    """Variables that must be either 0 or 1."""
     INTEGER = "integer"
+    """Variables that must be integer values."""
 
-    def to_poi(self):
+    def _to_poi(self):
         """Convert the Variable type to its pyoptinterface equivalent."""
         if self == VType.CONTINUOUS:
             return poi.VariableDomain.Continuous
@@ -300,7 +312,7 @@ class UnmatchedStrategy(Enum):
 # See: https://stackoverflow.com/questions/67292470/type-hinting-enum-member-value-in-python
 ObjSenseValue = Literal["min", "max"]
 VTypeValue = Literal["continuous", "binary", "integer"]
-for enum, type in [(_ObjSense, ObjSenseValue), (VType, VTypeValue)]:
+for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
 SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt"]
@@ -310,6 +322,6 @@ assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
 
 
 class PyoframeError(Exception):
-    """Class for all Pyoframe-specific errors."""
+    """Class for all Pyoframe-specific errors, typically errors arising from improper arithmetic operations."""
 
     pass

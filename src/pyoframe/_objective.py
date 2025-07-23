@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pyoptinterface as poi
 
-from pyoframe.constants import _ObjSense
-from pyoframe.core import Expression, SupportsToExpr
+from pyoframe._constants import ObjSense
+from pyoframe._core import Expression, SupportsToExpr
 
 
 class Objective(Expression):
@@ -91,7 +91,7 @@ class Objective(Expression):
         )
         if (
             not self._model.solver.supports_objective_sense
-            and self._model.sense == _ObjSense.MAX
+            and self._model.sense == ObjSense.MAX
         ):
             obj_value *= -1
         return obj_value
@@ -107,7 +107,7 @@ class Objective(Expression):
         kwargs = {}
         if (
             not self._model.solver.supports_objective_sense
-            and self._model.sense == _ObjSense.MAX
+            and self._model.sense == ObjSense.MAX
         ):
             poi_expr = (-self)._to_poi()
             kwargs["sense"] = poi.ObjectiveSense.Minimize

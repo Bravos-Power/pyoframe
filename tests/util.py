@@ -6,12 +6,12 @@ import ast
 import inspect
 import io
 import textwrap
-from typing import TYPE_CHECKING, Any, Literal, Tuple, Union, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import polars as pl
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.core import Expression
+    from pyoframe._core import Expression
 
 
 @overload
@@ -23,12 +23,12 @@ def csvs_to_dataframe(
 @overload
 def csvs_to_dataframe(
     *csv_strings: str,
-) -> Tuple[pl.DataFrame, ...]: ...
+) -> tuple[pl.DataFrame, ...]: ...
 
 
 def csvs_to_dataframe(
     *csv_strings: str,
-) -> Union[Tuple[pl.DataFrame, ...], pl.DataFrame]:
+) -> tuple[pl.DataFrame, ...] | pl.DataFrame:
     """Convert a sequence of CSV strings to Pyoframe expressions."""
     dfs = []
     for csv_string in csv_strings:
@@ -42,21 +42,21 @@ def csvs_to_dataframe(
 @overload
 def csvs_to_expr(
     csv_strings: str,
-) -> "Expression": ...
+) -> Expression: ...
 
 
 @overload
 def csvs_to_expr(
     *csv_strings: str,
-) -> Tuple["Expression", ...]: ...
+) -> tuple[Expression, ...]: ...
 
 
 def csvs_to_expr(
     *csv_strings: str,
-) -> Union[Tuple["Expression", ...], "Expression"]:
+) -> tuple[Expression, ...] | Expression:
     if len(csv_strings) == 1:
         return csvs_to_dataframe(*csv_strings).to_expr()
-    return tuple((df.to_expr() for df in csvs_to_dataframe(*csv_strings)))
+    return tuple(df.to_expr() for df in csvs_to_dataframe(*csv_strings))
 
 
 _tolerances = {

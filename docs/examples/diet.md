@@ -15,8 +15,7 @@ os.chdir(os.path.join(os.getcwd(), "tests/examples/diet_problem/input_data"))
 ```python
 import pandas as pd
 
-from pyoframe import Model, Variable, sum, sum_by
-
+import pyoframe as pf
 
 # Import data
 food = pd.read_csv("foods.csv")
@@ -24,16 +23,16 @@ nutrients = pd.read_csv("nutrients.csv")
 food_nutrients = pd.read_csv("foods_to_nutrients.csv")
 
 # Construct model
-m = Model()
-m.Buy = Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
+m = pf.Model()
+m.Buy = pf.Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
 
-nutrient_intake = sum_by("category", m.Buy * food_nutrients)
+nutrient_intake = pf.sum_by("category", m.Buy * food_nutrients)
 m.min_nutrients = (
     nutrients[["category", "min"]] <= nutrient_intake.drop_unmatched()
 )  # (1)!
 m.max_nutrients = nutrient_intake.drop_unmatched() <= nutrients[["category", "max"]]
 
-m.minimize = sum(m.Buy * food[["food", "cost"]])
+m.minimize = pf.sum(m.Buy * food[["food", "cost"]])
 
 # Solve model
 m.optimize()

@@ -1,10 +1,12 @@
 """Defines helper functions for doing arithmetic operations on expressions (e.g. addition)."""
 
-from typing import TYPE_CHECKING, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import polars as pl
 
-from pyoframe.constants import (
+from pyoframe._constants import (
     COEF_KEY,
     CONST_TERM,
     KEY_TYPE,
@@ -17,10 +19,10 @@ from pyoframe.constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.core import Expression
+    from pyoframe._core import Expression
 
 
-def _multiply_expressions(self: "Expression", other: "Expression") -> "Expression":
+def _multiply_expressions(self: Expression, other: Expression) -> Expression:
     """Multiply two or more expressions together.
 
     Examples:
@@ -36,7 +38,7 @@ def _multiply_expressions(self: "Expression", other: "Expression") -> "Expressio
         >>> result * m.x3
         Traceback (most recent call last):
         ...
-        pyoframe.constants.PyoframeError: Failed to multiply expressions:
+        pyoframe._constants.PyoframeError: Failed to multiply expressions:
         <Expression size=1 dimensions={} terms=1 degree=2> * <Expression size=1 dimensions={} terms=1>
         Due to error:
         Cannot multiply a quadratic expression by a non-constant.
@@ -55,7 +57,7 @@ def _multiply_expressions(self: "Expression", other: "Expression") -> "Expressio
         ) from error
 
 
-def _add_expressions(*expressions: "Expression") -> "Expression":
+def _add_expressions(*expressions: Expression) -> Expression:
     try:
         return _add_expressions_core(*expressions)
     except PyoframeError as error:
@@ -69,7 +71,7 @@ def _add_expressions(*expressions: "Expression") -> "Expression":
         ) from error
 
 
-def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expression":
+def _multiply_expressions_core(self: Expression, other: Expression) -> Expression:
     self_degree, other_degree = self.degree(), other.degree()
     if self_degree + other_degree > 2:
         # We know one of the two must be a quadratic since 1 + 1 is not greater than 2.
@@ -107,7 +109,7 @@ def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expr
     return self._new(data)
 
 
-def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expression":
+def _quadratic_multiplication(self: Expression, other: Expression) -> Expression:
     """Multiply two expressions of degree 1.
 
     Examples:
@@ -160,7 +162,7 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
     return self._new(data)
 
 
-def _add_expressions_core(*expressions: "Expression") -> "Expression":
+def _add_expressions_core(*expressions: Expression) -> Expression:
     # Mapping of how a sum of two expressions should propogate the unmatched strategy
     propogatation_strategies = {
         (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP): UnmatchedStrategy.DROP,
@@ -318,7 +320,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
     return new_expr
 
 
-def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
+def _add_dimension(self: Expression, target: Expression) -> Expression:
     target_dims = target.dimensions
     if target_dims is None:
         return self
@@ -441,7 +443,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
     return df
 
 
-def _get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
+def _get_dimensions(df: pl.DataFrame) -> list[str] | None:
     """Returns the dimensions of the DataFrame.
 
     Reserved columns do not count as dimensions. If there are no dimensions,

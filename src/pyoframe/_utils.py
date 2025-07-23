@@ -1,27 +1,20 @@
 """File containing utility functions and classes."""
 
+from __future__ import annotations
+
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.model import Variable
-    from pyoframe.model_element import ModelElementWithId
+    from pyoframe._model import Variable
+    from pyoframe._model_element import ModelElementWithId
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
@@ -35,7 +28,7 @@ def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
 
 
 def parse_inputs_as_iterable(
-    *inputs: Union[Any, Iterable[Any]],
+    *inputs: Any | Iterable[Any],
 ) -> Iterable[Any]:
     """Converts a parameter *x: Any | Iterable[Any] to a single Iterable[Any] object.
 
@@ -55,7 +48,7 @@ def parse_inputs_as_iterable(
     return inputs
 
 
-def _is_iterable(input: Union[Any, Iterable[Any]]) -> bool:
+def _is_iterable(input: Any | Iterable[Any]) -> bool:
     # Inspired from the polars library, TODO: Consider using opposite check, i.e. equals list or tuple
     return isinstance(input, Iterable) and not isinstance(
         input,
@@ -75,7 +68,7 @@ def _is_iterable(input: Union[Any, Iterable[Any]]) -> bool:
 
 def concat_dimensions(
     df: pl.DataFrame,
-    prefix: Optional[str] = None,
+    prefix: str | None = None,
     keep_dims: bool = True,
     ignore_columns: Sequence[str] = RESERVED_COL_KEYS,
     replace_spaces: bool = True,
@@ -254,7 +247,7 @@ def unwrap_single_values(func):
 
 
 def dataframe_to_tupled_list(
-    df: pl.DataFrame, num_max_elements: Optional[int] = None
+    df: pl.DataFrame, num_max_elements: int | None = None
 ) -> str:
     """Converts a dataframe into a list of tuples. Used to print a Set to the console. See examples for behaviour.
 
@@ -287,8 +280,8 @@ def dataframe_to_tupled_list(
 
 @dataclass
 class FuncArgs:
-    args: List
-    kwargs: Dict = field(default_factory=dict)
+    args: list
+    kwargs: dict = field(default_factory=dict)
 
 
 class Container:
@@ -337,7 +330,7 @@ class NamedVariableMapper:
     CONST_TERM_NAME = "_ONE"
     NAME_COL = "__name"
 
-    def __init__(self, cls: Type["ModelElementWithId"]) -> None:
+    def __init__(self, cls: type[ModelElementWithId]) -> None:
         self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},
@@ -350,7 +343,7 @@ class NamedVariableMapper:
             )
         )
 
-    def add(self, element: "Variable") -> None:
+    def add(self, element: Variable) -> None:
         self._extend_registry(self._element_to_map(element))
 
     def _extend_registry(self, df: pl.DataFrame) -> None:
