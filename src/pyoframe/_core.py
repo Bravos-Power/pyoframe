@@ -389,32 +389,31 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
 class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
-    """A mathematical expression (linear or quadratic)."""
+    """A mathematical expression (linear or quadratic).
+
+    Examples:
+        >>> import pandas as pd
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "item": [1, 1, 1, 2, 2],
+        ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+        ...         "cost": [1, 2, 3, 4, 5],
+        ...     }
+        ... ).set_index(["item", "time"])
+        >>> m = pf.Model()
+        >>> m.Time = pf.Variable(df.index)
+        >>> m.Size = pf.Variable(df.index)
+        >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
+        >>> expr
+        <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
+        [1,mon]: Time[1,mon] + Size[1,mon]
+        [1,tue]: 2 Time[1,tue] +2 Size[1,tue]
+        [1,wed]: 3 Time[1,wed] +3 Size[1,wed]
+        [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
+        [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
+    """
 
     def __init__(self, data: pl.DataFrame):
-        """A linear expression.
-
-        Examples:
-            >>> import pandas as pd
-            >>> df = pd.DataFrame(
-            ...     {
-            ...         "item": [1, 1, 1, 2, 2],
-            ...         "time": ["mon", "tue", "wed", "mon", "tue"],
-            ...         "cost": [1, 2, 3, 4, 5],
-            ...     }
-            ... ).set_index(["item", "time"])
-            >>> m = pf.Model()
-            >>> m.Time = pf.Variable(df.index)
-            >>> m.Size = pf.Variable(df.index)
-            >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
-            >>> expr
-            <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
-            [1,mon]: Time[1,mon] + Size[1,mon]
-            [1,tue]: 2 Time[1,tue] +2 Size[1,tue]
-            [1,wed]: 3 Time[1,wed] +3 Size[1,wed]
-            [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
-            [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
-        """
         # Sanity checks, VAR_KEY and COEF_KEY must be present
         assert VAR_KEY in data.columns, "Missing variable column."
         assert COEF_KEY in data.columns, "Missing coefficient column."
@@ -435,7 +434,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @classmethod
     def constant(cls, constant: int | float) -> Expression:
-        """Creates a new expression equal to the given constant.
+        """Create a new expression equal to the given constant.
 
         Examples:
             >>> pf.Expression.constant(5)
@@ -502,7 +501,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return [VAR_KEY]
 
     def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True) -> Expression:
-        """Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
+        """Replace the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
 
         This is particularly useful to go from one type of dimensions to another. For example, to convert data that
         is indexed by city to data indexed by country (see example).
@@ -569,7 +568,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return mapped_expression
 
     def rolling_sum(self, over: str, window_size: int) -> Expression:
-        """Calculates the rolling sum of the Expression over a specified window size for a given dimension.
+        """Calculate the rolling sum of the Expression over a specified window size for a given dimension.
 
         This method applies a rolling sum operation over the dimension specified by `over`,
         using a window defined by `window_size`.
@@ -680,7 +679,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return QUAD_VAR_KEY in self.data.columns
 
     def degree(self) -> int:
-        """Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
+        """Return the degree of the expression (0=constant, 1=linear, 2=quadratic).
 
         Examples:
             >>> import pandas as pd
@@ -761,7 +760,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return _multiply_expressions(self, other)
 
     def to_expr(self) -> Expression:
-        """Returns the expression itself."""
+        """Return the expression itself."""
         return self
 
     def _learn_from_other(self, other: Expression):
@@ -867,7 +866,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @unwrap_single_values
     def evaluate(self) -> pl.DataFrame:
-        """The value of the expression. Only available after the model has been solved.
+        """Compute the value of the expression using the variables' solutions. Only available after the model has been solved.
 
         Examples:
             >>> m = pf.Model()
@@ -1839,7 +1838,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def next(self, dim: str, wrap_around: bool = False) -> Expression:
-        """Creates an expression where the variable at each index is the next variable in the specified dimension.
+        """Create an expression where the variable at each index is the next variable in the specified dimension.
 
         Parameters:
             dim:

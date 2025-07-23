@@ -222,7 +222,7 @@ class Config(metaclass=_ConfigMeta):
 
     @classmethod
     def reset_defaults(cls):
-        """Resets all configuration options to their default values.
+        """Reset all configuration options to their default values.
 
         Examples:
             >>> pf.Config.print_uses_variable_names

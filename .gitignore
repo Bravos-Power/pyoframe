@@ -13,5 +13,4 @@ site
 .idea
 src/pyoframe/_version.py
 htmlcov/
-benchmarks/energy_model/data/
-.snakemake/
+.snakemake

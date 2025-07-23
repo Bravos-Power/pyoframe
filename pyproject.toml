@@ -65,6 +65,7 @@ select = [
     "W292",
     "W291",
     "D",
+    "D401", # require imperative mood even though Google standard doesn't require it
     "UP",   # Ensures consistency with Union vs | for type hinting (and similar)
     "TC",   # Forces type imports into a TYPE_CHECKING block
 ]

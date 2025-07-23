@@ -144,7 +144,7 @@ class ModelElement(ABC):
 
 
 def _support_polars_method(method_name: str):
-    """Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute."""
+    """Wrap the underlying Polars method to make it accessible on ModelElement."""
 
     def method(self: SupportPolarsMethodMixin, *args, **kwargs) -> Any:
         result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
@@ -164,14 +164,14 @@ class SupportPolarsMethodMixin(ABC):
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
-        """Used to create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
+        """Create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
 
     @property
     @abstractmethod
     def data(self): ...
 
     def pick(self, **kwargs):
-        """Filters elements by the given criteria and then drops the filtered dimensions.
+        """Filter elements by the given criteria and then drop the filtered dimensions.
 
         Examples:
             >>> m = pf.Model()
@@ -213,4 +213,4 @@ class ModelElementWithId(ModelElement):
     @classmethod
     @abstractmethod
     def _get_id_column_name(cls) -> str:
-        """Returns the name of the column containing the IDs."""
+        """Return the name of the column containing the IDs."""

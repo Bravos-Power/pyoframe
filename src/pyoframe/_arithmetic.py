@@ -361,7 +361,7 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
 
 
 def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
-    """Combines terms with the same variables."""
+    """Combine terms with the same variables."""
     dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
     var_cols = [VAR_KEY] + ([QUAD_VAR_KEY] if QUAD_VAR_KEY in df.columns else [])
     df = df.group_by(dims + var_cols, maintain_order=True).sum()
@@ -369,7 +369,7 @@ def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
-    """Removes the quadratic column and terms with a zero coefficient, when applicable.
+    """Remove the quadratic column and terms with a zero coefficient, when applicable.
 
     Specifically, zero coefficient terms are always removed, except if they're the only terms in which case the expression contains a single term.
     The quadratic column is removed if the expression is not a quadratic.
@@ -444,7 +444,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _get_dimensions(df: pl.DataFrame) -> list[str] | None:
-    """Returns the dimensions of the DataFrame.
+    """Return the dimensions of the DataFrame.
 
     Reserved columns do not count as dimensions. If there are no dimensions,
     returns `None` to force caller to handle this special case.
