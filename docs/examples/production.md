@@ -8,11 +8,11 @@ This classical problem (Eiselt and Sandblom, p. 20) seeks to determine which pro
 
 1. Each product must go through all the machines.
 
-2. Every machine takes a different amount of time to process every product ([processing_times.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/production_planning/input_data/processing_times.csv)).
+2. Every machine takes a different amount of time to process every product ([`processing_times.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/production_planning/input_data/processing_times.csv)).
 
-3. Machines have a maximum lifetime before needing maintenance ([machines_availability.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/production_planning/input_data/machines_availability.csv)).
+3. Machines have a maximum lifetime before needing maintenance ([`machines_availability.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/production_planning/input_data/machines_availability.csv)).
 
-4. Each product yields a different amount of profit ([products_profit.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/production_planning/input_data/products_profit.csv)).
+4. Each product yields a different amount of profit ([`products_profit.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/production_planning/input_data/products_profit.csv)).
 
 *[Eiselt and Sandblom]: H.A Eiselt and Carl-Louis Sandblom. Operations Research: A Model-Based Approach 3rd Edition, Springer, 2022.
 

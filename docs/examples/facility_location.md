@@ -1,4 +1,4 @@
-# Facility Location Problem
+# Facility location Problem
 
 ## Problem statement
 

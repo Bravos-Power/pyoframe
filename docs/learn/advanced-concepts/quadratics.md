@@ -2,9 +2,7 @@
 
 Quadratic expressions work as you'd expect. Simply multiply two linear expression together (or square an expression with `**2`) and you'll get a quadratic. The quadratic can then be used in constraints or the objective.
 
-## Example
-
-### Maximize area of box
+## Example 1: Maximize area of box
 Here's a short example that shows that a square maximizes the area of any box with a fixed perimeter.
 
 ```python
@@ -29,7 +27,7 @@ assert model.w.solution == model.h.solution
 assert model.objective.evaluate() == 25
 -->
 
-### Facility Location Problem
+## Example 2: Facility location problem
 
 See [examples/facility_location](../../examples/facility_location.md).
 
