@@ -1,9 +1,4 @@
-"""Pyoframe's public API accessible via `import pyoframe`.
-
-Note:
-    `import pyoframe` will automatically patch Polars and Pandas
-    to make `DataFrame.to_expr()` available.
-"""
+"""Pyoframe's public API accessible via `import pyoframe as pf`."""
 
 from pyoframe._constants import Config, ObjSense, PyoframeError, VType
 from pyoframe._core import Constraint, Expression, Set, Variable, sum, sum_by

@@ -1,4 +1,4 @@
-"""Generate the code reference pages and navigation."""
+"""Script to auto-generate the reference API documentation pages."""
 
 from pathlib import Path
 
