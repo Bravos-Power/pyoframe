@@ -24,7 +24,7 @@ def test_set_multiplication():
 def test_set_multiplication_same_name():
     dim1 = [1, 2, 3]
     dim2 = ["a", "b"]
-    with pytest.raises(AssertionError, match="columns in common"):
+    with pytest.raises(AssertionError, match="dimension 'x' is present in both sets"):
         Set(x=dim1) * Set(x=dim2)
 
 

@@ -271,7 +271,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> Set._parse_acceptable_sets([dim1, dim2])
             Traceback (most recent call last):
             ...
-            AssertionError: All coordinates must have unique column names.
+            AssertionError: Dimension 'dim1' is not unique.
             >>> dim2.name = "dim2"
             >>> Set._parse_acceptable_sets([dim1, dim2])
             shape: (6, 2)
@@ -298,7 +298,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         for df in over_frames[1:]:
             overlap_dims = set(over_merged.columns) & set(df.columns)
             assert not overlap_dims, (
-                f"Dimension {tuple(overlap_dims)[0]} is not unique."
+                f"Dimension '{tuple(overlap_dims)[0]}' is not unique."
             )
             over_merged = over_merged.join(df, how="cross")
         return over_merged

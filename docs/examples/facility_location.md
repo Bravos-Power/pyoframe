@@ -46,7 +46,7 @@ model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
 model.con_dist_y = model.dist_y == model.customer_position_y.add_dim(
     "f"
 ) - model.facility_position.pick(d=2).add_dim("y")
-model.dist = Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
+model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
 model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
     model.dist_y**2
 ).add_dim("x")
