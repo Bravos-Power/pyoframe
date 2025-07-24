@@ -2,7 +2,7 @@
 
 ## Problem statement
 
-Given a list of potential foods, their costs, and their availability ([foods.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods.csv)), and a list of the nutrients (e.g., protein, fats, etc.) contained in each food ([foods_to_nutrients.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods_to_nutrients.csv)), how can you satisfy your dietary requirements ([nutrients.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/nutrients.csv)) while minimizing total costs?
+Given a list of potential foods, their costs, and their availability ([`foods.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods.csv)), and a list of the nutrients (e.g., protein, fats, etc.) contained in each food ([`foods_to_nutrients.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods_to_nutrients.csv)), how can you satisfy your dietary requirements ([`nutrients.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/nutrients.csv)) while minimizing total costs?
 
 ## Model
 
@@ -28,11 +28,12 @@ m.Buy = pf.Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
 
 nutrient_intake = pf.sum_by("category", m.Buy * food_nutrients)
 m.min_nutrients = (
-    nutrients[["category", "min"]] <= nutrient_intake.drop_unmatched()
-)  # (1)!
+    nutrients[["category", "min"]] <= nutrient_intake.drop_unmatched()  # (1)!
+)
 m.max_nutrients = nutrient_intake.drop_unmatched() <= nutrients[["category", "max"]]
 
-m.minimize = pf.sum(m.Buy * food[["food", "cost"]])
+total_cost = pf.sum(m.Buy * food[["food", "cost"]])
+m.minimize = total_cost
 
 # Solve model
 m.optimize()
@@ -40,9 +41,11 @@ m.optimize()
 
 1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)
 
-So what should you eat...
+So the solution is...
 
 ```pycon
+>>> total_cost.evaluate()
+12.060249999999998
 >>> m.Buy.solution
 ┌───────────┬──────────┐
 │ food      ┆ solution │

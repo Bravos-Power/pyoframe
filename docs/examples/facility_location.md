@@ -21,7 +21,7 @@ model = pf.Model()
 model.facilities = pf.Set(f=range(F))
 model.x_axis = pf.Set(x=range(G))
 model.y_axis = pf.Set(y=range(G))
-model.axis = pf.Set(d=[1, 2])
+model.axis = pf.Set(axis=["x", "y"])
 model.customers = model.x_axis * model.y_axis  # (1)!
 
 
@@ -42,16 +42,15 @@ model.dist_x = pf.Variable(model.x_axis, model.facilities)
 model.dist_y = pf.Variable(model.y_axis, model.facilities)
 model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
     "f"
-) - model.facility_position.pick(d=1).add_dim("x")
+) - model.facility_position.pick(axis="x").add_dim("x")
 model.con_dist_y = model.dist_y == model.customer_position_y.add_dim(
     "f"
-) - model.facility_position.pick(d=2).add_dim("y")
+) - model.facility_position.pick(axis="y").add_dim("y")
 model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
 model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
     model.dist_y**2
 ).add_dim("x")
 
-# Twice the max distance which ensures that when is_closest is 0, the constraint is not binding.
 M = 2 * 1.414
 model.con_max_distance = model.max_distance.add_dim("x", "y", "f") >= model.dist - M * (
     1 - model.is_closest
@@ -63,7 +62,7 @@ model.minimize = model.max_distance
 model.optimize()
 ```
 
-1. Multiplying [Sets][pyoframe.Set] returns the [cartesian product](https://en.wikipedia.org/wiki/Cartesian_product).
+1. Multiplying [Sets][pyoframe.Set] returns their [cartesian product](https://en.wikipedia.org/wiki/Cartesian_product).
 
 So what's the maximum distance from a customer to its nearest facility?
 
