@@ -296,8 +296,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         over_merged = over_frames[0]
 
         for df in over_frames[1:]:
-            assert set(over_merged.columns) & set(df.columns) == set(), (
-                "All coordinates must have unique column names."
+            overlap_dims = set(over_merged.columns) & set(df.columns)
+            assert not overlap_dims, (
+                f"Dimension {tuple(overlap_dims)[0]} is not unique."
             )
             over_merged = over_merged.join(df, how="cross")
         return over_merged
@@ -315,8 +316,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __mul__(self, other):
         if isinstance(other, Set):
-            assert set(self.data.columns) & set(other.data.columns) == set(), (
-                "Cannot multiply two sets with columns in common."
+            overlap_dims = set(self.data.columns) & set(other.data.columns)
+            assert not overlap_dims, (
+                f"Cannot multiply the two sets because dimension '{tuple(overlap_dims)[0]}' is present in both sets."
             )
             return Set(self.data, other.data)
         return super().__mul__(other)

@@ -1,9 +1,8 @@
 # Facility Location Problem
 
-## Problem Statement
+## Problem statement
 
-This problem, as described in [elsewhere](), seeks to find the optimal `(x,y)` location for a set of `F` facilities such that
-the maximum distance between any customer and its nearest facility is minimized. Customers are spread out evenly on a `G`-by-`G` grid.
+As described in [this paper](https://mlubin.github.io/pdf/jump-sirev.pdf), the facility location problem seeks to find the optimal `(x,y)` location for a set of `F` facilities such that the maximum distance between any customer and its nearest facility is minimized. Customers are spread out evenly on a `G`-by-`G` grid.
 
 ## Model
 
@@ -16,14 +15,14 @@ G = 4
 F = 3
 
 # Construct model
-model = Model()
+model = pf.Model()
 
 # Define sets
 model.facilities = pf.Set(f=range(F))
 model.x_axis = pf.Set(x=range(G))
 model.y_axis = pf.Set(y=range(G))
 model.axis = pf.Set(d=[1, 2])
-model.customers = model.x_axis * model.y_axis
+model.customers = model.x_axis * model.y_axis  # (1)!
 
 
 model.facility_position = pf.Variable(model.facilities, model.axis, lb=0, ub=1)
@@ -63,6 +62,8 @@ model.minimize = model.max_distance
 # Solve model
 model.optimize()
 ```
+
+1. Multiplying [Sets][pyoframe.Set] returns the [cartesian product](https://en.wikipedia.org/wiki/Cartesian_product).
 
 So what's the maximum distance from a customer to its nearest facility?
 
