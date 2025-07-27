@@ -6,7 +6,10 @@ import os
 os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
-**Pyoframe secret power is its ability to seamlessly work with large datasets.** 
+!!! tip "Pyoframe is built on DataFrames"
+    Most other optimization libraries require you to massage your data, stored in a `DataFrame`, into other data structures.[^1] Not Pyoframe! DataFrames form the core of Pyoframe making it easy to seamlessly — and efficiently — integrate large datasets into your models.
+
+[^1]: For example, Pyomo converts your DataFrames to individual Python objects, Linopy uses multi-dimensional matrices via xarray, and gurobipy requires Python lists, dictionaries and tuples.
 
 We are going to re-build our [previous example](./example.md) using a dataset, `food_data.csv`, instead of hard-coded values. This way, we can add as many vegetarian proteins as we like without needing to write more code. If you're impatient, [skip to the end](#put-it-all-together) to see the final result.
 
@@ -22,7 +25,7 @@ We are going to re-build our [previous example](./example.md) using a dataset, `
 
 ### Step 1: Load the data
 
-Load `food_data.csv` using Pandas or Polars.
+Load `food_data.csv` using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/).
 
 === "Polars"
 
@@ -41,7 +44,7 @@ Load `food_data.csv` using Pandas or Polars.
     ```
 
 !!! tip "Pandas vs. Polars: Which should I use?"
-    Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar libraries for manipulating data. We prefer using Polars because it is much faster, but you can use whichever library you're most comfortable with.
+    Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar libraries for manipulating data with DataFrames. We prefer using Polars because it is much faster, but you can use whichever library you're most comfortable with.
     
     Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations. If needed, you can convert a Polars DataFrame back to Pandas using [`polars.DataFrame.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas).
  
@@ -52,6 +55,8 @@ import pyoframe as pf
 
 m = pf.Model()
 ```
+
+A [`pyoframe.Model`][pyoframe.Model] object sets the foundation onto which you will add optimization variables, constraints, and an objective.
 
 ### Step 3: Create a dimensioned variable
 
@@ -73,7 +78,7 @@ Printing the variable shows that it contains a `food` dimension with indices `to
 
 !!! tip "Capitalize model variables"
 
-    We suggest capitalizing model variables (i.e. `m.Buy` not `m.buy`) to make it easy to distinguish what is and isn't a variable.
+    We suggest capitalizing model variables (i.e. `m.Buy`, not `m.buy`) to make distinguishing what is and isn't a variable easy.
 
 ### Step 3: Create the objective with `pf.sum`
 
