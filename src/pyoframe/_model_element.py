@@ -1,4 +1,4 @@
-"""Module defining base classes for Pyoframe."""
+"""Defines the base classes used in Pyoframe."""
 
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ class ModelElement(ABC):
 
 
 def _support_polars_method(method_name: str):
-    """Wrap the underlying Polars method to make it accessible on ModelElement."""
+    """Wraps the underlying Polars method to make it accessible on ModelElement."""
 
     def method(self: SupportPolarsMethodMixin, *args, **kwargs) -> Any:
         result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
@@ -164,14 +164,14 @@ class SupportPolarsMethodMixin(ABC):
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
-        """Create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
+        """Creates a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
 
     @property
     @abstractmethod
     def data(self): ...
 
     def pick(self, **kwargs):
-        """Filter elements by the given criteria and then drop the filtered dimensions.
+        """Filters elements by the given criteria and then drop the filtered dimensions.
 
         Examples:
             >>> m = pf.Model()
@@ -213,4 +213,4 @@ class ModelElementWithId(ModelElement):
     @classmethod
     @abstractmethod
     def _get_id_column_name(cls) -> str:
-        """Return the name of the column containing the IDs."""
+        """Returns the name of the column containing the IDs."""

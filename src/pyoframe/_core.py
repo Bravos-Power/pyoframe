@@ -1,4 +1,4 @@
-"""Module defining several core Pyoframe objects including Set, Constraint, Variable, and Expression."""
+"""Defines several core Pyoframe objects including Set, Constraint, Variable, and Expression."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ class SupportsToExpr(Protocol):
     """Protocol for any object that can be converted to a Pyoframe [Expression][pyoframe.Expression]."""
 
     def to_expr(self) -> Expression:
-        """Convert the object to a Pyoframe [Expression][pyoframe.Expression]."""
+        """Converts the object to a Pyoframe [Expression][pyoframe.Expression]."""
         ...
 
 
@@ -82,23 +82,23 @@ class SupportsMath(ABC, SupportsToExpr):
         super().__init__(**kwargs)
 
     def keep_unmatched(self):
-        """Indicate that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
+        """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
         self.unmatched_strategy = UnmatchedStrategy.KEEP
         return self
 
     def drop_unmatched(self):
-        """Indicate that rows that are not matched in the other expression during addition or subtraction should be dropped."""
+        """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
         self.unmatched_strategy = UnmatchedStrategy.DROP
         return self
 
     def add_dim(self, *dims: str):
-        """Indicate that the expression can be broadcasted over the given dimensions during addition and subtraction."""
+        """Indicates that the expression can be broadcasted over the given dimensions during addition and subtraction."""
         self.allowed_new_dims.extend(dims)
         return self
 
     @abstractmethod
     def to_expr(self) -> Expression:
-        """Convert the object to a Pyoframe Expression."""
+        """Converts the object to a Pyoframe Expression."""
         ...
 
     __add__ = _forward_to_expression("__add__")
@@ -107,7 +107,7 @@ class SupportsMath(ABC, SupportsToExpr):
     map = _forward_to_expression("map")
 
     def __pow__(self, power: int):
-        """Support squaring expressions.
+        """Supports squaring expressions.
 
         Examples:
             >>> m = pf.Model()
@@ -133,7 +133,7 @@ class SupportsMath(ABC, SupportsToExpr):
         return res
 
     def __sub__(self, other):
-        """Subtract a value from this Expression.
+        """Subtracts a value from this Expression.
 
         Examples:
             >>> import polars as pl
@@ -157,7 +157,7 @@ class SupportsMath(ABC, SupportsToExpr):
         return self.to_expr() + other
 
     def __truediv__(self, other):
-        """Divide this expression.
+        """Divides this expression.
 
         Examples:
             Support division.
@@ -172,7 +172,7 @@ class SupportsMath(ABC, SupportsToExpr):
         return self.to_expr() * (1 / other)
 
     def __rsub__(self, other):
-        """Support right subtraction.
+        """Supports right subtraction.
 
         Examples:
             >>> m = pf.Model()
@@ -262,7 +262,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def _parse_acceptable_sets(
         *over: SetTypes | Iterable[SetTypes],
     ) -> pl.DataFrame:
-        """Compute the cartesian product of the given sets.
+        """Computes the cartesian product of the given sets.
 
         Examples:
             >>> import pandas as pd
@@ -304,7 +304,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return over_merged
 
     def to_expr(self) -> Expression:
-        """Convert the Set to an Expression equal to 1 for each index.
+        """Converts the Set to an Expression equal to 1 for each index.
 
         Useful when multiplying a Set by an Expression.
         """
@@ -391,7 +391,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
 
 class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
-    """A mathematical expression (linear or quadratic).
+    """Represents a linear or quadratic mathematical expression.
 
     Examples:
         >>> import pandas as pd
@@ -436,7 +436,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @classmethod
     def constant(cls, constant: int | float) -> Expression:
-        """Create a new expression equal to the given constant.
+        """Creates a new expression equal to the given constant.
 
         Examples:
             >>> pf.Expression.constant(5)
@@ -454,7 +454,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def sum(self, over: str | Iterable[str]):
-        """Sum this expression over the given dimensions.
+        """Sums this expression over the given dimensions.
 
         Examples:
             >>> import pandas as pd
@@ -503,7 +503,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return [VAR_KEY]
 
     def map(self, mapping_set: SetTypes, drop_shared_dims: bool = True) -> Expression:
-        """Replace the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
+        """Replaces the dimensions that are shared with mapping_set with the other dimensions found in mapping_set.
 
         This is particularly useful to go from one type of dimensions to another. For example, to convert data that
         is indexed by city to data indexed by country (see example).
@@ -570,7 +570,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return mapped_expression
 
     def rolling_sum(self, over: str, window_size: int) -> Expression:
-        """Calculate the rolling sum of the Expression over a specified window size for a given dimension.
+        """Calculates the rolling sum of the Expression over a specified window size for a given dimension.
 
         This method applies a rolling sum operation over the dimension specified by `over`,
         using a window defined by `window_size`.
@@ -630,7 +630,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
 
     def within(self, set: SetTypes) -> Expression:
-        """Filter this expression to only include the dimensions within the provided set.
+        """Filters this expression to only include the dimensions within the provided set.
 
         Examples:
             >>> import pandas as pd
@@ -664,7 +664,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @property
     def is_quadratic(self) -> bool:
-        """Returns True if the expression is quadratic, False otherwise.
+        """Returns `True` if the expression is quadratic, False otherwise.
 
         Computes in O(1) since expressions are quadratic if and
         only if self.data contain the QUAD_VAR_KEY column.
@@ -681,7 +681,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return QUAD_VAR_KEY in self.data.columns
 
     def degree(self) -> int:
-        """Return the degree of the expression (0=constant, 1=linear, 2=quadratic).
+        """Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
 
         Examples:
             >>> import pandas as pd
@@ -706,7 +706,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return 0
 
     def __add__(self, other):
-        """Add another expression or a constant to this expression.
+        """Adds another expression or a constant to this expression.
 
         Examples:
             >>> import pandas as pd
@@ -762,7 +762,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return _multiply_expressions(self, other)
 
     def to_expr(self) -> Expression:
-        """Return the expression itself."""
+        """Returns the expression itself."""
         return self
 
     def _learn_from_other(self, other: Expression):
@@ -777,7 +777,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def _add_const(self, const: int | float) -> Expression:
-        """Add a constant to the expression.
+        """Adds a constant to the expression.
 
         Examples:
             >>> m = pf.Model()
@@ -868,7 +868,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @unwrap_single_values
     def evaluate(self) -> pl.DataFrame:
-        """Compute the value of the expression using the variables' solutions. Only available after the model has been solved.
+        """Computes the value of the expression using the variables' solutions. Only available after the model has been solved.
 
         Examples:
             >>> m = pf.Model()
@@ -1038,7 +1038,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     @property
     def terms(self) -> int:
-        """Number of terms across all subexpressions.
+        """The number of terms across all subexpressions.
 
         Expressions equal to zero count as one term.
 
@@ -1069,7 +1069,7 @@ def sum(
     over: str | Sequence[str] | SupportsToExpr,
     expr: SupportsToExpr | None = None,
 ) -> Expression:
-    """Sum an expression over specified dimensions.
+    """Sums an expression over specified dimensions.
 
     If no dimensions are specified, the sum is taken over all of the expression's dimensions.
 
@@ -1365,7 +1365,7 @@ class Constraint(ModelElementWithId):
     def relax(
         self, cost: SupportsToExpr, max: SupportsToExpr | None = None
     ) -> Constraint:
-        """Allow the constraint to be violated at a `cost` and, optionally, up to a maximum.
+        """Allows the constraint to be violated at a `cost` and, optionally, up to a maximum.
 
         Warning:
             `.relax()` must be called before the constraint is assigned to the [Model][pyoframe.Model] (see examples below).
@@ -1727,7 +1727,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     @property
     @unwrap_single_values
     def solution(self):
-        """Retrieve a variable's optimal value after the model has been solved.
+        """Retrieves a variable's optimal value after the model has been solved.
 
         Returned as a DataFrame if the variable has dimensions, otherwise as a single value.
         Binary and integer variables are returned as integers.
@@ -1826,7 +1826,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             )
 
     def to_expr(self) -> Expression:
-        """Convert the Variable to an Expression."""
+        """Converts the Variable to an Expression."""
         self._assert_has_ids()
         return self._new(self.data.drop(SOLUTION_KEY, strict=False))
 
@@ -1840,7 +1840,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         return e
 
     def next(self, dim: str, wrap_around: bool = False) -> Expression:
-        """Create an expression where the variable at each index is the next variable in the specified dimension.
+        """Creates an expression where the variable at each index is the next variable in the specified dimension.
 
         Parameters:
             dim:

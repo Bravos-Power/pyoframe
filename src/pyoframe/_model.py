@@ -1,4 +1,4 @@
-"""Module defining the Model class for Pyoframe."""
+"""Defines the `Model` class for Pyoframe."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Model:
-    """The basic building block of any Pyoframe optimization model to which variables, constraints, and an objective can be added.
+    """The founding block of any Pyoframe optimization model onto which variables, constraints, and an objective can be added.
 
     Parameters:
         name:
@@ -298,7 +298,7 @@ class Model:
 
     @property
     def minimize(self) -> Objective | None:
-        """Set or get the model's objective for minimization problems."""
+        """Sets or gets the model's objective for minimization problems."""
         if self.sense != ObjSense.MIN:
             raise ValueError("Can't get .minimize in a maximization problem.")
         return self._objective
@@ -313,7 +313,7 @@ class Model:
 
     @property
     def maximize(self) -> Objective | None:
-        """Set or get the model's objective for maximization problems."""
+        """Sets or gets the model's objective for maximization problems."""
         if self.sense != ObjSense.MAX:
             raise ValueError("Can't get .maximize in a minimization problem.")
         return self._objective
@@ -364,7 +364,7 @@ class Model:
         )
 
     def write(self, file_path: Path | str, pretty: bool = False):
-        """Output the model to a file (e.g. a `.lp` file).
+        """Outputs the model to a file (e.g. a `.lp` file).
 
         Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
         Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
@@ -388,7 +388,7 @@ class Model:
         self.poi.write(str(file_path), **kwargs)
 
     def optimize(self):
-        """Optimize the model using your selected solver (e.g. Gurobi, HiGHS)."""
+        """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
         self.poi.optimize()
 
     @for_solvers("gurobi")
@@ -429,7 +429,7 @@ class Model:
 
     @for_solvers("gurobi", "copt")
     def compute_IIS(self):
-        """Gurobi only: Compute the Irreducible Infeasible Set (IIS) of the model.
+        """Gurobi only: Computes the Irreducible Infeasible Set (IIS) of the model.
 
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.

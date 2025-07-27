@@ -1,4 +1,4 @@
-"""Module defining the functions used to monkey patch polars and pandas."""
+"""Defines the functions used to monkey patch polars and pandas."""
 
 from functools import wraps
 

@@ -1,4 +1,4 @@
-"""File containing shared constants used across the package."""
+"""Contains shared constants which are used across the package."""
 
 from __future__ import annotations
 
@@ -87,8 +87,8 @@ class Config(metaclass=_ConfigMeta):
     """
 
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
-    """
-    The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
+    """The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
+
     If `auto`, Pyoframe will try to use whichever solver is installed.
     If `raise`, an exception will be raised when [Model][pyoframe.Model] is instantiated without specifying a solver.
 
@@ -96,8 +96,7 @@ class Config(metaclass=_ConfigMeta):
     """
 
     disable_unmatched_checks: bool = False
-    """
-    Improve performance by skipping unmatched checks (not recommended).
+    """When `True`, improves performance by skipping unmatched checks (not recommended).
 
     When `True`, unmatched checks are disabled which effectively means that all expressions
     are treated as if they contained [`.keep_unmatched()`][pyoframe.Expression.keep_unmatched]
@@ -140,8 +139,7 @@ class Config(metaclass=_ConfigMeta):
     """
 
     print_max_line_length: int = 80
-    """
-    Maximum number of characters to print in a single line.
+    """Maximum number of characters to print in a single line.
 
     Examples:
         >>> pf.Config.print_max_line_length = 20
@@ -154,8 +152,7 @@ class Config(metaclass=_ConfigMeta):
     """
 
     print_max_lines: int = 15
-    """
-    Maximum number of lines to print.
+    """Maximum number of lines to print.
 
     Examples:
         >>> pf.Config.print_max_lines = 3
@@ -170,8 +167,7 @@ class Config(metaclass=_ConfigMeta):
     """
 
     print_max_set_elements: int = 50
-    """
-    Maximum number of elements in a set to print.
+    """Maximum number of elements in a set to print.
     
     Examples:
         >>> pf.Config.print_max_set_elements = 5
@@ -181,15 +177,13 @@ class Config(metaclass=_ConfigMeta):
     """
 
     enable_is_duplicated_expression_safety_check: bool = False
-    """
-    Setting for internal testing purposes only.
+    """Setting for internal testing purposes only.
     
     When `True`, pyoframe checks that there are no bugs leading to duplicated terms in expressions.
     """
 
     integer_tolerance: float = 1e-8
-    """
-    Tolerance for checking if a floating point value is an integer.
+    """Tolerance for checking if a floating point value is an integer.
 
     !!! info
         For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
@@ -202,8 +196,7 @@ class Config(metaclass=_ConfigMeta):
     """Number of decimal places to use when displaying mathematical expressions."""
 
     print_uses_variable_names: bool = True
-    """
-    Improve performance by not tracking the link between variable IDs and variable names.
+    """Improves performance by not tracking the link between variable IDs and variable names.
 
     If set to `False`, printed expression will use variable IDs instead of variable names
     which might make debugging difficult.
@@ -222,7 +215,7 @@ class Config(metaclass=_ConfigMeta):
 
     @classmethod
     def reset_defaults(cls):
-        """Reset all configuration options to their default values.
+        """Resets all configuration options to their default values.
 
         Examples:
             >>> pf.Config.print_uses_variable_names
@@ -244,7 +237,7 @@ class ConstraintSense(Enum):
     EQ = "="
 
     def to_poi(self):
-        """Convert the constraint sense to its pyoptinterface equivalent."""
+        """Converts the constraint sense to its pyoptinterface equivalent."""
         if self == ConstraintSense.LE:
             return poi.ConstraintSense.LessEqual
         elif self == ConstraintSense.EQ:
@@ -260,7 +253,7 @@ class ObjSense(Enum):
     MAX = "max"
 
     def to_poi(self):
-        """Convert the objective sense to its pyoptinterface equivalent."""
+        """Converts the objective sense to its pyoptinterface equivalent."""
         if self == ObjSense.MIN:
             return poi.ObjectiveSense.Minimize
         elif self == ObjSense.MAX:

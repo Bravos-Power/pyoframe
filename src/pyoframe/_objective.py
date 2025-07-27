@@ -1,4 +1,4 @@
-"""Module defining the Objective class for optimization models."""
+"""Defines the `Objective` class for optimization models."""
 
 from __future__ import annotations
 
