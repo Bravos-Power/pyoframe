@@ -188,28 +188,28 @@ def test_add_expression_with_add_dim():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
         ),
     ):
         expr + expr_with_dim
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
         ),
     ):
         expr_with_dim + expr
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
         ),
     ):
         expr_with_dim + expr_with_two_dim
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
         ),
     ):
         expr_with_two_dim + expr_with_dim
@@ -263,7 +263,7 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['z']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['z']. If this is intentional, use .add_dim()"
         ),
     ):
         lhs + rhs
@@ -271,7 +271,7 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['x']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['x']. If this is intentional, use .add_dim()"
         ),
     ):
         lhs + rhs
@@ -302,7 +302,7 @@ def test_add_expression_with_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         lhs + rhs
@@ -344,7 +344,7 @@ def test_add_expressions_with_dims_and_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['z']. If this is intentional, use .add_dim()",
+            "DataFrame has missing dimensions ['z']. If this is intentional, use .add_dim()",
         ),
     ):
         lhs + rhs
@@ -352,7 +352,7 @@ def test_add_expressions_with_dims_and_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has missing dimensions ['x']. If this is intentional, use .add_dim()",
+            "DataFrame has missing dimensions ['x']. If this is intentional, use .add_dim()",
         ),
     ):
         lhs + rhs
@@ -394,7 +394,7 @@ def test_three_way_add():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         df1 + df2 + df3
@@ -445,7 +445,7 @@ def test_no_propogate():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         sum("dim1", expr1 + expr2) + expr3
@@ -453,7 +453,7 @@ def test_no_propogate():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         sum("dim1", expr1 + expr2.keep_unmatched()) + expr3

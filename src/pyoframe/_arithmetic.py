@@ -256,12 +256,12 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(outer_join.filter(outer_join.get_column(dims[0]).is_null()))
                 )
             if outer_join.get_column(dims[0] + "_right").null_count() > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(
                         outer_join.filter(
                             outer_join.get_column(dims[0] + "_right").is_null()
@@ -274,7 +274,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
             left_data = get_indices(right).join(left.data, how="left", on=dims)
             if left_data.get_column(COEF_KEY).null_count() > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(left_data.filter(left_data.get_column(COEF_KEY).is_null()))
                 )
         elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET):
@@ -284,7 +284,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
             unmatched = right.data.join(get_indices(left), how="anti", on=dims)
             if len(unmatched) > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(unmatched)
                 )
         else:  # pragma: no cover
@@ -339,7 +339,7 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
     if not set(missing_dims) <= set(self.allowed_new_dims):
         # TODO actually suggest using e.g. .add_dim("a", "b") instead of just "use .add_dim()"
         raise PyoframeError(
-            f"Dataframe has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
+            f"DataFrame has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
         )
 
     target_data = target.data.select(target_dims).unique(maintain_order=True)

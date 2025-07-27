@@ -175,7 +175,7 @@ def concat_dimensions(
 def cast_coef_to_string(
     df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
 ) -> pl.DataFrame:
-    """Converts column `column_name` of the dataframe `df` to a string. Round to `Config.print_float_precision` decimal places if not None.
+    """Converts column `column_name` of the DataFrame `df` to a string. Round to `Config.print_float_precision` decimal places if not None.
 
     Parameters:
         df:
@@ -234,7 +234,7 @@ def cast_coef_to_string(
 
 
 def unwrap_single_values(func):
-    """Returns the dataframe unless it is a single value in which case return the value."""
+    """Returns the DataFrame unless it is a single value in which case return the value."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -249,7 +249,7 @@ def unwrap_single_values(func):
 def dataframe_to_tupled_list(
     df: pl.DataFrame, num_max_elements: int | None = None
 ) -> str:
-    """Converts a dataframe into a list of tuples. Used to print a Set to the console. See examples for behaviour.
+    """Converts a DataFrame into a list of tuples. Used to print a Set to the console. See examples for behaviour.
 
     Examples:
         >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5]})

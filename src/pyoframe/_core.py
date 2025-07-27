@@ -729,7 +729,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             pyoframe._constants.PyoframeError: Failed to add expressions:
             <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
             Due to error:
-            Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
             shape: (1, 2)
             ┌──────┬────────────┐
             │ dim1 ┆ dim1_right │
@@ -1729,7 +1729,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     def solution(self):
         """Retrieves a variable's optimal value after the model has been solved.
 
-        Returned as a DataFrame if the variable has dimensions, otherwise as a single value.
+        Return type is a DataFrame if the variable has dimensions, otherwise it is a single value.
         Binary and integer variables are returned as integers.
 
         Examples:
@@ -1862,7 +1862,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             pyoframe._constants.PyoframeError: Failed to add expressions:
             <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
             Due to error:
-            Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
             shape: (2, 4)
             ┌───────┬─────────┬────────────┬────────────┐
             │ time  ┆ city    ┆ time_right ┆ city_right │

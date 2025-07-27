@@ -38,7 +38,7 @@ Nothing special here. Load your data using Pandas or Polars.
     ```
 
 !!! tip "Pandas vs. Polars: Which should I use?"
-    Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar DataFrame libraries. We prefer using Polars because it is much faster, but you can use whichever library you're most comfortable with.
+    Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar libraries for manipulating data. We prefer using Polars because it is much faster, but you can use whichever library you're most comfortable with.
     
     Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations. If needed, you can convert a Polars DataFrame back to Pandas using [`polars.DataFrame.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas).
  
@@ -96,7 +96,7 @@ First, we multiply the variable by the protein amount.
 
 As you can see, Pyoframe with a bit of magic converted our `Variable` into an `Expression` where the coefficients are the protein amounts.
 
-*[with a bit of magic]: Pyoframe always converts dataframes into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.
+*[with a bit of magic]: Pyoframe always converts DataFrames into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.
 
 Second, notice that our `Expression` still has a `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. All objective functions must be a single expression (without dimensions) so let's sum over the `food` dimensions using `pf.sum()`.
 
@@ -159,8 +159,8 @@ So you should buy:
 
 ```
 
-Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a dataframe with the solution for each of indices.
+Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of indices.
 
-!!! info "Returning Pandas dataframes"
+!!! info "Returning Pandas DataFrames"
 
-    Pyoframe currently always returns Polars dataframes but you can easily convert them to Pandas using [`.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas). In the future, we plan to add support for automatically returning Pandas dataframes. [Upvote the issue](https://github.com/Bravos-Power/pyoframe/issues/47) if you'd like this feature.
+    Pyoframe currently always returns Polars DataFrames but you can easily convert them to Pandas using [`.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas). In the future, we plan to add support for automatically returning Pandas DataFrames. [Upvote the issue](https://github.com/Bravos-Power/pyoframe/issues/47) if you'd like this feature.

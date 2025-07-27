@@ -28,7 +28,7 @@ Additionally, users should use `.to_expr()` whenever they wish to use [add_dim][
 !!! info "Under the hood"
     How is `.to_expr()` a valid Pandas and Polars method? `import pyoframe` causes Pyoframe to [monkey patch](https://stackoverflow.com/questions/5626193/what-is-monkey-patching) the Pandas and Polars libraries. One of the patches adds the `.to_expr()` method to both `pandas.DataFrame` and `polars.DataFrame` (see [`monkey_patch.py`](https://github.com/Bravos-Power/pyoframe/tree/main/src/pyoframe)).
 
-[^1]: After all, how could it? If a user decides to write code that adds two dataframes together, Pyoframe shouldn't (and couldn't) interfere.
+[^1]: After all, how could it? If a user decides to write code that adds two DataFrames together, Pyoframe shouldn't (and couldn't) interfere.
 
 ### Example
 
@@ -49,7 +49,11 @@ model.immigration = pf.Variable(dict(year=[2025, 2026]))
 Now, saw we wanted an expression representing the total yearly population change. The following works just fine:
 
 ```pycon
->>> model.immigration + population_data[["year", "births"]] + population_data[["year", "deaths"]]
+>>> (
+...     model.immigration 
+...     + population_data[["year", "births"]] 
+...     + population_data[["year", "deaths"]]
+... )
 <Expression size=2 dimensions={'year': 2} terms=4>
 [2025]: immigration[2025] -200000
 [2026]: immigration[2026] -300000
@@ -59,7 +63,11 @@ Now, saw we wanted an expression representing the total yearly population change
 But, if we simply change the order of the terms in our addition, we get an error:
 
 ```pycon
->>> population_data[["year", "births"]] + population_data[["year", "deaths"]] + model.immigration
+>>> (
+...     population_data[["year", "births"]] 
+...     + population_data[["year", "deaths"]]
+...     + model.immigration 
+... )
 Traceback (most recent call last):
 ...
 ValueError: Cannot create an expression with duplicate indices:
@@ -76,10 +84,14 @@ ValueError: Cannot create an expression with duplicate indices:
 
 What happened? Since Python computes additions from left to right, the second re-arranged version failed because, in the first addition, neither operand is a Pyoframe object. As such, the addition is done by Pandas, not Pyoframe, which leads to unexpected results.
 
-How do we avoid these weird behaviors? Users can manually convert their dataframes to Pyoframe expressions ahead of time with `.to_expr()`. For example:
+How do we avoid these weird behaviors? Users can manually convert their DataFrames to Pyoframe expressions ahead of time with `.to_expr()`. For example:
 
 ```pycon
->>> population_data[["year", "births"]].to_expr() + population_data[["year", "deaths"]].to_expr() + model.immigration
+>>> (
+...     population_data[["year", "births"]].to_expr()
+...     + population_data[["year", "deaths"]].to_expr()
+...     + model.immigration 
+... )
 <Expression size=2 dimensions={'year': 2} terms=4>
 [2025]: -200000  + immigration[2025]
 [2026]: -300000  + immigration[2026]

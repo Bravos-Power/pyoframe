@@ -38,6 +38,6 @@ m.X = pf.Variable()
 m.X.attr.PrimalStart = 5
 ```
 
-If the variable or constraint is dimensioned, the attribute can accept/return a dataframe instead of a constant.
+If the variable or constraint is dimensioned, the attribute can accept/return a DataFrame instead of a constant.
 
 

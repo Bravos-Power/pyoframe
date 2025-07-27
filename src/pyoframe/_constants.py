@@ -119,7 +119,7 @@ class Config(metaclass=_ConfigMeta):
         pyoframe._constants.PyoframeError: Failed to add expressions:
         <Expression size=3 dimensions={'city': 3} terms=3> + <Expression size=2 dimensions={'city': 2} terms=2>
         Due to error:
-        Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+        DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
         shape: (1, 2)
         ┌──────────┬────────────┐
         │ city     ┆ city_right │
