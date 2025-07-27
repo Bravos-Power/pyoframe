@@ -19,7 +19,7 @@ Note that instead of hardcoding values, we'll be reading from the following csv 
 
 ### Load your data
 
-Nothing special here. Load your data using your favourite dataframe library. We like [Polars](https://pola.rs/) because it's _fast_ but Pandas works too.
+Nothing special here. Load your data using Pandas or Polars.
 
 === "Polars"
 
@@ -37,6 +37,11 @@ Nothing special here. Load your data using your favourite dataframe library. We 
     data = pd.read_csv("food_data.csv")
     ```
 
+!!! tip "Pandas vs. Polars: Which should I use?"
+    Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar DataFrame libraries. We prefer using Polars because it is much faster, but you can use whichever library you're most comfortable with.
+    
+    Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations. If needed, you can convert a Polars DataFrame back to Pandas using [`polars.DataFrame.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas).
+ 
 ### Create the model
 
 ```python

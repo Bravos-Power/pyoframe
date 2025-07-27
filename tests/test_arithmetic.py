@@ -1,3 +1,5 @@
+"""Tests related to Pyoframe's arithmetic operations."""
+
 import re
 
 import numpy as np
@@ -8,7 +10,7 @@ from polars.testing import assert_frame_equal
 
 from pyoframe import Config, Expression, Model, Set, Variable, VType, sum
 from pyoframe._arithmetic import PyoframeError
-from pyoframe.constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
 
 from .util import csvs_to_expr
 
@@ -22,7 +24,7 @@ def test_set_multiplication():
 def test_set_multiplication_same_name():
     dim1 = [1, 2, 3]
     dim2 = ["a", "b"]
-    with pytest.raises(AssertionError, match="columns in common"):
+    with pytest.raises(AssertionError, match="dimension 'x' is present in both sets"):
         Set(x=dim1) * Set(x=dim2)
 
 

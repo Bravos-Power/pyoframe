@@ -1,7 +1,7 @@
 # Internal details
 
-Pyoframe's inner workings involve a few tricks that one should be aware of
-if they wish to modify Pyoframe's internal code.
+Pyoframe's inner workings involve a few tricks that you should be aware of
+if you wish to modify Pyoframe's internal code.
 
 ## The zero variable
 

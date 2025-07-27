@@ -1,3 +1,5 @@
+"""Tests related to defining Pyoframe models."""
+
 import pytest
 from pytest import approx
 

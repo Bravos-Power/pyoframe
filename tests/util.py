@@ -1,12 +1,17 @@
+"""Utility functions for testing in Pyoframe."""
+
 from __future__ import annotations
 
+import ast
+import inspect
 import io
-from typing import TYPE_CHECKING, Literal, Tuple, Union, overload
+import textwrap
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 import polars as pl
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.core import Expression
+    from pyoframe._core import Expression
 
 
 @overload
@@ -18,12 +23,12 @@ def csvs_to_dataframe(
 @overload
 def csvs_to_dataframe(
     *csv_strings: str,
-) -> Tuple[pl.DataFrame, ...]: ...
+) -> tuple[pl.DataFrame, ...]: ...
 
 
 def csvs_to_dataframe(
     *csv_strings: str,
-) -> Union[Tuple[pl.DataFrame, ...], pl.DataFrame]:
+) -> tuple[pl.DataFrame, ...] | pl.DataFrame:
     """Convert a sequence of CSV strings to Pyoframe expressions."""
     dfs = []
     for csv_string in csv_strings:
@@ -37,21 +42,21 @@ def csvs_to_dataframe(
 @overload
 def csvs_to_expr(
     csv_strings: str,
-) -> "Expression": ...
+) -> Expression: ...
 
 
 @overload
 def csvs_to_expr(
     *csv_strings: str,
-) -> Tuple["Expression", ...]: ...
+) -> tuple[Expression, ...]: ...
 
 
 def csvs_to_expr(
     *csv_strings: str,
-) -> Union[Tuple["Expression", ...], "Expression"]:
+) -> tuple[Expression, ...] | Expression:
     if len(csv_strings) == 1:
         return csvs_to_dataframe(*csv_strings).to_expr()
-    return tuple((df.to_expr() for df in csvs_to_dataframe(*csv_strings)))
+    return tuple(df.to_expr() for df in csvs_to_dataframe(*csv_strings))
 
 
 _tolerances = {
@@ -77,3 +82,48 @@ def get_tol(solver):
         rel=tol["rtol"],
         abs=tol["atol"],
     )
+
+
+def get_attr_docs(cls: type[Any]) -> dict[str, str]:
+    """Copyright (c) David Lord under the MIT License (see: https://davidism.com/attribute-docstrings/).
+
+    Get any docstrings placed after attribute assignments in a class body.
+    """
+    cls_node = ast.parse(textwrap.dedent(inspect.getsource(cls))).body[0]
+
+    if not isinstance(cls_node, ast.ClassDef):
+        raise TypeError("Given object was not a class.")
+    out = {}
+
+    # Consider each pair of nodes.
+    nodes = cls_node.body
+    b = nodes[0]
+    for i in range(1, len(nodes)):
+        a, b = b, nodes[i]
+
+        # Must be an assignment then a constant string.
+        if (
+            not isinstance(a, (ast.Assign, ast.AnnAssign))
+            or not isinstance(b, ast.Expr)
+            or not isinstance(b.value, ast.Constant)
+            or not isinstance(b.value.value, str)
+        ):
+            continue
+
+        doc = inspect.cleandoc(b.value.value)
+
+        if isinstance(a, ast.Assign):
+            # An assignment can have multiple targets (a = b = v).
+            targets = a.targets
+        else:
+            # An annotated assignment only has one target.
+            targets = [a.target]
+
+        for target in targets:
+            # Must be assigning to a plain name.
+            if not isinstance(target, ast.Name):
+                continue
+
+            out[target.id] = doc
+
+    return out

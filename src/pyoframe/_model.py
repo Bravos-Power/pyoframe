@@ -1,13 +1,15 @@
+"""Defines the `Model` class for Pyoframe."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
-from pyoframe.constants import (
+from pyoframe._constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
     SUPPORTED_SOLVERS,
@@ -15,18 +17,20 @@ from pyoframe.constants import (
     ObjSense,
     ObjSenseValue,
     PyoframeError,
-    Solver,
     VType,
+    _Solver,
 )
-from pyoframe.core import Constraint, Variable
-from pyoframe.model_element import ModelElement, ModelElementWithId
-from pyoframe.objective import Objective
-from pyoframe.util import Container, NamedVariableMapper, for_solvers, get_obj_repr
+from pyoframe._core import Constraint, SupportsToExpr, Variable
+from pyoframe._model_element import ModelElement, ModelElementWithId
+from pyoframe._objective import Objective
+from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
+
+if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Generator
 
 
 class Model:
-    """
-    The object that holds all the variables, constraints, and the objective.
+    """The founding block of any Pyoframe optimization model onto which variables, constraints, and an objective can be added.
 
     Parameters:
         name:
@@ -38,7 +42,6 @@ class Model:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
             Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
-            Does not work with HiGHS (see [here](https://github.com/Bravos-Power/pyoframe/issues/102#issuecomment-2727521430)).
         sense:
             Either "min" or "max". Indicates whether it's a minmization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
@@ -49,9 +52,9 @@ class Model:
         >>> m.X = pf.Variable()
         >>> m.my_constraint = m.X <= 10
         >>> m
-        <Model vars=1 constrs=1 objective=False>
+        <Model vars=1 constrs=1 has_objective=False solver=gurobi>
 
-        Try setting the Gurobi license:
+        Use `solver_env` to, for example, connect to a Gurobi Compute Server:
         >>> m = pf.Model(
         ...     solver="gurobi",
         ...     solver_env=dict(ComputeServer="myserver", ServerPassword="mypassword"),
@@ -65,18 +68,16 @@ class Model:
         "_variables",
         "_constraints",
         "_objective",
-        "var_map",
-        "io_mappers",
+        "objective",
+        "_var_map",
         "name",
         "solver",
         "poi",
         "_params",
         "params",
-        "result",
         "_attr",
         "attr",
         "sense",
-        "objective",
         "_use_var_names",
         "ONE",
         "solver_name",
@@ -86,22 +87,22 @@ class Model:
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        solver: SUPPORTED_SOLVER_TYPES | Solver | None = None,
-        solver_env: Optional[Dict[str, str]] = None,
+        name: str | None = None,
+        solver: SUPPORTED_SOLVER_TYPES | _Solver | None = None,
+        solver_env: dict[str, str] | None = None,
         use_var_names: bool = False,
-        sense: Union[ObjSense, ObjSenseValue, None] = None,
+        sense: ObjSense | ObjSenseValue | None = None,
     ):
-        self.poi, self.solver = Model.create_poi_model(solver, solver_env)
-        self.solver_name = self.solver.name
-        self._variables: List[Variable] = []
-        self._constraints: List[Constraint] = []
-        self.sense = ObjSense(sense) if sense is not None else None
-        self._objective: Optional[Objective] = None
-        self.var_map = (
+        self.poi, self.solver = Model._create_poi_model(solver, solver_env)
+        self.solver_name: str = self.solver.name
+        self._variables: list[Variable] = []
+        self._constraints: list[Constraint] = []
+        self.sense: ObjSense | None = ObjSense(sense) if sense is not None else None
+        self._objective: Objective | None = None
+        self._var_map = (
             NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
         )
-        self.name = name
+        self.name: str | None = name
 
         self._params = Container(self._set_param, self._get_param)
         self._attr = Container(self._set_attr, self._get_attr)
@@ -109,12 +110,12 @@ class Model:
 
     @property
     def use_var_names(self):
+        """Whether to pass human-readable variable names to the solver."""
         return self._use_var_names
 
     @property
-    def attr(self):
-        """
-        An object that allows reading and writing model attributes.
+    def attr(self) -> Container:
+        """An object that allows reading and writing model attributes.
 
         Several model attributes are common across all solvers making it easy to switch between solvers (see supported attributes for
         [Gurobi](https://metab0t.github.io/PyOptInterface/gurobi.html#supported-model-attribute),
@@ -141,7 +142,7 @@ class Model:
             ...
             KeyError: 'NumConstrs'
 
-        See also:
+        See Also:
             [Variable.attr][pyoframe.Variable.attr] for setting variable attributes and
             [Constraint.attr][pyoframe.Constraint.attr] for setting constraint attributes.
         """
@@ -149,8 +150,7 @@ class Model:
 
     @property
     def params(self) -> Container:
-        """
-        An object that allows reading and writing solver-specific parameters.
+        """An object that allows reading and writing solver-specific parameters.
 
         See the list of available parameters for
         [Gurobi](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#sec:Parameters),
@@ -165,8 +165,8 @@ class Model:
         return self._params
 
     @classmethod
-    def create_poi_model(
-        cls, solver: Optional[str | Solver], solver_env: Optional[Dict[str, str]]
+    def _create_poi_model(
+        cls, solver: str | _Solver | None, solver_env: dict[str, str] | None
     ):
         if solver is None:
             # TODO remove this first condition after a few version releases
@@ -181,7 +181,7 @@ class Model:
             elif Config.default_solver == "auto":
                 for solver_option in SUPPORTED_SOLVERS:
                     try:
-                        return cls.create_poi_model(solver_option, solver_env)
+                        return cls._create_poi_model(solver_option, solver_env)
                     except RuntimeError:
                         pass
                 raise ValueError(
@@ -245,12 +245,14 @@ class Model:
         return model, solver
 
     @property
-    def variables(self) -> List[Variable]:
+    def variables(self) -> list[Variable]:
+        """Returns a list of the model's variables."""
         return self._variables
 
     @property
-    def binary_variables(self) -> Iterable[Variable]:
-        """
+    def binary_variables(self) -> Generator[Variable]:
+        """Returns the model's binary variables.
+
         Examples:
             >>> m = pf.Model()
             >>> m.X = pf.Variable(vtype=pf.VType.BINARY)
@@ -261,8 +263,9 @@ class Model:
         return (v for v in self.variables if v.vtype == VType.BINARY)
 
     @property
-    def integer_variables(self) -> Iterable[Variable]:
-        """
+    def integer_variables(self) -> Generator[Variable]:
+        """Returns the model's integer variables.
+
         Examples:
             >>> m = pf.Model()
             >>> m.X = pf.Variable(vtype=pf.VType.INTEGER)
@@ -273,15 +276,17 @@ class Model:
         return (v for v in self.variables if v.vtype == VType.INTEGER)
 
     @property
-    def constraints(self):
+    def constraints(self) -> list[Constraint]:
+        """Returns the model's constraints."""
         return self._constraints
 
     @property
-    def objective(self):
+    def objective(self) -> Objective:
+        """Returns the model's objective."""
         return self._objective
 
     @objective.setter
-    def objective(self, value):
+    def objective(self, value: SupportsToExpr | float | int):
         if self._objective is not None and (
             not isinstance(value, Objective) or not value._constructive
         ):
@@ -289,16 +294,17 @@ class Model:
         if not isinstance(value, Objective):
             value = Objective(value)
         self._objective = value
-        value.on_add_to_model(self, "objective")
+        value._on_add_to_model(self, "objective")
 
     @property
-    def minimize(self):
+    def minimize(self) -> Objective | None:
+        """Sets or gets the model's objective for minimization problems."""
         if self.sense != ObjSense.MIN:
             raise ValueError("Can't get .minimize in a maximization problem.")
         return self._objective
 
     @minimize.setter
-    def minimize(self, value):
+    def minimize(self, value: SupportsToExpr | float | int):
         if self.sense is None:
             self.sense = ObjSense.MIN
         if self.sense != ObjSense.MIN:
@@ -306,13 +312,14 @@ class Model:
         self.objective = value
 
     @property
-    def maximize(self):
+    def maximize(self) -> Objective | None:
+        """Sets or gets the model's objective for maximization problems."""
         if self.sense != ObjSense.MAX:
             raise ValueError("Can't get .maximize in a minimization problem.")
         return self._objective
 
     @maximize.setter
-    def maximize(self, value):
+    def maximize(self, value: SupportsToExpr | float | int):
         if self.sense is None:
             self.sense = ObjSense.MAX
         if self.sense != ObjSense.MAX:
@@ -336,12 +343,12 @@ class Model:
                     f"Cannot create {__name} since it was already created."
                 )
 
-            __value.on_add_to_model(self, __name)
+            __value._on_add_to_model(self, __name)
 
             if isinstance(__value, Variable):
                 self._variables.append(__value)
-                if self.var_map is not None:
-                    self.var_map.add(__value)
+                if self._var_map is not None:
+                    self._var_map.add(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
         return super().__setattr__(__name, __value)
@@ -352,12 +359,12 @@ class Model:
             name=self.name,
             vars=len(self.variables),
             constrs=len(self.constraints),
-            objective=bool(self.objective),
+            has_objective=bool(self.objective),
+            solver=self.solver_name,
         )
 
-    def write(self, file_path: Union[Path, str], pretty: bool = False):
-        """
-        Output the model to a file.
+    def write(self, file_path: Path | str, pretty: bool = False):
+        """Outputs the model to a file (e.g. a `.lp` file).
 
         Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
         Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
@@ -381,16 +388,12 @@ class Model:
         self.poi.write(str(file_path), **kwargs)
 
     def optimize(self):
-        """
-        Optimize the model using your selected solver (e.g. Gurobi, HiGHS).
-        """
+        """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
         self.poi.optimize()
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
-        """
-        Turns a mixed integer program into a continuous one by fixing
-        all the integer and binary variables to their solution values.
+        """Gurobi only: Converts a mixed integer program into a continuous one by fixing all the non-continuous variables to their solution values.
 
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
@@ -426,8 +429,7 @@ class Model:
 
     @for_solvers("gurobi", "copt")
     def compute_IIS(self):
-        """
-        Computes the Irreducible Infeasible Set (IIS) of the model.
+        """Gurobi only: Computes the Irreducible Infeasible Set (IIS) of the model.
 
         !!! warning "Gurobi only"
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
@@ -452,8 +454,7 @@ class Model:
         self.poi.computeIIS()
 
     def dispose(self):
-        """
-        Disposes of the model and cleans up the solver environment.
+        """Disposes of the model and cleans up the solver environment.
 
         When using Gurobi compute server, this cleanup will
         ensure your run is not marked as 'ABORTED'.

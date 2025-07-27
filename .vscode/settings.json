@@ -6,5 +6,8 @@
         "Pyoframe",
         "ipopt",
         "highs"
+    ],
+    "python.testing.pytestArgs": [
+        "."
     ]
 }

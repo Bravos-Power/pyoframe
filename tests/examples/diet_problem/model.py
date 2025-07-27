@@ -1,6 +1,4 @@
-"""
-Diet module example
-"""
+"""Example Pyoframe formulation of the classic diet problem."""
 
 # pyright: reportAttributeAccessIssue=false
 
