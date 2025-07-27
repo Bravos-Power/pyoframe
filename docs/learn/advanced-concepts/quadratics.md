@@ -8,14 +8,14 @@ Here's a short example that shows that a square maximizes the area of any box wi
 ```python
 import pyoframe as pf
 
-model = pf.Model(sense="max")
+model = pf.Model(sense="max", solver="highs")
 model.w = pf.Variable(lb=0)
 model.h = pf.Variable(lb=0)
 model.limit_perimter = 2 * (model.w + model.h) <= 20
 model.objective = model.w * model.h
 model.optimize()
 print(f"It's a square: {model.w.solution == model.h.solution}")
-print(f"With area: {model.objective.evaluate()}")
+print(f"With area: {model.objective.value}")
 
 # Outputs:
 # It's a square: True
@@ -24,7 +24,7 @@ print(f"With area: {model.objective.evaluate()}")
 
 <!-- invisible-code-block: python
 assert model.w.solution == model.h.solution
-assert model.objective.evaluate() == 25
+assert model.objective.value == 25
 -->
 
 ## Example 2: Facility location problem

@@ -39,7 +39,7 @@ m.minimize = total_cost
 m.optimize()
 ```
 
-1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/getting-started/special-functions.md#drop_unmatched-and-keep_unmatched)
+1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/get-started/special-functions.md#drop_unmatched-and-keep_unmatched)
 
 So the solution is...
 

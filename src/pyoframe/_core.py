@@ -367,6 +367,10 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = set
         elif isinstance(set, pl.Series):
             df = set.to_frame()
+        elif isinstance(set, pd.Series):
+            if not set.name:
+                raise ValueError("Cannot convert an unnamed Pandas Series to a Set.")
+            df = pl.from_pandas(set).to_frame()
         elif isinstance(set, Set):
             df = set.data
         elif isinstance(set, range):

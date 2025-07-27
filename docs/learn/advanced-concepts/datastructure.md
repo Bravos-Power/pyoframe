@@ -1,4 +1,4 @@
-# The Pyoframe datastructure
+# Pyoframe's datastructure
 
 !!! info "Work in progress"
 

@@ -27,7 +27,7 @@ template: home.html
 
     Install `pyoframe` and learn the library's basics.
 
-    [:octicons-arrow-right-24: Get started](./learn/getting-started/installation.md)
+    [:octicons-arrow-right-24: Get started](./learn/get-started/installation.md)
 
 -   :octicons-light-bulb-16:{ .lg .middle } __Examples__
 
