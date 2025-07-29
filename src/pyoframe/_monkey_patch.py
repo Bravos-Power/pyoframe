@@ -32,6 +32,8 @@ def _patch_class(cls):
 def polars_df_to_expr(self: pl.DataFrame) -> Expression:
     """Converts a [polars](https://pola.rs/) `DataFrame` to a Pyoframe [Expression][pyoframe.Expression] by using the last column for values and the previous columns as dimensions.
 
+    See [Special Functions](../learn/get-started/special-functions.md#dataframeto_expr) for more details.
+
     Examples:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6], "z": [7, 8, 9]})
