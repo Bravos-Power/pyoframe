@@ -113,7 +113,7 @@ class Objective(Expression):
             kwargs["sense"] = poi.ObjectiveSense.Minimize
         else:
             poi_expr = self._to_poi()
-            kwargs["sense"] = self._model.sense.to_poi()
+            kwargs["sense"] = self._model.sense._to_poi()
         self._model.poi.set_objective(poi_expr, **kwargs)
 
     def __iadd__(self, other):

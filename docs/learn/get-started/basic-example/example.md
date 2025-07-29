@@ -6,7 +6,7 @@ import os
 os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
-I will first show you how to solve a simple optimization problem with Pyoframe.
+To start, you'll solve a simple optimization problem with Pyoframe.
 
 !!! quote "Problem statement"
     Imagine you're a vegetarian hesitating between tofu and chickpeas as
@@ -14,7 +14,7 @@ I will first show you how to solve a simple optimization problem with Pyoframe.
     possible while still consuming at least 50 grams of protein. How many blocks
     of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein) should you buy?
 
-Click on the :material-plus-circle: buttons below to understand the Pyoframe solution.
+Click on the :material-plus-circle: buttons below to understand the code, and then run it on your computer.
 
 ```python
 import pyoframe as pf
@@ -32,7 +32,15 @@ m.minimize = 4 * m.tofu_blocks + 3 * m.chickpea_cans  # (2)!
 m.protein_constraint = 18 * m.tofu_blocks + 15 * m.chickpea_cans >= 50  # (3)!
 
 m.optimize()  # (4)!
+
+print("Tofu blocks:", m.tofu_blocks.solution)
+print("Chickpea cans:", m.chickpea_cans.solution)
 ```
+
+<!-- invisible-code-block: python
+assert m.tofu_blocks.solution == 2
+assert m.chickpea_cans.solution == 1
+-->
 
 1. `lb=0` set a lower bound so that you can't buy negative amounts of tofu. 
     
@@ -42,12 +50,11 @@ m.optimize()  # (4)!
 3. Pyoframe constraints are easily created with the `<=`, `>=`, or `==` operators.
 4. Pyoframe automatically detects the solver you have installed; no need to specify it!
 
-So how much should you buy...
+After running the code you should get:
 
-```pycon
->>> m.tofu_blocks.solution
-2
->>> m.chickpea_cans.solution
-1
-
+```console
+Tofu blocks: 2
+Chickpea cans: 1
 ```
+
+On the next page, you'll [integrate DataFrames](./example-with-dimensions.md) into your solution.

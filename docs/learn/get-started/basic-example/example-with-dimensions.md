@@ -7,11 +7,11 @@ os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
 !!! tip "Pyoframe is built on DataFrames"
-    Most other optimization libraries require you to massage your data, stored in a `DataFrame`, into other data structures.[^1] Not Pyoframe! DataFrames form the core of Pyoframe making it easy to seamlessly — and efficiently — integrate large datasets into your models.
+    Most other optimization libraries require you to convert your data from its `DataFrame` format to another format.[^1] Not Pyoframe! DataFrames form the core of Pyoframe making it easy to seamlessly — and efficiently — integrate large datasets into your models.
 
 [^1]: For example, Pyomo converts your DataFrames to individual Python objects, Linopy uses multi-dimensional matrices via xarray, and gurobipy requires Python lists, dictionaries and tuples.
 
-We are going to re-build our [previous example](./example.md) using a dataset, `food_data.csv`, instead of hard-coded values. This way, we can add as many vegetarian proteins as we like without needing to write more code. If you're impatient, [skip to the end](#put-it-all-together) to see the final result.
+You are going to re-build the [previous example](./example.md) using a dataset, `food_data.csv`, instead of hard-coded values. This way, you can add as many vegetarian proteins as you like without needing to write more code. If you're impatient, [skip to the end](#put-it-all-together) to see the final result.
 
 
 > `food_data.csv`
@@ -56,11 +56,11 @@ import pyoframe as pf
 m = pf.Model()
 ```
 
-A [`pyoframe.Model`][pyoframe.Model] object sets the foundation onto which you will add optimization variables, constraints, and an objective.
+A [`pyoframe.Model`][pyoframe.Model] instance sets the foundation of your optimization model onto which you can add optimization variables, constraints, and an objective.
 
 ### Step 3: Create a dimensioned variable
 
-Previously, we created two variables: `m.tofu_blocks` and `m.chickpea_cans`. Instead, we now create a single variable **dimensioned over the column `food`**.
+Previously, you created two variables: `m.tofu_blocks` and `m.chickpea_cans`. Instead, create a single variable **dimensioned over the column `food`**.
 
 ```python
 m.Buy = pf.Variable(data["food"], lb=0, vtype="integer")
@@ -82,7 +82,7 @@ Printing the variable shows that it contains a `food` dimension with indices `to
 
 ### Step 3: Create the objective with `pf.sum`
 
-Previously we had:
+Previously you had:
 
 <!-- skip: next -->
 
@@ -90,9 +90,9 @@ Previously we had:
 m.minimize = 4 * m.tofu_blocks + 3 * m.chickpea_cans
 ```
 
-How do we make use of our dimensioned variable `m.Buy` instead?
+How do you make use of the dimensioned variable `m.Buy` instead?
 
-First, we multiply the variable by the protein amount.
+First, multiply the variable by the protein amount.
 
 ```pycon
 >>> data[["food", "cost"]] * m.Buy
@@ -102,11 +102,11 @@ First, we multiply the variable by the protein amount.
 
 ```
 
-As you can see, Pyoframe with a bit of magic converted our `Variable` into an `Expression` where the coefficients are the protein amounts.
+As you can see, Pyoframe with a bit of magic converted the `Variable` into an `Expression` where the coefficients are the protein amounts.
 
 *[with a bit of magic]: Pyoframe always converts DataFrames into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.
 
-Second, notice that our `Expression` still has a `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. All objective functions must be a single expression (without dimensions) so let's sum over the `food` dimensions using `pf.sum()`.
+Second, notice that the `Expression` still has the `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. All objective functions must be a single expression (without dimensions) so let's sum over the `food` dimensions using `pf.sum()`.
 
 ```pycon
 >>> pf.sum("food", data[["food", "cost"]] * m.Buy)
@@ -115,7 +115,7 @@ Second, notice that our `Expression` still has a `food` dimension—it really co
 
 ```
 
-This works and since `food` is the only dimensions we don't even need to specify it. Putting it all together:
+This works and since `food` is the only dimensions you don't even need to specify it. Putting it all together:
 
 ```python
 m.minimize = pf.sum(data[["food", "cost"]] * m.Buy)
@@ -123,7 +123,7 @@ m.minimize = pf.sum(data[["food", "cost"]] * m.Buy)
 
 ### Step 4: Add the constraint
 
-This is similar to how we created the objective, except now we're using `protein` and we turn our `Expression` into a `Constraint` by with the `>=` operation.
+This is similar to how you created the objective, except now you're using `protein` and you turn the `Expression` into a `Constraint` with the `>=` operation.
 
 ```python
 m.protein_constraint = pf.sum(data[["food", "protein"]] * m.Buy) >= 50
