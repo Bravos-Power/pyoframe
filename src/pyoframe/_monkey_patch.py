@@ -29,12 +29,28 @@ def _patch_class(cls):
     cls.__contains__ = _patch_method(cls.__contains__)
 
 
-def _dataframe_to_expr(self: pl.DataFrame) -> Expression:
+def polars_df_to_expr(self: pl.DataFrame) -> Expression:
+    """Converts a [polars](https://pola.rs/) `DataFrame` to a Pyoframe [Expression][pyoframe.Expression] by using the last column for values and the previous columns as dimensions.
+
+    Examples:
+        >>> import polars as pl
+        >>> df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6], "z": [7, 8, 9]})
+        >>> df.to_expr()
+        <Expression size=3 dimensions={'x': 3, 'y': 3} terms=3>
+        [1,4]: 7
+        [2,5]: 8
+        [3,6]: 9
+    """
     return Expression(
         self.rename({self.columns[-1]: COEF_KEY})
         .drop_nulls(COEF_KEY)
         .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY))
     )
+
+
+def pandas_df_to_expr(self: pd.DataFrame) -> Expression:
+    """Same as [`polars.DataFrame.to_expr`](./polars.DataFrame.to_expr.md), but for [pandas](https://pandas.pydata.org/) DataFrames."""
+    return polars_df_to_expr(pl.from_pandas(self))
 
 
 def patch_dataframe_libraries():
@@ -50,7 +66,8 @@ def patch_dataframe_libraries():
     _patch_class(pd.Series)
     _patch_class(pl.DataFrame)
     _patch_class(pl.Series)
-    pl.DataFrame.to_expr = _dataframe_to_expr
+    pl.DataFrame.to_expr = polars_df_to_expr
+    pd.DataFrame.to_expr = pandas_df_to_expr
+    # TODO make a set instead!
     pl.Series.to_expr = lambda self: self.to_frame().to_expr()
-    pd.DataFrame.to_expr = lambda self: pl.from_pandas(self).to_expr()
     pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()
