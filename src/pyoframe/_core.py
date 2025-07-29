@@ -1283,7 +1283,7 @@ class Constraint(ModelElementWithId):
 
         is_quadratic = self.lhs.is_quadratic
         use_var_names = self._model.use_var_names
-        kwargs: dict[str, Any] = dict(sense=self.sense.to_poi(), rhs=0)
+        kwargs: dict[str, Any] = dict(sense=self.sense._to_poi(), rhs=0)
 
         key_cols = [COEF_KEY] + self.lhs._variable_columns
         key_cols_polars = [pl.col(c) for c in key_cols]

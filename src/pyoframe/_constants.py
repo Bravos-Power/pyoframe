@@ -236,7 +236,7 @@ class ConstraintSense(Enum):
     GE = ">="
     EQ = "="
 
-    def to_poi(self):
+    def _to_poi(self):
         """Converts the constraint sense to its pyoptinterface equivalent."""
         if self == ConstraintSense.LE:
             return poi.ConstraintSense.LessEqual
@@ -252,7 +252,7 @@ class ObjSense(Enum):
     MIN = "min"
     MAX = "max"
 
-    def to_poi(self):
+    def _to_poi(self):
         """Converts the objective sense to its pyoptinterface equivalent."""
         if self == ObjSense.MIN:
             return poi.ObjectiveSense.Minimize
