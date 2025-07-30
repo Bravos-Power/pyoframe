@@ -71,10 +71,10 @@ class ModelElement(ABC):
         """The names of the data's dimensions.
 
         Examples:
-            >>> # A variable with no dimensions
+            A variable with no dimensions
             >>> pf.Variable().dimensions
 
-            >>> # A variable with dimensions of "hour" and "city"
+            A variable with dimensions of "hour" and "city"
             >>> pf.Variable(
             ...     [
             ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
@@ -101,10 +101,11 @@ class ModelElement(ABC):
         """The number of indices in each dimension.
 
         Examples:
-            >>> # A variable with no dimensions
+            A variable with no dimensions
             >>> pf.Variable().shape
             {}
-            >>> # A variable with dimensions of "hour" and "city"
+
+            A variable with dimensions of "hour" and "city"
             >>> pf.Variable(
             ...     [
             ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},

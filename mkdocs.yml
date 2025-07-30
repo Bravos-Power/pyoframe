@@ -69,8 +69,8 @@ plugins:
       handlers:
         python:
           options:
-            unwrap_annotated: false
-            show_bases: false
+            unwrap_annotated: true
+            show_bases: false  # Do not show base classes in the class documentation.
             inherited_members: true  # Include inherited methods in children classes.
             filters: ["!^_"]  # Exclude dunder methods from documentation.
             show_if_no_docstring: true
