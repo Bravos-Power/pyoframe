@@ -1,3 +1,5 @@
+"""Module to automatically run and test the examples to ensure consistent results over time."""
+
 from __future__ import annotations
 
 import importlib
@@ -7,14 +9,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
 import pyoframe as pf
-from pyoframe.constants import SUPPORTED_SOLVERS, Solver
+from pyoframe._constants import SUPPORTED_SOLVERS, _Solver
 from tests.util import get_tol_pl
 
 
@@ -25,7 +27,7 @@ class Example:
     is_mip: bool = False
     is_quadratic: bool = False
 
-    def supports_solver(self, solver: Solver) -> bool:
+    def supports_solver(self, solver: _Solver) -> bool:
         if self.is_mip and not solver.supports_integer_variables:
             return False
         if self.is_quadratic and not solver.supports_quadratics:
@@ -48,7 +50,7 @@ class Example:
         )
         return path
 
-    def get_solve_with_gurobipy(self) -> Optional[Any]:
+    def get_solve_with_gurobipy(self) -> Any | None:
         parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         if parent_dir not in sys.path:
             sys.path.insert(0, parent_dir)
@@ -128,8 +130,8 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
         )
 
 
-def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
-    with open(sol_file_path, mode="r") as f:
+def parse_sol(sol_file_path) -> list[tuple[str, float]]:
+    with open(sol_file_path) as f:
         sol = f.read()
     sol = sol.partition("\nHiGHS v1\n")[0]  # Cut out everything after this
     sol = [line.strip() for line in sol.split("\n")]
@@ -151,7 +153,7 @@ def parse_sol(sol_file_path) -> List[Tuple[str, float]]:
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
-def test_examples(example, solver: Solver, use_var_names):
+def test_examples(example, solver: _Solver, use_var_names):
     if not example.supports_solver(solver):
         pytest.skip(
             f"Skipping example {example.folder_name} for solver {solver.name} due to unsupported features"

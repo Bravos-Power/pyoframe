@@ -16,9 +16,9 @@ Contributions are more than welcome! Submit a pull request, or [open an issue](h
 
 4. Run `pytest` to make sure everything is working. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
 
-## Documentation
+## Writing documentation
 
-We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please **follow the [Google style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html)** for docstrings. Additionally, all Python code blocks in Markdown files are tested using Sybil. To properly setup the tests refer to this [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks).
+We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please follow the [Google docstring style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) and the [Google style guide](https://developers.google.com/style). Additionally, all Python code blocks in Markdown files are tested using Sybil. To properly setup the tests refer to this [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks).
 
 ## Helpful commands
 

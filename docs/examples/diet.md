@@ -1,12 +1,8 @@
-# Diet Problem
+# Diet problem
 
-Given a dataset of food options, each with different nutritional contents, how do you satisfy your dietary requirements while minimizing cost?
+## Problem statement
 
-## Input Data
-
-- [foods.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods.csv)
-- [foods_to_nutrients.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods_to_nutrients.csv)
-- [nutrients.csv](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/nutrients.csv)
+Given a list of potential foods, their costs, and their availability ([`foods.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods.csv)), and a list of the nutrients (e.g., protein, fats, etc.) contained in each food ([`foods_to_nutrients.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/foods_to_nutrients.csv)), how can you satisfy your dietary requirements ([`nutrients.csv`](https://github.com/Bravos-Power/pyoframe/blob/main/tests/examples/diet_problem/input_data/nutrients.csv)) while minimizing total costs?
 
 ## Model
 
@@ -17,42 +13,39 @@ os.chdir(os.path.join(os.getcwd(), "tests/examples/diet_problem/input_data"))
 -->
 
 ```python
-import polars as pl
+import pandas as pd
 
-from pyoframe import Model, Variable, sum, sum_by
+import pyoframe as pf
 
+# Import data
+food = pd.read_csv("foods.csv")
+nutrients = pd.read_csv("nutrients.csv")
+food_nutrients = pd.read_csv("foods_to_nutrients.csv")
 
-def solve_model():
-    # Import data
-    food = pl.read_csv("foods.csv")
-    nutrients = pl.read_csv("nutrients.csv")
-    min_nutrient = nutrients.select(["category", "min"]).to_expr()
-    max_nutrient = nutrients.select(["category", "max"]).to_expr()
-    food_nutrients = pl.read_csv("foods_to_nutrients.csv").to_expr()
+# Construct model
+m = pf.Model()
+m.Buy = pf.Variable(food["food"], lb=0, ub=food[["food", "stock"]])
 
-    # Construct model
-    m = Model()
-    m.Buy = Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
+nutrient_intake = pf.sum_by("category", m.Buy * food_nutrients)
+m.min_nutrients = (
+    nutrients[["category", "min"]] <= nutrient_intake.drop_unmatched()  # (1)!
+)
+m.max_nutrients = nutrient_intake.drop_unmatched() <= nutrients[["category", "max"]]
 
-    nutrient_intake = sum_by("category", m.Buy * food_nutrients)
-    m.min_nutrients = min_nutrient <= nutrient_intake.drop_unmatched()  # (1)!
-    m.max_nutrients = nutrient_intake.drop_unmatched() <= max_nutrient
+total_cost = pf.sum(m.Buy * food[["food", "cost"]])
+m.minimize = total_cost
 
-    m.minimize = sum(m.Buy * food[["food", "cost"]])
-
-    m.optimize()
-
-    return m
-
-
-m = solve_model()
+# Solve model
+m.optimize()
 ```
 
-1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/getting-started/special-functions.md#expressiondrop_unmatched)
+1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/get-started/special-functions.md#drop_unmatched-and-keep_unmatched)
 
-So what should you eat...
+So the solution is...
 
 ```pycon
+>>> total_cost.evaluate()
+12.060249999999998
 >>> m.Buy.solution
 ┌───────────┬──────────┐
 │ food      ┆ solution │

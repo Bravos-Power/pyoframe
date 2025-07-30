@@ -69,11 +69,20 @@ plugins:
       handlers:
         python:
           options:
+            unwrap_annotated: true
+            show_bases: false  # Do not show base classes in the class documentation.
+            inherited_members: true  # Include inherited methods in children classes.
+            filters: ["!^_"]  # Exclude dunder methods from documentation.
             show_if_no_docstring: true
-            summary: true
+            summary:
+              attributes: true
+              functions: true
+              classes: true
+              modules: false
             extensions:
               - dataclasses
             merge_init_into_class: true
+            show_labels: false  # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
             docstring_options:
               ignore_init_summary: true
               trim_doctest_flags: true
@@ -91,7 +100,25 @@ plugins:
   - awesome-nav
   - gen-files:
       scripts:
-        - scripts/gen_ref_pages.py
+        - scripts/generate_api_reference.py
+
+extra_javascript:
+  - javascripts/feedback.js
+
+extra:
+  analytics:
+    provider: custom
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: Let us know how we can improve this page.
 
 watch:
   - src

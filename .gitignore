@@ -7,10 +7,10 @@ build
 tmp
 .coverage
 .cache
-docs/reference
 dist
 *.log
 site
 .idea
 src/pyoframe/_version.py
 htmlcov/
+.snakemake

@@ -1,4 +1,4 @@
-# Model components
+# Pyoframe basics
 
 !!! info "Work in progress"
 

@@ -1,5 +1,9 @@
-# Based on example at page 20 in book:
-#       H.A Eiselt and Carl-Louis Sandblom: Operations Research - A Model-Based Approach 3rd Edition, Springer, 2022
+"""Pyoframe formulation of a production planning model.
+
+Based on example at page 20 in book:
+      H.A Eiselt and Carl-Louis Sandblom: Operations Research - A Model-Based Approach 3rd Edition, Springer, 2022
+"""
+
 from pathlib import Path
 
 import polars as pl
@@ -16,7 +20,7 @@ def solve_model(use_var_names=True):
     products_profit = pl.read_csv(_input_dir / "products_profit.csv")
 
     m = pf.Model(use_var_names=use_var_names)
-    m.Production = pf.Variable(products_profit[["products"]], lb=0)
+    m.Production = pf.Variable(products_profit["products"], lb=0)
 
     machine_usage = m.Production * processing_times
     m.machine_capacity = sum_by("machines", machine_usage) <= machines_availability

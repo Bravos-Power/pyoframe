@@ -1,14 +1,17 @@
-# Adapted from https://www.gurobi.com/documentation/current/examples/facility_py.html#subsubsection:facility.py
-# Copyright 2024, Gurobi Optimization, LLC
+"""Gurobipy formulation of the facility problem.
 
-# Facility location: a company currently ships its product from 5 plants
-# to 4 warehouses. It is considering closing some plants to reduce
-# costs. What plant(s) should the company close, in order to minimize
-# transportation and fixed costs?
-#
-# Based on an example from Frontline Systems:
-#   http://www.solver.com/disfacility.htm
-# Used with permission.
+Adapted from https://www.gurobi.com/documentation/current/examples/facility_py.html#subsubsection:facility.py
+Copyright 2024, Gurobi Optimization, LLC
+
+Facility location: a company currently ships its product from 5 plants
+to 4 warehouses. It is considering closing some plants to reduce
+costs. What plant(s) should the company close, in order to minimize
+transportation and fixed costs?
+
+Based on an example from Frontline Systems:
+  http://www.solver.com/disfacility.htm
+Used with permission.
+"""
 
 import os
 from pathlib import Path

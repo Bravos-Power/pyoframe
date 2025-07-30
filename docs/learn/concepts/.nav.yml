@@ -1,0 +1,4 @@
+nav:
+  - building-blocks.md
+  - special-functions.md
+  - solver-access.md
