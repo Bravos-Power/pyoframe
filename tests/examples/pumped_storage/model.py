@@ -31,11 +31,9 @@ def solve_model(
     efficiency = 0.75
 
     m = pf.Model(use_var_names=use_var_names, **kwargs)
-    m.Pump = pf.Variable(hourly_prices[["tick"]], vtype=pf.VType.BINARY)
-    m.Turb = pf.Variable(hourly_prices[["tick"]], lb=0, ub=turb_max)
-    m.Storage_level = pf.Variable(
-        hourly_prices[["tick"]], lb=storage_min, ub=storage_max
-    )
+    m.Pump = pf.Variable(hourly_prices["tick"], vtype=pf.VType.BINARY)
+    m.Turb = pf.Variable(hourly_prices["tick"], lb=0, ub=turb_max)
+    m.Storage_level = pf.Variable(hourly_prices["tick"], lb=storage_min, ub=storage_max)
     m.initial_storage_level = (
         m.Storage_level.filter(pl.col("tick") == hourly_prices["tick"].min())
         == storage_level_init_and_final

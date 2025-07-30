@@ -1,4 +1,4 @@
-# Special functions
+# Transforms
 
 !!! info "Work in progress"
 

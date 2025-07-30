@@ -24,7 +24,7 @@ food_nutrients = pd.read_csv("foods_to_nutrients.csv")
 
 # Construct model
 m = pf.Model()
-m.Buy = pf.Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
+m.Buy = pf.Variable(food["food"], lb=0, ub=food[["food", "stock"]])
 
 nutrient_intake = pf.sum_by("category", m.Buy * food_nutrients)
 m.min_nutrients = (

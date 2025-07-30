@@ -35,7 +35,7 @@ machines_availability = pd.read_csv("machines_availability.csv")
 products_profit = pd.read_csv("products_profit.csv")
 
 m = pf.Model()
-m.Production = pf.Variable(products_profit[["products"]], lb=0)
+m.Production = pf.Variable(products_profit["products"], lb=0)
 
 machine_usage = m.Production * processing_times
 m.machine_capacity = pf.sum_by("machines", machine_usage) <= machines_availability

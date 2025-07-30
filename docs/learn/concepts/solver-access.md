@@ -1,4 +1,4 @@
-# Access the solver
+# Solver interface  
 
 ## Model attributes
 

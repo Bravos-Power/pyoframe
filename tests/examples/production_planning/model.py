@@ -20,7 +20,7 @@ def solve_model(use_var_names=True):
     products_profit = pl.read_csv(_input_dir / "products_profit.csv")
 
     m = pf.Model(use_var_names=use_var_names)
-    m.Production = pf.Variable(products_profit[["products"]], lb=0)
+    m.Production = pf.Variable(products_profit["products"], lb=0)
 
     machine_usage = m.Production * processing_times
     m.machine_capacity = sum_by("machines", machine_usage) <= machines_availability

@@ -4,6 +4,7 @@ nav:
   - Home: index.md
   - Learn:
     - learn/get-started
+    - learn/concepts
     - learn/advanced-concepts
   - examples
   - reference

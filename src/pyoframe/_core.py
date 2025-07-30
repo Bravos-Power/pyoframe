@@ -1428,7 +1428,7 @@ class Constraint(ModelElementWithId):
             ...         "max_underdelivered": [1, 9, 9],
             ...     }
             ... )
-            >>> m.hours_spent = pf.Variable(homework_due_tomorrow[["project"]], lb=0)
+            >>> m.hours_spent = pf.Variable(homework_due_tomorrow["project"], lb=0)
             >>> m.must_finish_project = (
             ...     m.hours_spent
             ...     >= homework_due_tomorrow[["project", "hours_to_finish"]]
