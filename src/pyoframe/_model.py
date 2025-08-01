@@ -42,6 +42,9 @@ class Model:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
             Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+        use_var_names_print:
+            Whether to use variable names when printing model elements to the console.
+            Set to `False` if you don't need to debug your model and you'd likely to slightly improve performance.
         sense:
             Either "min" or "max". Indicates whether it's a minmization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
@@ -91,6 +94,7 @@ class Model:
         solver: SUPPORTED_SOLVER_TYPES | _Solver | None = None,
         solver_env: dict[str, str] | None = None,
         use_var_names: bool = False,
+        use_var_names_print: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
         self.poi, self.solver = Model._create_poi_model(solver, solver_env)
@@ -99,9 +103,7 @@ class Model:
         self._constraints: list[Constraint] = []
         self.sense: ObjSense | None = ObjSense(sense) if sense is not None else None
         self._objective: Objective | None = None
-        self._var_map = (
-            NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
-        )
+        self._var_map = NamedVariableMapper(Variable) if use_var_names_print else None
         self.name: str | None = name
 
         self._params = Container(self._set_param, self._get_param)
@@ -353,10 +355,14 @@ class Model:
                 self._constraints.append(__value)
         return super().__setattr__(__name, __value)
 
+    def __getattribute__(self, name: str) -> Any:
+        # Defining this prevents pylance from giving error 'reportAttributeAccess'
+        return super().__getattribute__(name)
+
     def __repr__(self) -> str:
         return get_obj_repr(
             self,
-            name=self.name,
+            "name",
             vars=len(self.variables),
             constrs=len(self.constraints),
             has_objective=bool(self.objective),

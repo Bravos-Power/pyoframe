@@ -17,8 +17,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model_element import ModelElementWithId
 
 
-def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
-    """Generates __repr__() strings for classes. See usage for examples."""
+def get_obj_repr(obj: object, *_props: str, **kwargs):
+    """Generates __repr__() strings for classes.
+
+    See usage for examples.
+    """
     props = {prop: getattr(obj, prop) for prop in _props}
     props_str = " ".join(f"{k}={v}" for k, v in props.items() if v is not None)
     if props_str:
@@ -323,8 +326,8 @@ class NamedVariableMapper:
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)
-        <Expression size=1 dimensions={} terms=4>
-        foo[0] + foo[1] + foo[2] + foo[3]
+        <Expression terms=4>
+        foo[0] + foo[1] + foo[2] + foo[3]
     """
 
     CONST_TERM_NAME = "_ONE"

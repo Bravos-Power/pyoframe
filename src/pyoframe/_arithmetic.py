@@ -33,13 +33,13 @@ def _multiply_expressions(self: Expression, other: Expression) -> Expression:
         >>> m.x3 = pf.Variable()
         >>> result = 5 * m.x1 * m.x2
         >>> result
-        <Expression size=1 dimensions={} terms=1 degree=2>
-        5 x2 * x1
+        <Expression terms=1 degree=2>
+        5 x2 * x1
         >>> result * m.x3
         Traceback (most recent call last):
         ...
         pyoframe._constants.PyoframeError: Failed to multiply expressions:
-        <Expression size=1 dimensions={} terms=1 degree=2> * <Expression size=1 dimensions={} terms=1>
+        <Expression terms=1 degree=2> * <Expression terms=1>
         Due to error:
         Cannot multiply a quadratic expression by a non-constant.
     """
@@ -48,10 +48,7 @@ def _multiply_expressions(self: Expression, other: Expression) -> Expression:
     except PyoframeError as error:
         raise PyoframeError(
             "Failed to multiply expressions:\n"
-            + " * ".join(
-                e._to_str(include_header=True, include_data=False)
-                for e in [self, other]
-            )
+            + " * ".join(e._str_header() for e in [self, other])
             + "\nDue to error:\n"
             + str(error)
         ) from error
@@ -63,9 +60,7 @@ def _add_expressions(*expressions: Expression) -> Expression:
     except PyoframeError as error:
         raise PyoframeError(
             "Failed to add expressions:\n"
-            + " + ".join(
-                e._to_str(include_header=True, include_data=False) for e in expressions
-            )
+            + " + ".join(e._str_header() for e in expressions)
             + "\nDue to error:\n"
             + str(error)
         ) from error
@@ -121,15 +116,26 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
         >>> expr1 = df * m.x1
         >>> expr2 = df * m.x2 * 2 + 4
         >>> expr1 * expr2
-        <Expression size=3 dimensions={'dim': 3} terms=6 degree=2>
-        [1]: 4 x1 +2 x2 * x1
-        [2]: 8 x1 +8 x2 * x1
-        [3]: 12 x1 +18 x2 * x1
+        <Expression height=3 terms=6 degree=2>
+        ┌─────┬───────────────────┐
+        │ dim ┆ expression        │
+        │ (3) ┆                   │
+        ╞═════╪═══════════════════╡
+        │ 1   ┆ 4 x1 +2 x2 * x1   │
+        │ 2   ┆ 8 x1 +8 x2 * x1   │
+        │ 3   ┆ 12 x1 +18 x2 * x1 │
+        └─────┴───────────────────┘
         >>> (expr1 * expr2) - df * m.x1 * df * m.x2 * 2
-        <Expression size=3 dimensions={'dim': 3} terms=3>
-        [1]: 4 x1
-        [2]: 8 x1
-        [3]: 12 x1
+        <Expression height=3 terms=3>
+        ┌─────┬────────────┐
+        │ dim ┆ expression │
+        │ (3) ┆            │
+        ╞═════╪════════════╡
+        │ 1   ┆ 4 x1       │
+        │ 2   ┆ 8 x1       │
+        │ 3   ┆ 12 x1      │
+        └─────┴────────────┘
+
     """
     dims = self.dimensions_unsafe
     other_dims = other.dimensions_unsafe

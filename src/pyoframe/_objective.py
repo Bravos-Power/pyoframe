@@ -19,8 +19,8 @@ class Objective(Expression):
         >>> m.con = m.A + m.B <= 10
         >>> m.maximize = 2 * m.B + 4
         >>> m.maximize
-        <Objective size=1 dimensions={} terms=2>
-        objective: 2 B +4
+        <Objective terms=2>
+        2 B +4
 
         The objective value can be retrieved with from the solver once the model is solved using `.value`.
 

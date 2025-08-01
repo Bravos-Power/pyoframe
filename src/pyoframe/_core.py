@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Protocol, Union, overload
+from typing import TYPE_CHECKING, Any, Literal, Protocol, Union, overload
 
 import numpy as np
 import pandas as pd
@@ -113,7 +113,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v**2
-            <Expression size=1 dimensions={} terms=1 degree=2>
+            <Expression terms=1 degree=2>
             v * v
             >>> m.v**3
             Traceback (most recent call last):
@@ -141,10 +141,15 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> df = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]})
             >>> m.v = pf.Variable(df["dim1"])
             >>> m.v - df
-            <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] -1
-            [2]: v[2] -2
-            [3]: v[3] -3
+            <Expression height=3 terms=6>
+            ┌──────┬────────────┐
+            │ dim1 ┆ expression │
+            │ (3)  ┆            │
+            ╞══════╪════════════╡
+            │ 1    ┆ v[1] -1    │
+            │ 2    ┆ v[2] -2    │
+            │ 3    ┆ v[3] -3    │
+            └──────┴────────────┘
         """
         if not isinstance(other, (int, float)):
             other = other.to_expr()
@@ -164,10 +169,15 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v / 2
-            <Expression size=3 dimensions={'dim1': 3} terms=3>
-            [1]: 0.5 v[1]
-            [2]: 0.5 v[2]
-            [3]: 0.5 v[3]
+            <Expression height=3 terms=3>
+            ┌──────┬────────────┐
+            │ dim1 ┆ expression │
+            │ (3)  ┆            │
+            ╞══════╪════════════╡
+            │ 1    ┆ 0.5 v[1]   │
+            │ 2    ┆ 0.5 v[2]   │
+            │ 3    ┆ 0.5 v[3]   │
+            └──────┴────────────┘
         """
         return self.to_expr() * (1 / other)
 
@@ -178,10 +188,15 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> 1 - m.v
-            <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: 1  - v[1]
-            [2]: 1  - v[2]
-            [3]: 1  - v[3]
+            <Expression height=3 terms=6>
+            ┌──────┬────────────┐
+            │ dim1 ┆ expression │
+            │ (3)  ┆            │
+            ╞══════╪════════════╡
+            │ 1    ┆ 1 - v[1]   │
+            │ 2    ┆ 1 - v[2]   │
+            │ 3    ┆ 1 - v[3]   │
+            └──────┴────────────┘
         """
         return other + (-self.to_expr())
 
@@ -192,8 +207,8 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v <= 1
-            <Constraint sense='<=' size=1 dimensions={} terms=2>
-            v <= 1
+            <Constraint terms=2>
+            v <= 1
         """
         return Constraint(self - other, ConstraintSense.LE)
 
@@ -204,8 +219,8 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v >= 1
-            <Constraint sense='>=' size=1 dimensions={} terms=2>
-            v >= 1
+            <Constraint terms=2>
+            v >= 1
         """
         return Constraint(self - other, ConstraintSense.GE)
 
@@ -216,8 +231,8 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v == 1
-            <Constraint sense='=' size=1 dimensions={} terms=2>
-            v = 1
+            <Constraint terms=2>
+            v = 1
         """
         return Constraint(self - value, ConstraintSense.EQ)
 
@@ -340,7 +355,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def __repr__(self):
         return (
-            get_obj_repr(self, ("name",), size=self.data.height, dimensions=self.shape)
+            get_obj_repr(self, "name", size=self.data.height, dimensions=self.shape)
             + "\n"
             + dataframe_to_tupled_list(
                 self.data, num_max_elements=Config.print_max_set_elements
@@ -411,12 +426,17 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         >>> m.Size = pf.Variable(df.index)
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
         >>> expr
-        <Expression size=5 dimensions={'item': 2, 'time': 3} terms=10>
-        [1,mon]: Time[1,mon] + Size[1,mon]
-        [1,tue]: 2 Time[1,tue] +2 Size[1,tue]
-        [1,wed]: 3 Time[1,wed] +3 Size[1,wed]
-        [2,mon]: 4 Time[2,mon] +4 Size[2,mon]
-        [2,tue]: 5 Time[2,tue] +5 Size[2,tue]
+        <Expression height=5 terms=10>
+        ┌──────┬──────┬──────────────────────────────┐
+        │ item ┆ time ┆ expression                   │
+        │ (2)  ┆ (3)  ┆                              │
+        ╞══════╪══════╪══════════════════════════════╡
+        │ 1    ┆ mon  ┆ Time[1,mon] + Size[1,mon]    │
+        │ 1    ┆ tue  ┆ 2 Time[1,tue] +2 Size[1,tue] │
+        │ 1    ┆ wed  ┆ 3 Time[1,wed] +3 Size[1,wed] │
+        │ 2    ┆ mon  ┆ 4 Time[2,mon] +4 Size[2,mon] │
+        │ 2    ┆ tue  ┆ 5 Time[2,tue] +5 Size[2,tue] │
+        └──────┴──────┴──────────────────────────────┘
     """
 
     def __init__(self, data: pl.DataFrame):
@@ -444,7 +464,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> pf.Expression.constant(5)
-            <Expression size=1 dimensions={} terms=1>
+            <Expression terms=1>
             5
         """
         return cls(
@@ -539,14 +559,25 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             ...     }
             ... )
             >>> pop_data.map(cities_and_countries)
-            <Expression size=2 dimensions={'year': 1, 'country': 2} terms=2>
-            [2024,Canada]: 12
-            [2024,USA]: 8
+            <Expression height=2 terms=2>
+            ┌──────┬─────────┬────────────┐
+            │ year ┆ country ┆ expression │
+            │ (1)  ┆ (2)     ┆            │
+            ╞══════╪═════════╪════════════╡
+            │ 2024 ┆ Canada  ┆ 12         │
+            │ 2024 ┆ USA     ┆ 8          │
+            └──────┴─────────┴────────────┘
+
             >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
-            <Expression size=3 dimensions={'city': 3, 'year': 1, 'country': 2} terms=3>
-            [Toronto,2024,Canada]: 10
-            [Vancouver,2024,Canada]: 2
-            [Boston,2024,USA]: 8
+            <Expression height=3 terms=3>
+            ┌───────────┬──────┬─────────┬────────────┐
+            │ city      ┆ year ┆ country ┆ expression │
+            │ (3)       ┆ (1)  ┆ (2)     ┆            │
+            ╞═══════════╪══════╪═════════╪════════════╡
+            │ Toronto   ┆ 2024 ┆ Canada  ┆ 10         │
+            │ Vancouver ┆ 2024 ┆ Canada  ┆ 2          │
+            │ Boston    ┆ 2024 ┆ USA     ┆ 8          │
+            └───────────┴──────┴─────────┴────────────┘
         """
         mapping_set = Set(mapping_set)
 
@@ -605,12 +636,17 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m = pf.Model()
             >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
-            <Expression size=5 dimensions={'item': 2, 'time': 3} terms=8>
-            [1,1]: quantity[1,1]
-            [1,2]: quantity[1,1] +2 quantity[1,2]
-            [1,3]: 2 quantity[1,2] +3 quantity[1,3]
-            [2,1]: 4 quantity[2,1]
-            [2,2]: 4 quantity[2,1] +5 quantity[2,2]
+            <Expression height=5 terms=8>
+            ┌──────┬──────┬──────────────────────────────────┐
+            │ item ┆ time ┆ expression                       │
+            │ (2)  ┆ (3)  ┆                                  │
+            ╞══════╪══════╪══════════════════════════════════╡
+            │ 1    ┆ 1    ┆ quantity[1,1]                    │
+            │ 1    ┆ 2    ┆ quantity[1,1] +2 quantity[1,2]   │
+            │ 1    ┆ 3    ┆ 2 quantity[1,2] +3 quantity[1,3] │
+            │ 2    ┆ 1    ┆ 4 quantity[2,1]                  │
+            │ 2    ┆ 2    ┆ 4 quantity[2,1] +5 quantity[2,2] │
+            └──────┴──────┴──────────────────────────────────┘
         """
         dims = self.dimensions
         if dims is None:
@@ -718,20 +754,32 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
             >>> m.v = Variable(add)
             >>> m.v + add
-            <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] +10
-            [2]: v[2] +20
-            [3]: v[3] +30
+            <Expression height=3 terms=6>
+            ┌──────┬────────────┐
+            │ dim1 ┆ expression │
+            │ (3)  ┆            │
+            ╞══════╪════════════╡
+            │ 1    ┆ v[1] +10   │
+            │ 2    ┆ v[2] +20   │
+            │ 3    ┆ v[3] +30   │
+            └──────┴────────────┘
+
             >>> m.v + add + 2
-            <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] +12
-            [2]: v[2] +22
-            [3]: v[3] +32
+            <Expression height=3 terms=6>
+            ┌──────┬────────────┐
+            │ dim1 ┆ expression │
+            │ (3)  ┆            │
+            ╞══════╪════════════╡
+            │ 1    ┆ v[1] +12   │
+            │ 2    ┆ v[2] +22   │
+            │ 3    ┆ v[3] +32   │
+            └──────┴────────────┘
+
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression size=3 dimensions={'dim1': 3} terms=3> + <Expression size=2 dimensions={'dim1': 2} terms=2>
+            <Expression height=3 terms=3> + <Expression height=2 terms=2>
             Due to error:
             DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
             shape: (1, 2)
@@ -744,8 +792,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             └──────┴────────────┘
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
-            <Expression size=1 dimensions={} terms=2>
-            2 v2 +5
+            <Expression terms=2>
+            2 v2 +5
         """
         if isinstance(other, str):
             raise ValueError(
@@ -788,24 +836,29 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.x1 = Variable()
             >>> m.x2 = Variable()
             >>> m.x1 + 5
-            <Expression size=1 dimensions={} terms=2>
+            <Expression terms=2>
             x1 +5
             >>> m.x1**2 + 5
-            <Expression size=1 dimensions={} terms=2 degree=2>
+            <Expression terms=2 degree=2>
             x1 * x1 +5
             >>> m.x1**2 + m.x2 + 5
-            <Expression size=1 dimensions={} terms=3 degree=2>
-            x1 * x1 + x2 +5
+            <Expression terms=3 degree=2>
+            x1 * x1 + x2 +5
 
             It also works with dimensions
 
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v * m.v + 5
-            <Expression size=3 dimensions={'dim1': 3} terms=6 degree=2>
-            [1]: 5  + v[1] * v[1]
-            [2]: 5  + v[2] * v[2]
-            [3]: 5  + v[3] * v[3]
+            <Expression height=3 terms=6 degree=2>
+            ┌──────┬─────────────────┐
+            │ dim1 ┆ expression      │
+            │ (3)  ┆                 │
+            ╞══════╪═════════════════╡
+            │ 1    ┆ 5 + v[1] * v[1] │
+            │ 2    ┆ 5 + v[2] * v[2] │
+            │ 3    ┆ 5 + v[3] * v[3] │
+            └──────┴─────────────────┘
         """
         dim = self.dimensions
         data = self.data
@@ -943,7 +996,38 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 variables=self.data.get_column(VAR_KEY).to_numpy(),
             )
 
-    def _to_str_table(self, include_const_term=True):
+    @overload
+    def to_str(
+        self,
+        str_col_name: str = "expression",
+        include_const_term: bool = True,
+        return_df: Literal[False] = False,
+    ) -> str: ...
+
+    @overload
+    def to_str(
+        self,
+        str_col_name: str = "expression",
+        include_const_term: bool = True,
+        return_df: Literal[True] = True,
+    ) -> pl.DataFrame: ...
+
+    def to_str(
+        self,
+        str_col_name="expression",
+        include_const_term=True,
+        return_df: bool = False,
+    ) -> str | pl.DataFrame:
+        """Converts the expression to a human-readable string, or several arranged in a table.
+
+        Parameters:
+            str_col_name:
+                The name of the column containing the string representation of the expression (dimensioned expressions only).
+            include_const_term:
+                If False, constant terms are omitted from the string representation.
+            return_df:
+                If True, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
+        """
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
 
@@ -975,70 +1059,49 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         # Create a string for each term
         data = data.with_columns(
-            expr=pl.concat_str(
+            pl.concat_str(
                 COEF_KEY,
-                pl.lit(" "),
+                pl.lit(" "),
                 VAR_KEY,
             )
+            .str.strip_chars(characters="  ")
+            .alias(str_col_name)
         ).drop(COEF_KEY, VAR_KEY)
 
         if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
-                pl.col("expr").str.join(delimiter=" ")
+                pl.col(str_col_name).str.join(delimiter=" ")
             )
         else:
-            data = data.select(pl.col("expr").str.join(delimiter=" "))
+            data = data.select(pl.col(str_col_name).str.join(delimiter=" "))
 
         # Remove leading +
-        data = data.with_columns(pl.col("expr").str.strip_chars(characters=" +"))
+        data = data.with_columns(pl.col(str_col_name).str.strip_chars(characters="  +"))
 
-        if Config.print_max_lines:
-            data = data.head(Config.print_max_lines)
+        if not return_df:
+            if dimensions is None:
+                data = data.item()
+            else:
+                data = self._add_shape_to_columns(data)
+                with Config.print_polars_config:
+                    data = repr(data)
 
-        if Config.print_max_line_length:
-            data = data.with_columns(
-                pl.when(pl.col("expr").str.len_chars() > Config.print_max_line_length)
-                .then(
-                    pl.concat_str(
-                        pl.col("expr").str.slice(0, Config.print_max_line_length),
-                        pl.lit("…"),
-                    )
-                )
-                .otherwise(pl.col("expr"))
-            )
         return data
 
-    def _to_str(
-        self,
-        include_const_term=True,
-        include_header=False,
-        include_data=True,
-    ):
-        result = ""
-        if include_header:
-            result += get_obj_repr(
-                self,
-                size=len(self),
-                dimensions=self.shape,
-                terms=self.terms,
-                degree=2 if self.degree() == 2 else None,
-            )
-        if include_header and include_data:
-            result += "\n"
-        if include_data:
-            str_table = self._to_str_table(
-                include_const_term=include_const_term,
-            )
-            str_table = self._to_str_create_prefix(str_table)
-            result += str_table.select(pl.col("expr").str.join(delimiter="\n")).item()
-            result = self._append_ellipsis(result)
-        return result
-
-    def __repr__(self) -> str:
-        return self._to_str(include_header=True)
+    def _str_header(self) -> str:
+        """Returns a string representation of the expression's header."""
+        return get_obj_repr(
+            self,
+            height=len(self) if self.dimensions else None,
+            terms=self.terms,
+            degree=2 if self.degree() == 2 else None,
+        )
 
     def __str__(self) -> str:
-        return self._to_str()
+        return self.to_str()
+
+    def __repr__(self) -> str:
+        return self._str_header() + "\n" + self.to_str()
 
     @property
     def terms(self) -> int:
@@ -1052,9 +1115,14 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.v = pf.Variable({"t": [1, 2]})
             >>> coef = pl.DataFrame({"t": [1, 2], "coef": [0, 1]})
             >>> coef * (m.v + 4)
-            <Expression size=2 dimensions={'t': 2} terms=3>
-            [1]: 0
-            [2]: 4  + v[2]
+            <Expression height=2 terms=3>
+            ┌─────┬────────────┐
+            │ t   ┆ expression │
+            │ (2) ┆            │
+            ╞═════╪════════════╡
+            │ 1   ┆ 0          │
+            │ 2   ┆ 4 + v[2]   │
+            └─────┴────────────┘
             >>> (coef * (m.v + 4)).terms
             3
         """
@@ -1092,18 +1160,28 @@ def sum(
         ...     }
         ... ).to_expr()
         >>> expr
-        <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
-        [mon,Toronto]: 1000000
-        [tue,Toronto]: 3000000
-        [wed,Toronto]: 2000000
-        [mon,Vancouver]: 1000000
-        [tue,Vancouver]: 2000000
+        <Expression height=5 terms=5>
+        ┌──────┬───────────┬────────────┐
+        │ time ┆ place     ┆ expression │
+        │ (3)  ┆ (2)       ┆            │
+        ╞══════╪═══════════╪════════════╡
+        │ mon  ┆ Toronto   ┆ 1000000    │
+        │ tue  ┆ Toronto   ┆ 3000000    │
+        │ wed  ┆ Toronto   ┆ 2000000    │
+        │ mon  ┆ Vancouver ┆ 1000000    │
+        │ tue  ┆ Vancouver ┆ 2000000    │
+        └──────┴───────────┴────────────┘
         >>> pf.sum("time", expr)
-        <Expression size=2 dimensions={'place': 2} terms=2>
-        [Toronto]: 6000000
-        [Vancouver]: 3000000
+        <Expression height=2 terms=2>
+        ┌───────────┬────────────┐
+        │ place     ┆ expression │
+        │ (2)       ┆            │
+        ╞═══════════╪════════════╡
+        │ Toronto   ┆ 6000000    │
+        │ Vancouver ┆ 3000000    │
+        └───────────┴────────────┘
         >>> pf.sum(expr)
-        <Expression size=1 dimensions={} terms=1>
+        <Expression terms=1>
         9000000
 
         If the given dimensions don't exist, an error will be raised:
@@ -1148,19 +1226,30 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
         ...     }
         ... ).to_expr()
         >>> expr
-        <Expression size=5 dimensions={'time': 3, 'place': 2} terms=5>
-        [mon,Toronto]: 1000000
-        [tue,Toronto]: 3000000
-        [wed,Toronto]: 2000000
-        [mon,Vancouver]: 1000000
-        [tue,Vancouver]: 2000000
+        <Expression height=5 terms=5>
+        ┌──────┬───────────┬────────────┐
+        │ time ┆ place     ┆ expression │
+        │ (3)  ┆ (2)       ┆            │
+        ╞══════╪═══════════╪════════════╡
+        │ mon  ┆ Toronto   ┆ 1000000    │
+        │ tue  ┆ Toronto   ┆ 3000000    │
+        │ wed  ┆ Toronto   ┆ 2000000    │
+        │ mon  ┆ Vancouver ┆ 1000000    │
+        │ tue  ┆ Vancouver ┆ 2000000    │
+        └──────┴───────────┴────────────┘
+
         >>> pf.sum_by("place", expr)
-        <Expression size=2 dimensions={'place': 2} terms=2>
-        [Toronto]: 6000000
-        [Vancouver]: 3000000
+        <Expression height=2 terms=2>
+        ┌───────────┬────────────┐
+        │ place     ┆ expression │
+        │ (2)       ┆            │
+        ╞═══════════╪════════════╡
+        │ Toronto   ┆ 6000000    │
+        │ Vancouver ┆ 3000000    │
+        └───────────┴────────────┘
         >>> total_sum = pf.sum_by([], expr)
         >>> total_sum
-        <Expression size=1 dimensions={} terms=1>
+        <Expression terms=1>
         9000000
 
         If the specified dimensions don't exist, an error will be raised:
@@ -1501,25 +1590,43 @@ class Constraint(ModelElementWithId):
 
         return self
 
-    def _to_str(self) -> str:
+    @overload
+    def to_str(self, return_df: Literal[False] = False) -> str: ...
+
+    @overload
+    def to_str(self, return_df: Literal[True] = True) -> pl.DataFrame: ...
+
+    def to_str(self, return_df: bool = False) -> str | pl.DataFrame:
+        """Converts the constraint to a human-readable string, or several arranged in a table.
+
+        Parameters:
+            return_df:
+                If True, returns a DataFrame containing strings instead of the string representation of the DataFrame.
+        """
         dims = self.dimensions
-        str_table = self.lhs._to_str_table(include_const_term=False)
-        str_table = self._to_str_create_prefix(str_table)
+        str_table = self.lhs.to_str(
+            include_const_term=False, return_df=True, str_col_name="constraint"
+        )
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False)
         # Remove leading +
-        rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters=" +"))
+        rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters="  +"))
         rhs = rhs.rename({COEF_KEY: "rhs"})
-        constr_str = pl.concat(
-            [str_table, rhs], how=("align" if dims else "horizontal")
-        )
-        constr_str = constr_str.select(
-            pl.concat_str("expr", pl.lit(f" {self.sense.value} "), "rhs").str.join(
-                delimiter="\n"
+        constr_str = (
+            pl.concat([str_table, rhs], how=("align" if dims else "horizontal"))
+            .with_columns(
+                pl.concat_str("constraint", pl.lit(f" {self.sense.value} "), "rhs")
             )
-        ).item()
+            .drop("rhs")
+        )
 
-        constr_str = self._append_ellipsis(constr_str)
+        if not return_df:
+            if self.dimensions is None:
+                constr_str = constr_str.item()
+            else:
+                constr_str = self._add_shape_to_columns(constr_str)
+                with Config.print_polars_config:
+                    constr_str = repr(constr_str)
 
         return constr_str
 
@@ -1527,13 +1634,12 @@ class Constraint(ModelElementWithId):
         return (
             get_obj_repr(
                 self,
-                sense=f"'{self.sense.value}'",
-                size=len(self),
-                dimensions=self.shape,
+                "name",
+                height=len(self) if self.dimensions else None,
                 terms=len(self.lhs.data),
             )
             + "\n"
-            + self._to_str()
+            + self.to_str()
         )
 
 
@@ -1561,7 +1667,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         ... )
         >>> v = Variable(df)
         >>> v
-        <Variable size=6 dimensions={'dim1': 3, 'dim2': 2} added_to_model=False>
+        <Variable height=6 added_to_model=False>
 
         Variables cannot be used until they're added to the model.
 
@@ -1573,23 +1679,34 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         >>> m.constraint = m.v <= 3
 
         >>> m.v
-        <Variable name=v size=6 dimensions={'dim1': 3, 'dim2': 2}>
-        [1,a]: v[1,a]
-        [1,b]: v[1,b]
-        [2,a]: v[2,a]
-        [2,b]: v[2,b]
-        [3,a]: v[3,a]
-        [3,b]: v[3,b]
+        <Variable name=v height=6>
+        ┌──────┬──────┬──────────┐
+        │ dim1 ┆ dim2 ┆ variable │
+        │ (3)  ┆ (2)  ┆          │
+        ╞══════╪══════╪══════════╡
+        │ 1    ┆ a    ┆ v[1,a]   │
+        │ 1    ┆ b    ┆ v[1,b]   │
+        │ 2    ┆ a    ┆ v[2,a]   │
+        │ 2    ┆ b    ┆ v[2,b]   │
+        │ 3    ┆ a    ┆ v[3,a]   │
+        │ 3    ┆ b    ┆ v[3,b]   │
+        └──────┴──────┴──────────┘
+
         >>> m.v2 = Variable(df[["dim1"]])
         Traceback (most recent call last):
         ...
         ValueError: Duplicate rows found in input data.
         >>> m.v3 = Variable(df[["dim1"]].drop_duplicates())
         >>> m.v3
-        <Variable name=v3 size=3 dimensions={'dim1': 3}>
-        [1]: v3[1]
-        [2]: v3[2]
-        [3]: v3[3]
+        <Variable name=v3 height=3>
+        ┌──────┬──────────┐
+        │ dim1 ┆ variable │
+        │ (3)  ┆          │
+        ╞══════╪══════════╡
+        │ 1    ┆ v3[1]    │
+        │ 2    ┆ v3[2]    │
+        │ 3    ┆ v3[3]    │
+        └──────┴──────────┘
     """
 
     # TODO: Breaking change, remove support for Iterable[AcceptableSets]
@@ -1813,19 +1930,20 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             return (
                 get_obj_repr(
                     self,
-                    ("name", "lb", "ub"),
-                    size=self.data.height,
-                    dimensions=self.shape,
+                    "name",
+                    "lb",
+                    "ub",
+                    height=self.data.height if self.dimensions else None,
                 )
                 + "\n"
-                + self.to_expr()._to_str()
+                + self.to_expr().to_str(str_col_name="variable")
             )
         else:
             return get_obj_repr(
                 self,
-                ("name", "lb", "ub"),
-                size=self.data.height,
-                dimensions=self.shape,
+                "lb",
+                "ub",
+                height=self.data.height if self.dimensions else None,
                 added_to_model=False,
             )
 
@@ -1864,7 +1982,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression size=8 dimensions={'time': 4, 'city': 2} terms=16> + <Expression size=6 dimensions={'city': 2, 'time': 3} terms=6>
+            <Expression height=8 terms=16> + <Expression height=6 terms=6>
             Due to error:
             DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
             shape: (2, 4)
@@ -1880,26 +1998,51 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
             ...     "time"
             ... )
-            <Constraint sense='=' size=6 dimensions={'time': 3, 'city': 2} terms=18>
-            [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
-            [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
-            [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
-            [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
-            [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
-            [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
+            <Constraint height=6 terms=18>
+            ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
+            │ time  ┆ city    ┆ constraint                                                                     │
+            │ (3)   ┆ (2)     ┆                                                                                │
+            ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡
+            │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │
+            │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │
+            │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │
+            └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘
 
             >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next(
             ...     "time", wrap_around=True
             ... )
-            <Constraint sense='=' size=8 dimensions={'time': 4, 'city': 2} terms=24>
-            [00:00,Berlin]: bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin] = 0
-            [00:00,Toronto]: bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto] - bat_charge[06:00,Toronto] = 0
-            [06:00,Berlin]: bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin] = 0
-            [06:00,Toronto]: bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto] - bat_charge[12:00,Toronto] = 0
-            [12:00,Berlin]: bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin] = 0
-            [12:00,Toronto]: bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto] - bat_charge[18:00,Toronto] = 0
-            [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
-            [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
+            <Constraint height=8 terms=24>
+            ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
+            │ time  ┆ city    ┆ constraint                                                                     │
+            │ (4)   ┆ (2)     ┆                                                                                │
+            ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡
+            │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │
+            │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │
+            │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │
+            │ 18:00 ┆ Berlin  ┆ bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
+            │ 18:00 ┆ Toronto ┆ bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto]                            │
+            │       ┆         ┆ - bat_charge[00:00,Toronto] = 0                                                │
+            └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘
+
         """
         wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)
         wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))

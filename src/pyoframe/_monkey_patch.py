@@ -8,8 +8,6 @@ import polars as pl
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
 from pyoframe._core import Expression, SupportsMath
 
-# pyright: reportAttributeAccessIssue=false
-
 
 def _patch_class(cls):
     def _patch_method(func):
@@ -38,10 +36,15 @@ def polars_df_to_expr(self: pl.DataFrame) -> Expression:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6], "z": [7, 8, 9]})
         >>> df.to_expr()
-        <Expression size=3 dimensions={'x': 3, 'y': 3} terms=3>
-        [1,4]: 7
-        [2,5]: 8
-        [3,6]: 9
+        <Expression height=3 terms=3>
+        ┌─────┬─────┬────────────┐
+        │ x   ┆ y   ┆ expression │
+        │ (3) ┆ (3) ┆            │
+        ╞═════╪═════╪════════════╡
+        │ 1   ┆ 4   ┆ 7          │
+        │ 2   ┆ 5   ┆ 8          │
+        │ 3   ┆ 6   ┆ 9          │
+        └─────┴─────┴────────────┘
     """
     return Expression(
         self.rename({self.columns[-1]: COEF_KEY})
