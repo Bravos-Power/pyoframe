@@ -170,6 +170,38 @@ class Config(metaclass=_ConfigMeta):
     )
     """Polars `Config` used when printing Pyoframe objects."""
 
+    print_max_terms = 5
+    """Maximum number of terms to print in an expression before truncating it.
+
+    Examples:
+        >>> pf.Config.print_max_terms = 3
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(pf.Set(x=range(100)), pf.Set(y=range(100)))
+        >>> pf.sum("y", m.X)
+        <Expression height=100 terms=10000 type=linear>
+        ┌───────┬───────────────────────────────┐
+        │ x     ┆ expression                    │
+        │ (100) ┆                               │
+        ╞═══════╪═══════════════════════════════╡
+        │ 0     ┆ X[0,0] + X[0,1] + X[0,2] …    │
+        │ 1     ┆ X[1,0] + X[1,1] + X[1,2] …    │
+        │ 2     ┆ X[2,0] + X[2,1] + X[2,2] …    │
+        │ 3     ┆ X[3,0] + X[3,1] + X[3,2] …    │
+        │ 4     ┆ X[4,0] + X[4,1] + X[4,2] …    │
+        │ …     ┆ …                             │
+        │ 95    ┆ X[95,0] + X[95,1] + X[95,2] … │
+        │ 96    ┆ X[96,0] + X[96,1] + X[96,2] … │
+        │ 97    ┆ X[97,0] + X[97,1] + X[97,2] … │
+        │ 98    ┆ X[98,0] + X[98,1] + X[98,2] … │
+        │ 99    ┆ X[99,0] + X[99,1] + X[99,2] … │
+        └───────┴───────────────────────────────┘
+        >>> pf.sum(m.X)
+        <Expression terms=10000 type=linear>
+        X[0,0] + X[0,1] + X[0,2] …
+        
+
+    """
+
     @classmethod
     def reset_defaults(cls):
         """Resets all configuration options to their default values.

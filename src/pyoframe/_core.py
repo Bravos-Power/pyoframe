@@ -708,7 +708,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
         dims_in_common = [dim for dim in dims if dim in set_dims]
         by_dims = df.select(dims_in_common).unique(maintain_order=True)
-        return self._new(self.data.join(by_dims, on=dims_in_common))
+        return self._new(
+            self.data.join(by_dims, on=dims_in_common, maintain_order="left_right")
+        )
 
     @property
     def is_quadratic(self) -> bool:
@@ -790,9 +792,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             │ dim1 ┆ expression │
             │ (3)  ┆            │
             ╞══════╪════════════╡
-            │ 1    ┆ v[1] +12   │
-            │ 2    ┆ v[2] +22   │
-            │ 3    ┆ v[3] +32   │
+            │ 1    ┆ 12 + v[1]  │
+            │ 2    ┆ 22 + v[2]  │
+            │ 3    ┆ 32 + v[3]  │
             └──────┴────────────┘
 
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
@@ -908,7 +910,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                     pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
                 )
             data = data.join(
-                keys, on=dim + self._variable_columns, how="full", coalesce=True
+                keys,
+                on=dim + self._variable_columns,
+                how="full",
+                coalesce=True,
+                maintain_order="right_left",  # Changing the ordering just helps the constants come first which is better for reading?
             ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -928,7 +934,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
             dims_df = self.data.select(dims).unique(maintain_order=True)
-            df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
+            df = constant_terms.join(
+                dims_df, on=dims, how="full", coalesce=True, maintain_order="left_right"
+            )
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
@@ -1040,6 +1048,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     ) -> str | pl.DataFrame:
         """Converts the expression to a human-readable string, or several arranged in a table.
 
+        Long expressions are truncated according to [`Config.print_max_terms`][pyoframe.Config.print_max_terms].
+
         Parameters:
             str_col_name:
                 The name of the column containing the string representation of the expression (dimensioned expressions only).
@@ -1048,6 +1058,56 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return_df:
                 If True, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
 
+        Examples:
+            >>> import polars as pl
+            >>> m = pf.Model()
+            >>> x = pf.Set(x=range(1000))
+            >>> y = pf.Set(y=range(1000))
+            >>> m.V = pf.Variable(x, y)
+            >>> expr = 2 * m.V * m.V + 3
+            >>> print(expr.to_str())
+            ┌────────┬────────┬──────────────────────────────┐
+            │ x      ┆ y      ┆ expression                   │
+            │ (1000) ┆ (1000) ┆                              │
+            ╞════════╪════════╪══════════════════════════════╡
+            │ 0      ┆ 0      ┆ 3 +2 V[0,0] * V[0,0]         │
+            │ 0      ┆ 1      ┆ 3 +2 V[0,1] * V[0,1]         │
+            │ 0      ┆ 2      ┆ 3 +2 V[0,2] * V[0,2]         │
+            │ 0      ┆ 3      ┆ 3 +2 V[0,3] * V[0,3]         │
+            │ 0      ┆ 4      ┆ 3 +2 V[0,4] * V[0,4]         │
+            │ …      ┆ …      ┆ …                            │
+            │ 999    ┆ 995    ┆ 3 +2 V[999,995] * V[999,995] │
+            │ 999    ┆ 996    ┆ 3 +2 V[999,996] * V[999,996] │
+            │ 999    ┆ 997    ┆ 3 +2 V[999,997] * V[999,997] │
+            │ 999    ┆ 998    ┆ 3 +2 V[999,998] * V[999,998] │
+            │ 999    ┆ 999    ┆ 3 +2 V[999,999] * V[999,999] │
+            └────────┴────────┴──────────────────────────────┘
+            >>> expr = expr.sum("y")
+            >>> print(expr.to_str())
+            ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
+            │ x      ┆ expression                                                                              │
+            │ (1000) ┆                                                                                         │
+            ╞════════╪═════════════════════════════════════════════════════════════════════════════════════════╡
+            │ 0      ┆ 3000 +2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] …      │
+            │ 1      ┆ 3000 +2 V[1,0] * V[1,0] +2 V[1,1] * V[1,1] +2 V[1,2] * V[1,2] +2 V[1,3] * V[1,3] …      │
+            │ 2      ┆ 3000 +2 V[2,0] * V[2,0] +2 V[2,1] * V[2,1] +2 V[2,2] * V[2,2] +2 V[2,3] * V[2,3] …      │
+            │ 3      ┆ 3000 +2 V[3,0] * V[3,0] +2 V[3,1] * V[3,1] +2 V[3,2] * V[3,2] +2 V[3,3] * V[3,3] …      │
+            │ 4      ┆ 3000 +2 V[4,0] * V[4,0] +2 V[4,1] * V[4,1] +2 V[4,2] * V[4,2] +2 V[4,3] * V[4,3] …      │
+            │ …      ┆ …                                                                                       │
+            │ 995    ┆ 3000 +2 V[995,0] * V[995,0] +2 V[995,1] * V[995,1] +2 V[995,2] * V[995,2] +2 V[995,3] * │
+            │        ┆ V[995,3] …                                                                              │
+            │ 996    ┆ 3000 +2 V[996,0] * V[996,0] +2 V[996,1] * V[996,1] +2 V[996,2] * V[996,2] +2 V[996,3] * │
+            │        ┆ V[996,3] …                                                                              │
+            │ 997    ┆ 3000 +2 V[997,0] * V[997,0] +2 V[997,1] * V[997,1] +2 V[997,2] * V[997,2] +2 V[997,3] * │
+            │        ┆ V[997,3] …                                                                              │
+            │ 998    ┆ 3000 +2 V[998,0] * V[998,0] +2 V[998,1] * V[998,1] +2 V[998,2] * V[998,2] +2 V[998,3] * │
+            │        ┆ V[998,3] …                                                                              │
+            │ 999    ┆ 3000 +2 V[999,0] * V[999,0] +2 V[999,1] * V[999,1] +2 V[999,2] * V[999,2] +2 V[999,3] * │
+            │        ┆ V[999,3] …                                                                              │
+            └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+            >>> expr = expr.sum("x")
+            >>> print(expr.to_str())
+            3000000 +2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] …
 
         """
         data = self.data if include_const_term else self.variable_terms
@@ -1092,10 +1152,26 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         if dimensions is not None:
             data = data.group_by(dimensions, maintain_order=True).agg(
-                pl.col(str_col_name).str.join(delimiter=" ")
+                pl.concat_str(
+                    pl.col(str_col_name)
+                    .head(Config.print_max_terms)
+                    .str.join(delimiter=" "),
+                    pl.when(pl.len() > Config.print_max_terms)
+                    .then(pl.lit(" …"))
+                    .otherwise(pl.lit("")),
+                )
             )
         else:
+            truncate = data.height > Config.print_max_terms
+            if truncate:
+                data = data.head(Config.print_max_terms)
+
             data = data.select(pl.col(str_col_name).str.join(delimiter=" "))
+
+            if truncate:
+                data = data.with_columns(
+                    pl.concat_str(pl.col(str_col_name), pl.lit(" …"))
+                )
 
         # Remove leading +
         data = data.with_columns(pl.col(str_col_name).str.strip_chars(characters="  +"))
@@ -1351,7 +1427,9 @@ class Constraint(ModelElementWithId):
                 setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
         else:
             for key, value in (
-                self.data.join(value, on=self.dimensions, how="inner")
+                self.data.join(
+                    value, on=self.dimensions, how="inner", maintain_order="left_right"
+                )
                 .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
                 .iter_rows()
             ):
@@ -1621,9 +1699,67 @@ class Constraint(ModelElementWithId):
     def to_str(self, return_df: bool = False) -> str | pl.DataFrame:
         """Converts the constraint to a human-readable string, or several arranged in a table.
 
+        Long expressions are truncated according to [`Config.print_max_terms`][pyoframe.Config.print_max_terms].
+
         Parameters:
             return_df:
                 If True, returns a DataFrame containing strings instead of the string representation of the DataFrame.
+
+        Examples:
+            >>> import polars as pl
+            >>> m = pf.Model()
+            >>> x = pf.Set(x=range(1000))
+            >>> y = pf.Set(y=range(1000))
+            >>> m.V = pf.Variable(x, y)
+            >>> expr = 2 * m.V * m.V
+            >>> print((expr <= 3).to_str())
+            ┌────────┬────────┬────────────────────────────────┐
+            │ x      ┆ y      ┆ constraint                     │
+            │ (1000) ┆ (1000) ┆                                │
+            ╞════════╪════════╪════════════════════════════════╡
+            │ 0      ┆ 0      ┆ 2 V[0,0] * V[0,0] <= 3         │
+            │ 0      ┆ 1      ┆ 2 V[0,1] * V[0,1] <= 3         │
+            │ 0      ┆ 2      ┆ 2 V[0,2] * V[0,2] <= 3         │
+            │ 0      ┆ 3      ┆ 2 V[0,3] * V[0,3] <= 3         │
+            │ 0      ┆ 4      ┆ 2 V[0,4] * V[0,4] <= 3         │
+            │ …      ┆ …      ┆ …                              │
+            │ 999    ┆ 995    ┆ 2 V[999,995] * V[999,995] <= 3 │
+            │ 999    ┆ 996    ┆ 2 V[999,996] * V[999,996] <= 3 │
+            │ 999    ┆ 997    ┆ 2 V[999,997] * V[999,997] <= 3 │
+            │ 999    ┆ 998    ┆ 2 V[999,998] * V[999,998] <= 3 │
+            │ 999    ┆ 999    ┆ 2 V[999,999] * V[999,999] <= 3 │
+            └────────┴────────┴────────────────────────────────┘
+            >>> expr = expr.sum("x")
+            >>> print((expr >= 3).to_str())
+            ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐
+            │ y      ┆ constraint                                                                              │
+            │ (1000) ┆                                                                                         │
+            ╞════════╪═════════════════════════════════════════════════════════════════════════════════════════╡
+            │ 0      ┆ 2 V[0,0] * V[0,0] +2 V[1,0] * V[1,0] +2 V[2,0] * V[2,0] +2 V[3,0] * V[3,0] +2 V[4,0] *  │
+            │        ┆ V[4,0] … >= 3                                                                           │
+            │ 1      ┆ 2 V[0,1] * V[0,1] +2 V[1,1] * V[1,1] +2 V[2,1] * V[2,1] +2 V[3,1] * V[3,1] +2 V[4,1] *  │
+            │        ┆ V[4,1] … >= 3                                                                           │
+            │ 2      ┆ 2 V[0,2] * V[0,2] +2 V[1,2] * V[1,2] +2 V[2,2] * V[2,2] +2 V[3,2] * V[3,2] +2 V[4,2] *  │
+            │        ┆ V[4,2] … >= 3                                                                           │
+            │ 3      ┆ 2 V[0,3] * V[0,3] +2 V[1,3] * V[1,3] +2 V[2,3] * V[2,3] +2 V[3,3] * V[3,3] +2 V[4,3] *  │
+            │        ┆ V[4,3] … >= 3                                                                           │
+            │ 4      ┆ 2 V[0,4] * V[0,4] +2 V[1,4] * V[1,4] +2 V[2,4] * V[2,4] +2 V[3,4] * V[3,4] +2 V[4,4] *  │
+            │        ┆ V[4,4] … >= 3                                                                           │
+            │ …      ┆ …                                                                                       │
+            │ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │
+            │        ┆ V[3,995] +2 V[4,99…                                                                     │
+            │ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │
+            │        ┆ V[3,996] +2 V[4,99…                                                                     │
+            │ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │
+            │        ┆ V[3,997] +2 V[4,99…                                                                     │
+            │ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │
+            │        ┆ V[3,998] +2 V[4,99…                                                                     │
+            │ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │
+            │        ┆ V[3,999] +2 V[4,99…                                                                     │
+            └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘
+            >>> expr = expr.sum("y")
+            >>> print((expr == 3).to_str())
+            2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] +2 V[0,4] * V[0,4] … = 3
         """
         dims = self.dimensions
         str_table = self.lhs.to_str(
@@ -1634,13 +1770,15 @@ class Constraint(ModelElementWithId):
         # Remove leading +
         rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters="  +"))
         rhs = rhs.rename({COEF_KEY: "rhs"})
-        constr_str = (
-            pl.concat([str_table, rhs], how=("align" if dims else "horizontal"))
-            .with_columns(
-                pl.concat_str("constraint", pl.lit(f" {self.sense.value} "), "rhs")
+        if dims:
+            constr_str = str_table.join(
+                rhs, on=dims, how="left", maintain_order="left", coalesce=True
             )
-            .drop("rhs")
-        )
+        else:
+            constr_str = pl.concat([str_table, rhs], how="horizontal")
+        constr_str = constr_str.with_columns(
+            pl.concat_str("constraint", pl.lit(f" {self.sense.value} "), "rhs")
+        ).drop("rhs")
 
         if not return_df:
             if self.dimensions is None:
@@ -1782,7 +1920,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 setter(poi.VariableIndex(key), name, value)
         else:
             for key, v in (
-                self.data.join(value, on=self.dimensions, how="inner")
+                self.data.join(
+                    value, on=self.dimensions, how="inner", maintain_order="left_right"
+                )
                 .select(pl.col(VAR_KEY), pl.col(col_name))
                 .iter_rows()
             ):
@@ -2026,18 +2166,18 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (3)   ┆ (2)     ┆                                                                                │
             ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡
-            │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │
-            │       ┆         ┆ = 0                                                                            │
             │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │
-            │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │
+            │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │
             │       ┆         ┆ = 0                                                                            │
             │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │
-            │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │
+            │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │
             │       ┆         ┆ = 0                                                                            │
             │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │
+            │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
             └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘
 
             >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next(
@@ -2048,22 +2188,22 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (4)   ┆ (2)     ┆                                                                                │
             ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡
-            │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │
-            │       ┆         ┆ = 0                                                                            │
             │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │
-            │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │
+            │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │
             │       ┆         ┆ = 0                                                                            │
             │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │
-            │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │
+            │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │
             │       ┆         ┆ = 0                                                                            │
             │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │
-            │ 18:00 ┆ Berlin  ┆ bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin]   │
+            │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │
             │       ┆         ┆ = 0                                                                            │
             │ 18:00 ┆ Toronto ┆ bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto]                            │
             │       ┆         ┆ - bat_charge[00:00,Toronto] = 0                                                │
+            │ 18:00 ┆ Berlin  ┆ bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin]   │
+            │       ┆         ┆ = 0                                                                            │
             └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘
 
         """
@@ -2078,6 +2218,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         data = expr.data.rename({dim: "__prev"})
 
         data = data.join(
-            wrapped, left_on="__prev", right_on="__next", how="inner"
+            wrapped,
+            left_on="__prev",
+            right_on="__next",
+            how="inner",
+            maintain_order="right_left",
         ).drop(["__prev", "__next"], strict=False)
         return expr._new(data)

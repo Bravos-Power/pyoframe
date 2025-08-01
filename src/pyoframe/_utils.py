@@ -331,6 +331,7 @@ class NamedVariableMapper:
             validate="m:1",
             left_on=id_col,
             right_on=self._ID_COL,
+            maintain_order="left",
         ).rename({self.NAME_COL: to_col})
 
     def _element_to_map(self, element) -> pl.DataFrame:
