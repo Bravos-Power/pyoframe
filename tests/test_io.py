@@ -68,7 +68,7 @@ def test_constraint_to_str(solver):
     m.constraint = m.x1**2 <= 5
     assert (
         repr(m.constraint)
-        == """<Constraint name=constraint terms=2>
+        == """<Constraint 'constraint' terms=2 type=quadratic>
 x1 * x1 <= 5"""
     )
 
@@ -103,9 +103,9 @@ def test_float_to_str_precision():
     Config.float_to_str_precision = 6
     assert str(expr) == "10"
     # repr() is what is used when the object is printed in the console
-    assert repr(expr) == "<Expression terms=1>\n10"
+    assert repr(expr) == "<Expression terms=1 type=constant>\n10"
     Config.float_to_str_precision = None
-    assert repr(expr) == "<Expression terms=1>\n10.000000000010001"
+    assert repr(expr) == "<Expression terms=1 type=constant>\n10.000000000010001"
 
 
 def test_write_lp(use_var_names, solver):

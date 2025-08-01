@@ -46,7 +46,6 @@ from pyoframe._utils import (
     FuncArgs,
     cast_coef_to_string,
     concat_dimensions,
-    dataframe_to_tupled_list,
     get_obj_repr,
     parse_inputs_as_iterable,
     unwrap_single_values,
@@ -113,7 +112,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v**2
-            <Expression terms=1 degree=2>
+            <Expression terms=1 type=quadratic>
             v * v
             >>> m.v**3
             Traceback (most recent call last):
@@ -141,7 +140,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> df = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]})
             >>> m.v = pf.Variable(df["dim1"])
             >>> m.v - df
-            <Expression height=3 terms=6>
+            <Expression height=3 terms=6 type=linear>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -169,7 +168,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v / 2
-            <Expression height=3 terms=3>
+            <Expression height=3 terms=3 type=linear>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -188,7 +187,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> 1 - m.v
-            <Expression height=3 terms=6>
+            <Expression height=3 terms=6 type=linear>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -207,7 +206,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v <= 1
-            <Constraint terms=2>
+            <Constraint 'unnamed' terms=2 type=linear>
             v <= 1
         """
         return Constraint(self - other, ConstraintSense.LE)
@@ -219,7 +218,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v >= 1
-            <Constraint terms=2>
+            <Constraint 'unnamed' terms=2 type=linear>
             v >= 1
         """
         return Constraint(self - other, ConstraintSense.GE)
@@ -231,7 +230,7 @@ class SupportsMath(ABC, SupportsToExpr):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v == 1
-            <Constraint terms=2>
+            <Constraint 'unnamed' terms=2 type=linear>
             v = 1
         """
         return Constraint(self - value, ConstraintSense.EQ)
@@ -253,7 +252,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     Examples:
         >>> pf.Set(x=range(2), y=range(3))
-        <Set height=6>
+        <Set 'unnamed' height=6>
         ┌─────┬─────┐
         │ x   ┆ y   │
         │ (2) ┆ (3) │
@@ -364,7 +363,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return super().__add__(other)
 
     def __repr__(self):
-        header = get_obj_repr(self, "name", height=self.data.height)
+        header = get_obj_repr(self, self._friendly_name, height=self.data.height)
         data = self._add_shape_to_columns(self.data)
         with Config.print_polars_config:
             table = repr(data)
@@ -435,7 +434,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         >>> m.Size = pf.Variable(df.index)
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
         >>> expr
-        <Expression height=5 terms=10>
+        <Expression height=5 terms=10 type=linear>
         ┌──────┬──────┬──────────────────────────────┐
         │ item ┆ time ┆ expression                   │
         │ (2)  ┆ (3)  ┆                              │
@@ -473,7 +472,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         Examples:
             >>> pf.Expression.constant(5)
-            <Expression terms=1>
+            <Expression terms=1 type=constant>
             5
         """
         return cls(
@@ -568,7 +567,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             ...     }
             ... )
             >>> pop_data.map(cities_and_countries)
-            <Expression height=2 terms=2>
+            <Expression height=2 terms=2 type=constant>
             ┌──────┬─────────┬────────────┐
             │ year ┆ country ┆ expression │
             │ (1)  ┆ (2)     ┆            │
@@ -578,7 +577,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             └──────┴─────────┴────────────┘
 
             >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
-            <Expression height=3 terms=3>
+            <Expression height=3 terms=3 type=constant>
             ┌───────────┬──────┬─────────┬────────────┐
             │ city      ┆ year ┆ country ┆ expression │
             │ (3)       ┆ (1)  ┆ (2)     ┆            │
@@ -645,7 +644,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m = pf.Model()
             >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
-            <Expression height=5 terms=8>
+            <Expression height=5 terms=8 type=linear>
             ┌──────┬──────┬──────────────────────────────────┐
             │ item ┆ time ┆ expression                       │
             │ (2)  ┆ (3)  ┆                                  │
@@ -729,8 +728,18 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """
         return QUAD_VAR_KEY in self.data.columns
 
-    def degree(self) -> int:
+    @overload
+    def degree(self, return_str: Literal[False] = False) -> int: ...
+
+    @overload
+    def degree(self, return_str: Literal[True] = True) -> str: ...
+
+    def degree(self, return_str: bool = False) -> int | str:
         """Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
+
+        Parameters:
+            return_str: If True, returns the degree as a string ("constant", "linear", "quadratic").
+                If False, returns the degree as an integer (0, 1, or 2).
 
         Examples:
             >>> import pandas as pd
@@ -746,13 +755,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> expr += (m.v2**2).add_dim("dim1")
             >>> expr.degree()
             2
+            >>> expr.degree(return_str=True)
+            'quadratic'
         """
         if self.is_quadratic:
-            return 2
+            return "quadratic" if return_str else 2
         elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
-            return 1
+            return "linear" if return_str else 1
         else:
-            return 0
+            return "constant" if return_str else 0
 
     def __add__(self, other):
         """Adds another expression or a constant to this expression.
@@ -763,7 +774,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
             >>> m.v = Variable(add)
             >>> m.v + add
-            <Expression height=3 terms=6>
+            <Expression height=3 terms=6 type=linear>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -774,7 +785,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             └──────┴────────────┘
 
             >>> m.v + add + 2
-            <Expression height=3 terms=6>
+            <Expression height=3 terms=6 type=linear>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -788,7 +799,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=3 terms=3> + <Expression height=2 terms=2>
+            <Expression height=3 terms=3 type=linear> + <Expression height=2 terms=2 type=constant>
             Due to error:
             DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
             shape: (1, 2)
@@ -801,7 +812,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             └──────┴────────────┘
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
-            <Expression terms=2>
+            <Expression terms=2 type=linear>
             2 v2 +5
         """
         if isinstance(other, str):
@@ -845,13 +856,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.x1 = Variable()
             >>> m.x2 = Variable()
             >>> m.x1 + 5
-            <Expression terms=2>
+            <Expression terms=2 type=linear>
             x1 +5
             >>> m.x1**2 + 5
-            <Expression terms=2 degree=2>
+            <Expression terms=2 type=quadratic>
             x1 * x1 +5
             >>> m.x1**2 + m.x2 + 5
-            <Expression terms=3 degree=2>
+            <Expression terms=3 type=quadratic>
             x1 * x1 + x2 +5
 
             It also works with dimensions
@@ -859,7 +870,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v * m.v + 5
-            <Expression height=3 terms=6 degree=2>
+            <Expression height=3 terms=6 type=quadratic>
             ┌──────┬─────────────────┐
             │ dim1 ┆ expression      │
             │ (3)  ┆                 │
@@ -1036,6 +1047,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 If False, constant terms are omitted from the string representation.
             return_df:
                 If True, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
+
+
         """
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
@@ -1103,7 +1116,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             self,
             height=len(self) if self.dimensions else None,
             terms=self.terms,
-            degree=2 if self.degree() == 2 else None,
+            type=self.degree(return_str=True),
         )
 
     def __str__(self) -> str:
@@ -1124,7 +1137,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.v = pf.Variable({"t": [1, 2]})
             >>> coef = pl.DataFrame({"t": [1, 2], "coef": [0, 1]})
             >>> coef * (m.v + 4)
-            <Expression height=2 terms=3>
+            <Expression height=2 terms=3 type=linear>
             ┌─────┬────────────┐
             │ t   ┆ expression │
             │ (2) ┆            │
@@ -1169,7 +1182,7 @@ def sum(
         ...     }
         ... ).to_expr()
         >>> expr
-        <Expression height=5 terms=5>
+        <Expression height=5 terms=5 type=constant>
         ┌──────┬───────────┬────────────┐
         │ time ┆ place     ┆ expression │
         │ (3)  ┆ (2)       ┆            │
@@ -1181,7 +1194,7 @@ def sum(
         │ tue  ┆ Vancouver ┆ 2000000    │
         └──────┴───────────┴────────────┘
         >>> pf.sum("time", expr)
-        <Expression height=2 terms=2>
+        <Expression height=2 terms=2 type=constant>
         ┌───────────┬────────────┐
         │ place     ┆ expression │
         │ (2)       ┆            │
@@ -1190,7 +1203,7 @@ def sum(
         │ Vancouver ┆ 3000000    │
         └───────────┴────────────┘
         >>> pf.sum(expr)
-        <Expression terms=1>
+        <Expression terms=1 type=constant>
         9000000
 
         If the given dimensions don't exist, an error will be raised:
@@ -1235,7 +1248,7 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
         ...     }
         ... ).to_expr()
         >>> expr
-        <Expression height=5 terms=5>
+        <Expression height=5 terms=5 type=constant>
         ┌──────┬───────────┬────────────┐
         │ time ┆ place     ┆ expression │
         │ (3)  ┆ (2)       ┆            │
@@ -1248,7 +1261,7 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
         └──────┴───────────┴────────────┘
 
         >>> pf.sum_by("place", expr)
-        <Expression height=2 terms=2>
+        <Expression height=2 terms=2 type=constant>
         ┌───────────┬────────────┐
         │ place     ┆ expression │
         │ (2)       ┆            │
@@ -1258,7 +1271,7 @@ def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
         └───────────┴────────────┘
         >>> total_sum = pf.sum_by([], expr)
         >>> total_sum
-        <Expression terms=1>
+        <Expression terms=1 type=constant>
         9000000
 
         If the specified dimensions don't exist, an error will be raised:
@@ -1643,9 +1656,10 @@ class Constraint(ModelElementWithId):
         return (
             get_obj_repr(
                 self,
-                "name",
+                self._friendly_name,
                 height=len(self) if self.dimensions else None,
                 terms=len(self.lhs.data),
+                type=self.lhs.degree(return_str=True),
             )
             + "\n"
             + self.to_str()
@@ -1688,7 +1702,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         >>> m.constraint = m.v <= 3
 
         >>> m.v
-        <Variable name=v height=6>
+        <Variable 'v' height=6>
         ┌──────┬──────┬──────────┐
         │ dim1 ┆ dim2 ┆ variable │
         │ (3)  ┆ (2)  ┆          │
@@ -1707,7 +1721,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         ValueError: Duplicate rows found in input data.
         >>> m.v3 = Variable(df[["dim1"]].drop_duplicates())
         >>> m.v3
-        <Variable name=v3 height=3>
+        <Variable 'v3' height=3>
         ┌──────┬──────────┐
         │ dim1 ┆ variable │
         │ (3)  ┆          │
@@ -1939,9 +1953,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             return (
                 get_obj_repr(
                     self,
-                    "name",
-                    "lb",
-                    "ub",
+                    self._friendly_name,
+                    lb=self.lb,
+                    ub=self.ub,
                     height=self.data.height if self.dimensions else None,
                 )
                 + "\n"
@@ -1950,8 +1964,8 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         else:
             return get_obj_repr(
                 self,
-                "lb",
-                "ub",
+                lb=self.lb,
+                ub=self.ub,
                 height=self.data.height if self.dimensions else None,
                 added_to_model=False,
             )
@@ -1991,7 +2005,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=8 terms=16> + <Expression height=6 terms=6>
+            <Expression height=8 terms=16 type=linear> + <Expression height=6 terms=6 type=linear>
             Due to error:
             DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
             shape: (2, 4)
@@ -2007,7 +2021,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
             ...     "time"
             ... )
-            <Constraint height=6 terms=18>
+            <Constraint 'unnamed' height=6 terms=18 type=linear>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (3)   ┆ (2)     ┆                                                                                │
@@ -2029,7 +2043,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next(
             ...     "time", wrap_around=True
             ... )
-            <Constraint height=8 terms=24>
+            <Constraint 'unnamed' height=8 terms=24 type=linear>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (4)   ┆ (2)     ┆                                                                                │

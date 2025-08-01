@@ -17,13 +17,12 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model_element import ModelElementWithId
 
 
-def get_obj_repr(obj: object, *_props: str, **kwargs):
+def get_obj_repr(obj: object, *props: str | None, **kwargs):
     """Generates __repr__() strings for classes.
 
     See usage for examples.
     """
-    props = {prop: getattr(obj, prop) for prop in _props}
-    props_str = " ".join(f"{k}={v}" for k, v in props.items() if v is not None)
+    props_str = " ".join(f"'{v}'" for v in props if v is not None)
     if props_str:
         props_str += " "
     kwargs_str = " ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
@@ -249,38 +248,6 @@ def unwrap_single_values(func):
     return wrapper
 
 
-def dataframe_to_tupled_list(
-    df: pl.DataFrame, num_max_elements: int | None = None
-) -> str:
-    """Converts a DataFrame into a list of tuples. Used to print a Set to the console. See examples for behaviour.
-
-    Examples:
-        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5]})
-        >>> dataframe_to_tupled_list(df)
-        '[1, 2, 3, 4, 5]'
-        >>> dataframe_to_tupled_list(df, 3)
-        '[1, 2, 3, …]'
-
-        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 3, 4, 5, 6]})
-        >>> dataframe_to_tupled_list(df, 3)
-        '[(1, 2), (2, 3), (3, 4), …]'
-    """
-    elipse = False
-    if num_max_elements is not None:
-        if len(df) > num_max_elements:
-            elipse = True
-            df = df.head(num_max_elements)
-
-    res = (row for row in df.iter_rows())
-    if len(df.columns) == 1:
-        res = (row[0] for row in res)
-
-    res = str(list(res))
-    if elipse:
-        res = res[:-1] + ", …]"
-    return res
-
-
 @dataclass
 class FuncArgs:
     args: list
@@ -326,7 +293,7 @@ class NamedVariableMapper:
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)
-        <Expression terms=4>
+        <Expression terms=4 type=linear>
         foo[0] + foo[1] + foo[2] + foo[3]
     """
 

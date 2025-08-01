@@ -33,13 +33,13 @@ def _multiply_expressions(self: Expression, other: Expression) -> Expression:
         >>> m.x3 = pf.Variable()
         >>> result = 5 * m.x1 * m.x2
         >>> result
-        <Expression terms=1 degree=2>
+        <Expression terms=1 type=quadratic>
         5 x2 * x1
         >>> result * m.x3
         Traceback (most recent call last):
         ...
         pyoframe._constants.PyoframeError: Failed to multiply expressions:
-        <Expression terms=1 degree=2> * <Expression terms=1>
+        <Expression terms=1 type=quadratic> * <Expression terms=1 type=linear>
         Due to error:
         Cannot multiply a quadratic expression by a non-constant.
     """
@@ -116,7 +116,7 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
         >>> expr1 = df * m.x1
         >>> expr2 = df * m.x2 * 2 + 4
         >>> expr1 * expr2
-        <Expression height=3 terms=6 degree=2>
+        <Expression height=3 terms=6 type=quadratic>
         ┌─────┬───────────────────┐
         │ dim ┆ expression        │
         │ (3) ┆                   │
@@ -126,7 +126,7 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
         │ 3   ┆ 12 x1 +18 x2 * x1 │
         └─────┴───────────────────┘
         >>> (expr1 * expr2) - df * m.x1 * df * m.x2 * 2
-        <Expression height=3 terms=3>
+        <Expression height=3 terms=3 type=linear>
         ┌─────┬────────────┐
         │ dim ┆ expression │
         │ (3) ┆            │

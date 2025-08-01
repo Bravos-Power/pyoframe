@@ -171,7 +171,7 @@ class SupportPolarsMethodMixin(ABC):
             ...     ]
             ... )
             >>> m.v.pick(hour="06:00")
-            <Expression height=3 terms=3>
+            <Expression height=3 terms=3 type=linear>
             ┌─────────┬──────────────────┐
             │ city    ┆ expression       │
             │ (3)     ┆                  │
@@ -181,7 +181,7 @@ class SupportPolarsMethodMixin(ABC):
             │ Paris   ┆ v[06:00,Paris]   │
             └─────────┴──────────────────┘
             >>> m.v.pick(hour="06:00", city="Toronto")
-            <Expression terms=1>
+            <Expression terms=1 type=linear>
             v[06:00,Toronto]
         """
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))

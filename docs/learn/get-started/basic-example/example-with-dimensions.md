@@ -70,7 +70,7 @@ Printing the variable shows that it contains a `food` dimension with indices `to
 
 ```pycon
 >>> m.Buy
-<Variable name=Buy lb=0 height=2>
+<Variable 'Buy' lb=0 height=2>
 ┌──────────────┬───────────────────┐
 │ food         ┆ variable          │
 │ (2)          ┆                   │
@@ -101,7 +101,7 @@ First, multiply the variable by the protein amount.
 
 ```pycon
 >>> data[["food", "cost"]] * m.Buy
-<Expression height=2 terms=2>
+<Expression height=2 terms=2 type=linear>
 ┌──────────────┬─────────────────────┐
 │ food         ┆ expression          │
 │ (2)          ┆                     │
@@ -120,7 +120,7 @@ Second, notice that the `Expression` still has the `food` dimension—it really 
 
 ```pycon
 >>> pf.sum("food", data[["food", "cost"]] * m.Buy)
-<Expression terms=2>
+<Expression terms=2 type=linear>
 4 Buy[tofu_block] +3 Buy[chickpea_can]
 
 ```

@@ -117,7 +117,7 @@ class Config(metaclass=_ConfigMeta):
         Traceback (most recent call last):
         ...
         pyoframe._constants.PyoframeError: Failed to add expressions:
-        <Expression height=3 terms=3> + <Expression height=2 terms=2>
+        <Expression height=3 terms=3 type=constant> + <Expression height=2 terms=2 type=constant>
         Due to error:
         DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
         shape: (1, 2)
@@ -132,7 +132,7 @@ class Config(metaclass=_ConfigMeta):
         But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
         >>> pf.Config.disable_unmatched_checks = True
         >>> population + population_influx
-        <Expression height=3 terms=3>
+        <Expression height=3 terms=3 type=constant>
         ┌───────────┬────────────┐
         │ city      ┆ expression │
         │ (3)       ┆            │

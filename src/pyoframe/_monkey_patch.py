@@ -36,7 +36,7 @@ def polars_df_to_expr(self: pl.DataFrame) -> Expression:
         >>> import polars as pl
         >>> df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6], "z": [7, 8, 9]})
         >>> df.to_expr()
-        <Expression height=3 terms=3>
+        <Expression height=3 terms=3 type=constant>
         ┌─────┬─────┬────────────┐
         │ x   ┆ y   ┆ expression │
         │ (3) ┆ (3) ┆            │
