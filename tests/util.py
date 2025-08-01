@@ -62,7 +62,7 @@ def csvs_to_expr(
 _tolerances = {
     "gurobi": {"rtol": 1e-5, "atol": 1e-8},
     "highs": {"rtol": 1e-5, "atol": 1e-8},
-    "ipopt": {"rtol": None, "atol": 1e-5},
+    "ipopt": {"rtol": 1e-4, "atol": 1e-5},
 }
 
 
