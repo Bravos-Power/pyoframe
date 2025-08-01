@@ -143,16 +143,6 @@ class Config(metaclass=_ConfigMeta):
         └───────────┴────────────┘
     """
 
-    print_max_set_elements: int = 50
-    """Maximum number of elements in a set to print.
-    
-    Examples:
-        >>> pf.Config.print_max_set_elements = 5
-        >>> pf.Set(x=range(1000))
-        <Set size=1000 dimensions={'x': 1000}>
-        [0, 1, 2, 3, 4, …]
-    """
-
     enable_is_duplicated_expression_safety_check: bool = False
     """Setting for internal testing purposes only.
     

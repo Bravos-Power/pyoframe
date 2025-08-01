@@ -253,8 +253,18 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     Examples:
         >>> pf.Set(x=range(2), y=range(3))
-        <Set size=6 dimensions={'x': 2, 'y': 3}>
-        [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+        <Set height=6>
+        ┌─────┬─────┐
+        │ x   ┆ y   │
+        │ (2) ┆ (3) │
+        ╞═════╪═════╡
+        │ 0   ┆ 0   │
+        │ 0   ┆ 1   │
+        │ 0   ┆ 2   │
+        │ 1   ┆ 0   │
+        │ 1   ┆ 1   │
+        │ 1   ┆ 2   │
+        └─────┴─────┘
     """
 
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
@@ -354,13 +364,12 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return super().__add__(other)
 
     def __repr__(self):
-        return (
-            get_obj_repr(self, "name", size=self.data.height, dimensions=self.shape)
-            + "\n"
-            + dataframe_to_tupled_list(
-                self.data, num_max_elements=Config.print_max_set_elements
-            )
-        )
+        header = get_obj_repr(self, "name", height=self.data.height)
+        data = self._add_shape_to_columns(self.data)
+        with Config.print_polars_config:
+            table = repr(data)
+
+        return header + "\n" + table
 
     @staticmethod
     def _set_to_polars(set: SetTypes) -> pl.DataFrame:
