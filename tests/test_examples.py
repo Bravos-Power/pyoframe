@@ -84,7 +84,8 @@ def compare_results_dir(expected_dir, test_dir, solver):
         if file.suffix == ".sol":
             check_sol_equal(expected, file)
         elif file.suffix == ".lp":
-            check_lp_equal(expected, file)
+            if pf.Config.maintain_order:
+                check_lp_equal(expected, file)
         elif file.suffix == ".csv":
             df1 = pl.read_csv(expected)
             df2 = pl.read_csv(file)
@@ -118,7 +119,7 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
     expected_result = parse_sol(expected_sol_file)
     actual_result = parse_sol(actual_sol_file)
 
-    tol = 1e-8
+    tol = 1e-8 if pf.Config.maintain_order else 1e-6
     for (expected_name, expected_value), (actual_name, actual_value) in zip(
         expected_result, actual_result
     ):
@@ -126,7 +127,7 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
             f"Variable names do not match: {expected_name} != {actual_name}\n{expected_result}\n\n{actual_result}"
         )
         assert expected_value - tol <= actual_value <= expected_value + tol, (
-            f"Solution file does not match expected values {expected_sol_file}"
+            f"Variable {actual_name} in solution file does not match expected value {expected_value}"
         )
 
 
@@ -152,13 +153,33 @@ def parse_sol(sol_file_path) -> list[tuple[str, float]]:
     return list(sol_numeric.items())
 
 
+def pytest_generate_tests(metafunc):
+    if "test_examples_config" in metafunc.fixturenames:
+        metafunc.parametrize(
+            "test_examples_config",
+            [
+                (False, True),
+                (True, True),
+                (True, False),
+            ],
+            ids=[
+                "",
+                "named",
+                "named-unordered",
+            ],
+        )
+
+
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda x: x.folder_name)
-def test_examples(example, solver: _Solver, use_var_names):
+def test_examples(example, solver: _Solver, test_examples_config):
+    use_var_names, maintain_order = test_examples_config
+
     if not example.supports_solver(solver):
         pytest.skip(
             f"Skipping example {example.folder_name} for solver {solver.name} due to unsupported features"
         )
 
+    pf.Config.maintain_order = maintain_order
     pf.Config.default_solver = solver
 
     solver_func = example.import_solve_func()
@@ -241,6 +262,7 @@ if __name__ == "__main__":
     else:
         selection = [EXAMPLES[selection - 1]]
 
+    pf.Config.maintain_order = True  # Make it reproducible
     for example in selection:
         results_dir = example.get_results_path()
         if results_dir.exists():

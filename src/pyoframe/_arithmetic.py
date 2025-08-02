@@ -101,6 +101,9 @@ def _multiply_expressions_core(self: Expression, other: Expression) -> Expressio
             multiplier,
             on=dims_in_common if len(dims_in_common) > 0 else None,
             how="inner" if dims_in_common else "cross",
+            maintain_order=(
+                "left" if Config.maintain_order and dims_in_common else None
+            ),
         )
         .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
         .drop(COEF_KEY + "_right")
@@ -140,6 +143,9 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
             other.data,
             on=dims_in_common if len(dims_in_common) > 0 else None,
             how="inner" if dims_in_common else "cross",
+            maintain_order=(
+                "left" if Config.maintain_order and dims_in_common else None
+            ),
         )
         .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
         .drop(COEF_KEY + "_right")
@@ -234,7 +240,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
             left, right = right, left
 
         def get_indices(expr):
-            return expr.data.select(dims).unique(maintain_order=True)
+            return expr.data.select(dims).unique(maintain_order=Config.maintain_order)
 
         left_data, right_data = left.data, right.data
 
@@ -243,8 +249,16 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
         propogate_strat = propogatation_strategies[strat]  # type: ignore
 
         if strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP):
-            left_data = left.data.join(get_indices(right), how="inner", on=dims)
-            right_data = right.data.join(get_indices(left), how="inner", on=dims)
+            left_data = left.data.join(
+                get_indices(right),
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
+            right_data = right.data.join(
+                get_indices(left),
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
         elif strat == (UnmatchedStrategy.UNSET, UnmatchedStrategy.UNSET):
             assert not Config.disable_unmatched_checks, (
                 "This code should not be reached when unmatched checks are disabled."
@@ -253,6 +267,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
                 get_indices(right),
                 how="full",
                 on=dims,
+                maintain_order="left_right" if Config.maintain_order else None,
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
                 raise PyoframeError(
@@ -269,9 +284,19 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
                     )
                 )
         elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
-            left_data = get_indices(right).join(left.data, how="left", on=dims)
+            left_data = get_indices(right).join(
+                left.data,
+                how="left",
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
         elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.UNSET):
-            left_data = get_indices(right).join(left.data, how="left", on=dims)
+            left_data = get_indices(right).join(
+                left.data,
+                how="left",
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
             if left_data.get_column(COEF_KEY).null_count() > 0:
                 raise PyoframeError(
                     "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
@@ -342,16 +367,29 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
             f"DataFrame has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
         )
 
-    target_data = target.data.select(target_dims).unique(maintain_order=True)
+    target_data = target.data.select(target_dims).unique(
+        maintain_order=Config.maintain_order
+    )
 
     if not dims_in_common:
         return self._new(self.data.join(target_data, how="cross"))
 
     # If drop, we just do an inner join to get into the shape of the other
     if self.unmatched_strategy == UnmatchedStrategy.DROP:
-        return self._new(self.data.join(target_data, on=dims_in_common, how="inner"))
+        return self._new(
+            self.data.join(
+                target_data,
+                on=dims_in_common,
+                maintain_order="left" if Config.maintain_order else None,
+            )
+        )
 
-    result = self.data.join(target_data, on=dims_in_common, how="left")
+    result = self.data.join(
+        target_data,
+        on=dims_in_common,
+        how="left",
+        maintain_order="left" if Config.maintain_order else None,
+    )
     right_has_missing = result.get_column(missing_dims[0]).null_count() > 0
     if right_has_missing:
         raise PyoframeError(
@@ -364,7 +402,7 @@ def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
     """Combines terms with the same variables."""
     dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
     var_cols = [VAR_KEY] + ([QUAD_VAR_KEY] if QUAD_VAR_KEY in df.columns else [])
-    df = df.group_by(dims + var_cols, maintain_order=True).sum()
+    df = df.group_by(dims + var_cols, maintain_order=Config.maintain_order).sum()
     return df
 
 
@@ -423,9 +461,14 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
     if len(df_filtered) < len(df):
         dims = [c for c in df.columns if c not in RESERVED_COL_KEYS]
         if dims:
-            dim_values = df.select(dims).unique(maintain_order=True)
+            dim_values = df.select(dims).unique(maintain_order=Config.maintain_order)
             df = (
-                dim_values.join(df_filtered, on=dims, how="left")
+                dim_values.join(
+                    df_filtered,
+                    on=dims,
+                    how="left",
+                    maintain_order="left" if Config.maintain_order else None,
+                )
                 .with_columns(pl.col(COEF_KEY).fill_null(0))
                 .fill_null(CONST_TERM)
             )
