@@ -262,7 +262,6 @@ if __name__ == "__main__":
     else:
         selection = [EXAMPLES[selection - 1]]
 
-    pf.Config.maintain_order = True  # Make it reproducible
     for example in selection:
         results_dir = example.get_results_path()
         if results_dir.exists():
