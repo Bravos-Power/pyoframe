@@ -104,7 +104,7 @@ class Config(metaclass=_ConfigMeta):
 
     !!! warning
         This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
-        behaviors (see [here](../learn/get-started/special-functions.md#drop_unmatched-and-keep_unmatched)).
+        behaviors (see [here](../learn/concepts/special-functions.md#drop_unmatched-and-keep_unmatched)).
         Only consider enabling after you have thoroughly tested your code.
 
     Examples:
@@ -211,6 +211,13 @@ class Config(metaclass=_ConfigMeta):
         >>> 2 * m.my_var
         <Expression size=1 dimensions={} terms=1>
         2 x1
+    """
+
+    maintain_order: bool = True
+    """Whether the order of variables, constraints, and mathematical terms is to be identical across runs.
+
+    If `False`, performance is improved, but your results may vary every so slightly across runs
+    since numerical errors can accumulate differently when the order of operations changes.
     """
 
     @classmethod
