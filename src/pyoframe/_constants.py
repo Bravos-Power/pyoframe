@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Literal
 
@@ -75,11 +75,13 @@ class ConfigDefaults:
     enable_is_duplicated_expression_safety_check: bool = False
     integer_tolerance: float = 1e-8
     float_to_str_precision: int | None = 5
-    print_polars_config = pl.Config(
-        tbl_hide_column_data_types=True,
-        tbl_hide_dataframe_shape=True,
-        fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
-        apply_on_context_enter=True,
+    print_polars_config: pl.Config = field(
+        default_factory=lambda: pl.Config(
+            tbl_hide_column_data_types=True,
+            tbl_hide_dataframe_shape=True,
+            fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
+            apply_on_context_enter=True,
+        )
     )
     print_max_terms: int = 5
     maintain_order: bool = True
