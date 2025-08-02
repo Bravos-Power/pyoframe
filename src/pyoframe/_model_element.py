@@ -19,7 +19,7 @@ from pyoframe._constants import (
 from pyoframe._utils import concat_dimensions
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.model import Model
+    from pyoframe import Model
 
 
 class ModelElement(ABC):

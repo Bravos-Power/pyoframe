@@ -1350,12 +1350,41 @@ class Constraint(ModelElementWithId):
         self._data = df
 
     @property
-    @unwrap_single_values
     def dual(self) -> pl.DataFrame | float:
-        """Returns the constraint's dual values."""
+        """Returns the constraint's dual values.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.x = pf.Variable()
+            >>> m.y = pf.Variable()
+            >>> m.maximize = m.x - m.y
+
+            Notice that for every unit increase in the right-hand side, the objective only improves by 0.5.
+            >>> m.constraint_x = 2 * m.x <= 10
+            >>> m.constraint_y = 2 * m.y >= 5
+            >>> m.optimize()
+
+            For every unit increase in the right-hand side of `constraint_x`, the objective improves by 0.5.
+            >>> m.constraint_x.dual
+            0.5
+
+            For every unit increase in the right-hand side of `constraint_y`, the objective worsens by 0.5.
+            >>> m.constraint_y.dual
+            -0.5
+        """
         dual = self.attr.Dual
         if isinstance(dual, pl.DataFrame):
             dual = dual.rename({"Dual": DUAL_KEY})
+
+        # Weirdly, IPOPT returns dual values with the opposite sign, so we correct this bug.
+        # It also does this for maximization problems
+        # but since we flip the objective (because Ipopt doesn't support maximization), the double negatives cancel out.
+        assert self._model is not None
+        if self._model.solver.name == "ipopt" and self._model.sense == ObjSense.MIN:
+            if isinstance(dual, pl.DataFrame):
+                dual = dual.with_columns(pl.col(DUAL_KEY) * -1)
+            else:
+                dual *= -1
         return dual
 
     @classmethod
