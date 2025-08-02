@@ -549,9 +549,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             mapping_set:
                 The set to map the expression to. This can be a DataFrame, Index, or another Set.
             drop_shared_dims:
-                If True, the dimensions shared between the expression and the mapping set are dropped from the resulting expression and
+                If `True`, the dimensions shared between the expression and the mapping set are dropped from the resulting expression and
                     repeated rows are summed.
-                If False, the shared dimensions are kept in the resulting expression.
+                If `False`, the shared dimensions are kept in the resulting expression.
 
         Returns:
             A new Expression containing the result of the mapping operation.
@@ -749,8 +749,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         """Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
 
         Parameters:
-            return_str: If True, returns the degree as a string ("constant", "linear", "quadratic").
-                If False, returns the degree as an integer (0, 1, or 2).
+            return_str: If `True`, returns the degree as a string (`"constant"`, `"linear"`, or `"quadratic"`).
+                If `False`, returns the degree as an integer (0, 1, or 2).
 
         Examples:
             >>> import pandas as pd
@@ -1058,21 +1058,23 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
     def to_str(
         self,
-        str_col_name="expression",
-        include_const_term=True,
+        str_col_name: str = "expression",
+        include_const_term: bool = True,
         return_df: bool = False,
     ) -> str | pl.DataFrame:
         """Converts the expression to a human-readable string, or several arranged in a table.
 
-        Long expressions are truncated according to [`Config.print_max_terms`][pyoframe.Config.print_max_terms].
+        Long expressions are truncated according to [`Config.print_max_terms`][pyoframe._Config.print_max_terms] and [`Config.print_polars_config`][pyoframe._Config.print_polars_config].
+
+        `str(pyoframe.Expression)` is equivalent to `pyoframe.Expression.to_str()`.
 
         Parameters:
             str_col_name:
                 The name of the column containing the string representation of the expression (dimensioned expressions only).
             include_const_term:
-                If False, constant terms are omitted from the string representation.
+                If `False`, constant terms are omitted from the string representation.
             return_df:
-                If True, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
+                If `True`, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
 
         Examples:
             >>> import polars as pl
@@ -1126,6 +1128,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             3000000 +2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] …
 
         """
+        # TODO consider optimizing using LazyFrames since .head() could maybe be automatically pushed up the chain of operations.
         data = self.data if include_const_term else self.variable_terms
         data = cast_coef_to_string(data)
 
@@ -1211,11 +1214,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             type=self.degree(return_str=True),
         )
 
-    def __str__(self) -> str:
-        return self.to_str()
-
     def __repr__(self) -> str:
         return self._str_header() + "\n" + self.to_str()
+
+    def __str__(self) -> str:
+        return self.to_str()
 
     @property
     def terms(self) -> int:
@@ -1750,11 +1753,11 @@ class Constraint(ModelElementWithId):
     def to_str(self, return_df: bool = False) -> str | pl.DataFrame:
         """Converts the constraint to a human-readable string, or several arranged in a table.
 
-        Long expressions are truncated according to [`Config.print_max_terms`][pyoframe.Config.print_max_terms].
+        Long expressions are truncated according to [`Config.print_max_terms`][pyoframe._Config.print_max_terms] and [`Config.print_polars_config`][pyoframe._Config.print_polars_config].
 
         Parameters:
             return_df:
-                If True, returns a DataFrame containing strings instead of the string representation of the DataFrame.
+                If `True`, returns a DataFrame containing strings instead of the string representation of the DataFrame.
 
         Examples:
             >>> import polars as pl
@@ -1817,9 +1820,7 @@ class Constraint(ModelElementWithId):
             include_const_term=False, return_df=True, str_col_name="constraint"
         )
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
-        rhs = cast_coef_to_string(rhs, drop_ones=False)
-        # Remove leading +
-        rhs = rhs.with_columns(pl.col(COEF_KEY).str.strip_chars(characters="  +"))
+        rhs = cast_coef_to_string(rhs, drop_ones=False, always_show_sign=False)
         rhs = rhs.rename({COEF_KEY: "rhs"})
         if dims:
             constr_str = str_table.join(
@@ -2184,7 +2185,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             dim:
                 The dimension over which to shift the variable.
             wrap_around:
-                If True, the last index in the dimension is connected to the first index.
+                If `True`, the last index in the dimension is connected to the first index.
 
         Examples:
             >>> import pandas as pd

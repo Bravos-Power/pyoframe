@@ -12,7 +12,7 @@ Pyoframe will work with all types of indices, however integer indices are faster
 
 ## Disable `maintain_order`
 
-By default, Pyoframe ensures that the order of variables, constraints, and mathematical terms is maintained across runs to ensure that your results are reproducible down to the very last decimal place. However, if you're not bothered by miniscule variations in your results due to numerical errors accumulating differently for different orderings, you should disable [`maintain_order`][pyoframe.Config.maintain_order]:
+By default, Pyoframe ensures that the order of variables, constraints, and mathematical terms is maintained across runs to ensure that your results are reproducible down to the very last decimal place. However, if you're not bothered by miniscule variations in your results due to numerical errors accumulating differently for different orderings, you should disable [`maintain_order`][pyoframe._Config.maintain_order]:
 
 ```python
 pf.Config.maintain_order = False

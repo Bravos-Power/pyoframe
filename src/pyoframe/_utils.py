@@ -10,7 +10,13 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import polars as pl
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe._constants import (
+    COEF_KEY,
+    CONST_TERM,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+    Config,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Variable
@@ -84,9 +90,9 @@ def concat_dimensions(
         prefix:
             The prefix to be added to the concated dimension.
         keep_dims:
-            If True, the original dimensions are kept in the new DataFrame.
+            If `True`, the original dimensions are kept in the new DataFrame.
         replace_spaces : bool, optional
-            If True, replaces spaces with underscores.
+            If `True`, replaces spaces with underscores.
 
     Examples:
         >>> import polars as pl
@@ -175,7 +181,10 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
+    df: pl.DataFrame,
+    column_name: str = COEF_KEY,
+    drop_ones: bool = True,
+    always_show_sign: bool = True,
 ) -> pl.DataFrame:
     """Converts column `column_name` of the DataFrame `df` to a string. Round to `Config.print_float_precision` decimal places if not None.
 
@@ -185,7 +194,9 @@ def cast_coef_to_string(
         column_name:
             The name of the column to be casted.
         drop_ones:
-            If True, 1s are replaced with an empty string for non-constant terms.
+            If `True`, 1s are replaced with an empty string for non-constant terms.
+        always_show_sign:
+            If `True`, the sign of the coefficient is always shown, i.e. 1 becomes `+1` not just `1`.
 
     Examples:
         >>> import polars as pl
@@ -203,22 +214,26 @@ def cast_coef_to_string(
         │ +4  ┆ 4             │
         └─────┴───────────────┘
     """
-    df = df.with_columns(
-        pl.col(column_name).abs(),
-        _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
-    )
-
     if Config.float_to_str_precision is not None:
         df = df.with_columns(pl.col(column_name).round(Config.float_to_str_precision))
 
+    if always_show_sign:
+        df = df.with_columns(
+            pl.col(column_name).abs(),
+            _sign=pl.when(pl.col(column_name) < 0)
+            .then(pl.lit("-"))
+            .otherwise(pl.lit("+")),
+        )
+
     df = df.with_columns(
-        pl.when(pl.col(column_name) == pl.col(column_name).floor())
+        pl.when(pl.col(column_name) == pl.col(column_name).round())
         .then(pl.col(column_name).cast(pl.Int64).cast(pl.String))
         .otherwise(pl.col(column_name).cast(pl.String))
         .alias(column_name)
     )
 
     if drop_ones:
+        assert always_show_sign, "drop_ones requires always_show_sign=True"
         condition = pl.col(column_name) == str(1)
         if VAR_KEY in df.columns:
             condition = condition & (pl.col(VAR_KEY) != CONST_TERM)
@@ -228,11 +243,12 @@ def cast_coef_to_string(
             .otherwise(pl.col(column_name))
             .alias(column_name)
         )
-    else:
-        df = df.with_columns(pl.col(column_name).cast(pl.Utf8))
-    return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
-        "_sign"
-    )
+
+    if always_show_sign:
+        df = df.with_columns(
+            pl.concat_str("_sign", column_name).alias(column_name)
+        ).drop("_sign")
+    return df
 
 
 def unwrap_single_values(func):

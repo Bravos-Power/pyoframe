@@ -1,6 +1,12 @@
 """Pyoframe's public API accessible via `import pyoframe as pf`."""
 
-from pyoframe._constants import Config, ObjSense, PyoframeError, VType
+from pyoframe._constants import (
+    Config,
+    ObjSense,
+    PyoframeError,
+    VType,
+    _Config,  # noqa: F401 Should be kept here to allow cross referencing in the documentation
+)
 from pyoframe._core import Constraint, Expression, Set, Variable, sum, sum_by
 from pyoframe._model import Model
 from pyoframe._monkey_patch import patch_dataframe_libraries

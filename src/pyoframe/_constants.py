@@ -68,184 +68,244 @@ RESERVED_COL_KEYS = (
 )
 
 
-class _ConfigMeta(type):
-    """Metaclass for Config that stores the default values of all configuration options."""
-
-    def __init__(cls, name, bases, dct):
-        super().__init__(name, bases, dct)
-        cls._defaults = {
-            k: v
-            for k, v in dct.items()
-            if not k.startswith("_") and type(v) != classmethod  # noqa: E721 (didn't want to mess with it since it works)
-        }
-
-
-class Config(metaclass=_ConfigMeta):
-    """General settings for Pyoframe (for advanced users).
-
-    Accessible via `pf.Config` (see examples below).
-    """
-
+@dataclass
+class ConfigDefaults:
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
-    """The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
-
-    If `auto`, Pyoframe will try to use whichever solver is installed.
-    If `raise`, an exception will be raised when [Model][pyoframe.Model] is instantiated without specifying a solver.
-
-    We recommend that users specify their solver when instantiating [Model][pyoframe.Model] rather than relying on this option.
-    """
-
     disable_unmatched_checks: bool = False
-    """When `True`, improves performance by skipping unmatched checks (not recommended).
-
-    When `True`, unmatched checks are disabled which effectively means that all expressions
-    are treated as if they contained [`.keep_unmatched()`][pyoframe.Expression.keep_unmatched]
-    (unless [`.drop_unmatched()`][pyoframe.Expression.drop_unmatched] was applied).
-
-    !!! warning
-        This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
-        behaviors (see [here](../learn/concepts/special-functions.md#drop_unmatched-and-keep_unmatched)).
-        Only consider enabling after you have thoroughly tested your code.
-
-    Examples:
-        >>> import polars as pl
-        >>> population = pl.DataFrame({"city": ["Toronto", "Vancouver", "Montreal"], "pop": [2_731_571, 631_486, 1_704_694]}).to_expr()
-        >>> population_influx = pl.DataFrame({"city": ["Toronto", "Vancouver", "Montreal"],"influx": [100_000, 50_000, None],}).to_expr()
-        
-        Normally, an error warns users that the two expressions have conflicting indices:
-        >>> population + population_influx
-        Traceback (most recent call last):
-        ...
-        pyoframe._constants.PyoframeError: Failed to add expressions:
-        <Expression height=3 terms=3 type=constant> + <Expression height=2 terms=2 type=constant>
-        Due to error:
-        DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
-        shape: (1, 2)
-        ┌──────────┬────────────┐
-        │ city     ┆ city_right │
-        │ ---      ┆ ---        │
-        │ str      ┆ str        │
-        ╞══════════╪════════════╡
-        │ Montreal ┆ null       │
-        └──────────┴────────────┘
-        
-        But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
-        >>> pf.Config.disable_unmatched_checks = True
-        >>> population + population_influx
-        <Expression height=3 terms=3 type=constant>
-        ┌───────────┬────────────┐
-        │ city      ┆ expression │
-        │ (3)       ┆            │
-        ╞═══════════╪════════════╡
-        │ Toronto   ┆ 2831571    │
-        │ Vancouver ┆ 681486     │
-        │ Montreal  ┆ 1704694    │
-        └───────────┴────────────┘
-    """
-
     enable_is_duplicated_expression_safety_check: bool = False
-    """Setting for internal testing purposes only.
-    
-    When `True`, pyoframe checks that there are no bugs leading to duplicated terms in expressions.
-    """
-
     integer_tolerance: float = 1e-8
-    """Tolerance for checking if a floating point value is an integer.
-
-    !!! info
-        For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
-        To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
-        Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
-        unexpected errors. Setting the tolerance to zero disables the check.
-    """
-
     float_to_str_precision: int | None = 5
-    """Number of decimal places to use when displaying mathematical expressions.
-    
-    Examples:
-        >>> pf.Config.float_to_str_precision = 3
-        >>> m = pf.Model()
-        >>> m.X = pf.Variable()
-        >>> expr = 100.752038759 * m.X
-        >>> expr
-        <Expression terms=1 type=linear>
-        100.752 X
-        >>> pf.Config.float_to_str_precision = None
-        >>> expr
-        <Expression terms=1 type=linear>
-        100.752038759 X
-    """
-
     print_polars_config = pl.Config(
         tbl_hide_column_data_types=True,
         tbl_hide_dataframe_shape=True,
         fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
         apply_on_context_enter=True,
     )
-    """[`polars.Config`](https://docs.pola.rs/api/python/stable/reference/config.html) object to use when printing dimensioned Pyoframe objects.
-    
-    Examples:
-        If you'd like to limit the number of rows printed in a table, you can use `set_tbl_rows`:
-        >>> pf.Config.print_polars_config.set_tbl_rows(5)
-        <class 'polars.config.Config'>
-        >>> m = pf.Model()
-        >>> m.X = pf.Variable(pf.Set(x=range(100)))
-        >>> m.X
-        <Variable 'X' height=100>
-        ┌───────┬──────────┐
-        │ x     ┆ variable │
-        │ (100) ┆          │
-        ╞═══════╪══════════╡
-        │ 0     ┆ X[0]     │
-        │ 1     ┆ X[1]     │
-        │ 2     ┆ X[2]     │
-        │ …     ┆ …        │
-        │ 98    ┆ X[98]    │
-        │ 99    ┆ X[99]    │
-        └───────┴──────────┘
-    """
-
-    print_max_terms = 5
-    """Maximum number of terms to print in an expression before truncating it.
-
-    Examples:
-        >>> pf.Config.print_max_terms = 3
-        >>> m = pf.Model()
-        >>> m.X = pf.Variable(pf.Set(x=range(100)), pf.Set(y=range(100)))
-        >>> pf.sum("y", m.X)
-        <Expression height=100 terms=10000 type=linear>
-        ┌───────┬───────────────────────────────┐
-        │ x     ┆ expression                    │
-        │ (100) ┆                               │
-        ╞═══════╪═══════════════════════════════╡
-        │ 0     ┆ X[0,0] + X[0,1] + X[0,2] …    │
-        │ 1     ┆ X[1,0] + X[1,1] + X[1,2] …    │
-        │ 2     ┆ X[2,0] + X[2,1] + X[2,2] …    │
-        │ 3     ┆ X[3,0] + X[3,1] + X[3,2] …    │
-        │ 4     ┆ X[4,0] + X[4,1] + X[4,2] …    │
-        │ …     ┆ …                             │
-        │ 95    ┆ X[95,0] + X[95,1] + X[95,2] … │
-        │ 96    ┆ X[96,0] + X[96,1] + X[96,2] … │
-        │ 97    ┆ X[97,0] + X[97,1] + X[97,2] … │
-        │ 98    ┆ X[98,0] + X[98,1] + X[98,2] … │
-        │ 99    ┆ X[99,0] + X[99,1] + X[99,2] … │
-        └───────┴───────────────────────────────┘
-        >>> pf.sum(m.X)
-        <Expression terms=10000 type=linear>
-        X[0,0] + X[0,1] + X[0,2] …
-        
-
-    """
-
+    print_max_terms: int = 5
     maintain_order: bool = True
-    """Whether the order of variables, constraints, and mathematical terms is to be identical across runs.
 
-    If `False`, performance is improved, but your results may vary every so slightly across runs
-    since numerical errors can accumulate differently when the order of operations changes.
+
+class _Config:
+    """General settings for Pyoframe (for advanced users).
+
+    Accessible via `pf.Config` (see examples below).
     """
 
-    @classmethod
-    def reset_defaults(cls):
+    def __init__(self):
+        self._settings = ConfigDefaults()
+
+    @property
+    def default_solver(
+        self,
+    ) -> SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"]:
+        """The solver to use when [Model][pyoframe.Model] is instantiated without specifying a solver.
+
+        If `auto`, Pyoframe will try to use whichever solver is installed.
+        If `raise`, an exception will be raised when [Model][pyoframe.Model] is instantiated without specifying a solver.
+
+        We recommend that users specify their solver when instantiating [Model][pyoframe.Model] rather than relying on this option.
+        """
+        return self._settings.default_solver
+
+    @default_solver.setter
+    def default_solver(self, value):
+        self._settings.default_solver = value
+
+    @property
+    def disable_unmatched_checks(self) -> bool:
+        """When `True`, improves performance by skipping unmatched checks (not recommended).
+
+        When `True`, unmatched checks are disabled which effectively means that all expressions
+        are treated as if they contained [`.keep_unmatched()`][pyoframe.Expression.keep_unmatched]
+        (unless [`.drop_unmatched()`][pyoframe.Expression.drop_unmatched] was applied).
+
+        !!! warning
+            This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
+            behaviors (see [here](../learn/concepts/special-functions.md#drop_unmatched-and-keep_unmatched)).
+            Only consider enabling after you have thoroughly tested your code.
+
+        Examples:
+            >>> import polars as pl
+            >>> population = pl.DataFrame(
+            ...     {
+            ...         "city": ["Toronto", "Vancouver", "Montreal"],
+            ...         "pop": [2_731_571, 631_486, 1_704_694],
+            ...     }
+            ... ).to_expr()
+            >>> population_influx = pl.DataFrame(
+            ...     {
+            ...         "city": ["Toronto", "Vancouver", "Montreal"],
+            ...         "influx": [100_000, 50_000, None],
+            ...     }
+            ... ).to_expr()
+
+            Normally, an error warns users that the two expressions have conflicting indices:
+            >>> population + population_influx
+            Traceback (most recent call last):
+            ...
+            pyoframe._constants.PyoframeError: Failed to add expressions:
+            <Expression height=3 terms=3 type=constant> + <Expression height=2 terms=2 type=constant>
+            Due to error:
+            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            shape: (1, 2)
+            ┌──────────┬────────────┐
+            │ city     ┆ city_right │
+            │ ---      ┆ ---        │
+            │ str      ┆ str        │
+            ╞══════════╪════════════╡
+            │ Montreal ┆ null       │
+            └──────────┴────────────┘
+
+            But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
+            >>> pf.Config.disable_unmatched_checks = True
+            >>> population + population_influx
+            <Expression height=3 terms=3 type=constant>
+            ┌───────────┬────────────┐
+            │ city      ┆ expression │
+            │ (3)       ┆            │
+            ╞═══════════╪════════════╡
+            │ Toronto   ┆ 2831571    │
+            │ Vancouver ┆ 681486     │
+            │ Montreal  ┆ 1704694    │
+            └───────────┴────────────┘
+        """
+        return self._settings.disable_unmatched_checks
+
+    @disable_unmatched_checks.setter
+    def disable_unmatched_checks(self, value: bool):
+        self._settings.disable_unmatched_checks = value
+
+    @property
+    def enable_is_duplicated_expression_safety_check(self) -> bool:
+        """Setting for internal testing purposes only.
+
+        When `True`, pyoframe checks that there are no bugs leading to duplicated terms in expressions.
+        """
+        return self._settings.enable_is_duplicated_expression_safety_check
+
+    @enable_is_duplicated_expression_safety_check.setter
+    def enable_is_duplicated_expression_safety_check(self, value: bool):
+        self._settings.enable_is_duplicated_expression_safety_check = value
+
+    @property
+    def integer_tolerance(self) -> float:
+        """Tolerance for checking if a floating point value is an integer.
+
+        !!! info
+            For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
+            To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
+            Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
+            unexpected errors. Setting the tolerance to zero disables the check.
+        """
+        return self._settings.integer_tolerance
+
+    @integer_tolerance.setter
+    def integer_tolerance(self, value: float):
+        self._settings.integer_tolerance = value
+
+    @property
+    def float_to_str_precision(self) -> int | None:
+        """Number of decimal places to use when displaying mathematical expressions.
+
+        Examples:
+            >>> pf.Config.float_to_str_precision = 3
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> expr = 100.752038759 * m.X
+            >>> expr
+            <Expression terms=1 type=linear>
+            100.752 X
+            >>> pf.Config.float_to_str_precision = None
+            >>> expr
+            <Expression terms=1 type=linear>
+            100.752038759 X
+        """
+        return self._settings.float_to_str_precision
+
+    @float_to_str_precision.setter
+    def float_to_str_precision(self, value: int | None):
+        self._settings.float_to_str_precision = value
+
+    @property
+    def print_polars_config(self) -> pl.Config:
+        """[`polars.Config`](https://docs.pola.rs/api/python/stable/reference/config.html) object to use when printing dimensioned Pyoframe objects.
+
+        Examples:
+            For example, to limit the number of rows printed in a table, use `set_tbl_rows`:
+            >>> pf.Config.print_polars_config.set_tbl_rows(5)
+            <class 'polars.config.Config'>
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(pf.Set(x=range(100)))
+            >>> m.X
+            <Variable 'X' height=100>
+            ┌───────┬──────────┐
+            │ x     ┆ variable │
+            │ (100) ┆          │
+            ╞═══════╪══════════╡
+            │ 0     ┆ X[0]     │
+            │ 1     ┆ X[1]     │
+            │ 2     ┆ X[2]     │
+            │ …     ┆ …        │
+            │ 98    ┆ X[98]    │
+            │ 99    ┆ X[99]    │
+            └───────┴──────────┘
+        """
+        return self._settings.print_polars_config
+
+    @print_polars_config.setter
+    def print_polars_config(self, value: pl.Config):
+        self._settings.print_polars_config = value
+
+    @property
+    def print_max_terms(self) -> int:
+        """Maximum number of terms to print in an expression before truncating it.
+
+        Examples:
+            >>> pf.Config.print_max_terms = 3
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(pf.Set(x=range(100)), pf.Set(y=range(100)))
+            >>> pf.sum("y", m.X)
+            <Expression height=100 terms=10000 type=linear>
+            ┌───────┬───────────────────────────────┐
+            │ x     ┆ expression                    │
+            │ (100) ┆                               │
+            ╞═══════╪═══════════════════════════════╡
+            │ 0     ┆ X[0,0] + X[0,1] + X[0,2] …    │
+            │ 1     ┆ X[1,0] + X[1,1] + X[1,2] …    │
+            │ 2     ┆ X[2,0] + X[2,1] + X[2,2] …    │
+            │ 3     ┆ X[3,0] + X[3,1] + X[3,2] …    │
+            │ 4     ┆ X[4,0] + X[4,1] + X[4,2] …    │
+            │ …     ┆ …                             │
+            │ 95    ┆ X[95,0] + X[95,1] + X[95,2] … │
+            │ 96    ┆ X[96,0] + X[96,1] + X[96,2] … │
+            │ 97    ┆ X[97,0] + X[97,1] + X[97,2] … │
+            │ 98    ┆ X[98,0] + X[98,1] + X[98,2] … │
+            │ 99    ┆ X[99,0] + X[99,1] + X[99,2] … │
+            └───────┴───────────────────────────────┘
+            >>> pf.sum(m.X)
+            <Expression terms=10000 type=linear>
+            X[0,0] + X[0,1] + X[0,2] …
+        """
+        return self._settings.print_max_terms
+
+    @print_max_terms.setter
+    def print_max_terms(self, value: int):
+        self._settings.print_max_terms = value
+
+    @property
+    def maintain_order(self) -> bool:
+        """Whether the order of variables, constraints, and mathematical terms is to be identical across runs.
+
+        If `False`, performance is improved, but your results may vary every so slightly across runs
+        since numerical errors can accumulate differently when the order of operations changes.
+        """
+        return self._settings.maintain_order
+
+    @maintain_order.setter
+    def maintain_order(self, value: bool):
+        self._settings.maintain_order = value
+
+    def reset_defaults(self):
         """Resets all configuration options to their default values.
 
         Examples:
@@ -258,8 +318,10 @@ class Config(metaclass=_ConfigMeta):
             >>> pf.Config.disable_unmatched_checks
             False
         """
-        for key, value in cls._defaults.items():
-            setattr(cls, key, value)
+        self._settings = ConfigDefaults()
+
+
+Config = _Config()
 
 
 class ConstraintSense(Enum):
