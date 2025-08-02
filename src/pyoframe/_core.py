@@ -327,7 +327,9 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if isinstance(other, Set):
             try:
                 return self._new(
-                    pl.concat([self.data, other.data]).unique(maintain_order=True)
+                    pl.concat([self.data, other.data]).unique(
+                        maintain_order=Config.maintain_order
+                    )
                 )
             except pl.exceptions.ShapeError as e:
                 if "unable to vstack, column names don't match" in str(e):
@@ -357,7 +359,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             df = (
                 set.to_expr()
                 .data.drop(RESERVED_COL_KEYS, strict=False)
-                .unique(maintain_order=True)
+                .unique(maintain_order=Config.maintain_order)
             )
         elif isinstance(set, pd.Index):
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
@@ -495,7 +497,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         return self._new(
             self.data.drop(over)
-            .group_by(remaining_dims + self._variable_columns, maintain_order=True)
+            .group_by(
+                remaining_dims + self._variable_columns,
+                maintain_order=Config.maintain_order,
+            )
             .sum()
         )
 
@@ -663,8 +668,14 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             "Cannot use .within() with an expression with no dimensions."
         )
         dims_in_common = [dim for dim in dims if dim in set_dims]
-        by_dims = df.select(dims_in_common).unique(maintain_order=True)
-        return self._new(self.data.join(by_dims, on=dims_in_common))
+        by_dims = df.select(dims_in_common).unique(maintain_order=Config.maintain_order)
+        return self._new(
+            self.data.join(
+                by_dims,
+                on=dims_in_common,
+                maintain_order="left" if Config.maintain_order else None,
+            )
+        )
 
     @property
     def is_quadratic(self) -> bool:
@@ -724,9 +735,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             [3]: v[3] +30
             >>> m.v + add + 2
             <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] +12
-            [2]: v[2] +22
-            [3]: v[3] +32
+            [1]: 12  + v[1]
+            [2]: 22  + v[2]
+            [3]: 32  + v[3]
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
@@ -827,7 +838,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         else:
             keys = (
                 data.select(dim)
-                .unique(maintain_order=True)
+                .unique(maintain_order=Config.maintain_order)
                 .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
             )
             if self.is_quadratic:
@@ -835,7 +846,12 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                     pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
                 )
             data = data.join(
-                keys, on=dim + self._variable_columns, how="full", coalesce=True
+                keys,
+                on=dim + self._variable_columns,
+                how="full",
+                coalesce=True,
+                # We use right_left not left_right to bring the constants near the front for better readability
+                maintain_order="right_left" if Config.maintain_order else None,
             ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
@@ -854,8 +870,16 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if self.is_quadratic:
             constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
-            dims_df = self.data.select(dims).unique(maintain_order=True)
-            df = constant_terms.join(dims_df, on=dims, how="full", coalesce=True)
+            dims_df = self.data.select(dims).unique(
+                maintain_order=Config.maintain_order
+            )
+            df = constant_terms.join(
+                dims_df,
+                on=dims,
+                how="full",
+                coalesce=True,
+                maintain_order="left_right" if Config.maintain_order else None,
+            )
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
@@ -922,7 +946,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         dims = self.dimensions
         if dims is not None:
-            df = df.group_by(dims, maintain_order=True)
+            df = df.group_by(dims, maintain_order=Config.maintain_order)
         return df.sum()
 
     def _to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
@@ -983,7 +1007,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         ).drop(COEF_KEY, VAR_KEY)
 
         if dimensions is not None:
-            data = data.group_by(dimensions, maintain_order=True).agg(
+            data = data.group_by(dimensions, maintain_order=Config.maintain_order).agg(
                 pl.col("expr").str.join(delimiter=" ")
             )
         else:
@@ -1217,7 +1241,11 @@ class Constraint(ModelElementWithId):
         self._attr = Container(self._set_attribute, self._get_attribute)
 
         dims = self.lhs.dimensions
-        data = pl.DataFrame() if dims is None else self.lhs.data.select(dims).unique()
+        data = (
+            pl.DataFrame()
+            if dims is None
+            else self.lhs.data.select(dims).unique(maintain_order=Config.maintain_order)
+        )
 
         super().__init__(data)
 
@@ -1240,7 +1268,11 @@ class Constraint(ModelElementWithId):
                 setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
         else:
             for key, value in (
-                self.data.join(value, on=self.dimensions, how="inner")
+                self.data.join(
+                    value,
+                    on=self.dimensions,
+                    maintain_order="left" if Config.maintain_order else None,
+                )
                 .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
                 .iter_rows()
             ):
@@ -1313,9 +1345,9 @@ class Constraint(ModelElementWithId):
                 .cast(KEY_TYPE)
             )
         else:
-            df = self.lhs.data.group_by(self.dimensions, maintain_order=True).agg(
-                *key_cols_polars
-            )
+            df = self.lhs.data.group_by(
+                self.dimensions, maintain_order=Config.maintain_order
+            ).agg(*key_cols_polars)
             if use_var_names:
                 df = (
                     concat_dimensions(df, prefix=self.name)
@@ -1671,7 +1703,11 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 setter(poi.VariableIndex(key), name, value)
         else:
             for key, v in (
-                self.data.join(value, on=self.dimensions, how="inner")
+                self.data.join(
+                    value,
+                    on=self.dimensions,
+                    maintain_order="left" if Config.maintain_order else None,
+                )
                 .select(pl.col(VAR_KEY), pl.col(col_name))
                 .iter_rows()
             ):
@@ -1930,7 +1966,11 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             [18:00,Berlin]: bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin] = 0
             [18:00,Toronto]: bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto] - bat_charge[00:00,Toronto] = 0
         """
-        wrapped = self.data.select(dim).unique(maintain_order=True).sort(by=dim)
+        wrapped = (
+            self.data.select(dim)
+            .unique(maintain_order=Config.maintain_order)
+            .sort(by=dim)
+        )
         wrapped = wrapped.with_columns(pl.col(dim).shift(-1).alias("__next"))
         if wrap_around:
             wrapped = wrapped.with_columns(pl.col("__next").fill_null(pl.first(dim)))
@@ -1941,6 +1981,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         data = expr.data.rename({dim: "__prev"})
 
         data = data.join(
-            wrapped, left_on="__prev", right_on="__next", how="inner"
+            wrapped,
+            left_on="__prev",
+            right_on="__next",
+            # We use "right" instead of "left" to maintain consistency with the behavior without maintain_order
+            maintain_order="right" if Config.maintain_order else None,
         ).drop(["__prev", "__next"], strict=False)
         return expr._new(data)
