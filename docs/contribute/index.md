@@ -8,11 +8,20 @@ Contributions are more than welcome! Submit a pull request, or [open an issue](h
 
 ## Setup a development environment
 
-1. Clone this repository. `git clone https://github.com/Bravos-Power/pyoframe`
+1. Clone this repository.
+```console
+git clone https://github.com/Bravos-Power/pyoframe
+```
 
-2. Install the dependencies. `pip install --editable .[dev,docs]`
+2. Install the dependencies. 
+```console
+pip install --editable .[dev,docs]
+```
 
-3. Install the pre-commit hooks. `pre-commit install`
+3. Install the pre-commit hooks. 
+```console
+pre-commit install
+```
 
 4. Run `pytest` to make sure everything is working. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
 
