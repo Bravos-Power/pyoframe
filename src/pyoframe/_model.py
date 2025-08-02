@@ -355,8 +355,8 @@ class Model:
                 self._constraints.append(__value)
         return super().__setattr__(__name, __value)
 
+    # Defining a custom __getattribute__ prevents type checkers from complaining about attribute access
     def __getattribute__(self, name: str) -> Any:
-        # Defining this prevents pylance from giving error 'reportAttributeAccess'
         return super().__getattribute__(name)
 
     def __repr__(self) -> str:

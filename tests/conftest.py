@@ -27,6 +27,6 @@ def _force_solver_selection():
     pf.Config.default_solver = "raise"
 
 
-@pytest.fixture(params=[True, False])
+@pytest.fixture(params=[True, False], ids=["var_names", ""])
 def use_var_names(request):
     return request.param
