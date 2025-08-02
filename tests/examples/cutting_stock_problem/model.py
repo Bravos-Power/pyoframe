@@ -1,4 +1,3 @@
-# pyright: reportAttributeAccessIssue=false
 """Example Pyoframe formulation of the classic cutting stock problem."""
 
 import os

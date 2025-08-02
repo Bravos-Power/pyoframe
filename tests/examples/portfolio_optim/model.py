@@ -1,4 +1,3 @@
-# pyright: reportAttributeAccessIssue=false
 """Quadratic Portfolio Optimization Model (Markowitz Mean-Variance).
 
 Minimize portfolio variance subject to achieving a minimum return.

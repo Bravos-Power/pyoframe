@@ -1,7 +1,5 @@
 """Example Pyoframe formulation of the classic diet problem."""
 
-# pyright: reportAttributeAccessIssue=false
-
 import os
 from pathlib import Path
 
