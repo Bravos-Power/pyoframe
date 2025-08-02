@@ -17,7 +17,7 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.model import Model
+    from pyoframe import Model
 
 
 class ModelElement(ABC):

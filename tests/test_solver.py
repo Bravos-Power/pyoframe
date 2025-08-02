@@ -26,28 +26,56 @@ def test_solver_required():
         pf.Model()
 
 
-def test_retrieving_duals(solver):
-    m = pf.Model(solver=solver)
+@pytest.mark.parametrize(
+    "sense", [pf.ObjSense.MIN, pf.ObjSense.MAX], ids=["min", "max"]
+)
+@pytest.mark.parametrize(
+    "dimensioned", [True, False], ids=["dimensioned", "un-dimensioned"]
+)
+def test_retrieving_duals(solver, sense, dimensioned):
+    m = pf.Model(solver=solver, sense=sense)
 
-    m.A = pf.Variable(ub=100)
-    m.B = pf.Variable(ub=10)
+    if dimensioned:
+        dim = pf.Set(x=[1, 2])
+        m.A = pf.Variable(dim, lb=-100, ub=100)
+        m.B = pf.Variable(dim, lb=-10, ub=10)
+    else:
+        m.A = pf.Variable(lb=-100, ub=100)
+        m.B = pf.Variable(lb=-10, ub=10)
     m.max_AB = 2 * m.A + m.B <= 100
-    m.extra_slack_constraint = 2 * m.A + m.B <= 150
-    m.maximize = 0.2 * m.A + 2 * m.B
+    m.min_AB = 2 * m.A + m.B >= -100
+    obj = 0.2 * m.A + 2 * m.B
+    if dimensioned:
+        obj = pf.sum(obj)
+    m.objective = obj
 
     m.optimize()
 
-    assert m.A.solution == approx(45, **get_tol(solver))
-    assert m.B.solution == approx(10, **get_tol(solver))
-    assert m.maximize.value == approx(29, **get_tol(solver))
-    assert m.max_AB.dual == approx(0.1, **get_tol(solver))
-    assert m.extra_slack_constraint.dual == approx(0, **get_tol(solver))
+    flip = 1 if sense == pf.ObjSense.MAX else -1
+
+    def unwrap(value):
+        if dimensioned:
+            return value.filter(x=1).drop("x").item()
+        else:
+            return value
+
+    factor = len(dim) if dimensioned else 1
+
+    assert unwrap(m.A.solution) == approx(45 * flip, **get_tol(solver))
+    assert unwrap(m.B.solution) == approx(10 * flip, **get_tol(solver))
+    assert m.objective.value == approx(29 * flip * factor, **get_tol(solver))
+    tight, slack = (
+        (m.max_AB, m.min_AB) if sense == pf.ObjSense.MAX else (m.min_AB, m.max_AB)
+    )
+
+    assert unwrap(tight.dual) == approx(0.1, **get_tol(solver))
+    assert unwrap(slack.dual) == approx(0, **get_tol(solver))
 
     if solver.name == "gurobi":
-        assert m.max_AB.attr.slack == approx(0, **get_tol(solver))
-        assert m.extra_slack_constraint.attr.slack == approx(50, **get_tol(solver))
-        assert m.A.attr.RC == approx(0, **get_tol(solver))
-        assert m.B.attr.RC == approx(1.9, **get_tol(solver))
+        assert unwrap(tight.attr.slack) == approx(0, **get_tol(solver))
+        assert unwrap(slack.attr.slack) == approx(-200 * flip, **get_tol(solver))
+        assert unwrap(m.A.attr.RC) == approx(0, **get_tol(solver))
+        assert unwrap(m.B.attr.RC) == approx(1.9, **get_tol(solver))
 
 
 def test_retrieving_duals_vectorized(solver):
