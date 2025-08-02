@@ -1382,9 +1382,9 @@ class Constraint(ModelElementWithId):
         assert self._model is not None
         if self._model.solver.name == "ipopt" and self._model.sense == ObjSense.MIN:
             if isinstance(dual, pl.DataFrame):
-                dual = dual.with_columns(pl.col(DUAL_KEY) * -1)
+                dual = dual.with_columns(-pl.col(DUAL_KEY))
             else:
-                dual *= -1
+                dual = -dual
         return dual
 
     @classmethod
