@@ -735,9 +735,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             [3]: v[3] +30
             >>> m.v + add + 2
             <Expression size=3 dimensions={'dim1': 3} terms=6>
-            [1]: v[1] +12
-            [2]: v[2] +22
-            [3]: v[3] +32
+            [1]: 12  + v[1]
+            [2]: 22  + v[2]
+            [3]: 32  + v[3]
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
