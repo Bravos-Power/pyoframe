@@ -160,7 +160,21 @@ class Config(metaclass=_ConfigMeta):
     """
 
     float_to_str_precision: int | None = 5
-    """Number of decimal places to use when displaying mathematical expressions."""
+    """Number of decimal places to use when displaying mathematical expressions.
+    
+    Examples:
+        >>> pf.Config.float_to_str_precision = 3
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable()
+        >>> expr = 100.752038759 * m.X
+        >>> expr
+        <Expression terms=1 type=linear>
+        100.752 X
+        >>> pf.Config.float_to_str_precision = None
+        >>> expr
+        <Expression terms=1 type=linear>
+        100.752038759 X
+    """
 
     print_polars_config = pl.Config(
         tbl_hide_column_data_types=True,
@@ -168,7 +182,28 @@ class Config(metaclass=_ConfigMeta):
         fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
         apply_on_context_enter=True,
     )
-    """Polars `Config` used when printing Pyoframe objects."""
+    """[`polars.Config`](https://docs.pola.rs/api/python/stable/reference/config.html) object to use when printing dimensioned Pyoframe objects.
+    
+    Examples:
+        If you'd like to limit the number of rows printed in a table, you can use `set_tbl_rows`:
+        >>> pf.Config.print_polars_config.set_tbl_rows(5)
+        <class 'polars.config.Config'>
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(pf.Set(x=range(100)))
+        >>> m.X
+        <Variable 'X' height=100>
+        ┌───────┬──────────┐
+        │ x     ┆ variable │
+        │ (100) ┆          │
+        ╞═══════╪══════════╡
+        │ 0     ┆ X[0]     │
+        │ 1     ┆ X[1]     │
+        │ 2     ┆ X[2]     │
+        │ …     ┆ …        │
+        │ 98    ┆ X[98]    │
+        │ 99    ┆ X[99]    │
+        └───────┴──────────┘
+    """
 
     print_max_terms = 5
     """Maximum number of terms to print in an expression before truncating it.

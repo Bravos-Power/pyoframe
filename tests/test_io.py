@@ -8,8 +8,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Config, Model, Variable, sum
-from tests.util import csvs_to_expr
+from pyoframe import Model, Variable, sum
 
 
 def test_variables_to_string(solver):
@@ -87,25 +86,6 @@ x1 * x1 <= 5"""
             orient="row",
         ),
     )
-
-
-def test_float_to_str_precision():
-    expr = csvs_to_expr(
-        """
-    day,water_drank
-    1,2.00000000001
-    2,4
-    3,4
-"""
-    ).sum("day")
-    Config.float_to_str_precision = None
-    assert str(expr) == "10.000000000010001"
-    Config.float_to_str_precision = 6
-    assert str(expr) == "10"
-    # repr() is what is used when the object is printed in the console
-    assert repr(expr) == "<Expression terms=1 type=constant>\n10"
-    Config.float_to_str_precision = None
-    assert repr(expr) == "<Expression terms=1 type=constant>\n10.000000000010001"
 
 
 def test_write_lp(use_var_names, solver):
