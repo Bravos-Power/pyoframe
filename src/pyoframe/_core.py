@@ -1878,17 +1878,29 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         >>> df = pd.DataFrame(
         ...     {"dim1": [1, 1, 2, 2, 3, 3], "dim2": ["a", "b", "a", "b", "a", "b"]}
         ... )
-        >>> v = Variable(df)
-        >>> v
-        <Variable height=6 added_to_model=False>
+        >>> Variable(df)
+        <Variable 'unnamed' height=6>
+        ┌──────┬──────┐
+        │ dim1 ┆ dim2 │
+        │ (3)  ┆ (2)  │
+        ╞══════╪══════╡
+        │ 1    ┆ a    │
+        │ 1    ┆ b    │
+        │ 2    ┆ a    │
+        │ 2    ┆ b    │
+        │ 3    ┆ a    │
+        │ 3    ┆ b    │
+        └──────┴──────┘
 
         Variables cannot be used until they're added to the model.
 
-        >>> m.constraint = v <= 3
+        >>> m.constraint = Variable(df) <= 3
         Traceback (most recent call last):
         ...
-        ValueError: Cannot use 'Variable' before it has beed added to a model.
-        >>> m.v = v
+        ValueError: Cannot use 'Variable' before it has been added to a model.
+
+        Instead, assign the variable to the model first:
+        >>> m.v = Variable(df)
         >>> m.constraint = m.v <= 3
 
         >>> m.v
@@ -2143,26 +2155,24 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         return solution
 
     def __repr__(self):
-        if self._has_ids:
-            return (
-                get_obj_repr(
-                    self,
-                    self._friendly_name,
-                    lb=self.lb,
-                    ub=self.ub,
-                    height=self.data.height if self.dimensions else None,
-                )
-                + "\n"
-                + self.to_expr().to_str(str_col_name="variable")
-            )
-        else:
-            return get_obj_repr(
+        result = (
+            get_obj_repr(
                 self,
+                self._friendly_name,
                 lb=self.lb,
                 ub=self.ub,
                 height=self.data.height if self.dimensions else None,
-                added_to_model=False,
             )
+            + "\n"
+        )
+        if self._has_ids:
+            result += self.to_expr().to_str(str_col_name="variable")
+        else:
+            with Config.print_polars_config:
+                data = self._add_shape_to_columns(self.data)
+                result += repr(data)
+
+        return result
 
     def to_expr(self) -> Expression:
         """Converts the Variable to an Expression."""

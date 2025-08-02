@@ -201,7 +201,7 @@ class ModelElementWithId(ModelElement):
     def _assert_has_ids(self):
         if not self._has_ids:
             raise ValueError(
-                f"Cannot use '{self.__class__.__name__}' before it has beed added to a model."
+                f"Cannot use '{self.__class__.__name__}' before it has been added to a model."
             )
 
     @classmethod

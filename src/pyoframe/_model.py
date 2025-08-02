@@ -41,12 +41,13 @@ class Model:
         solver_env:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
-            Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+            If `True`, the solver will use your custom variable names in its outputs (e.g. during [`Model.write()`][pyoframe.Model.write]).
+            This can be useful for debugging `.lp`, `.sol`, and `.ilp` files, but may worsen performance.
         use_var_names_print:
-            Whether to use variable names when printing model elements to the console.
-            Set to `False` if you don't need to debug your model and you'd likely to slightly improve performance.
+            If `True`, pyoframe will use your custom variables names when printing elements of the model to the console.
+            This is useful for debugging, but may slightly worsen performance.
         sense:
-            Either "min" or "max". Indicates whether it's a minmization or maximization problem.
+            Either "min" or "max". Indicates whether it's a minimization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
             set when the objective is set using `.minimize` or `.maximize`.
 
