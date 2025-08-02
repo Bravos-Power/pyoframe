@@ -106,7 +106,10 @@ def test_filter_variable(solver):
     m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
     result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
-    assert str(result) == "[2]: v[2]"
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame([[2, "v[2]"]], schema=["dim1", "expression"], orient="row"),
+    )
 
 
 def test_filter_set():
@@ -277,16 +280,22 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
         lhs + rhs
     rhs = rhs.add_dim("x")
     result = lhs + rhs
-    assert (
-        str(result)
-        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[4,a]
-[1,a,5]: 4  +2 v1[1,a] +4 v2[5,a]
-[1,b,4]: 4  +2 v1[1,b] +4 v2[4,b]
-[1,b,5]: 4  +2 v1[1,b] +4 v2[5,b]
-[2,a,4]: 4  +2 v1[2,a] +4 v2[4,a]
-[2,a,5]: 4  +2 v1[2,a] +4 v2[5,a]
-[2,b,4]: 4  +2 v1[2,b] +4 v2[4,b]
-[2,b,5]: 4  +2 v1[2,b] +4 v2[5,b]"""
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                [1, "a", 4, "4 +2 v1[1,a] +4 v2[4,a]"],
+                [1, "a", 5, "4 +2 v1[1,a] +4 v2[5,a]"],
+                [1, "b", 4, "4 +2 v1[1,b] +4 v2[4,b]"],
+                [1, "b", 5, "4 +2 v1[1,b] +4 v2[5,b]"],
+                [2, "a", 4, "4 +2 v1[2,a] +4 v2[4,a]"],
+                [2, "a", 5, "4 +2 v1[2,a] +4 v2[5,a]"],
+                [2, "b", 4, "4 +2 v1[2,b] +4 v2[4,b]"],
+                [2, "b", 5, "4 +2 v1[2,b] +4 v2[5,b]"],
+            ],
+            schema=["x", "y", "z", "expression"],
+            orient="row",
+        ),
     )
 
 
@@ -308,26 +317,45 @@ def test_add_expression_with_missing(solver):
         lhs + rhs
 
     result = lhs + rhs.drop_unmatched()
-    assert (
-        str(result)
-        == """[a]: 4  +4 v2[a] +2 v1[a]
-[b]: 4  +4 v2[b] +2 v1[b]"""
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                ["a", "4 +4 v2[a] +2 v1[a]"],
+                ["b", "4 +4 v2[b] +2 v1[b]"],
+            ],
+            schema=["y", "expression"],
+            orient="row",
+        ),
     )
+
     result = lhs + rhs.keep_unmatched()
-    assert (
-        str(result)
-        == """[a]: 4  +4 v2[a] +2 v1[a]
-[b]: 4  +4 v2[b] +2 v1[b]
-[c]: 3  +4 v2[c]"""
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                ["a", "4 +4 v2[a] +2 v1[a]"],
+                ["b", "4 +4 v2[b] +2 v1[b]"],
+                ["c", "3 +4 v2[c]"],
+            ],
+            schema=["y", "expression"],
+            orient="row",
+        ),
     )
 
     Config.disable_unmatched_checks = True
     result = lhs + rhs
-    assert (
-        str(result)
-        == """[a]: 4  +2 v1[a] +4 v2[a]
-[b]: 4  +2 v1[b] +4 v2[b]
-[c]: 3  +4 v2[c]"""
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                ["a", "4 +2 v1[a] +4 v2[a]"],
+                ["b", "4 +2 v1[b] +4 v2[b]"],
+                ["c", "3 +4 v2[c]"],
+            ],
+            schema=["y", "expression"],
+            orient="row",
+        ),
     )
 
 
@@ -373,16 +401,22 @@ def test_add_expressions_with_dims_and_missing(solver):
         lhs.drop_unmatched() + rhs
 
     result = lhs + rhs.drop_unmatched()
-    assert (
-        str(result)
-        == """[1,a,4]: 4  +2 v1[1,a] +4 v2[a,4]
-[1,a,5]: 4  +2 v1[1,a] +4 v2[a,5]
-[1,b,4]: 4  +2 v1[1,b] +4 v2[b,4]
-[1,b,5]: 4  +2 v1[1,b] +4 v2[b,5]
-[2,a,4]: 4  +2 v1[2,a] +4 v2[a,4]
-[2,a,5]: 4  +2 v1[2,a] +4 v2[a,5]
-[2,b,4]: 4  +2 v1[2,b] +4 v2[b,4]
-[2,b,5]: 4  +2 v1[2,b] +4 v2[b,5]"""
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                [1, "a", 4, "4 +2 v1[1,a] +4 v2[a,4]"],
+                [1, "a", 5, "4 +2 v1[1,a] +4 v2[a,5]"],
+                [1, "b", 4, "4 +2 v1[1,b] +4 v2[b,4]"],
+                [1, "b", 5, "4 +2 v1[1,b] +4 v2[b,5]"],
+                [2, "a", 4, "4 +2 v1[2,a] +4 v2[a,4]"],
+                [2, "a", 5, "4 +2 v1[2,a] +4 v2[a,5]"],
+                [2, "b", 4, "4 +2 v1[2,b] +4 v2[b,4]"],
+                [2, "b", 5, "4 +2 v1[2,b] +4 v2[b,5]"],
+            ],
+            schema=["x", "y", "z", "expression"],
+            orient="row",
+        ),
     )
 
 
@@ -459,7 +493,10 @@ def test_no_propogate():
         sum("dim1", expr1 + expr2.keep_unmatched()) + expr3
 
     result = sum("dim1", expr1 + expr2.keep_unmatched()) + expr3.drop_unmatched()
-    assert str(result) == "[1]: 10"
+    assert_frame_equal(
+        result.to_str(return_df=True),
+        pl.DataFrame([[1, "10"]], schema=["dim2", "expression"], orient="row"),
+    )
 
 
 def test_variable_equals(solver):

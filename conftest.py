@@ -1,5 +1,6 @@
 """File related to setting up pytest."""
 
+import doctest
 import os
 from pathlib import Path
 
@@ -43,11 +44,17 @@ def pytest_collection_modifyitems(items):
 
 
 @pytest.fixture(scope="module")
-def markdown_setup_fixture():
+def markdown_setup_fixture_module():
     cwd = os.getcwd()
-    pl.Config.set_tbl_hide_dataframe_shape(True)
     yield
     os.chdir(cwd)
+
+
+@pytest.fixture
+def markdown_setup_fixture():
+    pl.Config.restore_defaults()
+    pl.Config.set_tbl_hide_dataframe_shape(True)
+    yield
     pl.Config.set_tbl_hide_dataframe_shape(False)
 
 
@@ -65,11 +72,11 @@ try:
             PythonCodeBlockParser(),
             SkipParser(),
             ClearNamespaceParser(),
-            DocTestParser(),
+            DocTestParser(optionflags=doctest.ELLIPSIS),
         ],
         patterns=["*.md"],
         setup=_setup_before_each_test,
-        fixtures=["markdown_setup_fixture"],
+        fixtures=["markdown_setup_fixture", "markdown_setup_fixture_module"],
     ).pytest()
 except ImportError:
     # Sybil is not installed, so we won't collect markdown files.

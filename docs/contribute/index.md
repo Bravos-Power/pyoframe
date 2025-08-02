@@ -25,7 +25,7 @@ We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documen
 - `pytest`: Runs all the tests. If you'd like to generate coverage information just add the flag `--cov`.
 - `mkdocs serve`: Generates the documentation locally. Navigate to [`http://127.0.0.1:8000/pyoframe/`](http://127.0.0.1:8000/pyoframe/) to check it out.
 - `coverage html`: Generate a webpage to view the coverage information generated after having run `pytest --cov`.
-- `python -m tests/test_examples.py`: Regenerate the files in the `results` folder of an example (e.g. `tests/examples/sudoku/results/**`). You should only run this if the result files need to be regenerated, for example, if model variable names have changed.
+- `python -m tests.test_examples`: Regenerate the files in the `results` folder of an example (e.g. `tests/examples/sudoku/results/**`). You should only run this if the result files need to be regenerated, for example, if model variable names have changed.
 - `ruff check`: Ensures all the linter tests pass
 - `ruff format`: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)
 - `doccmd --language=python --no-pad-file --command="ruff format" docs/`: to format the code in the documentation.

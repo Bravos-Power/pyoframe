@@ -117,7 +117,7 @@ class Config(metaclass=_ConfigMeta):
         Traceback (most recent call last):
         ...
         pyoframe._constants.PyoframeError: Failed to add expressions:
-        <Expression size=3 dimensions={'city': 3} terms=3> + <Expression size=2 dimensions={'city': 2} terms=2>
+        <Expression height=3 terms=3 type=constant> + <Expression height=2 terms=2 type=constant>
         Due to error:
         DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
         shape: (1, 2)
@@ -132,48 +132,15 @@ class Config(metaclass=_ConfigMeta):
         But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
         >>> pf.Config.disable_unmatched_checks = True
         >>> population + population_influx
-        <Expression size=3 dimensions={'city': 3} terms=3>
-        [Toronto]: 2831571
-        [Vancouver]: 681486
-        [Montreal]: 1704694
-    """
-
-    print_max_line_length: int = 80
-    """Maximum number of characters to print in a single line.
-
-    Examples:
-        >>> pf.Config.print_max_line_length = 20
-        >>> m = pf.Model()
-        >>> m.vars = pf.Variable({"x": range(1000)})
-        >>> pf.sum(m.vars)
-        <Expression size=1 dimensions={} terms=1000>
-        vars[0] + vars[1] + …
-
-    """
-
-    print_max_lines: int = 15
-    """Maximum number of lines to print.
-
-    Examples:
-        >>> pf.Config.print_max_lines = 3
-        >>> import pandas as pd
-        >>> expr = pd.DataFrame({"day_of_year": list(range(365)), "value": list(range(365))}).to_expr()
-        >>> expr
-        <Expression size=365 dimensions={'day_of_year': 365} terms=365>
-        [0]: 0
-        [1]: 1
-        [2]: 2
-         ⋮
-    """
-
-    print_max_set_elements: int = 50
-    """Maximum number of elements in a set to print.
-    
-    Examples:
-        >>> pf.Config.print_max_set_elements = 5
-        >>> pf.Set(x=range(1000))
-        <Set size=1000 dimensions={'x': 1000}>
-        [0, 1, 2, 3, 4, …]
+        <Expression height=3 terms=3 type=constant>
+        ┌───────────┬────────────┐
+        │ city      ┆ expression │
+        │ (3)       ┆            │
+        ╞═══════════╪════════════╡
+        │ Toronto   ┆ 2831571    │
+        │ Vancouver ┆ 681486     │
+        │ Montreal  ┆ 1704694    │
+        └───────────┴────────────┘
     """
 
     enable_is_duplicated_expression_safety_check: bool = False
@@ -193,24 +160,81 @@ class Config(metaclass=_ConfigMeta):
     """
 
     float_to_str_precision: int | None = 5
-    """Number of decimal places to use when displaying mathematical expressions."""
-
-    print_uses_variable_names: bool = True
-    """Improves performance by not tracking the link between variable IDs and variable names.
-
-    If set to `False`, printed expression will use variable IDs instead of variable names
-    which might make debugging difficult.
-
-    !!! warning
-        This setting must be changed before instantiating a [Model][pyoframe.Model].
+    """Number of decimal places to use when displaying mathematical expressions.
     
     Examples:
-        >>> pf.Config.print_uses_variable_names = False
+        >>> pf.Config.float_to_str_precision = 3
         >>> m = pf.Model()
-        >>> m.my_var = pf.Variable()
-        >>> 2 * m.my_var
-        <Expression size=1 dimensions={} terms=1>
-        2 x1
+        >>> m.X = pf.Variable()
+        >>> expr = 100.752038759 * m.X
+        >>> expr
+        <Expression terms=1 type=linear>
+        100.752 X
+        >>> pf.Config.float_to_str_precision = None
+        >>> expr
+        <Expression terms=1 type=linear>
+        100.752038759 X
+    """
+
+    print_polars_config = pl.Config(
+        tbl_hide_column_data_types=True,
+        tbl_hide_dataframe_shape=True,
+        fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
+        apply_on_context_enter=True,
+    )
+    """[`polars.Config`](https://docs.pola.rs/api/python/stable/reference/config.html) object to use when printing dimensioned Pyoframe objects.
+    
+    Examples:
+        If you'd like to limit the number of rows printed in a table, you can use `set_tbl_rows`:
+        >>> pf.Config.print_polars_config.set_tbl_rows(5)
+        <class 'polars.config.Config'>
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(pf.Set(x=range(100)))
+        >>> m.X
+        <Variable 'X' height=100>
+        ┌───────┬──────────┐
+        │ x     ┆ variable │
+        │ (100) ┆          │
+        ╞═══════╪══════════╡
+        │ 0     ┆ X[0]     │
+        │ 1     ┆ X[1]     │
+        │ 2     ┆ X[2]     │
+        │ …     ┆ …        │
+        │ 98    ┆ X[98]    │
+        │ 99    ┆ X[99]    │
+        └───────┴──────────┘
+    """
+
+    print_max_terms = 5
+    """Maximum number of terms to print in an expression before truncating it.
+
+    Examples:
+        >>> pf.Config.print_max_terms = 3
+        >>> m = pf.Model()
+        >>> m.X = pf.Variable(pf.Set(x=range(100)), pf.Set(y=range(100)))
+        >>> pf.sum("y", m.X)
+        <Expression height=100 terms=10000 type=linear>
+        ┌───────┬───────────────────────────────┐
+        │ x     ┆ expression                    │
+        │ (100) ┆                               │
+        ╞═══════╪═══════════════════════════════╡
+        │ 0     ┆ X[0,0] + X[0,1] + X[0,2] …    │
+        │ 1     ┆ X[1,0] + X[1,1] + X[1,2] …    │
+        │ 2     ┆ X[2,0] + X[2,1] + X[2,2] …    │
+        │ 3     ┆ X[3,0] + X[3,1] + X[3,2] …    │
+        │ 4     ┆ X[4,0] + X[4,1] + X[4,2] …    │
+        │ …     ┆ …                             │
+        │ 95    ┆ X[95,0] + X[95,1] + X[95,2] … │
+        │ 96    ┆ X[96,0] + X[96,1] + X[96,2] … │
+        │ 97    ┆ X[97,0] + X[97,1] + X[97,2] … │
+        │ 98    ┆ X[98,0] + X[98,1] + X[98,2] … │
+        │ 99    ┆ X[99,0] + X[99,1] + X[99,2] … │
+        └───────┴───────────────────────────────┘
+        >>> pf.sum(m.X)
+        <Expression terms=10000 type=linear>
+        X[0,0] + X[0,1] + X[0,2] …
+        
+
     """
 
     maintain_order: bool = True
@@ -225,14 +249,14 @@ class Config(metaclass=_ConfigMeta):
         """Resets all configuration options to their default values.
 
         Examples:
-            >>> pf.Config.print_uses_variable_names
-            True
-            >>> pf.Config.print_uses_variable_names = False
-            >>> pf.Config.print_uses_variable_names
+            >>> pf.Config.disable_unmatched_checks
             False
-            >>> pf.Config.reset_defaults()
-            >>> pf.Config.print_uses_variable_names
+            >>> pf.Config.disable_unmatched_checks = True
+            >>> pf.Config.disable_unmatched_checks
             True
+            >>> pf.Config.reset_defaults()
+            >>> pf.Config.disable_unmatched_checks
+            False
         """
         for key, value in cls._defaults.items():
             setattr(cls, key, value)

@@ -54,9 +54,14 @@ Now, saw we wanted an expression representing the total yearly population change
 ...     + population_data[["year", "births"]] 
 ...     + population_data[["year", "deaths"]]
 ... )
-<Expression size=2 dimensions={'year': 2} terms=4>
-[2025]: immigration[2025] -200000
-[2026]: immigration[2026] -300000
+<Expression height=2 terms=4 type=linear>
+┌──────┬───────────────────────────┐
+│ year ┆ expression                │
+│ (2)  ┆                           │
+╞══════╪═══════════════════════════╡
+│ 2025 ┆ immigration[2025] -200000 │
+│ 2026 ┆ immigration[2026] -300000 │
+└──────┴───────────────────────────┘
 
 ```
 
@@ -92,8 +97,13 @@ How do we avoid these weird behaviors? Users can manually convert their DataFram
 ...     + population_data[["year", "deaths"]].to_expr()
 ...     + model.immigration 
 ... )
-<Expression size=2 dimensions={'year': 2} terms=4>
-[2025]: -200000  + immigration[2025]
-[2026]: -300000  + immigration[2026]
+<Expression height=2 terms=4 type=linear>
+┌──────┬─────────────────────────────┐
+│ year ┆ expression                  │
+│ (2)  ┆                             │
+╞══════╪═════════════════════════════╡
+│ 2025 ┆ -200000 + immigration[2025] │
+│ 2026 ┆ -300000 + immigration[2026] │
+└──────┴─────────────────────────────┘
 
 ```
