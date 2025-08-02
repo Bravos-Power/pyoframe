@@ -29,6 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
 
+#  TODO rename use_var_names to solver_uses_variable_names and change order of name and solver
 class Model:
     """The founding block of any Pyoframe optimization model onto which variables, constraints, and an objective can be added.
 
@@ -43,7 +44,7 @@ class Model:
         use_var_names:
             If `True`, the solver will use your custom variable names in its outputs (e.g. during [`Model.write()`][pyoframe.Model.write]).
             This can be useful for debugging `.lp`, `.sol`, and `.ilp` files, but may worsen performance.
-        use_var_names_print:
+        print_uses_variable_names:
             If `True`, pyoframe will use your custom variables names when printing elements of the model to the console.
             This is useful for debugging, but may slightly worsen performance.
         sense:
@@ -95,7 +96,7 @@ class Model:
         solver: SUPPORTED_SOLVER_TYPES | _Solver | None = None,
         solver_env: dict[str, str] | None = None,
         use_var_names: bool = False,
-        use_var_names_print: bool = True,
+        print_uses_variable_names: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
         self.poi, self.solver = Model._create_poi_model(solver, solver_env)
@@ -104,7 +105,9 @@ class Model:
         self._constraints: list[Constraint] = []
         self.sense: ObjSense | None = ObjSense(sense) if sense is not None else None
         self._objective: Objective | None = None
-        self._var_map = NamedVariableMapper(Variable) if use_var_names_print else None
+        self._var_map = (
+            NamedVariableMapper(Variable) if print_uses_variable_names else None
+        )
         self.name: str | None = name
 
         self._params = Container(self._set_param, self._get_param)
