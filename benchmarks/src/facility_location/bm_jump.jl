@@ -12,8 +12,8 @@ function solve_facility(solver, G, F)
     # We use it to make a fair comparison with the other models.
     model = direct_model(Gurobi.Optimizer())  
     
-    set_time_limit_sec(model, 0.0)
-    set_optimizer_attribute(model, "Presolve", 0)
+    # set_time_limit_sec(model, 0.0)
+    # set_optimizer_attribute(model, "Presolve", 0)
     
     @variables(model, begin
         0 <= y[1:F, 1:2] <= 1
@@ -45,4 +45,5 @@ function solve_facility(solver, G, F)
 end
 
 size = parse(Int, ARGS[2])
-solve_facility(ARGS[1], size, size)
+m = solve_facility(ARGS[1], size, size)
+println(objective_value(m))

@@ -1,7 +1,7 @@
 import importlib
 import os
 from snakemake.utils import available_cpu_count
-from pyoframe.constants import SUPPORTED_SOLVERS
+from pyoframe._constants import SUPPORTED_SOLVERS
 
 configfile: "config.yaml"
 

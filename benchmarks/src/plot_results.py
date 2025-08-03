@@ -60,15 +60,23 @@ def plot(results, output):
         left_plot = (
             alt.Chart(solver_results)
             .mark_line(point=True)
-            .encode(x="size", y="s", color="library")
-            .properties(title=f"Time to construct ({solver})")
+            .encode(
+                x=alt.X("size", scale=alt.Scale(type="log")),
+                y=alt.Y("s", scale=alt.Scale(type="log")),
+                color="library",
+            )
+            .properties(title=f"Time to construct (log-log, {solver})")
         )
 
         right_plot = (
             alt.Chart(solver_results)
             .mark_line(point=True)
-            .encode(x="size", y="memory", color="library")
-            .properties(title=f"Peak memory usage (MB, {solver})")
+            .encode(
+                x=alt.X("size", scale=alt.Scale(type="log")),
+                y=alt.Y("memory", scale=alt.Scale(type="log")),
+                color="library",
+            )
+            .properties(title=f"Peak memory usage (log-log, {solver})")
         )
 
         if combined_plot is None:

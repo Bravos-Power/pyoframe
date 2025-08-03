@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pyoframe._constants import SUPPORTED_SOLVERS
+
+if TYPE_CHECKING:
+    import cvxpy as cp
 
 
 class Benchmark(ABC):
@@ -23,9 +27,18 @@ class Benchmark(ABC):
     @abstractmethod
     def solve(self, model): ...
 
+    def get_objective(self) -> float:
+        assert not self.block_solver, (
+            "Cannot get objective value when block_solver is True."
+        )
+        return self._get_objective()
+
+    @abstractmethod
+    def _get_objective(self) -> float: ...
+
     def run(self):
-        model = self.build()
-        return self.solve(model)
+        self.model = self.build()
+        self.model = self.solve(self.model)
 
     def get_supported_solvers(self):
         return [s.name for s in SUPPORTED_SOLVERS]
@@ -40,7 +53,6 @@ class PyoframeBenchmark(Benchmark):
             # Improve performance since we're not debugging
             import pyoframe as pf
 
-            pf.Config.print_uses_variable_names = False
             pf.Config.maintain_order = False
             pf.Config.disable_unmatched_checks = True
 
@@ -50,6 +62,9 @@ class PyoframeBenchmark(Benchmark):
             model.attr.Silent = 0
         model.optimize()
         return model
+
+    def _get_objective(self) -> float:
+        return self.model.objective.value
 
 
 class PyomoBenchmark(Benchmark):
@@ -73,6 +88,11 @@ class PyomoBenchmark(Benchmark):
                 raise e
         return model
 
+    def _get_objective(self) -> float:
+        from pyomo.environ import value
+
+        return value(self.model.obj)
+
 
 class GurobiPyBenchmark(Benchmark):
     def solve(self, model):
@@ -85,6 +105,9 @@ class GurobiPyBenchmark(Benchmark):
 
     def get_supported_solvers(self):
         return ["gurobi"]
+
+    def _get_objective(self) -> float:
+        return self.model.getObjective().getValue()
 
 
 class PyOptInterfaceBenchmark(Benchmark):
@@ -116,6 +139,11 @@ class PyOptInterfaceBenchmark(Benchmark):
 
         return model_constructor()
 
+    def _get_objective(self) -> float:
+        import pyoptinterface as poi
+
+        return self.model.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
+
 
 class LinopyBenchmark(Benchmark):
     def solve(self, model):
@@ -128,6 +156,22 @@ class LinopyBenchmark(Benchmark):
 
         model.solve(self.solver, **kwargs)
         return model
+
+
+class CvxpyBenchmark(Benchmark):
+    def solve(self, model: cp.Problem):
+        kwargs = {}
+
+        if self.block_solver:
+            kwargs["OutputFlag"] = 0
+            kwargs["TimeLimit"] = 0.0
+            kwargs["Presolve"] = 0
+
+        model.solve(self.solver, **kwargs)
+        return model
+
+    def _get_objective(self) -> float:
+        return self.model.objective.value
 
 
 def mock_snakemake(rulename, **wildcards):

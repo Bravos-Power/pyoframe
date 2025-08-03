@@ -2,16 +2,18 @@ repeat: 1 # TODO repeat
 problems:
   facility_location:
     size:
-      - 25
-      - 50
-      - 75
-      - 100
-      - 150
-      - 200
+      - 2
+      - 8
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256
     max_sizes:
-      # jump: 150
-      pyomo: 75
-      gurobipy: 150
+      # jump: 
+      pyomo: 64
+      gurobipy: 128
+      cvxpy: 32
   # energy_problem:
 
 solvers:
@@ -22,14 +24,8 @@ solvers:
 libraries:
   - pyoframe
   - pyomo
-  # - cvxpy
+  - cvxpy
   - gurobipy
   - jump
   # - linopy
   - pyoptinterface
-
-profile:
-  - library: pyoframe
-    solver: gurobi
-    size: 150
-    problem: facility_location

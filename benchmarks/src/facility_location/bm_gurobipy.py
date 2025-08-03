@@ -17,13 +17,21 @@ class Bench(GurobiPyBenchmark):
             G = F = self.size
         else:
             G, F = self.size
-        m = Model("facility")
+
+        m = Model()
 
         # Create variables
-        y = m.addVars(range(1, F + 1), range(1, 3), lb=0.0, ub=1.0)
-        s = m.addVars(range(G + 1), range(G + 1), range(1, F + 1), lb=0.0)
+        y = m.addVars(range(1, F + 1), range(1, 3), ub=1.0, vtype=GRB.CONTINUOUS)
+        s = m.addVars(range(G + 1), range(G + 1), range(1, F + 1))
         z = m.addVars(range(G + 1), range(G + 1), range(1, F + 1), vtype=GRB.BINARY)
-        r = m.addVars(range(G + 1), range(G + 1), range(1, F + 1), range(1, 3))
+        r = m.addVars(
+            range(G + 1),
+            range(G + 1),
+            range(1, F + 1),
+            range(1, 3),
+            name="r",
+            lb=-GRB.INFINITY,
+        )
         d = m.addVar()
 
         # Set objective
@@ -38,9 +46,9 @@ class Bench(GurobiPyBenchmark):
         for i in range(G + 1):
             for j in range(G + 1):
                 for f in range(1, F + 1):
-                    m.addConstr(s[i, j, f] == d + M * (1 - z[i, j, f]))
-                    m.addConstr(r[i, j, f, 1] == (1.0 * i) / G - y[f, 1])
-                    m.addConstr(r[i, j, f, 2] == (1.0 * j) / G - y[f, 2])
+                    m.addConstr(s[i, j, f] - (M * (1 - z[i, j, f])) <= d)
+                    m.addConstr(r[i, j, f, 1] == -y[f, 1] + (1.0 * i) / G)
+                    m.addConstr(r[i, j, f, 2] == -y[f, 2] + (1.0 * j) / G)
                     m.addConstr(
                         r[i, j, f, 1] * r[i, j, f, 1] + r[i, j, f, 2] * r[i, j, f, 2]
                         <= s[i, j, f] * s[i, j, f]
@@ -50,4 +58,6 @@ class Bench(GurobiPyBenchmark):
 
 
 if __name__ == "__main__":
-    Bench("gurobi", 5).run()
+    bench = Bench("gurobi", 2, block_solver=False)
+    bench.run()
+    print(bench.get_objective())

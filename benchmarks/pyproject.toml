@@ -6,19 +6,23 @@ build-backend = "setuptools.build_meta"
 name = "pyoframe-benchmarks"
 version = "0.0.0"
 dependencies = [
+    # solvers
+    "pyomo==6.9.2",
+    "linopy==0.5.5",
+    "pyoptinterface==0.4.1",
+    "cvxpy[GUROBI,MOSEK]==1.7.1",
+    # tools
     "snakemake==9.6.0",
     "gdown==5.2.0",             # To download data from Google Drive
     "papermill==2.6.0",         #  To run notebooks
     "altair==5.5.0",            # For plotting in notebooks
-    "pyomo==6.9.2",
-    "linopy==0.5.5",
-    "pyoptinterface==0.4.1",
     "xarray==2025.7.1",
     "numpy==2.3.1",
     "vl-convert-python==1.8.0", # For saving plots in altair
-    "snakeviz==2.2.2",  # For viewing profiling results
-    "memray==1.17.2",  # For memory profiling
+    "snakeviz==2.2.2",          # For viewing profiling results
+    "memray==1.17.2",           # For memory profiling
     "numpy==2.3.1",
+    "pytest==8.4.1"
 ]
 
 [tool.setuptools]

@@ -13,6 +13,8 @@ class Bench(PyoframeBenchmark):
         else:
             G, F = self.size
 
+        G = G + 1  # Add one to match Julia
+
         grid = range(G)
         customer_position_x = pl.DataFrame(
             {"x": grid, "x_pos": [step / (G - 1) for step in grid]}
@@ -21,7 +23,11 @@ class Bench(PyoframeBenchmark):
             {"y": grid, "y_pos": [step / (G - 1) for step in grid]}
         )
 
-        model = Model(solver=self.solver, use_var_names=self.use_var_names)
+        model = Model(
+            solver=self.solver,
+            use_var_names=self.use_var_names,
+            print_uses_variable_names=False,
+        )
         model.facilities = Set(f=range(F))
         model.x_axis = Set(x=grid)
         model.y_axis = Set(y=grid)
@@ -60,4 +66,4 @@ class Bench(PyoframeBenchmark):
 
 
 if __name__ == "__main__":
-    Bench("gurobi", 100).run()
+    Bench("gurobi", 5).run()
