@@ -14,9 +14,7 @@ from pyoframe._constants import (
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
-    Config,
 )
-from pyoframe._utils import concat_dimensions
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe import Model
@@ -119,29 +117,19 @@ class ModelElement(ABC):
             return {}
         return {dim: self.data[dim].n_unique() for dim in dims}
 
+    def _add_shape_to_columns(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Adds the shape of the data to the columns of the DataFrame.
+
+        This is used for displaying the shape in the string representation of the object.
+        """
+        shape = self.shape
+        return df.rename(lambda col: f"{col}\n({shape[col]})" if col in shape else col)
+
     def __len__(self) -> int:
         dims = self.dimensions
         if dims is None:
             return 1
         return self.data.select(dims).n_unique()
-
-    def _append_ellipsis(self, input: str) -> str:
-        result = input
-        if Config.print_max_lines and Config.print_max_lines < len(self):
-            result += "\n" + " " * (len(self.name) if self.name else 0) + " ⋮"
-        return result
-
-    def _to_str_create_prefix(self, data):
-        if self.name is None and self.dimensions is None:
-            return data
-
-        return (
-            concat_dimensions(data, prefix=self.name, ignore_columns=["expr"])
-            .with_columns(
-                pl.concat_str("concated_dim", pl.lit(": "), "expr").alias("expr")
-            )
-            .drop("concated_dim")
-        )
 
 
 def _support_polars_method(method_name: str):
@@ -183,12 +171,17 @@ class SupportPolarsMethodMixin(ABC):
             ...     ]
             ... )
             >>> m.v.pick(hour="06:00")
-            <Expression size=3 dimensions={'city': 3} terms=3>
-            [Toronto]: v[06:00,Toronto]
-            [Berlin]: v[06:00,Berlin]
-            [Paris]: v[06:00,Paris]
+            <Expression height=3 terms=3 type=linear>
+            ┌─────────┬──────────────────┐
+            │ city    ┆ expression       │
+            │ (3)     ┆                  │
+            ╞═════════╪══════════════════╡
+            │ Toronto ┆ v[06:00,Toronto] │
+            │ Berlin  ┆ v[06:00,Berlin]  │
+            │ Paris   ┆ v[06:00,Paris]   │
+            └─────────┴──────────────────┘
             >>> m.v.pick(hour="06:00", city="Toronto")
-            <Expression size=1 dimensions={} terms=1>
+            <Expression terms=1 type=linear>
             v[06:00,Toronto]
         """
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
@@ -208,7 +201,7 @@ class ModelElementWithId(ModelElement):
     def _assert_has_ids(self):
         if not self._has_ids:
             raise ValueError(
-                f"Cannot use '{self.__class__.__name__}' before it has beed added to a model."
+                f"Cannot use '{self.__class__.__name__}' before it has been added to a model."
             )
 
     @classmethod

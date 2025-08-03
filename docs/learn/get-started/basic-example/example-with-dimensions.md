@@ -70,9 +70,14 @@ Printing the variable shows that it contains a `food` dimension with indices `to
 
 ```pycon
 >>> m.Buy
-<Variable name=Buy lb=0 size=2 dimensions={'food': 2}>
-[tofu_block]: Buy[tofu_block]
-[chickpea_can]: Buy[chickpea_can]
+<Variable 'Buy' lb=0 height=2>
+┌──────────────┬───────────────────┐
+│ food         ┆ variable          │
+│ (2)          ┆                   │
+╞══════════════╪═══════════════════╡
+│ tofu_block   ┆ Buy[tofu_block]   │
+│ chickpea_can ┆ Buy[chickpea_can] │
+└──────────────┴───────────────────┘
 
 ```
 
@@ -96,9 +101,14 @@ First, multiply the variable by the protein amount.
 
 ```pycon
 >>> data[["food", "cost"]] * m.Buy
-<Expression size=2 dimensions={'food': 2} terms=2>
-[tofu_block]: 4 Buy[tofu_block]
-[chickpea_can]: 3 Buy[chickpea_can]
+<Expression height=2 terms=2 type=linear>
+┌──────────────┬─────────────────────┐
+│ food         ┆ expression          │
+│ (2)          ┆                     │
+╞══════════════╪═════════════════════╡
+│ tofu_block   ┆ 4 Buy[tofu_block]   │
+│ chickpea_can ┆ 3 Buy[chickpea_can] │
+└──────────────┴─────────────────────┘
 
 ```
 
@@ -110,8 +120,8 @@ Second, notice that the `Expression` still has the `food` dimension—it really 
 
 ```pycon
 >>> pf.sum("food", data[["food", "cost"]] * m.Buy)
-<Expression size=1 dimensions={} terms=2>
-4 Buy[tofu_block] +3 Buy[chickpea_can]
+<Expression terms=2 type=linear>
+4 Buy[tofu_block] +3 Buy[chickpea_can]
 
 ```
 

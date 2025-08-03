@@ -29,6 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
 
+#  TODO rename use_var_names to solver_uses_variable_names and change order of name and solver
 class Model:
     """The founding block of any Pyoframe optimization model onto which variables, constraints, and an objective can be added.
 
@@ -37,13 +38,17 @@ class Model:
             The name of the model. Currently it is not used for much.
         solver:
             The solver to use. If `None`, Pyoframe will try to use whichever solver is installed
-            (unless [Config.default_solver][pyoframe.Config.default_solver] was changed from its default value of `auto`).
+            (unless [Config.default_solver][pyoframe._Config.default_solver] was changed from its default value of `auto`).
         solver_env:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
         use_var_names:
-            Whether to pass variable names to the solver. Set to `True` if you'd like outputs from e.g. `Model.write()` to be legible.
+            If `True`, the solver will use your custom variable names in its outputs (e.g. during [`Model.write()`][pyoframe.Model.write]).
+            This can be useful for debugging `.lp`, `.sol`, and `.ilp` files, but may worsen performance.
+        print_uses_variable_names:
+            If `True`, pyoframe will use your custom variables names when printing elements of the model to the console.
+            This is useful for debugging, but may slightly worsen performance.
         sense:
-            Either "min" or "max". Indicates whether it's a minmization or maximization problem.
+            Either "min" or "max". Indicates whether it's a minimization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
             set when the objective is set using `.minimize` or `.maximize`.
 
@@ -91,6 +96,7 @@ class Model:
         solver: SUPPORTED_SOLVER_TYPES | _Solver | None = None,
         solver_env: dict[str, str] | None = None,
         use_var_names: bool = False,
+        print_uses_variable_names: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
         self.poi, self.solver = Model._create_poi_model(solver, solver_env)
@@ -100,7 +106,7 @@ class Model:
         self.sense: ObjSense | None = ObjSense(sense) if sense is not None else None
         self._objective: Objective | None = None
         self._var_map = (
-            NamedVariableMapper(Variable) if Config.print_uses_variable_names else None
+            NamedVariableMapper(Variable) if print_uses_variable_names else None
         )
         self.name: str | None = name
 
@@ -360,7 +366,7 @@ class Model:
     def __repr__(self) -> str:
         return get_obj_repr(
             self,
-            name=self.name,
+            self.name,
             vars=len(self.variables),
             constrs=len(self.constraints),
             has_objective=bool(self.objective),

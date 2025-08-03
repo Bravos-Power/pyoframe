@@ -89,6 +89,7 @@ include = ["src/pyoframe/*"]
 [tool.pytest.ini_options]
 pythonpath = "src"
 addopts = "--doctest-modules --ignore=scripts"
+# doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"

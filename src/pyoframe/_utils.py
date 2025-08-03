@@ -10,17 +10,25 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 import polars as pl
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe._constants import (
+    COEF_KEY,
+    CONST_TERM,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+    Config,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
 
 
-def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
-    """Generates __repr__() strings for classes. See usage for examples."""
-    props = {prop: getattr(obj, prop) for prop in _props}
-    props_str = " ".join(f"{k}={v}" for k, v in props.items() if v is not None)
+def get_obj_repr(obj: object, *props: str | None, **kwargs):
+    """Generates __repr__() strings for classes.
+
+    See usage for examples.
+    """
+    props_str = " ".join(f"'{v}'" for v in props if v is not None)
     if props_str:
         props_str += " "
     kwargs_str = " ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
@@ -82,9 +90,9 @@ def concat_dimensions(
         prefix:
             The prefix to be added to the concated dimension.
         keep_dims:
-            If True, the original dimensions are kept in the new DataFrame.
+            If `True`, the original dimensions are kept in the new DataFrame.
         replace_spaces : bool, optional
-            If True, replaces spaces with underscores.
+            If `True`, replaces spaces with underscores.
 
     Examples:
         >>> import polars as pl
@@ -173,7 +181,10 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
+    df: pl.DataFrame,
+    column_name: str = COEF_KEY,
+    drop_ones: bool = True,
+    always_show_sign: bool = True,
 ) -> pl.DataFrame:
     """Converts column `column_name` of the DataFrame `df` to a string. Round to `Config.print_float_precision` decimal places if not None.
 
@@ -183,7 +194,9 @@ def cast_coef_to_string(
         column_name:
             The name of the column to be casted.
         drop_ones:
-            If True, 1s are replaced with an empty string for non-constant terms.
+            If `True`, 1s are replaced with an empty string for non-constant terms.
+        always_show_sign:
+            If `True`, the sign of the coefficient is always shown, i.e. 1 becomes `+1` not just `1`.
 
     Examples:
         >>> import polars as pl
@@ -201,22 +214,26 @@ def cast_coef_to_string(
         │ +4  ┆ 4             │
         └─────┴───────────────┘
     """
-    df = df.with_columns(
-        pl.col(column_name).abs(),
-        _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
-    )
-
     if Config.float_to_str_precision is not None:
         df = df.with_columns(pl.col(column_name).round(Config.float_to_str_precision))
 
+    if always_show_sign:
+        df = df.with_columns(
+            pl.col(column_name).abs(),
+            _sign=pl.when(pl.col(column_name) < 0)
+            .then(pl.lit("-"))
+            .otherwise(pl.lit("+")),
+        )
+
     df = df.with_columns(
-        pl.when(pl.col(column_name) == pl.col(column_name).floor())
+        pl.when(pl.col(column_name) == pl.col(column_name).round())
         .then(pl.col(column_name).cast(pl.Int64).cast(pl.String))
         .otherwise(pl.col(column_name).cast(pl.String))
         .alias(column_name)
     )
 
     if drop_ones:
+        assert always_show_sign, "drop_ones requires always_show_sign=True"
         condition = pl.col(column_name) == str(1)
         if VAR_KEY in df.columns:
             condition = condition & (pl.col(VAR_KEY) != CONST_TERM)
@@ -226,11 +243,12 @@ def cast_coef_to_string(
             .otherwise(pl.col(column_name))
             .alias(column_name)
         )
-    else:
-        df = df.with_columns(pl.col(column_name).cast(pl.Utf8))
-    return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
-        "_sign"
-    )
+
+    if always_show_sign:
+        df = df.with_columns(
+            pl.concat_str("_sign", column_name).alias(column_name)
+        ).drop("_sign")
+    return df
 
 
 def unwrap_single_values(func):
@@ -244,38 +262,6 @@ def unwrap_single_values(func):
         return result
 
     return wrapper
-
-
-def dataframe_to_tupled_list(
-    df: pl.DataFrame, num_max_elements: int | None = None
-) -> str:
-    """Converts a DataFrame into a list of tuples. Used to print a Set to the console. See examples for behaviour.
-
-    Examples:
-        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5]})
-        >>> dataframe_to_tupled_list(df)
-        '[1, 2, 3, 4, 5]'
-        >>> dataframe_to_tupled_list(df, 3)
-        '[1, 2, 3, …]'
-
-        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 3, 4, 5, 6]})
-        >>> dataframe_to_tupled_list(df, 3)
-        '[(1, 2), (2, 3), (3, 4), …]'
-    """
-    elipse = False
-    if num_max_elements is not None:
-        if len(df) > num_max_elements:
-            elipse = True
-            df = df.head(num_max_elements)
-
-    res = (row for row in df.iter_rows())
-    if len(df.columns) == 1:
-        res = (row[0] for row in res)
-
-    res = str(list(res))
-    if elipse:
-        res = res[:-1] + ", …]"
-    return res
 
 
 @dataclass
@@ -323,8 +309,8 @@ class NamedVariableMapper:
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)
-        <Expression size=1 dimensions={} terms=4>
-        foo[0] + foo[1] + foo[2] + foo[3]
+        <Expression terms=4 type=linear>
+        foo[0] + foo[1] + foo[2] + foo[3]
     """
 
     CONST_TERM_NAME = "_ONE"
