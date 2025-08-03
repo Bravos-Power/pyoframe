@@ -1,8 +1,9 @@
+"""Contains the base clases used for benchmarking."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Tuple
 
 from pyoframe._constants import SUPPORTED_SOLVERS
 
@@ -13,7 +14,7 @@ class Benchmark(ABC):
             f"{solver} is not supported by {self.__class__.__name__}."
         )
         self.solver = solver
-        self.size: int | Tuple[int, int] | None = size
+        self.size: int | tuple[int, int] | None = size
         self.block_solver = block_solver
 
     @abstractmethod
@@ -130,7 +131,8 @@ class LinopyBenchmark(Benchmark):
 
 
 def mock_snakemake(rulename, **wildcards):
-    """
+    """Returns a snakemake object to substitute the one available when running from snakemake.
+
     `mock_snakemake` is inspired from PyPSA-Eur (MIT license, see https://github.com/PyPSA/pypsa-eur/blob/master/scripts/_helpers.py#L476)
 
     This function is expected to be executed from the 'scripts'-directory of '

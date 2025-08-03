@@ -1,5 +1,6 @@
-"""
-Simplifies the network topology by
+"""Simplifies the network topology using various tricks.
+
+Tricks are:
     - combining lines in parallel,
     - removing lines that lead nowhere,
     - and removing intermediary buses with no loads or generators.
@@ -23,7 +24,7 @@ def get_buses_degree(lines: pl.DataFrame, degree: int, exclude: pl.Series) -> pl
         pl.concat([lines["from_bus"], lines["to_bus"]])
         .value_counts(name="degree")
         .filter(pl.col("degree") == degree)
-        .filter((~f_bus.is_in(exclude.implode())))
+        .filter(~f_bus.is_in(exclude.implode()))
         .get_column("from_bus")
     )
 
@@ -66,13 +67,13 @@ def swap_direction(
 
 
 def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
-    """
-    Combine lines in series (e.g., a line going from bus 1 to bus 2 with a line going from bus 2 to bus 3).
+    """Combine lines in series (e.g., a line going from bus 1 to bus 2 with a line going from bus 2 to bus 3).
 
     This is done by doing two types of combinations:
     1. Combining line series of length 2 (e.g. A-B-C becomes A-C).
     2. Combining the first two lines in a series of length 3 or more (in series of length 3, A-B-C-D becomes A-C-D; in series of length 4 or more A-B-C-D-...-X-Y-Z becomes A-C-D-...-X-Z).
-    Note that this second type of operation doesn't fully combine the series, but if this function is called repeatedly, eventually all series will be combined."""
+    Note that this second type of operation doesn't fully combine the series, but if this function is called repeatedly, eventually all series will be combined.
+    """
     bus_to_remove = get_buses_degree(lines, degree=2, exclude=buses_to_keep).implode()
 
     l_edge = lines.filter(f_bus.is_in(bus_to_remove) ^ t_bus.is_in(bus_to_remove))

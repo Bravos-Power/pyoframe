@@ -1,8 +1,11 @@
-# Copyright (c) 2023: Yue Yang
-# https://github.com/metab0t/PyOptInterface_benchmark
-#
-# Use of this source code is governed by an MIT-style license that can be found
-# in the LICENSE.md file or at https://opensource.org/licenses/MIT.
+"""PyOptInterface implementation of the facility location benchmark.
+
+Copyright (c) 2023: Yue Yang
+https://github.com/metab0t/PyOptInterface_benchmark
+
+Use of this source code is governed by an MIT-style license that can be found
+in the LICENSE.md file or at https://opensource.org/licenses/MIT.
+"""
 
 import numpy as np
 import pyoptinterface as poi

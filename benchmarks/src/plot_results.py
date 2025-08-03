@@ -1,3 +1,5 @@
+"""Produces plots from benchmark results."""
+
 from pathlib import Path
 
 import altair as alt

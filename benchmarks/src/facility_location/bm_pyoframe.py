@@ -1,4 +1,5 @@
-# pyright: reportAttributeAccessIssue=false
+"""Pyoframe implementation of the facility location benchmark."""
+
 import polars as pl
 
 from benchmarks.utils import PyoframeBenchmark

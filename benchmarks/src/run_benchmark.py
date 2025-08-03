@@ -1,9 +1,11 @@
+"""Utility to run benchmarks from the command line."""
+
 import argparse
 import importlib
 import os
 import subprocess
+from collections.abc import Collection
 from pathlib import Path
-from typing import Collection
 
 from pyoframe._constants import SUPPORTED_SOLVERS
 
