@@ -40,7 +40,7 @@ dev = [
     "coverage",
     "ipykernel",
     "pyoptinterface[nlp]",
-    "numpy==2.3.1",  # for testing with np.nan
+    "numpy",  # for testing with np.nan, don't pin so that two versions of Python are possible
 ]
 # We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
 docs = [
