@@ -1,7 +1,7 @@
 import pytest
 
 import pyoframe as pf
-from pyoframe.constants import SUPPORTED_SOLVERS
+from pyoframe._constants import SUPPORTED_SOLVERS
 
 _available_solvers = []
 for s in SUPPORTED_SOLVERS:

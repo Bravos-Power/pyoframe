@@ -7,7 +7,7 @@ import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
-from pyoframe.constants import (
+from pyoframe._constants import (
     CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
     SUPPORTED_SOLVERS,
@@ -18,10 +18,10 @@ from pyoframe.constants import (
     Solver,
     VType,
 )
-from pyoframe.core import Constraint, Variable
-from pyoframe.model_element import ModelElement, ModelElementWithId
-from pyoframe.objective import Objective
-from pyoframe.util import Container, NamedVariableMapper, for_solvers, get_obj_repr
+from pyoframe._core import Constraint, Variable
+from pyoframe._model_element import ModelElement, ModelElementWithId
+from pyoframe._objective import Objective
+from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
 
 
 class Model:

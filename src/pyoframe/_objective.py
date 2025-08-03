@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pyoptinterface as poi
 
-from pyoframe.constants import ObjSense
-from pyoframe.core import Expression, SupportsToExpr
+from pyoframe._constants import ObjSense
+from pyoframe._core import Expression, SupportsToExpr
 
 
 class Objective(Expression):

@@ -19,11 +19,11 @@ from typing import (
 import pandas as pd
 import polars as pl
 
-from pyoframe.constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.model import Variable
-    from pyoframe.model_element import ModelElementWithId
+    from pyoframe._model import Variable
+    from pyoframe._model_element import ModelElementWithId
 
 
 def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Literal, Tuple, Union, overload
 import polars as pl
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.core import Expression
+    from pyoframe._core import Expression
 
 
 @overload

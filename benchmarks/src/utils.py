@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple
 
-from pyoframe.constants import SUPPORTED_SOLVERS
+from pyoframe._constants import SUPPORTED_SOLVERS
 
 
 class Benchmark(ABC):

@@ -26,7 +26,7 @@ from pyoframe._arithmetic import (
     _multiply_expressions,
     _simplify_expr_df,
 )
-from pyoframe.constants import (
+from pyoframe._constants import (
     COEF_KEY,
     CONST_TERM,
     CONSTRAINT_KEY,
@@ -44,12 +44,12 @@ from pyoframe.constants import (
     VType,
     VTypeValue,
 )
-from pyoframe.model_element import (
+from pyoframe._model_element import (
     ModelElement,
     ModelElementWithId,
     SupportPolarsMethodMixin,
 )
-from pyoframe.util import (
+from pyoframe._utils import (
     Container,
     FuncArgs,
     cast_coef_to_string,
@@ -61,7 +61,7 @@ from pyoframe.util import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.model import Model
+    from pyoframe._model import Model
 
 
 def _forward_to_expression(func_name: str):

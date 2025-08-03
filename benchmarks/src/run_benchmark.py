@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import Collection
 
-from pyoframe.constants import SUPPORTED_SOLVERS
+from pyoframe._constants import SUPPORTED_SOLVERS
 
 
 def get_problems() -> Collection[str]:

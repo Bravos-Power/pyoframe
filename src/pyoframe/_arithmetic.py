@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 import polars as pl
 
-from pyoframe.constants import (
+from pyoframe._constants import (
     COEF_KEY,
     CONST_TERM,
     KEY_TYPE,
@@ -19,7 +19,7 @@ from pyoframe.constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe.core import Expression
+    from pyoframe._core import Expression
 
 
 def _multiply_expressions(self: "Expression", other: "Expression") -> "Expression":
