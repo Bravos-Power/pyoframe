@@ -15,7 +15,7 @@ dynamic = ["version"]
 license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+    "Operating System :: OS  Independent",
     "Development Status :: 3 - Alpha",
     "Natural Language :: English",
 ]
@@ -58,8 +58,30 @@ docs = [
 highs = ["highsbox"]
 ipopt = ["pyoptinterface[nlp]"]
 
-[tool.ruff]
-lint.select = ["E4", "E7", "E9", "F", "I", "W292", "W291"]
+[tool.ruff.lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "W292",
+    "W291",
+    "D",
+    "UP",   # Ensures consistency with Union vs | for type hinting (and similar)
+    "TC",   # Forces type imports into a TYPE_CHECKING block
+]
+ignore = [
+    "D105", # magic method docstring
+    "D107", # __init__ docstring
+]
+
+[tool.ruff.lint.per-file-ignores]
+"{docs,tests}/**" = ["D101", "D102", "D103", "D104"]
+"conftest.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.format]
 docstring-code-format = true
@@ -70,6 +92,7 @@ include = ["src/pyoframe/*"]
 [tool.pytest.ini_options]
 pythonpath = "src"                             # https://stackoverflow.com/a/50156706/5864903
 addopts = "--doctest-modules --ignore=scripts"
+# doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"

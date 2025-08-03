@@ -1,8 +1,4 @@
-"""
-Diet module example
-"""
-
-# pyright: reportAttributeAccessIssue=false
+"""Example Pyoframe formulation of the classic diet problem."""
 
 import os
 from pathlib import Path
@@ -22,7 +18,7 @@ def solve_model(use_var_names):
     food_nutrients = pl.read_csv(_input_dir / "foods_to_nutrients.csv").to_expr()
 
     m = Model(use_var_names=use_var_names)
-    m.Buy = Variable(food[["food"]], lb=0, ub=food[["food", "stock"]])
+    m.Buy = Variable(food["food"], lb=0, ub=food[["food", "stock"]])
 
     m.min_nutrients = (
         min_nutrient <= sum("food", m.Buy * food_nutrients).drop_unmatched()

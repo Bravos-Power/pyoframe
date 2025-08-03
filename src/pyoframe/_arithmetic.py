@@ -1,8 +1,8 @@
-"""
-Defines helper functions for doing arithmetic operations on expressions (e.g. addition).
-"""
+"""Defines helper functions for doing arithmetic operations on expressions (e.g. addition)."""
 
-from typing import TYPE_CHECKING, List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import polars as pl
 
@@ -22,9 +22,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._core import Expression
 
 
-def _multiply_expressions(self: "Expression", other: "Expression") -> "Expression":
-    """
-    Multiply two or more expressions together.
+def _multiply_expressions(self: Expression, other: Expression) -> Expression:
+    """Multiplies two or more expressions together.
 
     Examples:
         >>> import pyoframe as pf
@@ -34,13 +33,13 @@ def _multiply_expressions(self: "Expression", other: "Expression") -> "Expressio
         >>> m.x3 = pf.Variable()
         >>> result = 5 * m.x1 * m.x2
         >>> result
-        <Expression size=1 dimensions={} terms=1 degree=2>
-        5 x2 * x1
+        <Expression terms=1 type=quadratic>
+        5 x2 * x1
         >>> result * m.x3
         Traceback (most recent call last):
         ...
-        pyoframe.constants.PyoframeError: Failed to multiply expressions:
-        <Expression size=1 dimensions={} terms=1 degree=2> * <Expression size=1 dimensions={} terms=1>
+        pyoframe._constants.PyoframeError: Failed to multiply expressions:
+        <Expression terms=1 type=quadratic> * <Expression terms=1 type=linear>
         Due to error:
         Cannot multiply a quadratic expression by a non-constant.
     """
@@ -49,29 +48,25 @@ def _multiply_expressions(self: "Expression", other: "Expression") -> "Expressio
     except PyoframeError as error:
         raise PyoframeError(
             "Failed to multiply expressions:\n"
-            + " * ".join(
-                e.to_str(include_header=True, include_data=False) for e in [self, other]
-            )
+            + " * ".join(e._str_header() for e in [self, other])
             + "\nDue to error:\n"
             + str(error)
         ) from error
 
 
-def _add_expressions(*expressions: "Expression") -> "Expression":
+def _add_expressions(*expressions: Expression) -> Expression:
     try:
         return _add_expressions_core(*expressions)
     except PyoframeError as error:
         raise PyoframeError(
             "Failed to add expressions:\n"
-            + " + ".join(
-                e.to_str(include_header=True, include_data=False) for e in expressions
-            )
+            + " + ".join(e._str_header() for e in expressions)
             + "\nDue to error:\n"
             + str(error)
         ) from error
 
 
-def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expression":
+def _multiply_expressions_core(self: Expression, other: Expression) -> Expression:
     self_degree, other_degree = self.degree(), other.degree()
     if self_degree + other_degree > 2:
         # We know one of the two must be a quadratic since 1 + 1 is not greater than 2.
@@ -101,6 +96,9 @@ def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expr
             multiplier,
             on=dims_in_common if len(dims_in_common) > 0 else None,
             how="inner" if dims_in_common else "cross",
+            maintain_order=(
+                "left" if Config.maintain_order and dims_in_common else None
+            ),
         )
         .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
         .drop(COEF_KEY + "_right")
@@ -109,9 +107,8 @@ def _multiply_expressions_core(self: "Expression", other: "Expression") -> "Expr
     return self._new(data)
 
 
-def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expression":
-    """
-    Multiply two expressions of degree 1.
+def _quadratic_multiplication(self: Expression, other: Expression) -> Expression:
+    """Multiplies two expressions of degree 1.
 
     Examples:
         >>> import polars as pl
@@ -122,15 +119,26 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
         >>> expr1 = df * m.x1
         >>> expr2 = df * m.x2 * 2 + 4
         >>> expr1 * expr2
-        <Expression size=3 dimensions={'dim': 3} terms=6 degree=2>
-        [1]: 4 x1 +2 x2 * x1
-        [2]: 8 x1 +8 x2 * x1
-        [3]: 12 x1 +18 x2 * x1
+        <Expression height=3 terms=6 type=quadratic>
+        ┌─────┬───────────────────┐
+        │ dim ┆ expression        │
+        │ (3) ┆                   │
+        ╞═════╪═══════════════════╡
+        │ 1   ┆ 4 x1 +2 x2 * x1   │
+        │ 2   ┆ 8 x1 +8 x2 * x1   │
+        │ 3   ┆ 12 x1 +18 x2 * x1 │
+        └─────┴───────────────────┘
         >>> (expr1 * expr2) - df * m.x1 * df * m.x2 * 2
-        <Expression size=3 dimensions={'dim': 3} terms=3>
-        [1]: 4 x1
-        [2]: 8 x1
-        [3]: 12 x1
+        <Expression height=3 terms=3 type=linear>
+        ┌─────┬────────────┐
+        │ dim ┆ expression │
+        │ (3) ┆            │
+        ╞═════╪════════════╡
+        │ 1   ┆ 4 x1       │
+        │ 2   ┆ 8 x1       │
+        │ 3   ┆ 12 x1      │
+        └─────┴────────────┘
+
     """
     dims = self.dimensions_unsafe
     other_dims = other.dimensions_unsafe
@@ -141,6 +149,9 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
             other.data,
             on=dims_in_common if len(dims_in_common) > 0 else None,
             how="inner" if dims_in_common else "cross",
+            maintain_order=(
+                "left" if Config.maintain_order and dims_in_common else None
+            ),
         )
         .with_columns(pl.col(COEF_KEY) * pl.col(COEF_KEY + "_right"))
         .drop(COEF_KEY + "_right")
@@ -163,7 +174,7 @@ def _quadratic_multiplication(self: "Expression", other: "Expression") -> "Expre
     return self._new(data)
 
 
-def _add_expressions_core(*expressions: "Expression") -> "Expression":
+def _add_expressions_core(*expressions: Expression) -> Expression:
     # Mapping of how a sum of two expressions should propogate the unmatched strategy
     propogatation_strategies = {
         (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP): UnmatchedStrategy.DROP,
@@ -244,8 +255,16 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
         propogate_strat = propogatation_strategies[strat]  # type: ignore
 
         if strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP):
-            left_data = left.data.join(get_indices(right), how="inner", on=dims)
-            right_data = right.data.join(get_indices(left), how="inner", on=dims)
+            left_data = left.data.join(
+                get_indices(right),
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
+            right_data = right.data.join(
+                get_indices(left),
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
         elif strat == (UnmatchedStrategy.UNSET, UnmatchedStrategy.UNSET):
             assert not Config.disable_unmatched_checks, (
                 "This code should not be reached when unmatched checks are disabled."
@@ -254,15 +273,16 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
                 get_indices(right),
                 how="full",
                 on=dims,
+                maintain_order="left_right" if Config.maintain_order else None,
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(outer_join.filter(outer_join.get_column(dims[0]).is_null()))
                 )
             if outer_join.get_column(dims[0] + "_right").null_count() > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(
                         outer_join.filter(
                             outer_join.get_column(dims[0] + "_right").is_null()
@@ -270,12 +290,22 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
                     )
                 )
         elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
-            left_data = get_indices(right).join(left.data, how="left", on=dims)
+            left_data = get_indices(right).join(
+                left.data,
+                how="left",
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
         elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.UNSET):
-            left_data = get_indices(right).join(left.data, how="left", on=dims)
+            left_data = get_indices(right).join(
+                left.data,
+                how="left",
+                on=dims,
+                maintain_order="left" if Config.maintain_order else None,
+            )
             if left_data.get_column(COEF_KEY).null_count() > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(left_data.filter(left_data.get_column(COEF_KEY).is_null()))
                 )
         elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET):
@@ -285,7 +315,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
             unmatched = right.data.join(get_indices(left), how="anti", on=dims)
             if len(unmatched) > 0:
                 raise PyoframeError(
-                    "Dataframe has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
+                    "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()\n"
                     + str(unmatched)
                 )
         else:  # pragma: no cover
@@ -321,7 +351,7 @@ def _add_expressions_core(*expressions: "Expression") -> "Expression":
     return new_expr
 
 
-def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
+def _add_dimension(self: Expression, target: Expression) -> Expression:
     target_dims = target.dimensions
     if target_dims is None:
         return self
@@ -340,7 +370,7 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
     if not set(missing_dims) <= set(self.allowed_new_dims):
         # TODO actually suggest using e.g. .add_dim("a", "b") instead of just "use .add_dim()"
         raise PyoframeError(
-            f"Dataframe has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
+            f"DataFrame has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
         )
 
     target_data = target.data.select(target_dims).unique(
@@ -352,9 +382,20 @@ def _add_dimension(self: "Expression", target: "Expression") -> "Expression":
 
     # If drop, we just do an inner join to get into the shape of the other
     if self.unmatched_strategy == UnmatchedStrategy.DROP:
-        return self._new(self.data.join(target_data, on=dims_in_common, how="inner"))
+        return self._new(
+            self.data.join(
+                target_data,
+                on=dims_in_common,
+                maintain_order="left" if Config.maintain_order else None,
+            )
+        )
 
-    result = self.data.join(target_data, on=dims_in_common, how="left")
+    result = self.data.join(
+        target_data,
+        on=dims_in_common,
+        how="left",
+        maintain_order="left" if Config.maintain_order else None,
+    )
     right_has_missing = result.get_column(missing_dims[0]).null_count() > 0
     if right_has_missing:
         raise PyoframeError(
@@ -372,14 +413,12 @@ def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
-    """
-    Removes the quadratic column and terms with a zero coefficient, when applicable.
+    """Removes the quadratic column and terms with a zero coefficient, when applicable.
 
     Specifically, zero coefficient terms are always removed, except if they're the only terms in which case the expression contains a single term.
     The quadratic column is removed if the expression is not a quadratic.
 
     Examples:
-
         >>> import polars as pl
         >>> df = pl.DataFrame(
         ...     {
@@ -430,7 +469,12 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
         if dims:
             dim_values = df.select(dims).unique(maintain_order=Config.maintain_order)
             df = (
-                dim_values.join(df_filtered, on=dims, how="left")
+                dim_values.join(
+                    df_filtered,
+                    on=dims,
+                    how="left",
+                    maintain_order="left" if Config.maintain_order else None,
+                )
                 .with_columns(pl.col(COEF_KEY).fill_null(0))
                 .fill_null(CONST_TERM)
             )
@@ -448,10 +492,11 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
     return df
 
 
-def _get_dimensions(df: pl.DataFrame) -> Optional[List[str]]:
-    """
-    Returns the dimensions of the DataFrame. Reserved columns do not count as dimensions.
-    If there are no dimensions, returns None to force caller to handle this special case.
+def _get_dimensions(df: pl.DataFrame) -> list[str] | None:
+    """Returns the dimensions of the DataFrame.
+
+    Reserved columns do not count as dimensions. If there are no dimensions,
+    returns `None` to force caller to handle this special case.
 
     Examples:
         >>> import polars as pl

@@ -1,9 +1,12 @@
+"""Tests related to converting Pyoframe objects to strings or writing them to files."""
+
 import os
 from tempfile import TemporaryDirectory
 
 import gurobipy as gp
 import polars as pl
 import pytest
+from polars.testing import assert_frame_equal
 
 from pyoframe import Model, Variable, sum
 
@@ -15,7 +18,7 @@ def test_variables_to_string(solver):
     m.x3 = Variable()
     m.x4 = Variable()
     expression = 5 * m.x1 + 3.4 * m.x2 - 2.1 * m.x3 + 1.1231237019273 * m.x4
-    assert str(expression) == "5 x1 +3.4 x2 -2.1 x3 +1.12312 x4"
+    assert expression.to_str() == "5 x1 +3.4 x2 -2.1 x3 +1.12312 x4"
 
 
 def test_variables_to_string_with_dimensions(solver):
@@ -34,13 +37,18 @@ def test_variables_to_string_with_dimensions(solver):
     expression_with_dimensions = (
         5 * m.v1 + 3.4 * m.v2 - 2.1 * m.v3 + 1.1231237019273 * m.v4
     )
-    result = expression_with_dimensions.to_str(include_header=False)
-    assert (
-        result
-        == """[1,1]: 5 v1[1,1] +3.4 v2[1,1] -2.1 v3[1,1] +1.12312 v4[1,1]
-[2,1]: 5 v1[2,1] +3.4 v2[2,1] -2.1 v3[2,1] +1.12312 v4[2,1]
-[1,2]: 5 v1[1,2] +3.4 v2[1,2] -2.1 v3[1,2] +1.12312 v4[1,2]
-[2,2]: 5 v1[2,2] +3.4 v2[2,2] -2.1 v3[2,2] +1.12312 v4[2,2]"""
+    assert_frame_equal(
+        expression_with_dimensions.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                [1, 1, "5 v1[1,1] +3.4 v2[1,1] -2.1 v3[1,1] +1.12312 v4[1,1]"],
+                [2, 1, "5 v1[2,1] +3.4 v2[2,1] -2.1 v3[2,1] +1.12312 v4[2,1]"],
+                [1, 2, "5 v1[1,2] +3.4 v2[1,2] -2.1 v3[1,2] +1.12312 v4[1,2]"],
+                [2, 2, "5 v1[2,2] +3.4 v2[2,2] -2.1 v3[2,2] +1.12312 v4[2,2]"],
+            ],
+            schema=["x", "y", "expression"],
+            orient="row",
+        ),
     )
 
 
@@ -48,7 +56,7 @@ def test_expression_with_const_to_str(solver):
     m = Model(solver=solver)
     m.x1 = Variable()
     expr = 5 + 2 * m.x1
-    assert str(expr) == "2 x1 +5"
+    assert str(expr) == "2 x1 +5"
 
 
 def test_constraint_to_str(solver):
@@ -58,20 +66,25 @@ def test_constraint_to_str(solver):
     m.x1 = Variable()
     m.constraint = m.x1**2 <= 5
     assert (
-        str(m.constraint)
-        == """<Constraint name=constraint sense='<=' size=1 dimensions={} terms=2>
-x1 * x1 <= 5"""
+        repr(m.constraint)
+        == """<Constraint 'constraint' terms=2 type=quadratic>
+x1 * x1 <= 5"""
     )
 
     # Now with dimensions
     m.x2 = Variable({"x": [1, 2, 3]})
     m.constraint_2 = m.x2 * m.x1 <= 5
-    assert (
-        str(m.constraint_2)
-        == """<Constraint name=constraint_2 sense='<=' size=3 dimensions={'x': 3} terms=6>
-[1]: x2[1] * x1 <= 5
-[2]: x2[2] * x1 <= 5
-[3]: x2[3] * x1 <= 5"""
+    assert_frame_equal(
+        m.constraint_2.to_str(return_df=True),
+        pl.DataFrame(
+            [
+                [1, "x2[1] * x1 <= 5"],
+                [2, "x2[2] * x1 <= 5"],
+                [3, "x2[3] * x1 <= 5"],
+            ],
+            schema=["x", "constraint"],
+            orient="row",
+        ),
     )
 
 

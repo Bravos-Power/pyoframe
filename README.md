@@ -8,7 +8,7 @@
 [![Open Bugs](https://img.shields.io/github/issues-search/Bravos-Power/pyoframe?query=label%3Abug%20is%3Aopen&label=Open%20Bugs)](https://github.com/Bravos-Power/pyoframe/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
 
 
-A library to rapidly and memory-efficiently formulate large and sparse optimization models using Pandas or Polars dataframes.
+A library to rapidly and memory-efficiently formulate large and sparse optimization models using Pandas or Polars DataFrames.
 
 ## **[Documentation](https://bravos-power.github.io/pyoframe/)**
 

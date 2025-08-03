@@ -1,3 +1,5 @@
+"""Defines the `Objective` class for optimization models."""
+
 from __future__ import annotations
 
 import pyoptinterface as poi
@@ -7,7 +9,8 @@ from pyoframe._core import Expression, SupportsToExpr
 
 
 class Objective(Expression):
-    """
+    """The objective for an optimization model.
+
     Examples:
         An `Objective` is automatically created when an `Expression` is assigned to `.minimize` or `.maximize`
 
@@ -16,8 +19,8 @@ class Objective(Expression):
         >>> m.con = m.A + m.B <= 10
         >>> m.maximize = 2 * m.B + 4
         >>> m.maximize
-        <Objective size=1 dimensions={} terms=2>
-        objective: 2 B +4
+        <Objective terms=2 type=linear>
+        2 B +4
 
         The objective value can be retrieved with from the solver once the model is solved using `.value`.
 
@@ -75,8 +78,8 @@ class Objective(Expression):
 
     @property
     def value(self) -> float:
-        """
-        The value of the objective function (only available after solving the model).
+        """The value of the objective function (only available after solving the model).
+
         This value is obtained by directly querying the solver.
         """
         assert self._model is not None, (
@@ -93,8 +96,8 @@ class Objective(Expression):
             obj_value *= -1
         return obj_value
 
-    def on_add_to_model(self, model, name):
-        super().on_add_to_model(model, name)
+    def _on_add_to_model(self, model, name):
+        super()._on_add_to_model(model, name)
         assert self._model is not None
         if self._model.sense is None:
             raise ValueError(
@@ -106,11 +109,11 @@ class Objective(Expression):
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX
         ):
-            poi_expr = (-self).to_poi()
+            poi_expr = (-self)._to_poi()
             kwargs["sense"] = poi.ObjectiveSense.Minimize
         else:
-            poi_expr = self.to_poi()
-            kwargs["sense"] = self._model.sense.to_poi()
+            poi_expr = self._to_poi()
+            kwargs["sense"] = self._model.sense._to_poi()
         self._model.poi.set_objective(poi_expr, **kwargs)
 
     def __iadd__(self, other):

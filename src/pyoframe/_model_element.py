@@ -1,7 +1,9 @@
+"""Defines the base classes used in Pyoframe."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import polars as pl
 
@@ -15,10 +17,12 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe._model import Model
+    from pyoframe import Model
 
 
 class ModelElement(ABC):
+    """The base class for elements of a Model such as [][pyoframe.Variable] and [][pyoframe.Constraint]."""
+
     def __init__(self, data: pl.DataFrame, **kwargs) -> None:
         # Sanity checks, no duplicate column names
         assert len(data.columns) == len(set(data.columns)), (
@@ -42,32 +46,33 @@ class ModelElement(ABC):
             data = data.cast({QUAD_VAR_KEY: KEY_TYPE})
 
         self._data = data
-        self._model: Optional[Model] = None
+        self._model: Model | None = None
         self.name = None
         super().__init__(**kwargs)
 
-    def on_add_to_model(self, model: "Model", name: str):
+    def _on_add_to_model(self, model: Model, name: str):
         self.name = name
         self._model = model
 
     @property
     def data(self) -> pl.DataFrame:
+        """Returns the object's underlying Polars DataFrame."""
         return self._data
 
     @property
-    def friendly_name(self) -> str:
+    def _friendly_name(self) -> str:
+        """Returns the name of the element, or `'unnamed'` if it has no name."""
         return self.name if self.name is not None else "unnamed"
 
     @property
-    def dimensions(self) -> Optional[List[str]]:
-        """
-        The names of the data's dimensions.
+    def dimensions(self) -> list[str] | None:
+        """The names of the data's dimensions.
 
         Examples:
-            >>> # A variable with no dimensions
+            A variable with no dimensions
             >>> pf.Variable().dimensions
 
-            >>> # A variable with dimensions of "hour" and "city"
+            A variable with dimensions of "hour" and "city"
             >>> pf.Variable(
             ...     [
             ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
@@ -79,9 +84,9 @@ class ModelElement(ABC):
         return _get_dimensions(self.data)
 
     @property
-    def dimensions_unsafe(self) -> List[str]:
-        """
-        Same as `dimensions` but returns an empty list if there are no dimensions instead of None.
+    def dimensions_unsafe(self) -> list[str]:
+        """Same as `dimensions` but returns an empty list if there are no dimensions instead of `None`.
+
         When unsure, use `dimensions` instead since the type checker forces users to handle the None case (no dimensions).
         """
         dims = self.dimensions
@@ -90,15 +95,15 @@ class ModelElement(ABC):
         return dims
 
     @property
-    def shape(self) -> Dict[str, int]:
-        """
-        The number of indices in each dimension.
+    def shape(self) -> dict[str, int]:
+        """The number of indices in each dimension.
 
         Examples:
-            >>> # A variable with no dimensions
+            A variable with no dimensions
             >>> pf.Variable().shape
             {}
-            >>> # A variable with dimensions of "hour" and "city"
+
+            A variable with dimensions of "hour" and "city"
             >>> pf.Variable(
             ...     [
             ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
@@ -112,6 +117,14 @@ class ModelElement(ABC):
             return {}
         return {dim: self.data[dim].n_unique() for dim in dims}
 
+    def _add_shape_to_columns(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Adds the shape of the data to the columns of the DataFrame.
+
+        This is used for displaying the shape in the string representation of the object.
+        """
+        shape = self.shape
+        return df.rename(lambda col: f"{col}\n({shape[col]})" if col in shape else col)
+
     def __len__(self) -> int:
         dims = self.dimensions
         if dims is None:
@@ -120,11 +133,9 @@ class ModelElement(ABC):
 
 
 def _support_polars_method(method_name: str):
-    """
-    Wrapper to add a method to ModelElement that simply calls the underlying Polars method on the data attribute.
-    """
+    """Wraps the underlying Polars method to make it accessible on ModelElement."""
 
-    def method(self: "SupportPolarsMethodMixin", *args, **kwargs) -> Any:
+    def method(self: SupportPolarsMethodMixin, *args, **kwargs) -> Any:
         result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
         if isinstance(result_from_polars, pl.DataFrame):
             return self._new(result_from_polars)
@@ -142,17 +153,14 @@ class SupportPolarsMethodMixin(ABC):
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
-        """
-        Used to create a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.).
-        """
+        """Creates a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
 
     @property
     @abstractmethod
     def data(self): ...
 
     def pick(self, **kwargs):
-        """
-        Filters elements by the given criteria and then drops the filtered dimensions.
+        """Filters elements by the given criteria and then drop the filtered dimensions.
 
         Examples:
             >>> m = pf.Model()
@@ -163,37 +171,40 @@ class SupportPolarsMethodMixin(ABC):
             ...     ]
             ... )
             >>> m.v.pick(hour="06:00")
-            <Expression size=3 dimensions={'city': 3} terms=3>
-            [Toronto]: v[06:00,Toronto]
-            [Berlin]: v[06:00,Berlin]
-            [Paris]: v[06:00,Paris]
+            <Expression height=3 terms=3 type=linear>
+            ┌─────────┬──────────────────┐
+            │ city    ┆ expression       │
+            │ (3)     ┆                  │
+            ╞═════════╪══════════════════╡
+            │ Toronto ┆ v[06:00,Toronto] │
+            │ Berlin  ┆ v[06:00,Berlin]  │
+            │ Paris   ┆ v[06:00,Paris]   │
+            └─────────┴──────────────────┘
             >>> m.v.pick(hour="06:00", city="Toronto")
-            <Expression size=1 dimensions={} terms=1>
+            <Expression terms=1 type=linear>
             v[06:00,Toronto]
         """
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 
 
 class ModelElementWithId(ModelElement):
-    """
-    Provides a method that assigns a unique ID to each row in a DataFrame.
+    """Extends ModelElement with a method that assigns a unique ID to each row in a DataFrame.
+
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
     IDs are only unique for the subclass since different subclasses have different counters.
     """
 
     @property
     def _has_ids(self) -> bool:
-        return self.get_id_column_name() in self.data.columns
+        return self._get_id_column_name() in self.data.columns
 
     def _assert_has_ids(self):
         if not self._has_ids:
             raise ValueError(
-                f"Cannot use '{self.__class__.__name__}' before it has beed added to a model."
+                f"Cannot use '{self.__class__.__name__}' before it has been added to a model."
             )
 
     @classmethod
     @abstractmethod
-    def get_id_column_name(cls) -> str:
-        """
-        Returns the name of the column containing the IDs.
-        """
+    def _get_id_column_name(cls) -> str:
+        """Returns the name of the column containing the IDs."""

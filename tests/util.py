@@ -1,7 +1,9 @@
+"""Utility functions for testing in Pyoframe."""
+
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING, Literal, Tuple, Union, overload
+from typing import TYPE_CHECKING, Literal, overload
 
 import polars as pl
 
@@ -18,12 +20,12 @@ def csvs_to_dataframe(
 @overload
 def csvs_to_dataframe(
     *csv_strings: str,
-) -> Tuple[pl.DataFrame, ...]: ...
+) -> tuple[pl.DataFrame, ...]: ...
 
 
 def csvs_to_dataframe(
     *csv_strings: str,
-) -> Union[Tuple[pl.DataFrame, ...], pl.DataFrame]:
+) -> tuple[pl.DataFrame, ...] | pl.DataFrame:
     """Convert a sequence of CSV strings to Pyoframe expressions."""
     dfs = []
     for csv_string in csv_strings:
@@ -37,27 +39,27 @@ def csvs_to_dataframe(
 @overload
 def csvs_to_expr(
     csv_strings: str,
-) -> "Expression": ...
+) -> Expression: ...
 
 
 @overload
 def csvs_to_expr(
     *csv_strings: str,
-) -> Tuple["Expression", ...]: ...
+) -> tuple[Expression, ...]: ...
 
 
 def csvs_to_expr(
     *csv_strings: str,
-) -> Union[Tuple["Expression", ...], "Expression"]:
+) -> tuple[Expression, ...] | Expression:
     if len(csv_strings) == 1:
         return csvs_to_dataframe(*csv_strings).to_expr()
-    return tuple((df.to_expr() for df in csvs_to_dataframe(*csv_strings)))
+    return tuple(df.to_expr() for df in csvs_to_dataframe(*csv_strings))
 
 
 _tolerances = {
     "gurobi": {"rtol": 1e-5, "atol": 1e-8},
     "highs": {"rtol": 1e-5, "atol": 1e-8},
-    "ipopt": {"rtol": None, "atol": 1e-5},
+    "ipopt": {"rtol": 1e-5, "atol": 1e-5},
 }
 
 

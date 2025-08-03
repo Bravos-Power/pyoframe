@@ -1,5 +1,9 @@
-# Based on example at page 120 in book:
-#       N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
+"""Pyoframe formulation of a pumped storage model.
+
+Based on example at page 120 in book:
+      N. Sudermann-Merx: Einführung in Optimierungsmodelle, Springer Nature, 2023
+"""
+
 from pathlib import Path
 
 import polars as pl
@@ -10,8 +14,7 @@ import pyoframe as pf
 def solve_model(
     use_var_names: bool = True, hourly_timestep: int = 6, **kwargs
 ) -> pf.Model:
-    """
-    Solve a pump storage model.
+    """Solve a pump storage model.
 
     Parameters:
         use_var_names: Whether to use variable names in the model.
@@ -28,11 +31,9 @@ def solve_model(
     efficiency = 0.75
 
     m = pf.Model(use_var_names=use_var_names, **kwargs)
-    m.Pump = pf.Variable(hourly_prices[["tick"]], vtype=pf.VType.BINARY)
-    m.Turb = pf.Variable(hourly_prices[["tick"]], lb=0, ub=turb_max)
-    m.Storage_level = pf.Variable(
-        hourly_prices[["tick"]], lb=storage_min, ub=storage_max
-    )
+    m.Pump = pf.Variable(hourly_prices["tick"], vtype=pf.VType.BINARY)
+    m.Turb = pf.Variable(hourly_prices["tick"], lb=0, ub=turb_max)
+    m.Storage_level = pf.Variable(hourly_prices["tick"], lb=storage_min, ub=storage_max)
     m.initial_storage_level = (
         m.Storage_level.filter(pl.col("tick") == hourly_prices["tick"].min())
         == storage_level_init_and_final
@@ -56,7 +57,9 @@ def solve_model(
 
 def read_hourly_prices():
     """Read hourly prices from CSV file and return a DataFrame.
-    Special attention is paid to properly parse daylight saving time (DST) changes."""
+
+    Special attention is paid to properly parse daylight saving time (DST) changes.
+    """
     df = pl.read_csv(
         Path(__file__).parent / "input_data" / "elspot-prices_2021_hourly_eur.csv",
         try_parse_dates=True,

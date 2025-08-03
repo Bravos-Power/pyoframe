@@ -1,37 +1,34 @@
-"""
-File containing utility functions and classes.
-"""
+"""Contains utility functions and classes."""
 
+from __future__ import annotations
+
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Type,
-    Union,
-)
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import polars as pl
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, RESERVED_COL_KEYS, VAR_KEY, Config
+from pyoframe._constants import (
+    COEF_KEY,
+    CONST_TERM,
+    RESERVED_COL_KEYS,
+    VAR_KEY,
+    Config,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
 
 
-def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
+def get_obj_repr(obj: object, *props: str | None, **kwargs):
+    """Generates __repr__() strings for classes.
+
+    See usage for examples.
     """
-    Helper function to generate __repr__ strings for classes. See usage for examples.
-    """
-    props = {prop: getattr(obj, prop) for prop in _props}
-    props_str = " ".join(f"{k}={v}" for k, v in props.items() if v is not None)
+    props_str = " ".join(f"'{v}'" for v in props if v is not None)
     if props_str:
         props_str += " "
     kwargs_str = " ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
@@ -39,10 +36,10 @@ def get_obj_repr(obj: object, _props: Iterable[str] = (), **kwargs):
 
 
 def parse_inputs_as_iterable(
-    *inputs: Union[Any, Iterable[Any]],
+    *inputs: Any | Iterable[Any],
 ) -> Iterable[Any]:
-    """
-    Converts a parameter *x: Any | Iteraable[Any] to a single Iterable[Any] object.
+    """Converts a parameter *x: Any | Iterable[Any] to a single Iterable[Any] object.
+
     This is helpful to support these two ways of passing arguments:
         - foo([1, 2, 3])
         - foo(1, 2, 3)
@@ -59,7 +56,7 @@ def parse_inputs_as_iterable(
     return inputs
 
 
-def _is_iterable(input: Union[Any, Iterable[Any]]) -> bool:
+def _is_iterable(input: Any | Iterable[Any]) -> bool:
     # Inspired from the polars library, TODO: Consider using opposite check, i.e. equals list or tuple
     return isinstance(input, Iterable) and not isinstance(
         input,
@@ -79,14 +76,13 @@ def _is_iterable(input: Union[Any, Iterable[Any]]) -> bool:
 
 def concat_dimensions(
     df: pl.DataFrame,
-    prefix: Optional[str] = None,
+    prefix: str | None = None,
     keep_dims: bool = True,
     ignore_columns: Sequence[str] = RESERVED_COL_KEYS,
     replace_spaces: bool = True,
     to_col: str = "concated_dim",
 ) -> pl.DataFrame:
-    """
-    Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
+    """Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
 
     Parameters:
         df:
@@ -94,9 +90,9 @@ def concat_dimensions(
         prefix:
             The prefix to be added to the concated dimension.
         keep_dims:
-            If True, the original dimensions are kept in the new DataFrame.
+            If `True`, the original dimensions are kept in the new DataFrame.
         replace_spaces : bool, optional
-            If True, replaces spaces with underscores.
+            If `True`, replaces spaces with underscores.
 
     Examples:
         >>> import polars as pl
@@ -185,10 +181,12 @@ def concat_dimensions(
 
 
 def cast_coef_to_string(
-    df: pl.DataFrame, column_name: str = COEF_KEY, drop_ones: bool = True
+    df: pl.DataFrame,
+    column_name: str = COEF_KEY,
+    drop_ones: bool = True,
+    always_show_sign: bool = True,
 ) -> pl.DataFrame:
-    """
-    Converts column `column_name` of the dataframe `df` to a string. Rounds to `Config.print_float_precision` decimal places if not None.
+    """Converts column `column_name` of the DataFrame `df` to a string. Round to `Config.print_float_precision` decimal places if not None.
 
     Parameters:
         df:
@@ -196,7 +194,9 @@ def cast_coef_to_string(
         column_name:
             The name of the column to be casted.
         drop_ones:
-            If True, 1s are replaced with an empty string for non-constant terms.
+            If `True`, 1s are replaced with an empty string for non-constant terms.
+        always_show_sign:
+            If `True`, the sign of the coefficient is always shown, i.e. 1 becomes `+1` not just `1`.
 
     Examples:
         >>> import polars as pl
@@ -214,22 +214,26 @@ def cast_coef_to_string(
         │ +4  ┆ 4             │
         └─────┴───────────────┘
     """
-    df = df.with_columns(
-        pl.col(column_name).abs(),
-        _sign=pl.when(pl.col(column_name) < 0).then(pl.lit("-")).otherwise(pl.lit("+")),
-    )
-
     if Config.float_to_str_precision is not None:
         df = df.with_columns(pl.col(column_name).round(Config.float_to_str_precision))
 
+    if always_show_sign:
+        df = df.with_columns(
+            pl.col(column_name).abs(),
+            _sign=pl.when(pl.col(column_name) < 0)
+            .then(pl.lit("-"))
+            .otherwise(pl.lit("+")),
+        )
+
     df = df.with_columns(
-        pl.when(pl.col(column_name) == pl.col(column_name).floor())
+        pl.when(pl.col(column_name) == pl.col(column_name).round())
         .then(pl.col(column_name).cast(pl.Int64).cast(pl.String))
         .otherwise(pl.col(column_name).cast(pl.String))
         .alias(column_name)
     )
 
     if drop_ones:
+        assert always_show_sign, "drop_ones requires always_show_sign=True"
         condition = pl.col(column_name) == str(1)
         if VAR_KEY in df.columns:
             condition = condition & (pl.col(VAR_KEY) != CONST_TERM)
@@ -239,15 +243,16 @@ def cast_coef_to_string(
             .otherwise(pl.col(column_name))
             .alias(column_name)
         )
-    else:
-        df = df.with_columns(pl.col(column_name).cast(pl.Utf8))
-    return df.with_columns(pl.concat_str("_sign", column_name).alias(column_name)).drop(
-        "_sign"
-    )
+
+    if always_show_sign:
+        df = df.with_columns(
+            pl.concat_str("_sign", column_name).alias(column_name)
+        ).drop("_sign")
+    return df
 
 
 def unwrap_single_values(func):
-    """Decorator for functions that return DataFrames. Returned dataframes with a single value will instead return the value."""
+    """Returns the DataFrame unless it is a single value in which case return the value."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -259,48 +264,14 @@ def unwrap_single_values(func):
     return wrapper
 
 
-def dataframe_to_tupled_list(
-    df: pl.DataFrame, num_max_elements: Optional[int] = None
-) -> str:
-    """
-    Converts a dataframe into a list of tuples. Used to print a Set to the console. See examples for behaviour.
-
-    Examples:
-        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5]})
-        >>> dataframe_to_tupled_list(df)
-        '[1, 2, 3, 4, 5]'
-        >>> dataframe_to_tupled_list(df, 3)
-        '[1, 2, 3, ...]'
-
-        >>> df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 3, 4, 5, 6]})
-        >>> dataframe_to_tupled_list(df, 3)
-        '[(1, 2), (2, 3), (3, 4), ...]'
-    """
-    elipse = False
-    if num_max_elements is not None:
-        if len(df) > num_max_elements:
-            elipse = True
-            df = df.head(num_max_elements)
-
-    res = (row for row in df.iter_rows())
-    if len(df.columns) == 1:
-        res = (row[0] for row in res)
-
-    res = str(list(res))
-    if elipse:
-        res = res[:-1] + ", ...]"
-    return res
-
-
 @dataclass
 class FuncArgs:
-    args: List
-    kwargs: Dict = field(default_factory=dict)
+    args: list
+    kwargs: dict = field(default_factory=dict)
 
 
 class Container:
-    """
-    A placeholder object that makes it easy to set and get attributes. Used in Model.attr and Model.params, for example.
+    """A placeholder object that makes it easy to set and get attributes. Used in Model.attr and Model.params, for example.
 
     Examples:
         >>> x = {}
@@ -331,22 +302,21 @@ class Container:
 
 
 class NamedVariableMapper:
-    """
-    Maps variables to a string representation using the object's name and dimensions.
+    """Maps variables to a string representation using the object's name and dimensions.
 
     Examples:
         >>> import polars as pl
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> pf.sum(m.foo)
-        <Expression size=1 dimensions={} terms=4>
-        foo[0] + foo[1] + foo[2] + foo[3]
+        <Expression terms=4 type=linear>
+        foo[0] + foo[1] + foo[2] + foo[3]
     """
 
     CONST_TERM_NAME = "_ONE"
     NAME_COL = "__name"
 
-    def __init__(self, cls: Type["ModelElementWithId"]) -> None:
+    def __init__(self, cls: type[ModelElementWithId]) -> None:
         self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},
@@ -359,7 +329,7 @@ class NamedVariableMapper:
             )
         )
 
-    def add(self, element: "Variable") -> None:
+    def add(self, element: Variable) -> None:
         self._extend_registry(self._element_to_map(element))
 
     def _extend_registry(self, df: pl.DataFrame) -> None:
@@ -377,6 +347,7 @@ class NamedVariableMapper:
             validate="m:1",
             left_on=id_col,
             right_on=self._ID_COL,
+            maintain_order="left" if Config.maintain_order else None,
         ).rename({self.NAME_COL: to_col})
 
     def _element_to_map(self, element) -> pl.DataFrame:
@@ -394,9 +365,7 @@ class NamedVariableMapper:
 
 
 def for_solvers(*solvers: str):
-    """
-    Decorator that limits the function to only be called when the solver is in the `only` list.
-    """
+    """Limits the decorated function to only be available when the solver is in the `solvers` list."""
 
     def decorator(func):
         @wraps(func)

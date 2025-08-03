@@ -1,6 +1,4 @@
-# pyright: reportAttributeAccessIssue=false
-"""
-Quadratic Portfolio Optimization Model (Markowitz Mean-Variance)
+"""Quadratic Portfolio Optimization Model (Markowitz Mean-Variance).
 
 Minimize portfolio variance subject to achieving a minimum return.
 
@@ -37,8 +35,7 @@ _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
 
 def solve_model(use_var_names=True, solver="gurobi"):
-    """
-    Portfolio Optimization Test Case - Quadratic Programming with IPOPT
+    """Portfolio Optimization Test Case - Quadratic Programming with IPOPT.
 
     This example demonstrates IPOPT's capability to solve quadratic programming problems
     by implementing the classic Markowitz mean-variance portfolio optimization.

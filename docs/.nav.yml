@@ -3,7 +3,8 @@ sort:
 nav:
   - Home: index.md
   - Learn:
-    - learn/getting-started
+    - learn/get-started
+    - learn/concepts
     - learn/advanced-concepts
   - examples
   - reference

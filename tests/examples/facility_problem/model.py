@@ -1,4 +1,5 @@
-# pyright: reportAttributeAccessIssue=false
+"""Pyoframe formulation of a facility problem."""
+
 import os
 from pathlib import Path
 
