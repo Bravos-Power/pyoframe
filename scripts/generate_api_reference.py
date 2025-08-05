@@ -28,7 +28,7 @@ with mkdocs_gen_files.open(Path("reference", "index.md"), "a") as index_file:
 
 with mkdocs_gen_files.open(Path("reference", ".nav.yml"), "a") as nav_file:
     nav_file.write("  - index.md\n")
-    for entry in pf.__all__:
+    for entry in objects_to_gen:
         nav_file.write(f"  - pyoframe.{entry}.md\n")
     nav_file.write("  - polars.DataFrame.to_expr.md\n")
     nav_file.write("  - pandas.DataFrame.to_expr.md\n")
