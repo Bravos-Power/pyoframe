@@ -87,8 +87,8 @@ def _multiply_expressions_core(self: Expression, other: Expression) -> Expressio
         VAR_KEY
     )  # QUAD_VAR_KEY doesn't need to be dropped since we know it doesn't exist
 
-    dims = self.dimensions_unsafe
-    other_dims = other.dimensions_unsafe
+    dims = self._dimensions_unsafe
+    other_dims = other._dimensions_unsafe
     dims_in_common = [dim for dim in dims if dim in other_dims]
 
     data = (
@@ -140,8 +140,8 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
         └─────┴────────────┘
 
     """
-    dims = self.dimensions_unsafe
-    other_dims = other.dimensions_unsafe
+    dims = self._dimensions_unsafe
+    other_dims = other._dimensions_unsafe
     dims_in_common = [dim for dim in dims if dim in other_dims]
 
     data = (
@@ -197,17 +197,17 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
         dims = []
     elif Config.disable_unmatched_checks:
         requires_join = any(
-            expr.unmatched_strategy
+            expr._unmatched_strategy
             not in (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET)
             for expr in expressions
         )
     else:
         requires_join = any(
-            expr.unmatched_strategy != UnmatchedStrategy.KEEP for expr in expressions
+            expr._unmatched_strategy != UnmatchedStrategy.KEEP for expr in expressions
         )
 
     has_dim_conflict = any(
-        sorted(dims) != sorted(expr.dimensions_unsafe) for expr in expressions[1:]
+        sorted(dims) != sorted(expr._dimensions_unsafe) for expr in expressions[1:]
     )
 
     # If we cannot use .concat compute the sum in a pairwise manner
@@ -223,14 +223,14 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
             _add_dimension(expressions[0], expressions[1]),
             _add_dimension(expressions[1], expressions[0]),
         )
-        assert sorted(expressions[0].dimensions_unsafe) == sorted(
-            expressions[1].dimensions_unsafe
+        assert sorted(expressions[0]._dimensions_unsafe) == sorted(
+            expressions[1]._dimensions_unsafe
         )
 
-    dims = expressions[0].dimensions_unsafe
+    dims = expressions[0]._dimensions_unsafe
     # Check no dims conflict
     assert all(
-        sorted(dims) == sorted(expr.dimensions_unsafe) for expr in expressions[1:]
+        sorted(dims) == sorted(expr._dimensions_unsafe) for expr in expressions[1:]
     )
     if requires_join:
         assert len(expressions) == 2
@@ -238,7 +238,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
         left, right = expressions[0], expressions[1]
 
         # Order so that drop always comes before keep, and keep always comes before default
-        if (left.unmatched_strategy, right.unmatched_strategy) in (
+        if (left._unmatched_strategy, right._unmatched_strategy) in (
             (UnmatchedStrategy.UNSET, UnmatchedStrategy.DROP),
             (UnmatchedStrategy.UNSET, UnmatchedStrategy.KEEP),
             (UnmatchedStrategy.KEEP, UnmatchedStrategy.DROP),
@@ -250,7 +250,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
 
         left_data, right_data = left.data, right.data
 
-        strat = (left.unmatched_strategy, right.unmatched_strategy)
+        strat = (left._unmatched_strategy, right._unmatched_strategy)
 
         propogate_strat = propogatation_strategies[strat]  # type: ignore
 
@@ -323,7 +323,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
 
         expr_data = [left_data, right_data]
     else:
-        propogate_strat = expressions[0].unmatched_strategy
+        propogate_strat = expressions[0]._unmatched_strategy
         expr_data = [expr.data for expr in expressions]
 
     # Add quadratic column if it is needed and doesn't already exist
@@ -346,7 +346,7 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
     data = _sum_like_terms(data)
 
     new_expr = expressions[0]._new(data)
-    new_expr.unmatched_strategy = propogate_strat
+    new_expr._unmatched_strategy = propogate_strat
 
     return new_expr
 
@@ -367,7 +367,7 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
     if not missing_dims:
         return self
 
-    if not set(missing_dims) <= set(self.allowed_new_dims):
+    if not set(missing_dims) <= set(self._allowed_new_dims):
         # TODO actually suggest using e.g. .add_dim("a", "b") instead of just "use .add_dim()"
         raise PyoframeError(
             f"DataFrame has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
@@ -381,7 +381,7 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
         return self._new(self.data.join(target_data, how="cross"))
 
     # If drop, we just do an inner join to get into the shape of the other
-    if self.unmatched_strategy == UnmatchedStrategy.DROP:
+    if self._unmatched_strategy == UnmatchedStrategy.DROP:
         return self._new(
             self.data.join(
                 target_data,
