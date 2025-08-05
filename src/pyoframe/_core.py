@@ -602,10 +602,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             │ Toronto   ┆ 6000000    │
             │ Vancouver ┆ 3000000    │
             └───────────┴────────────┘
-            >>> total_sum = expr.sum_by()
-            >>> total_sum
-            <Expression terms=1 type=constant>
-            9000000
 
             If the specified dimensions don't exist, an error will be raised:
 
