@@ -350,14 +350,14 @@ class NamedVariableMapper:
             maintain_order="left" if Config.maintain_order else None,
         ).rename({self.NAME_COL: to_col})
 
-    def _element_to_map(self, element) -> pl.DataFrame:
+    def _element_to_map(self, element: Variable) -> pl.DataFrame:
         element_name = element.name  # type: ignore
         assert element_name is not None, (
             "Element must have a name to be used in a named mapping."
         )
         element._assert_has_ids()
         return concat_dimensions(
-            element.data.select(element.dimensions_unsafe + [VAR_KEY]),
+            element.data.select(element._dimensions_unsafe + [VAR_KEY]),
             keep_dims=False,
             prefix=element_name,
             to_col=self.NAME_COL,

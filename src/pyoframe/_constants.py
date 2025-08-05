@@ -17,6 +17,7 @@ CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
 
+# TODO: move as configuration since this could be too small... also add a test to make sure errors occur on overflow.
 KEY_TYPE = pl.UInt32
 
 
