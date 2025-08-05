@@ -608,12 +608,13 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> expr.sum_by("city")
             Traceback (most recent call last):
             ...
-            AssertionError: Cannot sum by ['city'] because the expression's dimensions are ['time', 'place'].
+            ValueError: Cannot sum by ['city'] because it is not a valid dimension. The expression's dimensions are: ['time', 'place'].
 
+            >>> total_sum = expr.sum()
             >>> total_sum.sum_by("time")
             Traceback (most recent call last):
             ...
-            AssertionError: Cannot sum by ['time'] because the expression has no dimensions.
+            ValueError: Cannot sum a dimensionless expression.
 
         See Also:
             [pyoframe.Expression.sum][] for summing over specified dimensions.
@@ -625,7 +626,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             raise ValueError("Cannot sum a dimensionless expression.")
         if not set(by) <= set(dims):
             raise ValueError(
-                f"Cannot apply sum_by because {tuple(set(by) - set(dims))} is not a valid dimension {tuple(dims)}"
+                f"Cannot sum by {list(set(by) - set(dims))} because it is not a valid dimension. The expression's dimensions are: {list(dims)}."
             )
         remaining_dims = [dim for dim in dims if dim not in by]
         return self.sum(*remaining_dims)
