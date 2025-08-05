@@ -55,14 +55,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
 
-def _forward_to_expression(func_name: str):
-    def wrapper(self: SupportsMath, *args, **kwargs) -> Expression:
-        expr = self.to_expr()
-        return getattr(expr, func_name)(*args, **kwargs)
-
-    return wrapper
-
-
 # TODO consider changing this simply to a type and having a helper "Expression.from(object)"
 class SupportsToExpr(Protocol):
     """Protocol for any object that can be converted to a Pyoframe [Expression][pyoframe.Expression]."""
@@ -100,10 +92,23 @@ class SupportsMath(ABC, SupportsToExpr):
         """Converts the object to a Pyoframe Expression."""
         ...
 
-    __add__ = _forward_to_expression("__add__")
-    __mul__ = _forward_to_expression("__mul__")
-    sum = _forward_to_expression("sum")
-    map = _forward_to_expression("map")
+    def sum(self, *args, **kwargs):
+        """Converts the object to an expression (see `.to_expr()`) and then applies [`Expression.sum`][pyoframe.Expression.sum]."""
+        return self.to_expr().sum(*args, **kwargs)
+
+    def sum_by(self, *args, **kwargs):
+        """Converts the object to an expression (see `.to_expr()`) and then applies [`Expression.sum_by`][pyoframe.Expression.sum_by]."""
+        return self.to_expr().sum_by(*args, **kwargs)
+
+    def map(self, *args, **kwargs):
+        """Converts the object to an expression (see `.to_expr()`) and then applies [`Expression.map`][pyoframe.Expression.map]."""
+        return self.to_expr().map(*args, **kwargs)
+
+    def __add__(self, *args, **kwargs):
+        return self.to_expr().__add__(*args, **kwargs)
+
+    def __mul__(self, *args, **kwargs):
+        return self.to_expr().__mul__(*args, **kwargs)
 
     def __pow__(self, power: int):
         """Supports squaring expressions.
@@ -487,39 +492,65 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             )
         )
 
-    def sum(self, over: str | Iterable[str]):
-        """Sums this expression over the given dimensions.
+    def sum(self, *over: str):
+        """Sums an expression over specified dimensions.
+
+        If no dimensions are specified, the sum is taken over all of the expression's dimensions.
 
         Examples:
-            >>> import pandas as pd
-            >>> m = pf.Model()
-            >>> df = pd.DataFrame(
+            >>> expr = pl.DataFrame(
             ...     {
-            ...         "item": [1, 1, 1, 2, 2],
             ...         "time": ["mon", "tue", "wed", "mon", "tue"],
-            ...         "cost": [1, 2, 3, 4, 5],
+            ...         "place": [
+            ...             "Toronto",
+            ...             "Toronto",
+            ...             "Toronto",
+            ...             "Vancouver",
+            ...             "Vancouver",
+            ...         ],
+            ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
             ...     }
-            ... ).set_index(["item", "time"])
-            >>> m.quantity = Variable(df.reset_index()[["item"]].drop_duplicates())
-            >>> expr = (m.quantity * df["cost"]).sum("time")
-            >>> expr.data
-            shape: (2, 3)
-            ┌──────┬─────────┬───────────────┐
-            │ item ┆ __coeff ┆ __variable_id │
-            │ ---  ┆ ---     ┆ ---           │
-            │ i64  ┆ f64     ┆ u32           │
-            ╞══════╪═════════╪═══════════════╡
-            │ 1    ┆ 6.0     ┆ 1             │
-            │ 2    ┆ 9.0     ┆ 2             │
-            └──────┴─────────┴───────────────┘
+            ... ).to_expr()
+            >>> expr
+            <Expression height=5 terms=5 type=constant>
+            ┌──────┬───────────┬────────────┐
+            │ time ┆ place     ┆ expression │
+            │ (3)  ┆ (2)       ┆            │
+            ╞══════╪═══════════╪════════════╡
+            │ mon  ┆ Toronto   ┆ 1000000    │
+            │ tue  ┆ Toronto   ┆ 3000000    │
+            │ wed  ┆ Toronto   ┆ 2000000    │
+            │ mon  ┆ Vancouver ┆ 1000000    │
+            │ tue  ┆ Vancouver ┆ 2000000    │
+            └──────┴───────────┴────────────┘
+            >>> expr.sum("time")
+            <Expression height=2 terms=2 type=constant>
+            ┌───────────┬────────────┐
+            │ place     ┆ expression │
+            │ (2)       ┆            │
+            ╞═══════════╪════════════╡
+            │ Toronto   ┆ 6000000    │
+            │ Vancouver ┆ 3000000    │
+            └───────────┴────────────┘
+            >>> expr.sum()
+            <Expression terms=1 type=constant>
+            9000000
+
+            If the given dimensions don't exist, an error will be raised:
+
+            >>> expr.sum("city")
+            Traceback (most recent call last):
+            ...
+            AssertionError: Cannot sum over ['city'] as it is not in ['time', 'place']
+
+        See Also:
+            [pyoframe.Expression.sum_by][] for summing over all dimensions _except_ those that are specified.
         """
-        if isinstance(over, str):
-            over = [over]
         dims = self.dimensions
-        if not dims:
-            raise ValueError(
-                f"Cannot sum over dimensions {over} since the current expression has no dimensions."
-            )
+        if dims is None:
+            raise ValueError("Cannot sum a dimensionless expression.")
+        if not over:
+            over = tuple(dims)
         assert set(over) <= set(dims), f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
@@ -531,6 +562,77 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             )
             .sum()
         )
+
+    def sum_by(self, *by: str):
+        """Like [`Expression.sum`][pyoframe.Expression.sum], but the sum is taken over all dimensions *except* those specified in `by` (just like a `group_by().sum()` operation).
+
+        Examples:
+            >>> expr = pl.DataFrame(
+            ...     {
+            ...         "time": ["mon", "tue", "wed", "mon", "tue"],
+            ...         "place": [
+            ...             "Toronto",
+            ...             "Toronto",
+            ...             "Toronto",
+            ...             "Vancouver",
+            ...             "Vancouver",
+            ...         ],
+            ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
+            ...     }
+            ... ).to_expr()
+            >>> expr
+            <Expression height=5 terms=5 type=constant>
+            ┌──────┬───────────┬────────────┐
+            │ time ┆ place     ┆ expression │
+            │ (3)  ┆ (2)       ┆            │
+            ╞══════╪═══════════╪════════════╡
+            │ mon  ┆ Toronto   ┆ 1000000    │
+            │ tue  ┆ Toronto   ┆ 3000000    │
+            │ wed  ┆ Toronto   ┆ 2000000    │
+            │ mon  ┆ Vancouver ┆ 1000000    │
+            │ tue  ┆ Vancouver ┆ 2000000    │
+            └──────┴───────────┴────────────┘
+
+            >>> expr.sum_by("place")
+            <Expression height=2 terms=2 type=constant>
+            ┌───────────┬────────────┐
+            │ place     ┆ expression │
+            │ (2)       ┆            │
+            ╞═══════════╪════════════╡
+            │ Toronto   ┆ 6000000    │
+            │ Vancouver ┆ 3000000    │
+            └───────────┴────────────┘
+            >>> total_sum = expr.sum_by()
+            >>> total_sum
+            <Expression terms=1 type=constant>
+            9000000
+
+            If the specified dimensions don't exist, an error will be raised:
+
+            >>> expr.sum_by("city")
+            Traceback (most recent call last):
+            ...
+            AssertionError: Cannot sum by ['city'] because the expression's dimensions are ['time', 'place'].
+
+            >>> total_sum.sum_by("time")
+            Traceback (most recent call last):
+            ...
+            AssertionError: Cannot sum by ['time'] because the expression has no dimensions.
+
+        See Also:
+            [pyoframe.Expression.sum][] for summing over specified dimensions.
+        """
+        if not by:
+            raise ValueError("sum_by requires at least 1 argument.")
+        dims = self.dimensions
+        if dims is None:
+            raise ValueError("Cannot sum a dimensionless expression.")
+        if not set(by) <= set(dims):
+            raise ValueError(
+                f"Cannot apply sum_by because {tuple(set(by) - set(dims))} is not a valid dimension {tuple(dims)}"
+            )
+        remaining_dims = [dim for dim in dims if dim not in by]
+        return self.sum(*remaining_dims)
 
     @property
     def _variable_columns(self) -> list[str]:
@@ -613,7 +715,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         mapped_expression = self * mapping_set
 
         if drop_shared_dims:
-            return sum(shared_dims, mapped_expression)
+            return mapped_expression.sum(*shared_dims)
 
         return mapped_expression
 
@@ -826,10 +928,6 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             <Expression terms=2 type=linear>
             2 v2 +5
         """
-        if isinstance(other, str):
-            raise ValueError(
-                "Cannot add a string to an expression. Perhaps you meant to use pf.sum() instead of sum()?"
-            )
         if isinstance(other, (int, float)):
             return self._add_const(other)
         other = other.to_expr()
@@ -975,7 +1073,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m = pf.Model()
             >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
             >>> m.expr_1 = 2 * m.X + 1
-            >>> m.expr_2 = pf.sum(m.expr_1)
+            >>> m.expr_2 = m.expr_1.sum()
             >>> m.maximize = m.expr_2 - 3
             >>> m.attr.Silent = True
             >>> m.optimize()
@@ -1258,144 +1356,22 @@ def sum(
     over: str | Sequence[str] | SupportsToExpr,
     expr: SupportsToExpr | None = None,
 ) -> Expression:
-    """Sums an expression over specified dimensions.
-
-    If no dimensions are specified, the sum is taken over all of the expression's dimensions.
-
-    Examples:
-        >>> expr = pl.DataFrame(
-        ...     {
-        ...         "time": ["mon", "tue", "wed", "mon", "tue"],
-        ...         "place": [
-        ...             "Toronto",
-        ...             "Toronto",
-        ...             "Toronto",
-        ...             "Vancouver",
-        ...             "Vancouver",
-        ...         ],
-        ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
-        ...     }
-        ... ).to_expr()
-        >>> expr
-        <Expression height=5 terms=5 type=constant>
-        ┌──────┬───────────┬────────────┐
-        │ time ┆ place     ┆ expression │
-        │ (3)  ┆ (2)       ┆            │
-        ╞══════╪═══════════╪════════════╡
-        │ mon  ┆ Toronto   ┆ 1000000    │
-        │ tue  ┆ Toronto   ┆ 3000000    │
-        │ wed  ┆ Toronto   ┆ 2000000    │
-        │ mon  ┆ Vancouver ┆ 1000000    │
-        │ tue  ┆ Vancouver ┆ 2000000    │
-        └──────┴───────────┴────────────┘
-        >>> pf.sum("time", expr)
-        <Expression height=2 terms=2 type=constant>
-        ┌───────────┬────────────┐
-        │ place     ┆ expression │
-        │ (2)       ┆            │
-        ╞═══════════╪════════════╡
-        │ Toronto   ┆ 6000000    │
-        │ Vancouver ┆ 3000000    │
-        └───────────┴────────────┘
-        >>> pf.sum(expr)
-        <Expression terms=1 type=constant>
-        9000000
-
-        If the given dimensions don't exist, an error will be raised:
-
-        >>> pf.sum("city", expr)
-        Traceback (most recent call last):
-        ...
-        AssertionError: Cannot sum over ['city'] as it is not in ['time', 'place']
-
-    See Also:
-        [pyoframe.sum_by][] for summing over all dimensions _except_ those that are specified.
-    """
+    """Deprecated: Use Expression.sum() or Variable.sum() instead."""
     if expr is None:
         assert isinstance(over, SupportsMath)
-        over = over.to_expr()
-        all_dims = over.dimensions
-        if all_dims is None:
-            raise ValueError(
-                "Cannot sum over dimensions with an expression with no dimensions."
-            )
-        return over.sum(all_dims)
+        return over.to_expr().sum()
     else:
         assert isinstance(over, (str, Sequence))
-        return expr.to_expr().sum(over)
+        if isinstance(over, str):
+            over = (over,)
+        return expr.to_expr().sum(*over)
 
 
 def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
-    """Like [`pf.sum()`][pyoframe.sum], but the sum is taken over all dimensions except those specified in `by` (just like a `group_by` operation).
-
-    Examples:
-        >>> expr = pl.DataFrame(
-        ...     {
-        ...         "time": ["mon", "tue", "wed", "mon", "tue"],
-        ...         "place": [
-        ...             "Toronto",
-        ...             "Toronto",
-        ...             "Toronto",
-        ...             "Vancouver",
-        ...             "Vancouver",
-        ...         ],
-        ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
-        ...     }
-        ... ).to_expr()
-        >>> expr
-        <Expression height=5 terms=5 type=constant>
-        ┌──────┬───────────┬────────────┐
-        │ time ┆ place     ┆ expression │
-        │ (3)  ┆ (2)       ┆            │
-        ╞══════╪═══════════╪════════════╡
-        │ mon  ┆ Toronto   ┆ 1000000    │
-        │ tue  ┆ Toronto   ┆ 3000000    │
-        │ wed  ┆ Toronto   ┆ 2000000    │
-        │ mon  ┆ Vancouver ┆ 1000000    │
-        │ tue  ┆ Vancouver ┆ 2000000    │
-        └──────┴───────────┴────────────┘
-
-        >>> pf.sum_by("place", expr)
-        <Expression height=2 terms=2 type=constant>
-        ┌───────────┬────────────┐
-        │ place     ┆ expression │
-        │ (2)       ┆            │
-        ╞═══════════╪════════════╡
-        │ Toronto   ┆ 6000000    │
-        │ Vancouver ┆ 3000000    │
-        └───────────┴────────────┘
-        >>> total_sum = pf.sum_by([], expr)
-        >>> total_sum
-        <Expression terms=1 type=constant>
-        9000000
-
-        If the specified dimensions don't exist, an error will be raised:
-
-        >>> pf.sum_by("city", expr)
-        Traceback (most recent call last):
-        ...
-        AssertionError: Cannot sum by ['city'] because the expression's dimensions are ['time', 'place'].
-
-        >>> pf.sum_by("time", total_sum)
-        Traceback (most recent call last):
-        ...
-        AssertionError: Cannot sum by ['time'] because the expression has no dimensions.
-
-    See Also:
-        [pyoframe.sum][] for summing over specified dimensions.
-    """
+    """Deprecated: Use Expression.sum() or Variable.sum() instead."""
     if isinstance(by, str):
         by = [by]
-    expr = expr.to_expr()
-    dimensions = expr.dimensions
-    assert dimensions is not None, (
-        f"Cannot sum by {by} because the expression has no dimensions."
-    )
-    assert set(by) <= set(dimensions), (
-        f"Cannot sum by {by} because the expression's dimensions are {dimensions}."
-    )
-    remaining_dims = [dim for dim in dimensions if dim not in by]
-    return sum(over=remaining_dims, expr=expr)
+    return expr.to_expr().sum_by(*by)
 
 
 class Constraint(ModelElementWithId):
@@ -1679,7 +1655,7 @@ class Constraint(ModelElementWithId):
             ...     homework_due_tomorrow[["project", "cost_per_hour_underdelivered"]],
             ...     max=homework_due_tomorrow[["project", "max_underdelivered"]],
             ... )
-            >>> m.only_one_day = sum("project", m.hours_spent) <= 24
+            >>> m.only_one_day = m.hours_spent.sum("project") <= 24
             >>> # Relaxing a constraint after it has already been assigned will give an error
             >>> m.only_one_day.relax(1)
             Traceback (most recent call last):
@@ -1730,7 +1706,7 @@ class Constraint(ModelElementWithId):
 
         penalty = var * cost
         if self.dimensions:
-            penalty = sum(self.dimensions, penalty)
+            penalty = penalty.sum()
         if m.sense is None:
             raise ValueError(
                 "Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...)."

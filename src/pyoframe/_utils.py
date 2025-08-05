@@ -308,7 +308,7 @@ class NamedVariableMapper:
         >>> import polars as pl
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
-        >>> pf.sum(m.foo)
+        >>> m.foo.sum()
         <Expression terms=4 type=linear>
         foo[0] + foo[1] + foo[2] + foo[3]
     """

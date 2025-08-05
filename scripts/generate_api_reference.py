@@ -9,8 +9,10 @@ import pyoframe as pf
 root = Path(__file__).parent.parent
 src = root / "src" / "pyoframe"
 
+objects_to_gen = [obj for obj in pf.__all__ if obj not in ("sum", "sum_by")]
 
-for object_name in pf.__all__:
+
+for object_name in objects_to_gen:
     full_doc_path = Path("reference", f"pyoframe.{object_name}.md")
 
     if object_name == "Config":
@@ -20,7 +22,7 @@ for object_name in pf.__all__:
         fd.write(f"# pyoframe.{object_name} \n\n::: pyoframe.{object_name}")
 
 with mkdocs_gen_files.open(Path("reference", "index.md"), "a") as index_file:
-    for entry in pf.__all__:
+    for entry in objects_to_gen:
         index_file.write(f"- [{entry}](pyoframe.{entry}.md)" + "\n")
 
 
