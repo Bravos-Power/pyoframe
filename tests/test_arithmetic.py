@@ -8,7 +8,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Config, Expression, Model, Set, Variable, VType, sum
+from pyoframe import Config, Expression, Model, Set, Variable, VType
 from pyoframe._arithmetic import PyoframeError
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
 
@@ -482,7 +482,7 @@ def test_no_propogate():
             "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
-        sum("dim1", expr1 + expr2) + expr3
+        (expr1 + expr2).sum("dim1") + expr3
 
     with pytest.raises(
         PyoframeError,
@@ -490,9 +490,9 @@ def test_no_propogate():
             "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
-        sum("dim1", expr1 + expr2.keep_unmatched()) + expr3
+        (expr1 + expr2.keep_unmatched()).sum("dim1") + expr3
 
-    result = sum("dim1", expr1 + expr2.keep_unmatched()) + expr3.drop_unmatched()
+    result = (expr1 + expr2.keep_unmatched()).sum("dim1") + expr3.drop_unmatched()
     assert_frame_equal(
         result.to_str(return_df=True),
         pl.DataFrame([[1, "10"]], schema=["dim2", "expression"], orient="row"),
@@ -514,7 +514,7 @@ def test_variable_equals(solver):
     ):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
-    m.maximize = sum(m.Choose100)
+    m.maximize = m.Choose100.sum()
     m.attr.Silent = True
     m.optimize()
     assert m.maximize.value == 300

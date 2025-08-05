@@ -38,9 +38,9 @@ m = pf.Model()
 m.Production = pf.Variable(products_profit["products"], lb=0)
 
 machine_usage = m.Production * processing_times
-m.machine_capacity = pf.sum_by("machines", machine_usage) <= machines_availability
+m.machine_capacity = machine_usage.sum_by("machines") <= machines_availability
 
-m.maximize = pf.sum(products_profit * m.Production)
+m.maximize = (products_profit * m.Production).sum()
 
 m.optimize()
 ```

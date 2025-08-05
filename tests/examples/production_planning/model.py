@@ -9,7 +9,6 @@ from pathlib import Path
 import polars as pl
 
 import pyoframe as pf
-from pyoframe import sum_by
 
 _input_dir = Path(__file__).parent / "input_data"
 
@@ -23,9 +22,9 @@ def solve_model(use_var_names=True):
     m.Production = pf.Variable(products_profit["products"], lb=0)
 
     machine_usage = m.Production * processing_times
-    m.machine_capacity = sum_by("machines", machine_usage) <= machines_availability
+    m.machine_capacity = machine_usage.sum_by("machines") <= machines_availability
 
-    m.maximize = pf.sum(products_profit * m.Production)
+    m.maximize = (products_profit * m.Production).sum()
 
     m.optimize()
 

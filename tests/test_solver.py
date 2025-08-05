@@ -46,7 +46,7 @@ def test_retrieving_duals(solver, sense, dimensioned):
     m.min_AB = 2 * m.A + m.B >= -100
     obj = 0.2 * m.A + 2 * m.B
     if dimensioned:
-        obj = pf.sum(obj)
+        obj = obj.sum()
     m.objective = obj
 
     m.optimize()
@@ -87,8 +87,8 @@ def test_retrieving_duals_vectorized(solver):
     m.X_ub = m.X <= data[["t", "ub"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
 
@@ -135,8 +135,8 @@ def test_support_variable_attributes(solver):
     m.X.attr.UpperBound = data[["t", "UpperBound"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
 
@@ -184,8 +184,8 @@ def test_support_variable_raw_attributes():
     m.X.attr.UB = data[["t", "UB"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = pf.sum(data[["t", "coef"]] * m.X).add_dim("c") <= constraint_bounds
-    m.maximize = pf.sum(data[["t", "obj_coef"]] * m.X)
+    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
 
@@ -222,7 +222,7 @@ def test_setting_gurobi_constraint_attr():
     m.B = pf.Variable(pf.Set(y=[1, 2, 3]))
     m.A_con = m.A >= 10
     m.B_con = m.B >= 5
-    m.maximize = m.A + pf.sum(m.B)
+    m.maximize = m.A + m.B.sum()
 
     # Solving it should return unbounded
     m.optimize()

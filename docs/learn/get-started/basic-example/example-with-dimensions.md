@@ -85,7 +85,7 @@ Printing the variable shows that it contains a `food` dimension with indices `to
 
     We suggest capitalizing model variables (i.e. `m.Buy`, not `m.buy`) to make distinguishing what is and isn't a variable easy.
 
-### Step 3: Create the objective with `pf.sum`
+### Step 3: Create the objective with `.sum()`
 
 Previously you had:
 
@@ -116,10 +116,10 @@ As you can see, Pyoframe with a bit of magic converted the `Variable` into an `E
 
 *[with a bit of magic]: Pyoframe always converts DataFrames into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.
 
-Second, notice that the `Expression` still has the `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. All objective functions must be a single expression (without dimensions) so let's sum over the `food` dimensions using `pf.sum()`.
+Second, notice that the `Expression` still has the `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. All objective functions must be a single expression (without dimensions) so let's sum over the `food` dimension.
 
 ```pycon
->>> pf.sum("food", data[["food", "cost"]] * m.Buy)
+>>> (data[["food", "cost"]] * m.Buy).sum("food")
 <Expression terms=2 type=linear>
 4 Buy[tofu_block] +3 Buy[chickpea_can]
 
@@ -128,7 +128,7 @@ Second, notice that the `Expression` still has the `food` dimension—it really 
 This works and since `food` is the only dimensions you don't even need to specify it. Putting it all together:
 
 ```python
-m.minimize = pf.sum(data[["food", "cost"]] * m.Buy)
+m.minimize = (data[["food", "cost"]] * m.Buy).sum()
 ```
 
 ### Step 4: Add the constraint
@@ -136,7 +136,7 @@ m.minimize = pf.sum(data[["food", "cost"]] * m.Buy)
 This is similar to how you created the objective, except now you're using `protein` and you turn the `Expression` into a `Constraint` with the `>=` operation.
 
 ```python
-m.protein_constraint = pf.sum(data[["food", "protein"]] * m.Buy) >= 50
+m.protein_constraint = (data[["food", "protein"]] * m.Buy).sum() >= 50
 ```
 
 <!-- invisible-code-block: python
@@ -156,8 +156,8 @@ data = pd.read_csv("food_data.csv")
 
 m = pf.Model()
 m.Buy = pf.Variable(data["food"], lb=0, vtype="integer")
-m.minimize = pf.sum(data[["food", "cost"]] * m.Buy)
-m.protein_constraint = pf.sum(data[["food", "protein"]] * m.Buy) >= 50
+m.minimize = (data[["food", "cost"]] * m.Buy).sum()
+m.protein_constraint = (data[["food", "protein"]] * m.Buy).sum() >= 50
 
 m.optimize()
 ```

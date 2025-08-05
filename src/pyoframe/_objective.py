@@ -8,6 +8,7 @@ from pyoframe._constants import ObjSense
 from pyoframe._core import Expression, SupportsToExpr
 
 
+# TODO don't subclass Expression to avoid a bunch of unnecessary functions being available.
 class Objective(Expression):
     """The objective for an optimization model.
 
@@ -48,7 +49,7 @@ class Objective(Expression):
         >>> m.maximize = m.dimensioned_variable
         Traceback (most recent call last):
         ...
-        ValueError: Objective cannot be created from a dimensioned expression. Did you forget to use pf.sum()?
+        ValueError: Objective cannot be created from a dimensioned expression. Did you forget to use .sum()?
 
         Objectives cannot be overwritten.
 
@@ -73,7 +74,7 @@ class Objective(Expression):
         self._model = expr._model
         if self.dimensions is not None:
             raise ValueError(
-                "Objective cannot be created from a dimensioned expression. Did you forget to use pf.sum()?"
+                "Objective cannot be created from a dimensioned expression. Did you forget to use .sum()?"
             )
 
     @property

@@ -46,7 +46,7 @@ def solve_model(
 
     m.pump_and_turbine_xor = m.Turb <= (1 - m.Pump) * turb_max
 
-    m.maximize = pf.sum((m.Turb - pump_max * m.Pump) * hourly_prices)
+    m.maximize = ((m.Turb - pump_max * m.Pump) * hourly_prices).sum()
 
     m.attr.RelativeGap = 1e-5
 

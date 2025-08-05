@@ -24,13 +24,12 @@ def solve_model(use_var_names):
     )
     m.is_used = pf.Variable({"stock": range(stock_available)}, vtype="binary")
 
-    m.con_within_stock = (
-        pf.sum_by("stock", m.orders_in_stock * orders["width"])
-        <= stock_width * m.is_used
-    )
-    m.con_meet_orders = pf.sum_by("order", m.orders_in_stock) >= orders["quantity"]
+    m.con_within_stock = (m.orders_in_stock * orders["width"]).sum_by(
+        "stock"
+    ) <= stock_width * m.is_used
+    m.con_meet_orders = m.orders_in_stock.sum_by("order") >= orders["quantity"]
 
-    m.minimize = pf.sum(m.is_used)
+    m.minimize = m.is_used.sum()
 
     m.optimize()
 
