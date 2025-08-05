@@ -166,6 +166,51 @@ class SupportPolarsMethodMixin(ABC):
         Takes the same arguments as [`polars.DataFrame.rename`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.rename.html).
 
         See the [portfolio optimization example](../examples/portfolio_optimization.md) for a usage example.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable(
+            ...     {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...     {"city": ["Toronto", "Berlin", "Paris"]},
+            ... )
+            >>> m.v
+            <Variable 'v' height=12>
+            ┌───────┬─────────┬──────────────────┐
+            │ hour  ┆ city    ┆ variable         │
+            │ (4)   ┆ (3)     ┆                  │
+            ╞═══════╪═════════╪══════════════════╡
+            │ 00:00 ┆ Toronto ┆ v[00:00,Toronto] │
+            │ 00:00 ┆ Berlin  ┆ v[00:00,Berlin]  │
+            │ 00:00 ┆ Paris   ┆ v[00:00,Paris]   │
+            │ 06:00 ┆ Toronto ┆ v[06:00,Toronto] │
+            │ 06:00 ┆ Berlin  ┆ v[06:00,Berlin]  │
+            │ …     ┆ …       ┆ …                │
+            │ 12:00 ┆ Berlin  ┆ v[12:00,Berlin]  │
+            │ 12:00 ┆ Paris   ┆ v[12:00,Paris]   │
+            │ 18:00 ┆ Toronto ┆ v[18:00,Toronto] │
+            │ 18:00 ┆ Berlin  ┆ v[18:00,Berlin]  │
+            │ 18:00 ┆ Paris   ┆ v[18:00,Paris]   │
+            └───────┴─────────┴──────────────────┘
+
+            >>> m.v.rename({"city": "location"})
+            <Expression height=12 terms=12 type=linear>
+            ┌───────┬──────────┬──────────────────┐
+            │ hour  ┆ location ┆ expression       │
+            │ (4)   ┆ (3)      ┆                  │
+            ╞═══════╪══════════╪══════════════════╡
+            │ 00:00 ┆ Toronto  ┆ v[00:00,Toronto] │
+            │ 00:00 ┆ Berlin   ┆ v[00:00,Berlin]  │
+            │ 00:00 ┆ Paris    ┆ v[00:00,Paris]   │
+            │ 06:00 ┆ Toronto  ┆ v[06:00,Toronto] │
+            │ 06:00 ┆ Berlin   ┆ v[06:00,Berlin]  │
+            │ …     ┆ …        ┆ …                │
+            │ 12:00 ┆ Berlin   ┆ v[12:00,Berlin]  │
+            │ 12:00 ┆ Paris    ┆ v[12:00,Paris]   │
+            │ 18:00 ┆ Toronto  ┆ v[18:00,Toronto] │
+            │ 18:00 ┆ Berlin   ┆ v[18:00,Berlin]  │
+            │ 18:00 ┆ Paris    ┆ v[18:00,Paris]   │
+            └───────┴──────────┴──────────────────┘
+
         """
         return self._new(self.data.rename(*args, **kwargs))
 
