@@ -6,7 +6,7 @@ from pathlib import Path
 CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/GIS/"
 
 ENERGY_BENCHMARKS = Path("input_data/energy_planning")
-PREPROCESS_DIR = ENERGY_BENCHMARKS / "raw"
+PREPROCESS_DIR = ENERGY_BENCHMARKS / "intermediary_data_inputs"
 POSTPROCESS_DIR = ENERGY_BENCHMARKS
 SCRIPTS_DIR = Path("./scripts")
 
@@ -17,7 +17,7 @@ rule generate_all_inputs:
         generators=POSTPROCESS_DIR / "generators.parquet",
         yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
         vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
-        pdf=POSTPROCESS_DIR / "power_distribution_factors.parquet"
+        bodf=POSTPROCESS_DIR / "branch_outage_dist_facts.parquet",
     output:
         POSTPROCESS_DIR / "COMPLETED"
     shell:
@@ -69,7 +69,7 @@ rule process_line_data:
     input:
         PREPROCESS_DIR / "CATS_lines.json",
     output:
-        POSTPROCESS_DIR / "lines.parquet",
+        PREPROCESS_DIR / "lines.parquet",
     notebook:
         str(SCRIPTS_DIR / "process_lines_json.py.ipynb")
 
@@ -98,7 +98,7 @@ rule compute_capacity_factors:
 
 rule simplify_network:
     input:
-        lines=POSTPROCESS_DIR / "lines.parquet",
+        lines=PREPROCESS_DIR / "lines.parquet",
         generators=POSTPROCESS_DIR / "generators.parquet",
         loads=POSTPROCESS_DIR / "loads.parquet",
     output:
@@ -110,6 +110,15 @@ rule compute_ptdf:
     input:
         lines=POSTPROCESS_DIR / "lines_simplified.parquet",
     output:
-        POSTPROCESS_DIR / "power_transfer_dist_facts.parquet",
-    script:
-        SCRIPTS_DIR / "compute_power_transfer_dist_facts.py"
+        PREPROCESS_DIR / "power_transfer_dist_facts.parquet",
+    notebook:
+        str(SCRIPTS_DIR / "compute_power_transfer_dist_facts.ipynb")
+
+rule compute_bodf:
+    input:
+        lines=POSTPROCESS_DIR / "lines_simplified.parquet",
+        ptdf=PREPROCESS_DIR / "power_transfer_dist_facts.parquet",
+    output:
+        POSTPROCESS_DIR / "branch_outage_dist_facts.parquet",
+    notebook:
+        str(SCRIPTS_DIR / "compute_branch_outage_dist_facts.ipynb")

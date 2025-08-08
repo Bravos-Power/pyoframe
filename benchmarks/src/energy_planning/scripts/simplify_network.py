@@ -20,15 +20,19 @@ f_bus = pl.col("from_bus")
 t_bus = pl.col("to_bus")
 
 
-def get_buses_degree(lines: pl.DataFrame, degree: int, exclude: pl.Series) -> pl.Series:
+def get_buses_degree(
+    lines: pl.DataFrame, degree: int, exclude: pl.Series | None = None
+) -> pl.Series:
     """Returns a Series of buses with degree `degree` that are not in `exclude`."""
-    return (
+    lines = (
         pl.concat([lines["from_bus"], lines["to_bus"]])
         .value_counts(name="degree")
         .filter(pl.col("degree") == degree)
-        .filter(~f_bus.is_in(exclude.implode()))
-        .get_column("from_bus")
     )
+    if exclude is not None:
+        lines = lines.filter(~f_bus.is_in(exclude.implode()))
+
+    return lines.get_column("from_bus")
 
 
 def remove_dead_ends(lines, buses_to_keep):
@@ -135,6 +139,37 @@ def remove_self_connections(lines):
     return lines, initial - lines.height
 
 
+def identify_leafs(lines, buses_to_keep):
+    """Flags lines that are at the very edge of the grid.
+
+    These lines will later be excluded from branch outages since they would effectively split the network.
+    """
+    lines = lines.with_columns(is_leaf=pl.lit(False))
+    passes = 0
+
+    while True:
+        leaf_buses = get_buses_degree(lines.filter(~pl.col("is_leaf")), 1)
+        if len(leaf_buses) == 0:
+            break
+        if passes == 0:
+            assert leaf_buses.is_in(buses_to_keep.implode()).all(), (
+                "Dead end buses were not properly removed"
+            )
+
+        lines = lines.with_columns(
+            is_leaf=(
+                pl.col("is_leaf")
+                | f_bus.is_in(leaf_buses.implode())
+                | t_bus.is_in(leaf_buses.implode())
+            )
+        )
+        passes += 1
+    print(
+        f"Detected {lines.filter('is_leaf').height} leaf buses after {passes} passes."
+    )
+    return lines
+
+
 def main(lines, buses_to_keep):
     """Simplify the network until there is no more simplification possible."""
     lines = lines.drop("line_id")
@@ -178,6 +213,8 @@ def main(lines, buses_to_keep):
     print(
         f"Removed {lines_removed / num_lines_initial:.2%} of lines in total (l={lines.height})."
     )
+
+    lines = identify_leafs(lines, buses_to_keep)
 
     lines = lines.with_row_index(name="line_id", offset=1)
 
