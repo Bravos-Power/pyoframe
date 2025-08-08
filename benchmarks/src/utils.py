@@ -160,8 +160,17 @@ class LinopyBenchmark(Benchmark):
             kwargs["TimeLimit"] = 0.0
             kwargs["Presolve"] = 0
 
-        model.solve(self.solver, **kwargs)
+        try:
+            model.solve(self.solver, **kwargs)
+        except Exception as e:
+            if self.block_solver:
+                pass
+            else:
+                raise e
         return model
+
+    def _get_objective(self) -> float:
+        return self.model.objective.value
 
 
 class CvxpyBenchmark(Benchmark):

@@ -17,10 +17,27 @@ problems:
       jump: 256
       pyoframe: true
       pyoptinterface: true
-  energy_planning:
-    requires_input: true
+  # energy_planning:
+  #   requires_input: true
+  #   libraries:
+  #     pyoframe: true
+  dummy_model:
+    size:
+      - 100
+      - 200
+      - 300
+      - 400
+      - 500
+      - 1000
+      - 2000
     libraries:
+      pyomo: 1000
+      gurobipy: 1000
+      cvxpy: 1000
+      jump: true
       pyoframe: true
+      pyoptinterface: true
+      linopy: 1000
 
 
 solvers:

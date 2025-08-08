@@ -57,7 +57,7 @@ rule plot_results:
 rule run_benchmark:
     threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
     input:
-        lambda wildcards: "input_data/{problem}/COMPLETED" if config["problems"][wildcards.problem].get("requires_input", False) else None
+        lambda wildcards: "input_data/{problem}/COMPLETED" if config["problems"][wildcards.problem].get("requires_input", False) else []
     benchmark:
         repeat("results/{problem}/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:
