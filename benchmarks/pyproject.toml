@@ -22,7 +22,15 @@ dependencies = [
     "snakeviz==2.2.2",          # For viewing profiling results
     "memray==1.17.2",           # For memory profiling
     "numpy==2.3.1",
-    "pytest==8.4.1"
+    "pytest==8.4.1",
+]
+
+[project.optional-dependencies]
+energy-planning = [
+    "scikit-sparse==0.4.16",
+    "scipy==1.16.0",
+    "nbformat==5.10.4",
+    "nbconvert==7.16.6",
 ]
 
 [tool.setuptools]

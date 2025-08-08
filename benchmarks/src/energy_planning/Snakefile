@@ -5,18 +5,23 @@ from pathlib import Path
 
 CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/GIS/"
 
-ENERGY_BENCHMARKS = Path("benchmarks/energy_planning")
-PREPROCESS_DIR = ENERGY_BENCHMARKS / "data/preprocess"
-POSTPROCESS_DIR = ENERGY_BENCHMARKS / "data/postprocess"
-SCRIPTS_DIR = ENERGY_BENCHMARKS / "scripts"
+ENERGY_BENCHMARKS = Path("input_data/energy_planning")
+PREPROCESS_DIR = ENERGY_BENCHMARKS / "raw"
+POSTPROCESS_DIR = ENERGY_BENCHMARKS
+SCRIPTS_DIR = Path("./scripts")
 
-rule all:
+rule generate_all_inputs:
     input:
         loads=POSTPROCESS_DIR / "loads.parquet",
         lines=POSTPROCESS_DIR / "lines_simplified.parquet",
         generators=POSTPROCESS_DIR / "generators.parquet",
         yearly_limit=POSTPROCESS_DIR / "yearly_limits.parquet",
         vcf=POSTPROCESS_DIR / "variable_capacity_factors.parquet",
+        pdf=POSTPROCESS_DIR / "power_distribution_factors.parquet"
+    output:
+        POSTPROCESS_DIR / "COMPLETED"
+    shell:
+        "touch {output[0]}"
 
 
 rule fetch_load_data:
@@ -101,3 +106,10 @@ rule simplify_network:
     script:
         SCRIPTS_DIR / "simplify_network.py"
 
+rule compute_ptdf:
+    input:
+        lines=POSTPROCESS_DIR / "lines_simplified.parquet",
+    output:
+        POSTPROCESS_DIR / "power_transfer_dist_facts.parquet",
+    script:
+        SCRIPTS_DIR / "compute_power_transfer_dist_facts.py"

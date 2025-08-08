@@ -6,6 +6,8 @@ Tricks are:
     - and removing intermediary buses with no loads or generators.
 
 Line ratings and reactances are updated accordingly.
+Line IDs are not preserved (since new / combined lines are created).
+Node IDs are preserved, but the number of nodes is reduced.
 
 As of June 25, 2025, this script reduces the number of lines by 25%.
 """
@@ -135,6 +137,7 @@ def remove_self_connections(lines):
 
 def main(lines, buses_to_keep):
     """Simplify the network until there is no more simplification possible."""
+    lines = lines.drop("line_id")
     expected_cols = {"from_bus", "to_bus", "reactance", "line_rating"}
     assert set(lines.columns) == expected_cols, (
         f"Unexpected columns in lines DataFrame ({set(lines.columns) - expected_cols})"
@@ -175,6 +178,8 @@ def main(lines, buses_to_keep):
     print(
         f"Removed {lines_removed / num_lines_initial:.2%} of lines in total (l={lines.height})."
     )
+
+    lines = lines.with_row_index(name="line_id", offset=1)
 
     return lines
 

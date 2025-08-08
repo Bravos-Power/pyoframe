@@ -8,6 +8,8 @@ from .bm_pyoframe import Bench as PyoframeBenchmark
 from .bm_pyomo import Bench as PyomoBenchmark
 from .bm_pyoptinterface import Bench as PyOptInterfaceBenchmark
 
+TEST_TOL = 1e-6
+
 
 @pytest.mark.parametrize(
     "bench_cls",
@@ -35,4 +37,8 @@ def test_benchmark_objectives(bench_cls, size):
     bench = bench_cls("gurobi", size, block_solver=False)
     bench.run()
     objective_value = bench.get_objective()
-    assert objective_value == pytest.approx(expected_obj, abs=1e-5)
+    assert objective_value == pytest.approx(expected_obj, abs=TEST_TOL)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

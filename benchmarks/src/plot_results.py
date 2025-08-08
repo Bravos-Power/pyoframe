@@ -8,7 +8,7 @@ import polars as pl
 from benchmarks.utils import mock_snakemake
 
 
-def collect_benchmarks(input_files):
+def collect_benchmarks(input_files) -> pl.DataFrame:
     assert input_files, "No input files provided to plot_results.py"
     dfs = []
     for input_file in input_files:
@@ -35,6 +35,9 @@ def normalize_results(results: pl.DataFrame):
     non_join_cols = [col for col in results.columns if col not in join_cols]
 
     pyoframe_results = results.filter(pl.col("library") == "pyoframe").drop("library")
+    assert pyoframe_results.height > 0, (
+        "Cannot normalize results: no pyoframe data found"
+    )
     results = results.join(
         pyoframe_results,
         on=["size", "solver"],
@@ -47,7 +50,8 @@ def normalize_results(results: pl.DataFrame):
     return results
 
 
-def plot(results, output):
+def plot(results: pl.DataFrame, output):
+    assert results.height > 0, "No results to plot"
     if results.get_column("max_pss").sum() == 0:
         results = results.rename({"max_uss": "memory"})
     else:

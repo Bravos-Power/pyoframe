@@ -14,6 +14,12 @@ This folder contains the code and instructions needed to compare Pyoframe's perf
 5. Run `snakemake --cores 'all'`. This will run all the benchmarks and take a while.
 6. View the plotted results in, for example, `facility_problem/results/benchmark_results.png`
 
+### Running energy planning benchmark
+
+You'll need to complete the following additional steps.
+1. Install the dependencies for [`scikit-sparse`](https://github.com/scikit-sparse/scikit-sparse), typically `sudo apt-get install libsuitesparse-dev`
+2. `pip install --editable .[energy-planning]
+
 
 ## Running energy model benchmark locally
 

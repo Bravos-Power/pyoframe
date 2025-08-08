@@ -5,6 +5,8 @@ from pyoframe._constants import SUPPORTED_SOLVERS
 
 configfile: "config.yaml"
 
+include: "src/energy_planning/Snakefile"
+
 wildcard_constraints:
     problem="[a-z_]+",
     library="[a-z]+",
@@ -15,6 +17,7 @@ def generate_all_runs(problem):
     import itertools
 
     problem_data = config["problems"][problem]
+    libraries = problem_data["libraries"]
     if problem_data is None or "size" not in problem_data:
         sizes = [0]
     else:
@@ -24,10 +27,10 @@ def generate_all_runs(problem):
         (size, library, solver)
         for size, library, solver in itertools.product(
             sizes,
-            config["libraries"],
+            libraries.keys(),
             config["solvers"]
         )
-        if size <= problem_data["max_sizes"].get(library, float('inf'))
+        if (type(libraries[library]) is bool and libraries[library]) or size <= libraries[library]
     ]
 
     return runs
@@ -53,6 +56,8 @@ rule plot_results:
 
 rule run_benchmark:
     threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
+    input:
+        lambda wildcards: "input_data/{problem}/COMPLETED" if config["problems"][wildcards.problem].get("requires_input", False) else None
     benchmark:
         repeat("results/{problem}/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:

@@ -1,10 +1,16 @@
-"""Contains the base clases used for benchmarking."""
+"""Contains the base classes used for benchmarking."""
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+try:
+    import nbformat
+    from nbconvert.preprocessors import ExecutePreprocessor
+except ImportError:
+    pass
 
 from pyoframe._constants import SUPPORTED_SOLVERS
 
@@ -263,3 +269,24 @@ def mock_snakemake(rulename, **wildcards):
 
     snakemake.mock = True
     return snakemake
+
+
+def run_notebook(
+    notebook_path: Path,
+    working_directory: Path,
+    debug: bool = False,
+    first_cell: str | None = None,
+):
+    """Runs a Jupyter notebook."""
+    with open(notebook_path) as f:
+        nb = nbformat.read(f, as_version=4)
+    if first_cell is not None:
+        injected_cell = nbformat.v4.new_code_cell(source=first_cell)
+
+        nb["cells"] = [injected_cell] + nb["cells"]
+    ep = ExecutePreprocessor(timeout=600, kernel_name="python3")
+    ep.preprocess(nb, {"metadata": {"path": working_directory}})
+
+    if debug:
+        with open(notebook_path.parent / ".debug.ipynb", "w") as f:
+            nbformat.write(nb, f)

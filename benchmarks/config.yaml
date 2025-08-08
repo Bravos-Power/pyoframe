@@ -9,12 +9,19 @@ problems:
       - 64
       - 128
       - 256
-    max_sizes:
-      # jump: 
+      - 512
+    libraries:
       pyomo: 64
       gurobipy: 128
       cvxpy: 32
-  # energy_problem:
+      jump: 256
+      pyoframe: true
+      pyoptinterface: true
+  energy_planning:
+    requires_input: true
+    libraries:
+      pyoframe: true
+
 
 solvers:
   - gurobi
