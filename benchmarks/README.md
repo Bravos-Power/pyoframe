@@ -1,6 +1,6 @@
 # Pyoframe benchmarks
 
-This folder contains the code and instructions needed to compare Pyoframe's performance to other libraries.
+This folder contains the code and instructions needed to benchmark Pyoframe's performance to other libraries. For benchmarking, we use [`snakemake`](https://snakemake.github.io/) to produce the inputs and run the benchmarks.
 
 ## How to run the benchmarks
 

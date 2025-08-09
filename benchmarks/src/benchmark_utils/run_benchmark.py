@@ -13,7 +13,7 @@ from pyoframe._constants import SUPPORTED_SOLVERS
 def get_problems() -> Collection[str]:
     return [
         c.name
-        for c in os.scandir(Path(__file__).parent)
+        for c in os.scandir(Path(__file__).parent.parent)
         if c.is_dir() and not c.name.startswith("_")
     ]
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     if args.library != "jump":
         # import solve function dynamically
         benchmark = importlib.import_module(
-            f"benchmarks.{args.problem}.bm_{args.library.lower()}"
+            f"{args.problem}.bm_{args.library.lower()}"
         ).Bench
 
         benchmark(solver=args.solver, size=args.size).run()

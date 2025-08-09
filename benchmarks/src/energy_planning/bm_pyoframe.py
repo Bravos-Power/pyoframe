@@ -5,7 +5,10 @@ from benchmark_utils import PyoframeBenchmark
 
 class Bench(PyoframeBenchmark):
     def build(self):
-        raise NotImplementedError()
+        ...
+        # bodf = pl.read_parquet(self.input_dir / "branch_outage_dist_fact.parquet")
+        # generators = pl.read_parquet(self.input_dir / "generators.parquet")
+        # lines = pl.read_parquet(self.input_dir / "lines_simplified.parquet")
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ class Benchmark(ABC):
             f"{solver} is not supported by {self.__class__.__name__}."
         )
         self.solver = solver
-        self.size: int | tuple[int, int] | None = size
+        self.size = size
         self.block_solver = block_solver
 
     @abstractmethod

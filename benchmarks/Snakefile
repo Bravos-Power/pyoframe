@@ -52,16 +52,16 @@ rule plot_results:
         "results/{problem}/combined_results.png",
         "results/{problem}/normalized_results.png"
     script:
-        "src/plot_results.py"
+        "src/benchmark_utils/plot_results.py"
 
 rule run_benchmark:
     threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
     input:
-        lambda wildcards: "input_data/{problem}/COMPLETED" if config["problems"][wildcards.problem].get("requires_input", False) else []
+        lambda wildcards: directory("input_data/{problem}/final_inputs") if config["problems"][wildcards.problem].get("requires_inputs", False) else []
     benchmark:
         repeat("results/{problem}/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:
-        "python src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+        "python src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
 
 
 
@@ -70,7 +70,7 @@ rule profile:
     output:
         "results/{problem}/{library}_{solver}_{size}.prof"
     shell:
-        "py-spy record -s -t -f speedscope --rate 20 --native -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof -- python src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+        "py-spy record -s -t -f speedscope --rate 20 --native -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof -- python src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
 
 rule mem_profile:
     threads: available_cpu_count()
@@ -78,7 +78,7 @@ rule mem_profile:
         "results/{problem}/{library}_{solver}_{size}_memray.html"
     shell:
         """
-        memray run --trace-python-allocators --follow-fork --native --aggregate -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin src/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}
+        memray run --trace-python-allocators --follow-fork --native --aggregate -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}
         memray flamegraph -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.html results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin
         """
 
