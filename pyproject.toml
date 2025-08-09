@@ -21,7 +21,7 @@ dependencies = [
     "numpy",
     "pyarrow",
     "pandas",
-    "pyoptinterface>=0.4.1,<1",
+    "pyoptinterface>=0.5.0,<1",
 ]
 
 [project.optional-dependencies]

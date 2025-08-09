@@ -1035,7 +1035,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),
             )
         else:
-            return poi.ScalarAffineFunction(
+            return poi.ScalarAffineFunction.from_numpy(
                 coefficients=self.data.get_column(COEF_KEY).to_numpy(),
                 variables=self.data.get_column(VAR_KEY).to_numpy(),
             )
@@ -1508,7 +1508,9 @@ class Constraint(ModelElementWithId):
             else self._model.poi.add_linear_constraint
         )
         ScalarFunction = (
-            poi.ScalarQuadraticFunction if is_quadratic else poi.ScalarAffineFunction
+            poi.ScalarQuadraticFunction
+            if is_quadratic
+            else poi.ScalarAffineFunction.from_numpy
         )
 
         if self.dimensions is None:
