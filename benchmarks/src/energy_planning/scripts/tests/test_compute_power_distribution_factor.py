@@ -66,13 +66,12 @@ snakemake.input = Mock()
 snakemake.input.lines = "lines.parquet"
 snakemake.output = ["ptdf.parquet"]
 """,
+            debug=False,
         )
 
         ptdf = pl.read_parquet(tmpdirname / "ptdf.parquet")
 
-    assert set(ptdf.columns) == {"injection", "line", "factor"}
-    ptdf = ptdf.sort("injection", "line").select(["injection", "line", "factor"])
-    # ptdf.write_csv(ROOT / "ptdf.csv")
+    ptdf.write_csv(Path(__file__).parent / "expected_ptdfs_new.csv")
     assert_frame_equal(
         ptdf,
         pl.read_csv(Path(__file__).parent / "expected_ptdfs.csv"),
