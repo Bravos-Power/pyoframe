@@ -9,8 +9,7 @@ in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 
 import numpy as np
 import pyoptinterface as poi
-
-from benchmarks.utils import PyOptInterfaceBenchmark
+from benchmark_utils import PyOptInterfaceBenchmark
 
 
 class Bench(PyOptInterfaceBenchmark):

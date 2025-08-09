@@ -1,6 +1,6 @@
 """Linopy dummy benchmark."""
 
-from benchmarks.utils import LinopyBenchmark
+from benchmark_utils import LinopyBenchmark
 
 
 class Bench(LinopyBenchmark):

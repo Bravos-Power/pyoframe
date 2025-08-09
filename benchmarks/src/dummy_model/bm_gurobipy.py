@@ -6,9 +6,8 @@ Use of this source code is governed by an MIT-style license that can be found
 in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 """
 
+from benchmark_utils import GurobiPyBenchmark
 from gurobipy import GRB, Model, quicksum
-
-from benchmarks.utils import GurobiPyBenchmark
 
 
 class Bench(GurobiPyBenchmark):

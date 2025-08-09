@@ -1,9 +1,8 @@
 """Linopy dummy benchmark."""
 
 import linopy
+from benchmark_utils import LinopyBenchmark
 from numpy import arange
-
-from benchmarks.utils import LinopyBenchmark
 
 
 class Bench(LinopyBenchmark):

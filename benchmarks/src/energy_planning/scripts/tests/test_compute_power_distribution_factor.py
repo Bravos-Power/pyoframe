@@ -8,9 +8,8 @@ from tempfile import TemporaryDirectory
 
 import polars as pl
 import pytest
+from benchmark_utils import run_notebook
 from polars.testing import assert_frame_equal
-
-from benchmarks.utils import run_notebook
 
 ROOT = Path(__file__).parent.parent.parent.parent.parent
 

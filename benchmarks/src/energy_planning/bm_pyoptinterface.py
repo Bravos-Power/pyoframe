@@ -1,6 +1,6 @@
 """Pyoptinterface dummy benchmark."""
 
-from benchmarks.utils import PyOptInterfaceBenchmark
+from benchmark_utils import PyOptInterfaceBenchmark
 
 
 class Bench(PyOptInterfaceBenchmark):

@@ -5,7 +5,7 @@ from pathlib import Path
 import altair as alt
 import polars as pl
 
-from benchmarks.utils import mock_snakemake
+from benchmark_utils import mock_snakemake
 
 
 def collect_benchmarks(input_files) -> pl.DataFrame:

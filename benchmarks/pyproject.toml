@@ -32,6 +32,3 @@ energy-planning = [
     "nbformat==5.10.4",
     "nbconvert==7.16.6",
 ]
-
-[tool.setuptools]
-package-dir = { "benchmarks" = "src" }

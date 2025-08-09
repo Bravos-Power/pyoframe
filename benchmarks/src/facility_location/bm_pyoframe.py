@@ -1,8 +1,8 @@
 """Pyoframe implementation of the facility location benchmark."""
 
 import polars as pl
+from benchmark_utils import PyoframeBenchmark
 
-from benchmarks.utils import PyoframeBenchmark
 from pyoframe import Model, Set, Variable
 
 

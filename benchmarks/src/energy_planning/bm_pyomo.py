@@ -7,7 +7,7 @@ in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 See https://github.com/jump-dev/JuMPPaperBenchmarks
 """
 
-from benchmarks.utils import PyomoBenchmark
+from benchmark_utils import PyomoBenchmark
 
 
 class Bench(PyomoBenchmark):

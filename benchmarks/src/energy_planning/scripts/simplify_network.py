@@ -13,8 +13,7 @@ As of June 25, 2025, this script reduces the number of lines by 25%.
 """
 
 import polars as pl
-
-from benchmarks.utils import mock_snakemake
+from benchmark_utils import mock_snakemake
 
 f_bus = pl.col("from_bus")
 t_bus = pl.col("to_bus")

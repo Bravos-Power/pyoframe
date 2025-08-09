@@ -1,6 +1,7 @@
 """Pyoframe implementation of the facility location benchmark."""
 
-from benchmarks.utils import PyoframeBenchmark
+from benchmark_utils import PyoframeBenchmark
+
 from pyoframe import Model, Set, Variable, sum
 
 

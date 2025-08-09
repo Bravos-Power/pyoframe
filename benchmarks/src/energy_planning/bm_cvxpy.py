@@ -4,7 +4,7 @@ Note: we must use the SOC constraint because CVXPY does not support convex <= co
 See: https://www.cvxpy.org/tutorial/dcp/index.html#dcp-problems
 """
 
-from benchmarks.utils import CvxpyBenchmark
+from benchmark_utils import CvxpyBenchmark
 
 
 class Bench(CvxpyBenchmark):
