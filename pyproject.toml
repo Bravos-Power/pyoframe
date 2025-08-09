@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools>=61.0", "setuptools-scm>=8"]
+requires = [
+    "setuptools>=61.0",
+    "setuptools-scm>=8", # Sets the package version based on git tags
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -18,7 +21,6 @@ classifiers = [
 ]
 dependencies = [
     "polars~=1.0",
-    "numpy",
     "pyarrow",
     "pandas",
     "pyoptinterface>=0.4.1,<1",
@@ -33,11 +35,12 @@ dev = [
     "pytest",
     "pytest-cov",
     "pre-commit",
-    "gurobipy",
+    "gurobipy",            # Used only to compare results with Gurobi during testing
     "highsbox",
     "coverage",
     "ipykernel",
     "pyoptinterface[nlp]",
+    "numpy",  # for testing with np.nan, don't pin so that two versions of Python are possible
 ]
 # We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
 docs = [
@@ -74,7 +77,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"{docs,tests}/**" = ["D101", "D102", "D103", "D104"]
+"{docs,tests,benchmarks}/**" = ["D101", "D102", "D103", "D104"]
 "conftest.py" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
@@ -87,13 +90,16 @@ docstring-code-format = true
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"
-addopts = "--doctest-modules --ignore=scripts"
+pythonpath = "src"                             # https://stackoverflow.com/a/50156706/5864903
+addopts = "--doctest-modules --ignore=scripts --ignore=benchmarks"
 # doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"
 local_scheme = "no-local-version"
+
+[tool.setuptools.package-dir]
+pyoframe = "src/pyoframe"
 
 [project.urls]
 Homepage = "https://bravos-power.github.io/pyoframe/"
