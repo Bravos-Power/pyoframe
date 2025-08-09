@@ -26,6 +26,7 @@ if __name__ == "__main__":
     parser.add_argument("--solver", choices=[s.name for s in SUPPORTED_SOLVERS])
     parser.add_argument("--size", type=int, default=None)
     parser.add_argument("--library")
+    parser.add_argument("--input-dir", default=None)
     args = parser.parse_args()
 
     if args.library != "jump":
@@ -34,7 +35,7 @@ if __name__ == "__main__":
             f"{args.problem}.bm_{args.library.lower()}"
         ).Bench
 
-        benchmark(solver=args.solver, size=args.size).run()
+        benchmark(solver=args.solver, size=args.size, input_dir=args.input_dir).run()
     else:
         subprocess.run(
             [

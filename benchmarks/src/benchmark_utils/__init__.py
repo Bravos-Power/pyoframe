@@ -1,4 +1,7 @@
-"""Contains the base classes used for benchmarking."""
+"""Contains the base classes used for benchmarking.
+
+Note that this contributes to every benchmark so we try to keep the imports mostly clear.
+"""
 
 from __future__ import annotations
 
@@ -6,26 +9,16 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-try:
-    import nbformat
-    from nbconvert.preprocessors import ExecutePreprocessor
-except ImportError:
-    pass
-
-from pyoframe._constants import SUPPORTED_SOLVERS
-
 if TYPE_CHECKING:
     import cvxpy as cp
 
 
 class Benchmark(ABC):
-    def __init__(self, solver, size=None, block_solver=True):
-        assert solver in self.get_supported_solvers(), (
-            f"{solver} is not supported by {self.__class__.__name__}."
-        )
+    def __init__(self, solver, size=None, block_solver=True, input_dir=None):
         self.solver = solver
         self.size = size
         self.block_solver = block_solver
+        self.input_dir = input_dir
 
     @abstractmethod
     def build(self): ...
@@ -45,9 +38,6 @@ class Benchmark(ABC):
     def run(self):
         self.model = self.build()
         self.model = self.solve(self.model)
-
-    def get_supported_solvers(self):
-        return [s.name for s in SUPPORTED_SOLVERS]
 
 
 class PyoframeBenchmark(Benchmark):
@@ -108,9 +98,6 @@ class GurobiPyBenchmark(Benchmark):
             model.setParam("Presolve", 0)
         model.optimize()
         return model
-
-    def get_supported_solvers(self):
-        return ["gurobi"]
 
     def _get_objective(self) -> float:
         return self.model.getObjective().getValue()
@@ -287,6 +274,9 @@ def run_notebook(
     first_cell: str | None = None,
 ):
     """Runs a Jupyter notebook."""
+    import nbformat
+    from nbconvert.preprocessors import ExecutePreprocessor
+
     with open(notebook_path) as f:
         nb = nbformat.read(f, as_version=4)
     if first_cell is not None:
