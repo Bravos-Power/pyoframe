@@ -82,8 +82,6 @@ snakemake.output = ["bodf.parquet"]
 
         bodf = pl.read_parquet(tmpdirname / "bodf.parquet")
 
-    assert set(bodf.columns) == {"outage", "line", "factor"}
-    bodf = bodf.sort("outage", "line").select(["outage", "line", "factor"])
     assert_frame_equal(
         bodf,
         pl.read_csv(Path(__file__).parent / "expected_bodfs.csv"),

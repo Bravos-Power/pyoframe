@@ -1,4 +1,4 @@
-outage,line,factor
+outage_line_id,affected_line_id,factor
 1,2,0.5862068965517241
 1,3,0.4137931034482758
 1,4,-0.5517241379310341
