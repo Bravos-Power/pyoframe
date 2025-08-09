@@ -23,6 +23,7 @@ problems:
   #     pyoframe: true
   dummy_model:
     size:
+      # - 2
       - 100
       - 200
       - 300
