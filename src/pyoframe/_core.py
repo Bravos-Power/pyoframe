@@ -1492,8 +1492,10 @@ class Constraint(ModelElementWithId):
         self._assign_ids()
 
     def _assign_ids(self):
-        # Ideas to speedup:
-        #   - Find a way to sort the groupby and then present slices of the arrays rather than creating new ones
+        """This function is the main bottleneck for pyoframe.
+
+        I've spent a lot of time optimizing it.
+        """
         assert self._model is not None
 
         is_quadratic = self.lhs.is_quadratic
@@ -1526,10 +1528,12 @@ class Constraint(ModelElementWithId):
                 .cast(KEY_TYPE)
             )
         else:
-            df = self.lhs.data.group_by(
-                self.dimensions, maintain_order=Config.maintain_order
-            ).agg(*key_cols_polars)
             if use_var_names:
+                # TODO optimize use_var_names to match the not use_var_names techniques
+                df = self.lhs.data.group_by(
+                    self.dimensions, maintain_order=Config.maintain_order
+                ).agg(*key_cols_polars)
+
                 df = (
                     concat_dimensions(df, prefix=self.name)
                     .with_columns(
@@ -1546,36 +1550,66 @@ class Constraint(ModelElementWithId):
                     )
                     .drop("concated_dim")
                 )
+                df = df.drop(key_cols)
             else:
+                df = self.lhs.data.sort(self.dimensions)
+                coefs = df.get_column(COEF_KEY).to_list()
+                vars = df.get_column(VAR_KEY).to_list()
+                if is_quadratic:
+                    vars2 = df.get_column(QUAD_VAR_KEY).to_list()
+                df = df.drop(*key_cols)
+                split = (
+                    df.lazy()
+                    .with_row_index()
+                    .filter(pl.struct(self.dimensions).is_first_distinct())
+                    .select("index")
+                    .collect()
+                    .to_series()
+                    .to_list()
+                )
+                split.append(df.height)
+
+                if not is_quadratic and self._model.solver_name == "gurobi":
+                    # GRBaddconstr uses sprintf when no name is passed which is slow.
+                    kwargs["name"] = ""
+
                 # Note: we could use a generator and merge the two if statements but that was slower.
                 # Note 2: we use lambdas because they're faster than functions
                 if is_quadratic:
-                    map_func = lambda x: add_constraint(  # noqa: E731
-                        ScalarFunction(
-                            coefficients=x[COEF_KEY],
-                            var1s=x[VAR_KEY],
-                            var2s=x[QUAD_VAR_KEY],
-                        ),
-                        **kwargs,
-                    ).index
+                    map_func = (  # noqa: E731
+                        lambda i: add_constraint(
+                            ScalarFunction(
+                                coefficients=coefs[split[i] : split[i + 1]],
+                                var1s=vars[split[i] : split[i + 1]],
+                                var2s=vars2[split[i] : split[i + 1]],
+                            ),
+                            **kwargs,
+                        ).index
+                    )
                 else:
-                    if self._model.solver_name == "gurobi":
-                        # GRBaddconstr uses sprintf when no name is passed which is slow.
-                        kwargs["name"] = ""
+                    map_func = (  # noqa: E731
+                        lambda i: add_constraint(
+                            expr=ScalarFunction(
+                                coefficients=coefs[split[i] : split[i + 1]],
+                                variables=vars[split[i] : split[i + 1]],
+                            ),
+                            **kwargs,
+                        ).index
+                    )
 
-                    # I've tried with .from_numpy but creating the np.array is very slow and roughly doubles the overhead.
-                    map_func = lambda x: add_constraint(  # noqa: E731
-                        ScalarFunction(coefficients=x[COEF_KEY], variables=x[VAR_KEY]),
-                        **kwargs,
-                    ).index
-
-                # I tried using numpy and pyarrow instead of map_elements but I couldn't get it to be faster
-                df = df.with_columns(
-                    pl.struct(*key_cols_polars)
-                    .map_elements(map_func, return_dtype=KEY_TYPE)
-                    .alias(CONSTRAINT_KEY)
+                # I've tried with .from_numpy but creating the np.array is very slow and roughly doubles the overhead.
+                df = (
+                    df.lazy()
+                    .unique(maintain_order=True)
+                    .with_row_index()
+                    .with_columns(
+                        pl.col("index")
+                        .map_elements(map_func, return_dtype=KEY_TYPE)
+                        .alias(CONSTRAINT_KEY)
+                    )
+                    .drop("index")
+                    .collect()
                 )
-            df = df.drop(key_cols)
 
         self._data = df
 
