@@ -157,7 +157,7 @@ class SupportPolarsMethodMixin(ABC):
 
     @property
     @abstractmethod
-    def data(self): ...
+    def data(self) -> pl.DataFrame: ...
 
     def pick(self, **kwargs):
         """Filters elements by the given criteria and then drop the filtered dimensions.

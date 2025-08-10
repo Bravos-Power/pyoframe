@@ -9,7 +9,7 @@ dependencies = [
     # solvers
     "pyomo==6.9.2",
     "linopy==0.5.5",
-    "pyoptinterface==0.4.1",
+    "pyoptinterface==0.5.0",
     "cvxpy[GUROBI,MOSEK]==1.7.1",
     # tools
     "snakemake==9.6.0",

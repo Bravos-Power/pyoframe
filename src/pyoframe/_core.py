@@ -1415,7 +1415,7 @@ class Constraint(ModelElementWithId):
     """
 
     def __init__(self, lhs: Expression, sense: ConstraintSense):
-        self.lhs = lhs
+        self.lhs: Expression = lhs
         self._model = lhs._model
         self.sense = sense
         self._to_relax: FuncArgs | None = None
@@ -1492,6 +1492,8 @@ class Constraint(ModelElementWithId):
         self._assign_ids()
 
     def _assign_ids(self):
+        # Ideas to speedup:
+        #   - Find a way to sort the groupby and then present slices of the arrays rather than creating new ones
         assert self._model is not None
 
         is_quadratic = self.lhs.is_quadratic
@@ -1501,14 +1503,12 @@ class Constraint(ModelElementWithId):
         key_cols = [COEF_KEY] + self.lhs._variable_columns
         key_cols_polars = [pl.col(c) for c in key_cols]
 
-        add_constraint = (
-            self._model.poi.add_quadratic_constraint
-            if is_quadratic
-            else self._model.poi.add_linear_constraint
-        )
-        ScalarFunction = (
-            poi.ScalarQuadraticFunction if is_quadratic else poi.ScalarAffineFunction
-        )
+        if is_quadratic:
+            add_constraint = self._model.poi._add_quadratic_constraint
+            ScalarFunction = poi.ScalarQuadraticFunction
+        else:
+            add_constraint = self._model.poi._add_linear_constraint
+            ScalarFunction = poi.ScalarAffineFunction
 
         if self.dimensions is None:
             if self._model.use_var_names:
@@ -1547,14 +1547,32 @@ class Constraint(ModelElementWithId):
                     .drop("concated_dim")
                 )
             else:
+                # Note: we could use a generator and merge the two if statements but that was slower.
+                # Note 2: we use lambdas because they're faster than functions
+                if is_quadratic:
+                    map_func = lambda x: add_constraint(  # noqa: E731
+                        ScalarFunction(
+                            coefficients=x[COEF_KEY],
+                            var1s=x[VAR_KEY],
+                            var2s=x[QUAD_VAR_KEY],
+                        ),
+                        **kwargs,
+                    ).index
+                else:
+                    if self._model.solver_name == "gurobi":
+                        # GRBaddconstr uses sprintf when no name is passed which is slow.
+                        kwargs["name"] = ""
+
+                    # I've tried with .from_numpy but creating the np.array is very slow and roughly doubles the overhead.
+                    map_func = lambda x: add_constraint(  # noqa: E731
+                        ScalarFunction(coefficients=x[COEF_KEY], variables=x[VAR_KEY]),
+                        **kwargs,
+                    ).index
+
+                # I tried using numpy and pyarrow instead of map_elements but I couldn't get it to be faster
                 df = df.with_columns(
                     pl.struct(*key_cols_polars)
-                    .map_elements(
-                        lambda x: add_constraint(
-                            ScalarFunction(*(x[c] for c in key_cols)), **kwargs
-                        ).index,
-                        return_dtype=KEY_TYPE,
-                    )
+                    .map_elements(map_func, return_dtype=KEY_TYPE)
                     .alias(CONSTRAINT_KEY)
                 )
             df = df.drop(key_cols)
@@ -2045,12 +2063,13 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             if self._model.use_var_names:
                 kwargs["name"] = self.name
 
+            poi_add_var = self._model.poi.add_variable
+
             df = self.data.with_columns(
                 pl.lit(0).alias(VAR_KEY).cast(KEY_TYPE)
             ).with_columns(
                 pl.col(VAR_KEY).map_elements(
-                    lambda _: self._model.poi.add_variable(**kwargs).index,
-                    return_dtype=KEY_TYPE,
+                    lambda _: poi_add_var(**kwargs).index, return_dtype=KEY_TYPE
                 )
             )
 

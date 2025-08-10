@@ -46,7 +46,8 @@ class PyoframeBenchmark(Benchmark):
         self.use_var_names = use_var_names
 
         if self.block_solver:
-            # Improve performance since we're not debugging
+            # Slightly improves performance
+            # The bottleneck is still the underlying library
             import pyoframe as pf
 
             pf.Config.maintain_order = False
