@@ -1,10 +1,10 @@
 \ LP format - for model browsing. Use MPS format to capture full model detail.
 \ Signature: 0x92be20112224ce2e
 Maximize
-  5 C1 + 3.5 C2 + 4.5 C3
+  5 V + 3.5 V + 4.5 V
 Subject To
- R0: - 540 ONE + 3 C1 + 5 C2 + 4 C3 <= 0
- R1: - 480 ONE + 6 C1 + C2 + 3 C3 <= 0
+ C: - 540 ONE + 3 V + 5 V + 4 V <= 0
+ C: - 480 ONE + 6 V + V + 3 V <= 0
 Bounds
  ONE = 1
 End
