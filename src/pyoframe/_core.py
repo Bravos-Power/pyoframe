@@ -2077,15 +2077,14 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
     def _assign_ids(self):
         assert self._model is not None
+        assert self.name is not None
 
-        kwargs = {}
-        if self.lb is not None:
-            kwargs["lb"] = float(self.lb)
-        if self.ub is not None:
-            kwargs["ub"] = float(self.ub)
         if self.vtype != VType.CONTINUOUS:
             self._model.solver.check_supports_integer_variables()
-            kwargs["domain"] = self.vtype._to_poi()
+
+        lb = -1e100 if self.lb is None else float(self.lb)
+        ub = 1e100 if self.ub is None else float(self.ub)
+        domain = self.vtype._to_poi()
 
         poi_add_var = self._model.poi.add_variable
 
@@ -2095,7 +2094,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 .with_columns(
                     pl.col("concated_dim")
                     .map_elements(
-                        lambda name: poi_add_var(name=name, **kwargs).index,
+                        lambda name: poi_add_var(domain, lb, ub, name).index,
                         return_dtype=KEY_TYPE,
                     )
                     .alias(VAR_KEY)
@@ -2104,15 +2103,15 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             )
         else:
             if self._model.use_var_names:
-                kwargs["name"] = self.name
+                name = self.name
+            else:
+                # See explanation in constraint section
+                name = "v" if self._model.solver_name == "gurobi" else ""
 
-            df = self.data.with_columns(
-                pl.lit(0).alias(VAR_KEY).cast(KEY_TYPE)
-            ).with_columns(
-                pl.col(VAR_KEY).map_elements(
-                    lambda _: poi_add_var(**kwargs).index, return_dtype=KEY_TYPE
-                )
-            )
+            ids = [
+                poi_add_var(domain, lb, ub, name).index for _ in range(len(self.data))
+            ]
+            df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
 
         self._data = df
 
