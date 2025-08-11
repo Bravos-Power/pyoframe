@@ -86,9 +86,14 @@ class Objective(Expression):
             "Objective must be part of a model before it is queried."
         )
 
-        obj_value: float = self._model.poi.get_model_attribute(
-            poi.ModelAttribute.ObjectiveValue
-        )
+        try:
+            obj_value: float = self._model.poi.get_model_attribute(
+                poi.ModelAttribute.ObjectiveValue
+            )
+        except RuntimeError as e:
+            raise RuntimeError(
+                "Failed to retrieve the objective value. Did the model solve properly?"
+            ) from e
         if (
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX

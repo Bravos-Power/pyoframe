@@ -2088,7 +2088,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
 
         poi_add_var = self._model.poi.add_variable
 
-        if self.dimensions is not None and self._model.use_var_names:
+        dims = self.dimensions
+
+        if dims is not None and self._model.use_var_names:
             df = (
                 concat_dimensions(self.data, prefix=self.name)
                 .with_columns(
@@ -2108,9 +2110,9 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 # See explanation in constraint section
                 name = "V" if self._model.solver_name == "gurobi" else ""
 
-            ids = [
-                poi_add_var(domain, lb, ub, name).index for _ in range(len(self.data))
-            ]
+            count = 1 if dims is None else len(self.data)
+
+            ids = [poi_add_var(domain, lb, ub, name).index for _ in range(count)]
             df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
 
         self._data = df
