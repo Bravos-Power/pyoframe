@@ -1354,7 +1354,7 @@ def sum(over: SupportsToExpr) -> Expression: ...
 def sum(
     over: str | Sequence[str] | SupportsToExpr,
     expr: SupportsToExpr | None = None,
-) -> Expression:
+) -> Expression:  # pragma: no cover
     """Deprecated: Use Expression.sum() or Variable.sum() instead.
 
     Examples:
@@ -1379,7 +1379,9 @@ def sum(
         return expr.to_expr().sum(*over)
 
 
-def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
+def sum_by(
+    by: str | Sequence[str], expr: SupportsToExpr
+) -> Expression:  # pragma: no cover
     """Deprecated: Use Expression.sum() or Variable.sum() instead."""
     warnings.warn(
         "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
