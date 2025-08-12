@@ -49,7 +49,7 @@ docs = [
     "mkdocs-section-index",
     "mkdocs-awesome-nav",
     "mkdocs-table-reader-plugin",
-    "sybil[pytest]",
+    "sybil[pytest]==9.2.0",
     "doccmd",
 ]
 highs = ["highsbox"]

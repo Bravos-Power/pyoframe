@@ -60,7 +60,7 @@ And the result should be:
 │ D     ┆ 0.145308 │
 │ E     ┆ 0.137472 │
 └───────┴──────────┘
->>> round(m.objective.value, 4)
+>>> m.objective.value
 0.0195
 
 ```

@@ -67,7 +67,7 @@ model.optimize()
 So what's the maximum distance from a customer to its nearest facility?
 
 ```pycon
->>> round(model.objective.value, 3)
+>>> model.objective.value
 0.5
 
 ```
