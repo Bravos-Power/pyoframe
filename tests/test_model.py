@@ -79,3 +79,17 @@ def test_solver_detection():
     pf.Model(solver="Gurobi")
     with pytest.raises(ValueError, match="Unsupported solver: 'g urobi'"):
         pf.Model(solver="g urobi")
+
+
+def test_params():
+    m = pf.Model(solver="gurobi")
+    m.params.Method = 2
+    assert m.params.Method == 2
+    # capitalization shouldn't matter
+    m.params.method = 3
+    assert m.params.Method == 3
+
+    with pytest.raises(KeyError, match="Unknown parameter: 'lkjdgfsg'"):
+        m.params.lkjdgfsg
+    with pytest.raises(KeyError, match="Unknown parameter: 'lkjdgfsg'"):
+        m.params.lkjdgfsg = 4
