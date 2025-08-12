@@ -19,7 +19,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Natural Language :: English",
 ]
-dependencies = ["polars~=1.0", "pyarrow", "pandas", "pyoptinterface>=0.4.1,<1"]
+dependencies = ["polars~=1.0", "pyarrow", "pandas", "pyoptinterface==0.5.0"]
 
 [project.optional-dependencies]
 dev = [
@@ -85,7 +85,7 @@ docstring-code-format = true
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"  # https://stackoverflow.com/a/50156706/5864903
+pythonpath = "src"                                                 # https://stackoverflow.com/a/50156706/5864903
 addopts = "--doctest-modules --ignore=scripts --ignore=benchmarks"
 filterwarnings = ["error::DeprecationWarning"]
 # doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil

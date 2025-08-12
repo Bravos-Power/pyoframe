@@ -24,11 +24,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
 
+if sys.version_info >= (3, 10):
+    pairwise = itertools.pairwise
+else:
 
-def pairwise(iterable):
-    if sys.version_info >= (3, 10):
-        return itertools.pairwise(iterable)
-    else:
+    def pairwise(iterable):
         iterator = iter(iterable)
         a = next(iterator, None)
 
