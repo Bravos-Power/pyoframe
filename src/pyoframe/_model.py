@@ -396,10 +396,10 @@ class Model:
                 Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
         """
         if not self.solver.supports_write:
-            raise ValueError(f"Solver {self.solver.name} does not support .write()")
+            raise NotImplementedError(f"{self.solver.name} does not support .write()")
         if not self.use_var_names and self.solver.supports_repeat_names:
             raise ValueError(
-                f"use_var_names must be True to use .write() with {self.solver.name}"
+                f"{self.solver.name} requires use_var_names=True to use .write()"
             )
 
         file_path = Path(file_path)
