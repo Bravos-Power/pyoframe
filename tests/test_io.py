@@ -9,6 +9,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from pyoframe import Model, Variable
+from pyoframe._constants import _Solver
 
 
 def test_variables_to_string(solver):
@@ -88,8 +89,10 @@ x1 * x1 <= 5"""
     )
 
 
-def test_write_lp(use_var_names, solver):
-    if not solver.supports_write:
+def test_write_lp(use_var_names, solver: _Solver):
+    if not solver.supports_write or (
+        not use_var_names and solver.supports_repeat_names
+    ):
         pytest.skip(f"{solver.name} does not support writing LP files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(solver=solver, use_var_names=use_var_names)
@@ -122,7 +125,9 @@ def test_write_lp(use_var_names, solver):
 
 
 def test_write_sol(use_var_names, solver):
-    if not solver.supports_write:
+    if not solver.supports_write or (
+        not use_var_names and solver.supports_repeat_names
+    ):
         pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(solver=solver, use_var_names=use_var_names)
