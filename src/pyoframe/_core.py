@@ -551,7 +551,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             raise ValueError("Cannot sum a dimensionless expression.")
         if not over:
             over = tuple(dims)
-        assert set(over) <= set(dims), f"Cannot sum over {over} as it is not in {dims}"
+        assert set(over) <= set(dims), (
+            f"Cannot sum over {list(over)} as it is not in {dims}"
+        )
         remaining_dims = [dim for dim in dims if dim not in over]
 
         return self._new(
@@ -1353,7 +1355,20 @@ def sum(
     over: str | Sequence[str] | SupportsToExpr,
     expr: SupportsToExpr | None = None,
 ) -> Expression:
-    """Deprecated: Use Expression.sum() or Variable.sum() instead."""
+    """Deprecated: Use Expression.sum() or Variable.sum() instead.
+
+    Examples:
+        >>> x = pf.Set(x=range(100))
+        >>> pf.sum(x)
+        Traceback (most recent call last):
+          ...
+        DeprecationWarning: pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.
+    """
+    warnings.warn(
+        "pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.",
+        DeprecationWarning,
+    )
+
     if expr is None:
         assert isinstance(over, SupportsMath)
         return over.to_expr().sum()
@@ -1366,6 +1381,11 @@ def sum(
 
 def sum_by(by: str | Sequence[str], expr: SupportsToExpr) -> Expression:
     """Deprecated: Use Expression.sum() or Variable.sum() instead."""
+    warnings.warn(
+        "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
+        DeprecationWarning,
+    )
+
     if isinstance(by, str):
         by = [by]
     return expr.to_expr().sum_by(*by)
