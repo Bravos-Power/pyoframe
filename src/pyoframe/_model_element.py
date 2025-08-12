@@ -215,9 +215,26 @@ class SupportPolarsMethodMixin(ABC):
         return self._new(self.data.rename(*args, **kwargs))
 
     def with_columns(self, *args, **kwargs):
+        """Creates a new object with modified columns.
+
+        Takes the same arguments as [`polars.DataFrame.with_columns`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.with_columns.html).
+
+        !!! warning
+            Only use this function if you know what you're doing. It is not recommended to manually modify the columns
+            within a Pyoframe object.
+        """
         return self._new(self.data.with_columns(*args, **kwargs))
 
     def filter(self, *args, **kwargs):
+        """Creates a copy of the object containing only a subset of the original rows.
+
+        Takes the same arguments as [`polars.DataFrame.filter`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.filter.html).
+
+        See Also:
+            [`Expression.pick`][pyoframe.Expression.pick] or [`Variable.pick`][pyoframe.Variable.pick] if you wish to drop the filtered
+            column in the process.
+
+        """
         return self._new(self.data.filter(*args, **kwargs))
 
     @abstractmethod
@@ -229,7 +246,7 @@ class SupportPolarsMethodMixin(ABC):
     def data(self) -> pl.DataFrame: ...
 
     def pick(self, **kwargs):
-        """Filters elements by the given criteria and then drop the filtered dimensions.
+        """Filters elements by the given criteria and then drops the filtered dimensions.
 
         Examples:
             >>> m = pf.Model()
@@ -252,6 +269,9 @@ class SupportPolarsMethodMixin(ABC):
             >>> m.v.pick(hour="06:00", city="Toronto")
             <Expression terms=1 type=linear>
             v[06:00,Toronto]
+
+        See Also:
+            [`Expression.filter`][pyoframe.Expression.filter] or [`Variable.filter`][pyoframe.Variable.filter] if you don't wish to drop the filtered column.
         """
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 

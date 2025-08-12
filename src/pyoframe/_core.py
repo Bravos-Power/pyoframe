@@ -1745,7 +1745,11 @@ class Constraint(ModelElementWithId):
         return self
 
     def estimated_size(self, *args, **kwargs):
-        """See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details.
+        """Returns the estimated size of the constraint.
+
+        Includes the size of the underlying expression (`Constraint.lhs`).
+
+        See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details on signature and behavior.
 
         Examples:
             An dimensionless constraint has contains a 32 bit constraint id and, for each term, a 64 bit coefficient with a 32 bit variable id.
