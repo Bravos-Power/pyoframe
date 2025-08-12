@@ -18,7 +18,7 @@ class Benchmark(ABC):
         self.solver = solver
         self.size = size
         self.block_solver = block_solver
-        self.input_dir = input_dir
+        self.input_dir = Path(input_dir) if input_dir else None
 
     @abstractmethod
     def build(self): ...
@@ -38,6 +38,7 @@ class Benchmark(ABC):
     def run(self):
         self.model = self.build()
         self.model = self.solve(self.model)
+        return self.model
 
 
 class PyoframeBenchmark(Benchmark):

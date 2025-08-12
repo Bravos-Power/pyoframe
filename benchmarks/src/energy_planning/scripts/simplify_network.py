@@ -1,4 +1,4 @@
-"""Simplifies the network topology using various tricks.
+"""Simplifies the network topology using various tricks and identifies leaf nodes.
 
 Tricks are:
     - combining lines in parallel,
@@ -6,10 +6,13 @@ Tricks are:
     - and removing intermediary buses with no loads or generators.
 
 Line ratings and reactances are updated accordingly.
-Line IDs are not preserved (since new / combined lines are created).
+Line IDs are roughly preserved; merged lines take on the IDs of the original lines.
 Node IDs are preserved, but the number of nodes is reduced.
 
-As of June 25, 2025, this script reduces the number of lines by 25%.
+As of Aug 12, 2025, this script reduces the number of lines by 14.5%, mainly due to lines in series.
+
+Leaf nodes are nodes containing either loads or generators that can be wholly disconnected from the
+grid by a single contingency. They are flagged so such contingencies are not considered.
 """
 
 import polars as pl

@@ -17,10 +17,17 @@ problems:
       jump: 256
       pyoframe: true
       pyoptinterface: true
-  # energy_planning:
-  #   requires_inputs: true
-  #   libraries:
-  #     pyoframe: true
+  energy_planning:
+    requires_inputs: true
+    libraries:
+      pyoframe: true
+    size:
+      - 2
+      - 4
+      - 24
+      - 168
+      # - 730
+      # - 8670
   dummy_model:
     size:
       # - 2

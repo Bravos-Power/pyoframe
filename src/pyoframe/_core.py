@@ -353,6 +353,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return super().__mul__(other)
 
     def __add__(self, other):
+        # TODO replace with bitwise or
         if isinstance(other, Set):
             try:
                 return self._new(

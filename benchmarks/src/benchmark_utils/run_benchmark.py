@@ -29,6 +29,9 @@ if __name__ == "__main__":
     parser.add_argument("--input-dir", default=None)
     args = parser.parse_args()
 
+    if not os.path.exists(args.input_dir):
+        args.input_dir = None
+
     if args.library != "jump":
         # import solve function dynamically
         benchmark = importlib.import_module(
