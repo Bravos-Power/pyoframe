@@ -374,10 +374,19 @@ class Model:
         )
 
     def write(self, file_path: Path | str, pretty: bool = False):
-        """Outputs the model to a file (e.g. a `.lp` file).
+        """Outputs the model or the solution to a file (e.g. a `.lp`, `.sol`, `.mps`, or `.ilp` file).
 
-        Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
-        Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
+        These files can be useful for manually debugging a model.
+        Consult your solver documentation to learn more.
+
+        When creating your model, set `use_var_names` to make the outputed file human-readable.
+
+        ```python
+        m = pf.Model(use_var_names=True)
+        ```
+
+        For Gurobi, `use_var_names=True` is mandatory when using .write(). This may become mandatory for other
+        solvers too without notice.
 
         Parameters:
             file_path:
@@ -386,6 +395,10 @@ class Model:
                 Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
         """
         self.solver.check_supports_write()
+        if not self.use_var_names and self.solver.supports_repeat_names:
+            raise ValueError(
+                f"use_var_names must be True to use .write() with {self.solver_name}"
+            )
 
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)

@@ -10,7 +10,7 @@ from pyoframe import Model, Variable, sum
 _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
 
-def solve_model(use_var_names):
+def solve_model(use_var_names=False):
     food = pl.read_csv(_input_dir / "foods.csv")
     nutrients = pl.read_csv(_input_dir / "nutrients.csv")
     min_nutrient = nutrients.select(["category", "min"]).to_expr()

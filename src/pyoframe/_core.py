@@ -6,7 +6,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from itertools import pairwise
-from typing import TYPE_CHECKING, Any, Literal, Protocol, Union, overload
+from typing import TYPE_CHECKING, Literal, Protocol, Union, overload
 
 import pandas as pd
 import polars as pl
@@ -1513,13 +1513,10 @@ class Constraint(ModelElementWithId):
         )
 
         if self.dimensions is None:
-            kwargs: dict[str, Any] = dict(sense=sense, rhs=0)
             if self._model.use_var_names:
-                kwargs["name"] = self.name
-            elif (
-                self._model.solver_name == "gurobi"
-            ):  # to match the behavior for dimensioned expressions
-                kwargs["name"] = "C"
+                name = self.name
+            else:
+                name = "C" if self._model.solver.supports_repeat_names else ""
             create_expression = (
                 poi.ScalarQuadraticFunction
                 if is_quadratic
@@ -1531,7 +1528,9 @@ class Constraint(ModelElementWithId):
                         create_expression(
                             *(self.lhs.data.get_column(c).to_numpy() for c in key_cols)
                         ),
-                        **kwargs,
+                        sense,
+                        0,
+                        name,
                     ).index
                 )
                 .alias(CONSTRAINT_KEY)
@@ -1567,7 +1566,9 @@ class Constraint(ModelElementWithId):
             )
             df = df.drop(key_cols)
         else:
-            df = self.lhs.data.sort(self.dimensions)
+            df = self.lhs.data.sort(
+                self.dimensions, maintain_order=Config.maintain_order
+            )
             coefs = df.get_column(COEF_KEY).to_list()
             vars = df.get_column(VAR_KEY).to_list()
             if is_quadratic:
@@ -1605,7 +1606,7 @@ class Constraint(ModelElementWithId):
                 # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
                 # Specifying "" is the same as not specifying anything, see pyoptinterface:
                 # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-                name = "C" if self._model.solver_name == "gurobi" else ""
+                name = "C" if self._model.solver.supports_repeat_names else ""
                 create_expression = poi.ScalarAffineFunction
                 ids = [
                     add_constraint(
@@ -2091,6 +2092,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         dims = self.dimensions
 
         if dims is not None and self._model.use_var_names:
+            # TODO optimize
             df = (
                 concat_dimensions(self.data, prefix=self.name)
                 .with_columns(
@@ -2107,8 +2109,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             if self._model.use_var_names:
                 name = self.name
             else:
-                # See explanation in constraint section
-                name = "V" if self._model.solver_name == "gurobi" else ""
+                name = "V" if self._model.solver.supports_repeat_names else ""
 
             count = 1 if dims is None else len(self.data)
 

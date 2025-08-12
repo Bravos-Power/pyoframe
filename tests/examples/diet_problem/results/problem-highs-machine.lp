@@ -1,16 +1,16 @@
 \ File written by HiGHS .lp file handler
 min
- obj: +2.49 col_ekk_0 +2.89 col_ekk_1 +1.5 col_ekk_2 +1.89 col_ekk_3 +2.09 col_ekk_4 +1.99 col_ekk_5 +2.49 col_ekk_6 +0.89 col_ekk_7 +1.59 col_ekk_8
+ obj: +2.49 col_ekk_0 +2.89 col_ekk_1 +1.5 col_ekk_2 +1.89 col_ekk_3 +2.09 col_ekk_4 +1.99 col_ekk_5 +2.49 col_ekk_6 +0.89 col_ekk_7 +1.59 col_ekk_8 
 st
- con1: -40 ONE +1 col_ekk_0 <= +0
- con2: -30 ONE +1 col_ekk_1 <= +0
- con3: -20 ONE +1 col_ekk_2 <= +0
- con4: -20 ONE +1 col_ekk_3 <= +0
- con5: -40 ONE +1 col_ekk_4 <= +0
- con6: -50 ONE +1 col_ekk_5 <= +0
- con7: -60 ONE +1 col_ekk_6 <= +0
- con8: -6.8 ONE +1 col_ekk_7 <= +0
- con9: -80 ONE +1 col_ekk_8 <= +0
+ con1: -30 ONE +1 col_ekk_1 <= +0
+ con2: -20 ONE +1 col_ekk_3 <= +0
+ con3: -40 ONE +1 col_ekk_0 <= +0
+ con4: -20 ONE +1 col_ekk_2 <= +0
+ con5: -80 ONE +1 col_ekk_8 <= +0
+ con6: -40 ONE +1 col_ekk_4 <= +0
+ con7: -6.8 ONE +1 col_ekk_7 <= +0
+ con8: -50 ONE +1 col_ekk_5 <= +0
+ con9: -60 ONE +1 col_ekk_6 <= +0
  con10: +1800 ONE -410 col_ekk_0 -420 col_ekk_1 -560 col_ekk_2 -380 col_ekk_3 -320 col_ekk_4 -320 col_ekk_5 -320 col_ekk_6 -100 col_ekk_7 -330 col_ekk_8 <= +0
  con11: +91 ONE -24 col_ekk_0 -32 col_ekk_1 -20 col_ekk_2 -4 col_ekk_3 -12 col_ekk_4 -15 col_ekk_5 -31 col_ekk_6 -8 col_ekk_7 -8 col_ekk_8 <= +0
  con12: -2200 ONE +410 col_ekk_0 +420 col_ekk_1 +560 col_ekk_2 +380 col_ekk_3 +320 col_ekk_4 +320 col_ekk_5 +320 col_ekk_6 +100 col_ekk_7 +330 col_ekk_8 <= +0

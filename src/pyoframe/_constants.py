@@ -28,6 +28,13 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
+    supports_repeat_names: bool = False
+    """Whether variables or constraints can have repeated names.
+
+    Since Gurobi supports repeat names, we automatically set all the variable names to 'V' and
+    all the constraint names to 'C'. This is faster than allowing Gurobi to generate distinct
+    names for every variable and constraint.
+    """
 
     def check_supports_integer_variables(self):
         if not self.supports_integer_variables:
@@ -44,7 +51,7 @@ class _Solver:
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi"),
+    _Solver("gurobi", supports_repeat_names=True),
     _Solver("highs", supports_quadratics=False, supports_duals=False),
     _Solver(
         "ipopt",

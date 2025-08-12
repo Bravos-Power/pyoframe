@@ -206,8 +206,10 @@ def test_gurobi_model_matches(example):
         compare_results_dir(example.get_results_path(), tmpdir, "gurobi")
 
 
-def write_results(example: Example, model, results_dir, solver):
-    if solver.supports_write:
+def write_results(example: Example, model, results_dir, solver: _Solver):
+    if solver.supports_write and (
+        model.use_var_names or not solver.supports_repeat_names
+    ):
         readability = "pretty" if model.use_var_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
@@ -217,7 +219,10 @@ def write_results(example: Example, model, results_dir, solver):
         )
 
     if example.unique_solution:
-        if solver.supports_write:
+        if solver.supports_write and (
+            model.use_var_names or not solver.supports_repeat_names
+        ):
+            readability = "pretty" if model.use_var_names else "machine"
             model.write(results_dir / f"solution-{model.solver.name}-{readability}.sol")
 
         module = example.import_model_module()
@@ -246,7 +251,7 @@ def write_results(example: Example, model, results_dir, solver):
 
 
 if __name__ == "__main__":
-    selection = int(
+    problem_selection = int(
         input(
             "Choose which of the following results you'd like to rewrite.\n0: ALL\n"
             + "\n".join(
@@ -257,17 +262,35 @@ if __name__ == "__main__":
         )
     )
 
-    if selection == 0:
-        selection = EXAMPLES
-    else:
-        selection = [EXAMPLES[selection - 1]]
+    solver_selection = int(
+        input(
+            "Choose which of the following solvers you'd like to rewrite.\n0: ALL\n"
+            + "\n".join(
+                str(i + 1) + ": " + solver.name
+                for i, solver in enumerate(SUPPORTED_SOLVERS)
+            )
+            + "\n"
+        )
+    )
 
-    for example in selection:
+    if problem_selection == 0:
+        problem_selection = EXAMPLES
+    else:
+        problem_selection = [EXAMPLES[problem_selection - 1]]
+
+    solvers = (
+        SUPPORTED_SOLVERS
+        if solver_selection == 0
+        else [SUPPORTED_SOLVERS[solver_selection - 1]]
+    )
+
+    for example in problem_selection:
         results_dir = example.get_results_path()
-        if results_dir.exists():
-            shutil.rmtree(results_dir)
+        if solver_selection == 0:
+            if results_dir.exists():
+                shutil.rmtree(results_dir)
         solve_model = example.import_solve_func()
-        for solver in SUPPORTED_SOLVERS:
+        for solver in solvers:
             if not example.supports_solver(solver):
                 continue
             pf.Config.default_solver = solver.name
