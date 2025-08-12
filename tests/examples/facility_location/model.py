@@ -29,7 +29,7 @@ def solve_model(use_var_names=False, G=4, F=3):
     model.max_distance = pf.Variable(lb=0)
 
     model.is_closest = pf.Variable(model.customers, model.facilities, vtype="binary")
-    model.con_only_one_closest = pf.sum("f", model.is_closest) == 1
+    model.con_only_one_closest = model.is_closest.sum("f") == 1
 
     model.dist_x = pf.Variable(model.x_axis, model.facilities)
     model.dist_y = pf.Variable(model.y_axis, model.facilities)

@@ -26,13 +26,13 @@ food_nutrients = pd.read_csv("foods_to_nutrients.csv")
 m = pf.Model()
 m.Buy = pf.Variable(food["food"], lb=0, ub=food[["food", "stock"]])
 
-nutrient_intake = pf.sum_by("category", m.Buy * food_nutrients)
+nutrient_intake = (m.Buy * food_nutrients).sum_by("category")
 m.min_nutrients = (
     nutrients[["category", "min"]] <= nutrient_intake.drop_unmatched()  # (1)!
 )
 m.max_nutrients = nutrient_intake.drop_unmatched() <= nutrients[["category", "max"]]
 
-total_cost = pf.sum(m.Buy * food[["food", "cost"]])
+total_cost = (m.Buy * food[["food", "cost"]]).sum()
 m.minimize = total_cost
 
 # Solve model

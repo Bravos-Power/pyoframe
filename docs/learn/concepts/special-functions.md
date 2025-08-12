@@ -6,7 +6,7 @@
 
 Pyoframe has a few special functions that make working with dataframes easy and intuitive. Here they are:
 
-## `pf.sum(Expression)`
+## `sum` and `sum_by`
 
 ## `Expression.map()`
 

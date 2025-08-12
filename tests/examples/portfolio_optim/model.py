@@ -89,10 +89,10 @@ def solve_model(use_var_names=True, solver="gurobi"):
     m.weight = pf.Variable(assets.index, lb=0, ub=max_weight)
 
     # Constraint: weights must sum to 1
-    m.con_weights_sum = pf.sum(m.weight) == 1
+    m.con_weights_sum = m.weight.sum() == 1
 
     # Constraint: minimum expected return
-    m.con_min_return = pf.sum(m.weight * assets["expected_return"]) >= min_return
+    m.con_min_return = (m.weight * assets["expected_return"]).sum() >= min_return
 
     # Objective: minimize portfolio variance (quadratic)
     # Variance = sum over i,j of weight_i * cov_ij * weight_j
@@ -103,7 +103,7 @@ def solve_model(use_var_names=True, solver="gurobi"):
     # Create the quadratic expression
     quad_expr = weight_i * covariance["covariance"] * weight_j
 
-    m.minimize = pf.sum(quad_expr)
+    m.minimize = quad_expr.sum()
 
     # Optimize
     m.optimize()

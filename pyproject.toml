@@ -19,12 +19,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Natural Language :: English",
 ]
-dependencies = [
-    "polars~=1.0",
-    "pyarrow",
-    "pandas",
-    "pyoptinterface>=0.4.1,<1",
-]
+dependencies = ["polars~=1.0", "pyarrow", "pandas", "pyoptinterface>=0.4.1,<1"]
 
 [project.optional-dependencies]
 dev = [
@@ -40,7 +35,7 @@ dev = [
     "coverage",
     "ipykernel",
     "pyoptinterface[nlp]",
-    "numpy",  # for testing with np.nan, don't pin so that two versions of Python are possible
+    "numpy",               # for testing with np.nan, don't pin so that two versions of Python are possible
 ]
 # We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
 docs = [
@@ -52,7 +47,7 @@ docs = [
     "mkdocs-section-index",
     "mkdocs-awesome-nav",
     "mkdocs-table-reader-plugin",
-    "sybil[pytest]",
+    "sybil[pytest]==9.2.0",
     "doccmd",
 ]
 highs = ["highsbox"]
@@ -90,8 +85,9 @@ docstring-code-format = true
 include = ["src/pyoframe/*"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"                             # https://stackoverflow.com/a/50156706/5864903
+pythonpath = "src"  # https://stackoverflow.com/a/50156706/5864903
 addopts = "--doctest-modules --ignore=scripts --ignore=benchmarks"
+filterwarnings = ["error::DeprecationWarning"]
 # doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
 
 [tool.setuptools_scm]
