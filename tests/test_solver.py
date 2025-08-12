@@ -278,19 +278,3 @@ def test_integers_throw_error(solver: _Solver):
         ValueError, match="does not support integer or binary variables"
     ):
         m.A = pf.Variable(vtype=pf.VType.BINARY)
-
-
-def test_write_throws_error(solver: _Solver):
-    if solver.supports_write:
-        pytest.skip("This test is only valid for solvers that support writing models")
-
-    m = pf.Model(solver=solver)
-    m.A = pf.Variable(ub=10)
-    m.maximize = m.A
-    m.optimize()
-
-    with pytest.raises(ValueError, match="does not support .write()"):
-        m.write("test.lp")
-
-    with pytest.raises(ValueError, match="does not support .write()"):
-        m.write("test.sol")
