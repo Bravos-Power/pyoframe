@@ -5,7 +5,6 @@ from __future__ import annotations
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from itertools import pairwise
 from typing import TYPE_CHECKING, Literal, Protocol, Union, overload
 
 import pandas as pd
@@ -47,6 +46,7 @@ from pyoframe._utils import (
     cast_coef_to_string,
     concat_dimensions,
     get_obj_repr,
+    pairwise,
     parse_inputs_as_iterable,
     unwrap_single_values,
 )
