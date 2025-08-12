@@ -287,8 +287,9 @@ class Model:
         return self._constraints
 
     @property
-    def objective(self) -> Objective:
+    def objective(self) -> Objective | None:
         """Returns the model's objective."""
+        # TODO raise error instead of returning None (add a has_objective property).
         return self._objective
 
     @objective.setter
@@ -414,6 +415,7 @@ class Model:
     def optimize(self):
         """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
         self.poi.optimize()
+        #  TODO raise error if not solved to optimality
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
