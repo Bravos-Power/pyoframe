@@ -27,21 +27,21 @@ m = pf.Model()
 m.weight = pf.Variable(assets.index, lb=0, ub=params.loc["max_weight"])
 
 # Constraint: weights must sum to 1
-m.con_weights_sum = pf.sum(m.weight) == 1
+m.con_weights_sum = m.weight.sum() == 1
 
 # Constraint: minimum expected return
-m.con_min_return = (
-    pf.sum(m.weight * assets["expected_return"]) >= params.loc["min_return"]
-)
+m.con_min_return = (m.weight * assets["expected_return"]).sum() >= params.loc[
+    "min_return"
+]
 
 # Objective: minimize portfolio variance (quadratic)
 # Variance = sum over i,j of weight_i * cov_ij * weight_j
 # We use 'rename' to make the dimensions match properly
-m.minimize = pf.sum(
+m.minimize = (
     m.weight.rename({"asset": "asset_i"})
     * covariance["covariance"]
     * m.weight.rename({"asset": "asset_j"})
-)
+).sum()
 
 m.optimize()
 ```
@@ -60,7 +60,7 @@ And the result should be:
 │ D     ┆ 0.145308 │
 │ E     ┆ 0.137472 │
 └───────┴──────────┘
->>> round(m.objective.value, 4)
+>>> m.objective.value
 0.0195
 
 ```

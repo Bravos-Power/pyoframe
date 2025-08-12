@@ -267,7 +267,7 @@ class _Config:
             >>> pf.Config.print_max_terms = 3
             >>> m = pf.Model()
             >>> m.X = pf.Variable(pf.Set(x=range(100)), pf.Set(y=range(100)))
-            >>> pf.sum("y", m.X)
+            >>> m.X.sum("y")
             <Expression height=100 terms=10000 type=linear>
             ┌───────┬───────────────────────────────┐
             │ x     ┆ expression                    │
@@ -285,7 +285,7 @@ class _Config:
             │ 98    ┆ X[98,0] + X[98,1] + X[98,2] … │
             │ 99    ┆ X[99,0] + X[99,1] + X[99,2] … │
             └───────┴───────────────────────────────┘
-            >>> pf.sum(m.X)
+            >>> m.X.sum()
             <Expression terms=10000 type=linear>
             X[0,0] + X[0,1] + X[0,2] …
         """

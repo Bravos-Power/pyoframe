@@ -2,6 +2,7 @@
 
 import doctest
 import os
+import warnings
 from pathlib import Path
 
 import polars as pl
@@ -58,8 +59,10 @@ def markdown_setup_fixture():
     pl.Config.set_tbl_hide_dataframe_shape(False)
 
 
+SYBIL = False
 try:
     from sybil import Sybil
+    from sybil.evaluators.doctest import NUMBER
     from sybil.parsers.markdown import (
         ClearNamespaceParser,
         PythonCodeBlockParser,
@@ -67,17 +70,22 @@ try:
     )
     from sybil.parsers.rest import DocTestParser
 
+    SYBIL = True
+except ImportError:
+    # Sybil is not installed, so we won't collect markdown files.
+    pass
+
+if SYBIL:
     pytest_collect_file = Sybil(
         parsers=[
             PythonCodeBlockParser(),
             SkipParser(),
             ClearNamespaceParser(),
-            DocTestParser(optionflags=doctest.ELLIPSIS),
+            DocTestParser(optionflags=doctest.ELLIPSIS | NUMBER),
         ],
         patterns=["*.md"],
         setup=_setup_before_each_test,
         fixtures=["markdown_setup_fixture", "markdown_setup_fixture_module"],
     ).pytest()
-except ImportError:
-    # Sybil is not installed, so we won't collect markdown files.
-    pass
+else:
+    warnings.warn("Sybil not installed. Documentation tests will not run.")

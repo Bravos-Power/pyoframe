@@ -49,7 +49,7 @@ docs = [
     "mkdocs-section-index",
     "mkdocs-awesome-nav",
     "mkdocs-table-reader-plugin",
-    "sybil[pytest]",
+    "sybil[pytest]==9.2.0",
     "doccmd",
 ]
 highs = ["highsbox"]
@@ -89,6 +89,7 @@ include = ["src/pyoframe/*"]
 [tool.pytest.ini_options]
 pythonpath = "src"
 addopts = "--doctest-modules --ignore=scripts"
+filterwarnings = ["error::DeprecationWarning"]
 # doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
 
 [tool.setuptools_scm]

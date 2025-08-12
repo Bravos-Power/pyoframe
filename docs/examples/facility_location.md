@@ -36,7 +36,7 @@ model.customer_position_y = pd.DataFrame(
 model.max_distance = pf.Variable(lb=0)
 
 model.is_closest = pf.Variable(model.customers, model.facilities, vtype="binary")
-model.con_only_one_closest = pf.sum("f", model.is_closest) == 1
+model.con_only_one_closest = model.is_closest.sum("f") == 1
 
 model.dist_x = pf.Variable(model.x_axis, model.facilities)
 model.dist_y = pf.Variable(model.y_axis, model.facilities)
@@ -67,7 +67,7 @@ model.optimize()
 So what's the maximum distance from a customer to its nearest facility?
 
 ```pycon
->>> round(model.objective.value, 3)
+>>> model.objective.value
 0.5
 
 ```

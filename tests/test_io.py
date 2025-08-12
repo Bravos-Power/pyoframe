@@ -8,7 +8,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Model, Variable, sum
+from pyoframe import Model, Variable
 
 
 def test_variables_to_string(solver):
@@ -102,8 +102,8 @@ def test_write_lp(use_var_names, solver):
             }
         )
         m.population = Variable(cities[["country", "city"]])
-        m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
-        m.total_pop = sum(m.population) >= 310
+        m.minimize = (cities[["country", "city", "rent"]] * m.population).sum()
+        m.total_pop = m.population.sum() >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
 
         file_path = os.path.join(tmpdir, "test.lp")
@@ -135,8 +135,8 @@ def test_write_sol(use_var_names, solver):
             }
         )
         m.population = Variable(cities[["country", "city"]])
-        m.minimize = sum(cities[["country", "city", "rent"]] * m.population)
-        m.total_pop = sum(m.population) >= 310
+        m.minimize = (cities[["country", "city", "rent"]] * m.population).sum()
+        m.total_pop = m.population.sum() >= 310
         m.capacity_constraint = m.population <= cities[["country", "city", "capacity"]]
 
         file_path = os.path.join(tmpdir, "test.sol")
