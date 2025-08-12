@@ -394,10 +394,11 @@ class Model:
             pretty:
                 Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
         """
-        self.solver.check_supports_write()
+        if not self.solver.supports_write:
+            raise ValueError(f"Solver {self.solver.name} does not support .write()")
         if not self.use_var_names and self.solver.supports_repeat_names:
             raise ValueError(
-                f"use_var_names must be True to use .write() with {self.solver_name}"
+                f"use_var_names must be True to use .write() with {self.solver.name}"
             )
 
         file_path = Path(file_path)

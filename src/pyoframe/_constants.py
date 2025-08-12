@@ -37,16 +37,6 @@ class _Solver:
     names for every variable and constraint.
     """
 
-    def check_supports_integer_variables(self):
-        if not self.supports_integer_variables:
-            raise ValueError(
-                f"Solver {self.name} does not support integer or binary variables."
-            )
-
-    def check_supports_write(self):
-        if not self.supports_write:
-            raise ValueError(f"Solver {self.name} does not support .write()")
-
     def __repr__(self):
         return self.name
 

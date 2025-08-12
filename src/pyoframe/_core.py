@@ -2096,41 +2096,47 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         assert self._model is not None
         assert self.name is not None
 
-        if self.vtype != VType.CONTINUOUS:
-            self._model.solver.check_supports_integer_variables()
+        solver = self._model.solver
+        if solver.supports_integer_variables:
+            domain = self.vtype._to_poi()
+        else:
+            if self.vtype != VType.CONTINUOUS:
+                raise ValueError(
+                    f"Solver {solver.name} does not support integer or binary variables."
+                )
 
         lb = -1e100 if self.lb is None else float(self.lb)
         ub = 1e100 if self.ub is None else float(self.ub)
-        domain = self.vtype._to_poi()
 
         poi_add_var = self._model.poi.add_variable
 
         dims = self.dimensions
 
-        if dims is not None and self._model.use_var_names:
-            # TODO optimize
-            df = (
-                concat_dimensions(self.data, prefix=self.name)
-                .with_columns(
-                    pl.col("concated_dim")
-                    .map_elements(
-                        lambda name: poi_add_var(domain, lb, ub, name).index,
-                        return_dtype=KEY_TYPE,
-                    )
-                    .alias(VAR_KEY)
-                )
-                .drop("concated_dim")
-            )
+        dynamic_names = dims is not None and self._model.use_var_names
+        if dynamic_names:
+            df = concat_dimensions(self.data, prefix=self.name)
+            names = df.get_column("concated_dim").to_list()
+            df = df.drop("concated_dim")
+            if solver.supports_integer_variables:
+                ids = [poi_add_var(domain, lb, ub, name).index for name in names]
+            else:
+                ids = [poi_add_var(lb, ub, name=name).index for name in names]
         else:
             if self._model.use_var_names:
                 name = self.name
+            elif solver.supports_repeat_names:
+                name = "V"
             else:
-                name = "V" if self._model.solver.supports_repeat_names else ""
+                name = ""
 
-            count = 1 if dims is None else len(self.data)
+            n = 1 if dims is None else len(self.data)
 
-            ids = [poi_add_var(domain, lb, ub, name).index for _ in range(count)]
-            df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
+            if solver.supports_integer_variables:
+                ids = [poi_add_var(domain, lb, ub, name).index for _ in range(n)]
+            else:
+                ids = [poi_add_var(lb, ub, name=name).index for _ in range(n)]
+
+        df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
 
         self._data = df
 
