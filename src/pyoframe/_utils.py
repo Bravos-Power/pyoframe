@@ -30,9 +30,9 @@ else:
 
     def pairwise(iterable):
         iterator = iter(iterable)
-        a = next(iterator, None)
+        a = next(iterator)
 
-        for b in iterable:
+        for b in iterator:
             yield a, b
             a = b
 
