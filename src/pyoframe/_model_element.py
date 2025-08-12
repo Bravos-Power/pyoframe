@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import polars as pl
 
@@ -84,7 +84,7 @@ class ModelElement(ABC):
         return _get_dimensions(self.data)
 
     @property
-    def dimensions_unsafe(self) -> list[str]:
+    def _dimensions_unsafe(self) -> list[str]:
         """Same as `dimensions` but returns an empty list if there are no dimensions instead of `None`.
 
         When unsure, use `dimensions` instead since the type checker forces users to handle the None case (no dimensions).
@@ -117,6 +117,32 @@ class ModelElement(ABC):
             return {}
         return {dim: self.data[dim].n_unique() for dim in dims}
 
+    def estimated_size(self, unit: pl.SizeUnit = "b") -> int | float:
+        """Returns the estimated size of the object in bytes.
+
+        Only considers the size of the underlying DataFrame(s) since other components (e.g., the object name) are negligible.
+
+        Parameters:
+            unit:
+                See [`polars.DataFrame.estimated_size`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.estimated_size.html).
+
+        Examples:
+            >>> m = pf.Model()
+
+            A dimensionless variable contains just a 32 bit (4 bytes) unsigned integer (the variable ID).
+
+            >>> m.x = pf.Variable()
+            >>> m.x.estimated_size()
+            4
+
+            A dimensioned variable contains, for every row, a 32 bit ID and, in this case, a 64 bit `dim_x` value (1200 bytes total).
+
+            >>> m.y = pf.Variable(pf.Set(dim_x=range(100)))
+            >>> m.y.estimated_size()
+            1200
+        """
+        return self.data.estimated_size(unit)
+
     def _add_shape_to_columns(self, df: pl.DataFrame) -> pl.DataFrame:
         """Adds the shape of the data to the columns of the DataFrame.
 
@@ -132,24 +158,84 @@ class ModelElement(ABC):
         return self.data.select(dims).n_unique()
 
 
-def _support_polars_method(method_name: str):
-    """Wraps the underlying Polars method to make it accessible on ModelElement."""
-
-    def method(self: SupportPolarsMethodMixin, *args, **kwargs) -> Any:
-        result_from_polars = getattr(self.data, method_name)(*args, **kwargs)
-        if isinstance(result_from_polars, pl.DataFrame):
-            return self._new(result_from_polars)
-        else:
-            return result_from_polars
-
-    return method
-
-
+# TODO: merge with SupportsMath?
 class SupportPolarsMethodMixin(ABC):
-    rename = _support_polars_method("rename")
-    with_columns = _support_polars_method("with_columns")
-    filter = _support_polars_method("filter")
-    estimated_size = _support_polars_method("estimated_size")
+    def rename(self, *args, **kwargs):
+        """Renames one or several of the object's dimensions.
+
+        Takes the same arguments as [`polars.DataFrame.rename`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.rename.html).
+
+        See the [portfolio optimization example](../examples/portfolio_optimization.md) for a usage example.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable(
+            ...     {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...     {"city": ["Toronto", "Berlin", "Paris"]},
+            ... )
+            >>> m.v
+            <Variable 'v' height=12>
+            ┌───────┬─────────┬──────────────────┐
+            │ hour  ┆ city    ┆ variable         │
+            │ (4)   ┆ (3)     ┆                  │
+            ╞═══════╪═════════╪══════════════════╡
+            │ 00:00 ┆ Toronto ┆ v[00:00,Toronto] │
+            │ 00:00 ┆ Berlin  ┆ v[00:00,Berlin]  │
+            │ 00:00 ┆ Paris   ┆ v[00:00,Paris]   │
+            │ 06:00 ┆ Toronto ┆ v[06:00,Toronto] │
+            │ 06:00 ┆ Berlin  ┆ v[06:00,Berlin]  │
+            │ …     ┆ …       ┆ …                │
+            │ 12:00 ┆ Berlin  ┆ v[12:00,Berlin]  │
+            │ 12:00 ┆ Paris   ┆ v[12:00,Paris]   │
+            │ 18:00 ┆ Toronto ┆ v[18:00,Toronto] │
+            │ 18:00 ┆ Berlin  ┆ v[18:00,Berlin]  │
+            │ 18:00 ┆ Paris   ┆ v[18:00,Paris]   │
+            └───────┴─────────┴──────────────────┘
+
+            >>> m.v.rename({"city": "location"})
+            <Expression height=12 terms=12 type=linear>
+            ┌───────┬──────────┬──────────────────┐
+            │ hour  ┆ location ┆ expression       │
+            │ (4)   ┆ (3)      ┆                  │
+            ╞═══════╪══════════╪══════════════════╡
+            │ 00:00 ┆ Toronto  ┆ v[00:00,Toronto] │
+            │ 00:00 ┆ Berlin   ┆ v[00:00,Berlin]  │
+            │ 00:00 ┆ Paris    ┆ v[00:00,Paris]   │
+            │ 06:00 ┆ Toronto  ┆ v[06:00,Toronto] │
+            │ 06:00 ┆ Berlin   ┆ v[06:00,Berlin]  │
+            │ …     ┆ …        ┆ …                │
+            │ 12:00 ┆ Berlin   ┆ v[12:00,Berlin]  │
+            │ 12:00 ┆ Paris    ┆ v[12:00,Paris]   │
+            │ 18:00 ┆ Toronto  ┆ v[18:00,Toronto] │
+            │ 18:00 ┆ Berlin   ┆ v[18:00,Berlin]  │
+            │ 18:00 ┆ Paris    ┆ v[18:00,Paris]   │
+            └───────┴──────────┴──────────────────┘
+
+        """
+        return self._new(self.data.rename(*args, **kwargs))
+
+    def with_columns(self, *args, **kwargs):
+        """Creates a new object with modified columns.
+
+        Takes the same arguments as [`polars.DataFrame.with_columns`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.with_columns.html).
+
+        !!! warning
+            Only use this function if you know what you're doing. It is not recommended to manually modify the columns
+            within a Pyoframe object.
+        """
+        return self._new(self.data.with_columns(*args, **kwargs))
+
+    def filter(self, *args, **kwargs):
+        """Creates a copy of the object containing only a subset of the original rows.
+
+        Takes the same arguments as [`polars.DataFrame.filter`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.filter.html).
+
+        See Also:
+            [`Expression.pick`][pyoframe.Expression.pick] or [`Variable.pick`][pyoframe.Variable.pick] if you wish to drop the filtered
+            column in the process.
+
+        """
+        return self._new(self.data.filter(*args, **kwargs))
 
     @abstractmethod
     def _new(self, data: pl.DataFrame):
@@ -157,10 +243,10 @@ class SupportPolarsMethodMixin(ABC):
 
     @property
     @abstractmethod
-    def data(self): ...
+    def data(self) -> pl.DataFrame: ...
 
     def pick(self, **kwargs):
-        """Filters elements by the given criteria and then drop the filtered dimensions.
+        """Filters elements by the given criteria and then drops the filtered dimensions.
 
         Examples:
             >>> m = pf.Model()
@@ -183,6 +269,9 @@ class SupportPolarsMethodMixin(ABC):
             >>> m.v.pick(hour="06:00", city="Toronto")
             <Expression terms=1 type=linear>
             v[06:00,Toronto]
+
+        See Also:
+            [`Expression.filter`][pyoframe.Expression.filter] or [`Variable.filter`][pyoframe.Variable.filter] if you don't wish to drop the filtered column.
         """
         return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 

@@ -68,23 +68,23 @@ class SupportsMath(ABC, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
     def __init__(self, **kwargs):
-        self.unmatched_strategy = UnmatchedStrategy.UNSET
-        self.allowed_new_dims: list[str] = []
+        self._unmatched_strategy = UnmatchedStrategy.UNSET
+        self._allowed_new_dims: list[str] = []
         super().__init__(**kwargs)
 
     def keep_unmatched(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
-        self.unmatched_strategy = UnmatchedStrategy.KEEP
+        self._unmatched_strategy = UnmatchedStrategy.KEEP
         return self
 
     def drop_unmatched(self):
         """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
-        self.unmatched_strategy = UnmatchedStrategy.DROP
+        self._unmatched_strategy = UnmatchedStrategy.DROP
         return self
 
     def add_dim(self, *dims: str):
         """Indicates that the expression can be broadcasted over the given dimensions during addition and subtraction."""
-        self.allowed_new_dims.extend(dims)
+        self._allowed_new_dims.extend(dims)
         return self
 
     @abstractmethod
@@ -133,7 +133,7 @@ class SupportsMath(ABC, SupportsToExpr):
     def __neg__(self):
         res = self.to_expr() * -1
         # Negating a constant term should keep the unmatched strategy
-        res.unmatched_strategy = self.unmatched_strategy
+        res._unmatched_strategy = self._unmatched_strategy
         return res
 
     def __sub__(self, other):
@@ -284,7 +284,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         s = Set(data)
         s._model = self._model
         # Copy over the unmatched strategy on operations like .rename(), .with_columns(), etc.
-        s.unmatched_strategy = self.unmatched_strategy
+        s._unmatched_strategy = self._unmatched_strategy
         return s
 
     @staticmethod
@@ -382,7 +382,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if isinstance(set, dict):
             df = pl.DataFrame(set)
         elif isinstance(set, Constraint):
-            df = set.data.select(set.dimensions_unsafe)
+            df = set.data.select(set._dimensions_unsafe)
         elif isinstance(set, SupportsMath):
             df = (
                 set.to_expr()
@@ -950,8 +950,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def _new(self, data: pl.DataFrame) -> Expression:
         e = Expression(data)
         e._model = self._model
-        # Note: We intentionally don't propogate the unmatched strategy to the new expression
-        e.allowed_new_dims = self.allowed_new_dims
+        # Note: We intentionally don't propagate the unmatched strategy to the new expression
+        e._allowed_new_dims = self._allowed_new_dims
         return e
 
     def _add_const(self, const: int | float) -> Expression:
@@ -1457,7 +1457,7 @@ class Constraint(ModelElementWithId):
                     )
                 )
                 .alias(col_name)
-            ).select(self.dimensions_unsafe + [col_name])
+            ).select(self._dimensions_unsafe + [col_name])
 
     def _on_add_to_model(self, model: Model, name: str):
         super()._on_add_to_model(model, name)
@@ -1716,6 +1716,27 @@ class Constraint(ModelElementWithId):
             m.objective += penalty
 
         return self
+
+    def estimated_size(self, *args, **kwargs):
+        """Returns the estimated size of the constraint.
+
+        Includes the size of the underlying expression (`Constraint.lhs`).
+
+        See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details on signature and behavior.
+
+        Examples:
+            An dimensionless constraint has contains a 32 bit constraint id and, for each term, a 64 bit coefficient with a 32 bit variable id.
+            For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.
+
+            >>> m = pf.Model()
+            >>> m.x = pf.Variable()
+            >>> m.con = m.x <= 4
+            >>> m.con.estimated_size()
+            28
+        """
+        return super().estimated_size(*args, **kwargs) + self.lhs.estimated_size(
+            *args, **kwargs
+        )
 
     @overload
     def to_str(self, return_df: Literal[False] = False) -> str: ...
@@ -1987,7 +2008,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
                 pl.col(VAR_KEY)
                 .map_elements(lambda v_id: getter(poi.VariableIndex(v_id), name))
                 .alias(col_name)
-            ).select(self.dimensions_unsafe + [col_name])
+            ).select(self._dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
         assert self._model is not None
@@ -2157,8 +2178,8 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
         e._model = self._model
         # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
-        e.unmatched_strategy = self.unmatched_strategy
-        e.allowed_new_dims = self.allowed_new_dims
+        e._unmatched_strategy = self._unmatched_strategy
+        e._allowed_new_dims = self._allowed_new_dims
         return e
 
     def next(self, dim: str, wrap_around: bool = False) -> Expression:
