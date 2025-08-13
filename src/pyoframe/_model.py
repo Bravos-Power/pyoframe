@@ -287,8 +287,9 @@ class Model:
         return self._constraints
 
     @property
-    def objective(self) -> Objective:
+    def objective(self) -> Objective | None:
         """Returns the model's objective."""
+        # TODO raise error instead of returning None (add a has_objective property).
         return self._objective
 
     @objective.setter
@@ -374,10 +375,19 @@ class Model:
         )
 
     def write(self, file_path: Path | str, pretty: bool = False):
-        """Outputs the model to a file (e.g. a `.lp` file).
+        """Outputs the model or the solution to a file (e.g. a `.lp`, `.sol`, `.mps`, or `.ilp` file).
 
-        Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
-        Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
+        These files can be useful for manually debugging a model.
+        Consult your solver documentation to learn more.
+
+        When creating your model, set `use_var_names` to make the outputed file human-readable.
+
+        ```python
+        m = pf.Model(use_var_names=True)
+        ```
+
+        For Gurobi, `use_var_names=True` is mandatory when using .write(). This may become mandatory for other
+        solvers too without notice.
 
         Parameters:
             file_path:
@@ -385,7 +395,12 @@ class Model:
             pretty:
                 Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
         """
-        self.solver.check_supports_write()
+        if not self.solver.supports_write:
+            raise NotImplementedError(f"{self.solver.name} does not support .write()")
+        if not self.use_var_names and self.solver.supports_repeat_names:
+            raise ValueError(
+                f"{self.solver.name} requires use_var_names=True to use .write()"
+            )
 
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -400,6 +415,7 @@ class Model:
     def optimize(self):
         """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
         self.poi.optimize()
+        #  TODO raise error if not solved to optimality
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
@@ -495,10 +511,20 @@ class Model:
             self.poi.close()
 
     def _set_param(self, name, value):
-        self.poi.set_raw_parameter(name, value)
+        try:
+            self.poi.set_raw_parameter(name, value)
+        except KeyError as e:
+            raise KeyError(
+                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+            ) from e
 
     def _get_param(self, name):
-        return self.poi.get_raw_parameter(name)
+        try:
+            return self.poi.get_raw_parameter(name)
+        except KeyError as e:
+            raise KeyError(
+                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+            ) from e
 
     def _set_attr(self, name, value):
         try:

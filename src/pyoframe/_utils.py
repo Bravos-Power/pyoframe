@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import itertools
+import sys
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import wraps
@@ -21,6 +23,18 @@ from pyoframe._constants import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
+
+if sys.version_info >= (3, 10):
+    pairwise = itertools.pairwise
+else:
+
+    def pairwise(iterable):
+        iterator = iter(iterable)
+        a = next(iterator)
+
+        for b in iterator:
+            yield a, b
+            a = b
 
 
 def get_obj_repr(obj: object, *props: str | None, **kwargs):

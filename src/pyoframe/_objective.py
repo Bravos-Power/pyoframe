@@ -83,13 +83,17 @@ class Objective(Expression):
 
         This value is obtained by directly querying the solver.
         """
-        assert self._model is not None, (
-            "Objective must be part of a model before it is queried."
-        )
+        assert self._model is not None
 
-        obj_value: float = self._model.poi.get_model_attribute(
-            poi.ModelAttribute.ObjectiveValue
-        )
+        if (
+            self._model.attr.TerminationStatus
+            == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
+        ):
+            raise ValueError(
+                "Cannot retrieve the objective value before calling model.optimize()."
+            )
+
+        obj_value: float = self._model.attr.ObjectiveValue
         if (
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX
