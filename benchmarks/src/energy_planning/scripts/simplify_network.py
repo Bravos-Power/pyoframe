@@ -234,7 +234,7 @@ if __name__ == "__main__":
     gens = pl.scan_parquet(snakemake.input.generators)
     loads = pl.scan_parquet(snakemake.input.loads)
     buses_to_keep = (
-        pl.concat([gens.select("bus"), loads.select("bus")])
+        pl.concat([gens.select("bus"), loads.select("bus")], how="vertical_relaxed")
         .unique()
         .collect()
         .to_series()

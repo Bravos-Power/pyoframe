@@ -100,6 +100,7 @@ rule process_generator_data:
     """Group the generators by type and bus."""
     input:
         RAW_INPUT_DIR / "CATS_generators.csv",
+        PROCESSED_INPUT_DIR / "matpower_gen.parquet"
     output:
         PROCESSED_INPUT_DIR / "generators.parquet",
     notebook:
