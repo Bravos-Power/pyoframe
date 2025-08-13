@@ -4,7 +4,7 @@ import os
 from urllib.request import urlretrieve
 from pathlib import Path
 
-CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/GIS/"
+CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/"
 
 INPUT_DIR = Path("input_data/energy_planning")
 RAW_INPUT_DIR = INPUT_DIR / "raw_inputs"
@@ -20,7 +20,7 @@ rule generate_all_inputs:
         vcf=PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
         bodf=PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
     output:
-        directory(INPUT_DIR / "final_inputs")
+        directory(INPUT_DIR / "final_inputs"),
     run:
         output_dir = Path(output[0])
         os.makedirs(output_dir, exist_ok=True)
@@ -48,14 +48,32 @@ rule fetch_line_data:
     output:
         RAW_INPUT_DIR / "CATS_lines.json",
     run:
-        urlretrieve(CATS_GITHUB_URL + "CATS_lines.json", output[0])
+        urlretrieve(CATS_GITHUB_URL + "GIS/CATS_lines.json", output[0])
 
 
 rule fetch_generator_data:
     output:
         RAW_INPUT_DIR / "CATS_generators.csv",
     run:
-        urlretrieve(CATS_GITHUB_URL + "CATS_gens.csv", output[0])
+        urlretrieve(CATS_GITHUB_URL + "GIS/CATS_gens.csv", output[0])
+
+
+rule fetch_matpower_data:
+    output:
+        RAW_INPUT_DIR / "CaliforniaTestSystem.m",
+    run:
+        urlretrieve(CATS_GITHUB_URL + "MATPOWER/CaliforniaTestSystem.m", output[0])
+
+
+rule process_matpower_case:
+    input:
+        RAW_INPUT_DIR / "CaliforniaTestSystem.m",
+    output:
+        bus=PROCESSED_INPUT_DIR / "matpower_bus.parquet",
+        branch=PROCESSED_INPUT_DIR / "matpower_branch.parquet",
+        gen=PROCESSED_INPUT_DIR / "matpower_gen.parquet",
+    notebook:
+        str(SCRIPTS_DIR / "process_matpower_case.py.ipynb")
 
 
 rule process_load_data:
@@ -110,6 +128,7 @@ rule simplify_network:
     script:
         SCRIPTS_DIR / "simplify_network.py"
 
+
 rule compute_ptdf:
     input:
         lines=PROCESSED_INPUT_DIR / "lines_simplified.parquet",
@@ -117,6 +136,7 @@ rule compute_ptdf:
         PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
     notebook:
         str(SCRIPTS_DIR / "compute_power_transfer_dist_facts.ipynb")
+
 
 rule compute_bodf:
     input:

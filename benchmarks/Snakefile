@@ -61,7 +61,7 @@ rule run_benchmark:
     benchmark:
         repeat("results/{problem}/{library}_{solver}_{size}.tsv", config["repeat"])
     shell:
-        "python src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size} --input-dir {input[0]}"
+        "python src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}" + (" --input-dir {input}" if input else "")
 
 rule profile:
     threads: available_cpu_count()

@@ -54,7 +54,6 @@ class Bench(PyoframeBenchmark):
 
         m.power_balance = 0 == (
             m.dispatch.map(generators[["gen", "bus"]]).keep_unmatched()
-            # todo move up
             - active_load.keep_unmatched()
             - m.power_flow.map(lines[["line_id", "from_bus"]])
             .rename({"from_bus": "bus"})
