@@ -5,7 +5,9 @@ from __future__ import annotations
 import pyoptinterface as poi
 
 from pyoframe._constants import ObjSense
-from pyoframe._core import Expression, SupportsToExpr
+from pyoframe._core import Expression
+from pyoframe._utils import SupportsToExpr
+from pyoframe._utils import expr as to_expr
 
 
 # TODO don't subclass Expression to avoid a bunch of unnecessary functions being available.
@@ -69,7 +71,7 @@ class Objective(Expression):
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
-            expr = expr.to_expr()
+            expr = to_expr(expr)
         super().__init__(expr.data)
         self._model = expr._model
         if self.dimensions is not None:
@@ -89,7 +91,7 @@ class Objective(Expression):
 
         obj_value: float = self._model.poi.get_model_attribute(
             poi.ModelAttribute.ObjectiveValue
-        )
+        )  # pyright: ignore[reportAssignmentType]
         if (
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX

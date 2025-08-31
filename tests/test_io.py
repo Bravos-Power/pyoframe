@@ -60,7 +60,7 @@ def test_expression_with_const_to_str(solver):
 
 
 def test_constraint_to_str(solver):
-    if not solver.supports_quadratics:
+    if not solver.supports_quadratic_constraints:
         pytest.skip("Solver does not support quadratic constraints.")
     m = Model(solver=solver)
     m.x1 = Variable()

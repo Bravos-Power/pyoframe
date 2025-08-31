@@ -71,8 +71,8 @@ def patch_dataframe_libraries():
     _patch_class(pd.Series)
     _patch_class(pl.DataFrame)
     _patch_class(pl.Series)
-    pl.DataFrame.to_expr = polars_df_to_expr
-    pd.DataFrame.to_expr = pandas_df_to_expr
+    pl.DataFrame.to_expr = polars_df_to_expr  # type: ignore[assignment]
+    pd.DataFrame.to_expr = pandas_df_to_expr  # type: ignore[assignment]
     # TODO make a set instead!
-    pl.Series.to_expr = lambda self: self.to_frame().to_expr()
-    pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()
+    pl.Series.to_expr = lambda self: self.to_frame().to_expr()  # type: ignore[assignment]
+    pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()  # type: ignore[assignment]

@@ -30,11 +30,12 @@ import numpy as np
 import pandas as pd
 
 import pyoframe as pf
+from pyoframe._constants import SUPPORTED_SOLVER_TYPES
 
 _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
 
-def solve_model(use_var_names=True, solver="gurobi"):
+def solve_model(use_var_names=True, solver: SUPPORTED_SOLVER_TYPES = "gurobi"):
     """Portfolio Optimization Test Case - Quadratic Programming with IPOPT.
 
     This example demonstrates IPOPT's capability to solve quadratic programming problems

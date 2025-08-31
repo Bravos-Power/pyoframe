@@ -22,6 +22,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._core import Expression
 
 
+# TODO remove underscores
 def _multiply_expressions(self: Expression, other: Expression) -> Expression:
     """Multiplies two or more expressions together.
 

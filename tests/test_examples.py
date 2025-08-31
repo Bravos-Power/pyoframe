@@ -25,12 +25,12 @@ class Example:
     folder_name: str
     unique_solution: bool = True
     is_mip: bool = False
-    is_quadratic: bool = False
+    quadratic_constraints: bool = False
 
     def supports_solver(self, solver: _Solver) -> bool:
         if self.is_mip and not solver.supports_integer_variables:
             return False
-        if self.is_quadratic and not solver.supports_quadratics:
+        if self.quadratic_constraints and not solver.supports_quadratic_constraints:
             return False
         return True
 
@@ -66,10 +66,15 @@ EXAMPLES = [
     Example("diet_problem"),
     Example("facility_problem", is_mip=True),
     Example("cutting_stock_problem", unique_solution=False, is_mip=True),
-    Example("facility_location", unique_solution=False, is_mip=True, is_quadratic=True),
+    Example(
+        "facility_location",
+        unique_solution=False,
+        is_mip=True,
+        quadratic_constraints=True,
+    ),
     Example("sudoku", is_mip=True),
     Example("production_planning"),
-    Example("portfolio_optim", is_quadratic=True),
+    Example("portfolio_optim"),
     Example("pumped_storage", is_mip=True),
 ]
 
@@ -211,7 +216,7 @@ def write_results(example: Example, model, results_dir, solver):
         readability = "pretty" if model.use_var_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
-    if model.objective is not None:
+    if model.has_objective:
         pl.DataFrame({"value": [model.objective.value]}).write_csv(
             results_dir / "objective.csv"
         )

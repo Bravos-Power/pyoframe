@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import polars as pl
 
@@ -238,7 +238,7 @@ class SupportPolarsMethodMixin(ABC):
         return self._new(self.data.filter(*args, **kwargs))
 
     @abstractmethod
-    def _new(self, data: pl.DataFrame):
+    def _new(self, data: pl.DataFrame) -> Self:
         """Creates a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
 
     @property

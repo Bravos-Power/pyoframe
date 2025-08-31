@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, Union
 
 import pandas as pd
 import polars as pl
@@ -19,8 +19,26 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pyoframe._core import Expression
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
+
+
+class _SupportsToExpr(Protocol):
+    """Protocol for any object that can be converted to a Pyoframe [Expression][pyoframe.Expression]."""
+
+    def to_expr(self) -> Expression:
+        """Converts the object to a Pyoframe [Expression][pyoframe.Expression]."""
+        ...
+
+
+SupportsToExpr = Union[
+    pd.Series, pd.DataFrame, pl.Series, pl.DataFrame, _SupportsToExpr
+]
+
+
+def expr(obj: SupportsToExpr) -> Expression:
+    return obj.to_expr()  # pyright: ignore[reportAttributeAccessIssue, reportCallIssue]
 
 
 def get_obj_repr(obj: object, *props: str | None, **kwargs):
