@@ -296,7 +296,7 @@ class Model:
         """Returns the model's objective.
 
         Raises:
-            ValueError if the objective has not been defined.
+            ValueError: If the objective has not been defined.
 
         See Also:
             [`Model.has_objective`][pyoframe.Model.has_objective]
