@@ -211,7 +211,7 @@ def write_results(example: Example, model: pf.Model, results_dir, solver):
         readability = "pretty" if model.solver_uses_variable_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
-    if model.objective is not None:
+    if model.has_objective:
         pl.DataFrame({"value": [model.objective.value]}).write_csv(
             results_dir / "objective.csv"
         )

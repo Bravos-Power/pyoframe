@@ -1732,10 +1732,10 @@ class Constraint(ModelElementWithId):
             )
         elif m.sense == ObjSense.MAX:
             penalty *= -1
-        if m.objective is None:
-            m.objective = penalty
-        else:
+        if m.has_objective:
             m.objective += penalty
+        else:
+            m.objective = penalty
 
         return self
 

@@ -287,13 +287,27 @@ class Model:
         return self._constraints
 
     @property
+    def has_objective(self) -> bool:
+        """Returns whether the model's objective has been defined."""
+        return self._objective is not None
+
+    @property
     def objective(self) -> Objective:
-        """Returns the model's objective."""
+        """Returns the model's objective.
+
+        Raises:
+            ValueError if the objective has not been defined.
+
+        See Also:
+            [`Model.has_objective`][pyoframe.Model.has_objective]
+        """
+        if self._objective is None:
+            raise ValueError("Objective is not defined.")
         return self._objective
 
     @objective.setter
     def objective(self, value: SupportsToExpr | float | int):
-        if self._objective is not None and (
+        if self.has_objective and (
             not isinstance(value, Objective) or not value._constructive
         ):
             raise ValueError("An objective already exists. Use += or -= to modify it.")
@@ -369,7 +383,7 @@ class Model:
             self.name,
             vars=len(self.variables),
             constrs=len(self.constraints),
-            has_objective=bool(self.objective),
+            has_objective=self.has_objective,
             solver=self.solver_name,
         )
 
