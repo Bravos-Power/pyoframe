@@ -18,7 +18,7 @@ def solve_model(use_var_names=True):
     machines_availability = pl.read_csv(_input_dir / "machines_availability.csv")
     products_profit = pl.read_csv(_input_dir / "products_profit.csv")
 
-    m = pf.Model(use_var_names=use_var_names)
+    m = pf.Model(solver_uses_variable_names=use_var_names)
     m.Production = pf.Variable(products_profit["products"], lb=0)
 
     machine_usage = m.Production * processing_times

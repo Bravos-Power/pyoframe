@@ -206,9 +206,9 @@ def test_gurobi_model_matches(example):
         compare_results_dir(example.get_results_path(), tmpdir, "gurobi")
 
 
-def write_results(example: Example, model, results_dir, solver):
+def write_results(example: Example, model: pf.Model, results_dir, solver):
     if solver.supports_write:
-        readability = "pretty" if model.use_var_names else "machine"
+        readability = "pretty" if model.solver_uses_variable_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
     if model.objective is not None:

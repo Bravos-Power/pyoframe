@@ -60,7 +60,7 @@ def test_multiplication_no_common_dimensions():
 
 
 def test_within_set(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     small_set = Set(x=[1, 2], y=["a"])
     large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
     m.v = Variable(large_set)
@@ -102,7 +102,7 @@ def test_filter_constraint():
 
 
 def test_filter_variable(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
     result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
@@ -222,7 +222,7 @@ def test_add_expression_with_add_dim():
 
 
 def test_add_expression_with_vars_and_add_dim(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
     lhs = (1 + 2 * m.v).add_dim("dim1")
@@ -257,7 +257,7 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
-    m = Model(solver=solver)
+    m = Model(solver)
     m.v1 = Variable(dim1, dim2)
     m.v2 = Variable(dim3, dim2)
     lhs = 1 + 2 * m.v1
@@ -302,7 +302,7 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
 def test_add_expression_with_missing(solver):
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    m = Model(solver=solver)
+    m = Model(solver)
     m.v1 = Variable(dim2)
     m.v2 = Variable(dim2_large)
     lhs = 1 + 2 * m.v1
@@ -360,7 +360,7 @@ def test_add_expression_with_missing(solver):
 
 
 def test_add_expressions_with_dims_and_missing(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
@@ -504,7 +504,7 @@ def test_variable_equals(solver):
         pytest.skip(
             f"Solver {solver.name} does not support integer or binary variables, skipping test."
         )
-    m = Model(solver=solver)
+    m = Model(solver)
     index = Set(x=[1, 2, 3])
 
     m.Choose = Variable(index, vtype=VType.BINARY)
@@ -522,7 +522,7 @@ def test_variable_equals(solver):
 
 
 def test_adding_expressions_that_cancel(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
     m.y = Variable(pl.DataFrame({"t": [0, 1]}))
 
@@ -533,13 +533,13 @@ def test_adding_expressions_that_cancel(solver):
 
 
 def test_adding_cancelling_expressions_no_dim(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.X = Variable()
     m.c = m.X - m.X >= 0
 
 
 def test_adding_empty_expression(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
     m.y = Variable(pl.DataFrame({"t": [0, 1]}))
     m.z = Variable(pl.DataFrame({"t": [0, 1]}))
@@ -549,7 +549,7 @@ def test_adding_empty_expression(solver):
 
 
 def test_to_and_from_quadratic(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     df = pl.DataFrame({"dim": [1, 2, 3], "value": [1, 2, 3]})
     m.x1 = Variable()
     m.x2 = Variable()

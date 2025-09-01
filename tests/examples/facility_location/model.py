@@ -12,7 +12,7 @@ import pyoframe as pf
 
 
 def solve_model(use_var_names, G=4, F=3):
-    model = pf.Model(use_var_names=use_var_names, sense="min")
+    model = pf.Model(solver_uses_variable_names=use_var_names, sense="min")
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))

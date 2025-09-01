@@ -30,7 +30,7 @@ def solve_model(
     storage_level_init_and_final = 300
     efficiency = 0.75
 
-    m = pf.Model(use_var_names=use_var_names, **kwargs)
+    m = pf.Model(solver_uses_variable_names=use_var_names, **kwargs)
     m.Pump = pf.Variable(hourly_prices["tick"], vtype=pf.VType.BINARY)
     m.Turb = pf.Variable(hourly_prices["tick"], lb=0, ub=turb_max)
     m.Storage_level = pf.Variable(hourly_prices["tick"], lb=storage_min, ub=storage_max)
