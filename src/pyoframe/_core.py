@@ -1440,9 +1440,15 @@ class Constraint(ModelElementWithId):
         except KeyError:
             setter = self._model.poi.set_constraint_raw_attribute
 
+        constr_type = (
+            poi.ConstraintType.Quadratic
+            if self.lhs.is_quadratic
+            else poi.ConstraintType.Linear
+        )
+
         if self.dimensions is None:
             for key in self.data.get_column(CONSTRAINT_KEY):
-                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
+                setter(poi.ConstraintIndex(constr_type, key), name, value)
         else:
             for key, value in (
                 self.data.join(
@@ -1453,7 +1459,7 @@ class Constraint(ModelElementWithId):
                 .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
                 .iter_rows()
             ):
-                setter(poi.ConstraintIndex(poi.ConstraintType.Linear, key), name, value)
+                setter(poi.ConstraintIndex(constr_type, key), name, value)
 
     @unwrap_single_values
     def _get_attribute(self, name):
@@ -1465,21 +1471,16 @@ class Constraint(ModelElementWithId):
         except KeyError:
             getter = self._model.poi.get_constraint_raw_attribute
 
-        with (
-            warnings.catch_warnings()
-        ):  # map_elements without return_dtype= gives a warning
-            warnings.filterwarnings(
-                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
-            )
-            return self.data.with_columns(
-                pl.col(CONSTRAINT_KEY)
-                .map_elements(
-                    lambda v_id: getter(
-                        poi.ConstraintIndex(poi.ConstraintType.Linear, v_id), name
-                    )
-                )
-                .alias(col_name)
-            ).select(self._dimensions_unsafe + [col_name])
+        constr_type = (
+            poi.ConstraintType.Quadratic
+            if self.lhs.is_quadratic
+            else poi.ConstraintType.Linear
+        )
+
+        ids = self.data.get_column(CONSTRAINT_KEY).to_list()
+        attr = [getter(poi.ConstraintIndex(constr_type, v_id), name) for v_id in ids]
+        data = self.data.with_columns(pl.Series(attr).alias(col_name))
+        return data.select(self._dimensions_unsafe + [col_name])
 
     def _on_add_to_model(self, model: Model, name: str):
         super()._on_add_to_model(model, name)
@@ -2020,17 +2021,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         except KeyError:
             getter = self._model.poi.get_variable_raw_attribute
 
-        with (
-            warnings.catch_warnings()
-        ):  # map_elements without return_dtype= gives a warning
-            warnings.filterwarnings(
-                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
-            )
-            return self.data.with_columns(
-                pl.col(VAR_KEY)
-                .map_elements(lambda v_id: getter(poi.VariableIndex(v_id), name))
-                .alias(col_name)
-            ).select(self._dimensions_unsafe + [col_name])
+        ids = self.data.get_column(VAR_KEY).to_list()
+        attr = [getter(poi.VariableIndex(v_id), name) for v_id in ids]
+        data = self.data.with_columns(pl.Series(attr).alias(col_name))
+        return data.select(self._dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
         assert self._model is not None
@@ -2102,9 +2096,11 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> m = pf.Model()
             >>> m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)
             >>> m.var_integer = pf.Variable(
-            ...     {"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=VType.INTEGER
+            ...     {"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=pf.VType.INTEGER
             ... )
-            >>> m.var_dimensionless = pf.Variable(lb=4.5, ub=5.5, vtype=VType.INTEGER)
+            >>> m.var_dimensionless = pf.Variable(
+            ...     lb=4.5, ub=5.5, vtype=pf.VType.INTEGER
+            ... )
             >>> m.var_continuous.solution
             Traceback (most recent call last):
             ...
