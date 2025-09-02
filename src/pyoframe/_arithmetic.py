@@ -27,7 +27,7 @@ def _multiply_expressions(self: Expression, other: Expression) -> Expression:
 
     Examples:
         >>> import pyoframe as pf
-        >>> m = pf.Model("min")
+        >>> m = pf.Model()
         >>> m.x1 = pf.Variable()
         >>> m.x2 = pf.Variable()
         >>> m.x3 = pf.Variable()
@@ -368,9 +368,9 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
         return self
 
     if not set(missing_dims) <= set(self._allowed_new_dims):
-        # TODO actually suggest using e.g. .add_dim("a", "b") instead of just "use .add_dim()"
+        # TODO actually suggest using e.g. .over("a", "b") instead of just "use .over()"
         raise PyoframeError(
-            f"DataFrame has missing dimensions {missing_dims}. If this is intentional, use .add_dim()\n{self.data}"
+            f"DataFrame has missing dimensions {missing_dims}. If this is intentional, use .over()\n{self.data}"
         )
 
     target_data = target.data.select(target_dims).unique(

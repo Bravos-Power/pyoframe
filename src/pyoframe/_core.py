@@ -82,10 +82,29 @@ class SupportsMath(ABC, SupportsToExpr):
         self._unmatched_strategy = UnmatchedStrategy.DROP
         return self
 
-    def add_dim(self, *dims: str):
+    def over(self, *dims: str):
         """Indicates that the expression can be broadcasted over the given dimensions during addition and subtraction."""
         self._allowed_new_dims.extend(dims)
         return self
+
+    def _add_allowed_new_dims_to_df(self, df):
+        df = df.with_columns(*(pl.lit("*").alias(c) for c in self._allowed_new_dims))
+        # reorder
+        df = df.select(
+            *(
+                [c for c in df.columns if c not in RESERVED_COL_KEYS]
+                + [c for c in df.columns if c in RESERVED_COL_KEYS]
+            )
+        )
+        return df
+
+    def add_dim(self, *dims: str):
+        """Deprecated, use [`over`][pyoframe.Expression.over] instead."""
+        warnings.warn(
+            "'add_dim' has been renamed to 'over'. Please use 'over' instead.",
+            DeprecationWarning,
+        )
+        return self.over(*dims)
 
     @abstractmethod
     def to_expr(self) -> Expression:
@@ -372,6 +391,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
     def __repr__(self):
         header = get_obj_repr(self, self._friendly_name, height=self.data.height)
         data = self._add_shape_to_columns(self.data)
+        data = self._add_allowed_new_dims_to_df(data)
         with Config.print_polars_config:
             table = repr(data)
 
@@ -864,7 +884,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> expr *= m.v1
             >>> expr.degree()
             1
-            >>> expr += (m.v2**2).add_dim("dim1")
+            >>> expr += (m.v2**2).over("dim1")
             >>> expr.degree()
             2
             >>> expr.degree(return_str=True)
@@ -1297,6 +1317,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 data = data.item()
             else:
                 data = self._add_shape_to_columns(data)
+                data = self._add_allowed_new_dims_to_df(data)
                 with Config.print_polars_config:
                     data = repr(data)
 
@@ -2186,6 +2207,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         else:
             with Config.print_polars_config:
                 data = self._add_shape_to_columns(self.data)
+                data = self._add_allowed_new_dims_to_df(data)
                 result += repr(data)
 
         return result

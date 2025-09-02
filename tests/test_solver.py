@@ -87,7 +87,7 @@ def test_retrieving_duals_vectorized(solver):
     m.X_ub = m.X <= data[["t", "ub"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).over("c").sum() <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -135,7 +135,7 @@ def test_support_variable_attributes(solver):
     m.X.attr.UpperBound = data[["t", "UpperBound"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).over("c").sum() <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -184,7 +184,7 @@ def test_support_variable_raw_attributes():
     m.X.attr.UB = data[["t", "UB"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).over("c").sum() <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()

@@ -10,7 +10,7 @@ Pyoframe has a few special functions that make working with dataframes easy and 
 
 ## `Expression.map()`
 
-## `Expression.add_dim()`
+## `Expression.over()`
 
 ## `drop_unmatched` and `keep_unmatched`
 
@@ -23,7 +23,7 @@ Pyoframe conveniently allows users to use [Polars DataFrames](https://docs.pola.
 
 However, if **neither** the left or right terms of a mathematical operation is a Pyoframe object, Pyoframe will not automatically convert DataFrames[^1]. In these situations, users can manually convert their DataFrames to Pyoframe expressions using `.to_expr()`.
 
-Additionally, users should use `.to_expr()` whenever they wish to use [add_dim][pyoframe.Expression.add_dim], [drop_unmatched][pyoframe.Expression.drop_unmatched], or [keep_unmatched][pyoframe.Expression.keep_unmatched] on a DataFrame.
+Additionally, users should use `.to_expr()` whenever they wish to use [over][pyoframe.Expression.over], [drop_unmatched][pyoframe.Expression.drop_unmatched], or [keep_unmatched][pyoframe.Expression.keep_unmatched] on a DataFrame.
 
 !!! info "Under the hood"
     How is `.to_expr()` a valid Pandas and Polars method? `import pyoframe` causes Pyoframe to [monkey patch](https://stackoverflow.com/questions/5626193/what-is-monkey-patching) the Pandas and Polars libraries. One of the patches adds the `.to_expr()` method to both `pandas.DataFrame` and `polars.DataFrame` (see [`monkey_patch.py`](https://github.com/Bravos-Power/pyoframe/tree/main/src/pyoframe)).

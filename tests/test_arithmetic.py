@@ -181,7 +181,7 @@ def test_add_expressions_with_vars_and_dims():
     )
 
 
-def test_add_expression_with_add_dim():
+def test_add_expression_with_over():
     expr = pl.DataFrame({"value": [1]}).to_expr()
     expr_with_dim = pl.DataFrame({"dim1": [1], "value": [1]}).to_expr()
     expr_with_two_dim = pl.DataFrame(
@@ -191,41 +191,41 @@ def test_add_expression_with_add_dim():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .over()"
         ),
     ):
         expr + expr_with_dim
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .over()"
         ),
     ):
         expr_with_dim + expr
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .over()"
         ),
     ):
         expr_with_dim + expr_with_two_dim
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .over()"
         ),
     ):
         expr_with_two_dim + expr_with_dim
-    expr.add_dim("dim1") + expr_with_dim
-    expr.add_dim("dim1", "dim2") + expr_with_two_dim
-    expr_with_dim.add_dim("dim2") + expr_with_two_dim
+    expr.over("dim1") + expr_with_dim
+    expr.over("dim1", "dim2") + expr_with_two_dim
+    expr_with_dim.over("dim2") + expr_with_two_dim
 
 
-def test_add_expression_with_vars_and_add_dim(solver):
+def test_add_expression_with_vars_and_over(solver):
     m = Model(solver=solver)
     m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
-    lhs = (1 + 2 * m.v).add_dim("dim1")
+    lhs = (1 + 2 * m.v).over("dim1")
     result = lhs + expr_with_dim
     expected_result = pl.DataFrame(
         {
@@ -253,7 +253,7 @@ def test_add_expression_with_vars_and_add_dim(solver):
     )
 
 
-def test_add_expression_with_vars_and_add_dim_many(solver):
+def test_add_expression_with_vars_and_over_many(solver):
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
@@ -266,19 +266,19 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['z']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['z']. If this is intentional, use .over()"
         ),
     ):
         lhs + rhs
-    lhs = lhs.add_dim("z")
+    lhs = lhs.over("z")
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['x']. If this is intentional, use .add_dim()"
+            "DataFrame has missing dimensions ['x']. If this is intentional, use .over()"
         ),
     ):
         lhs + rhs
-    rhs = rhs.add_dim("x")
+    rhs = rhs.over("x")
     result = lhs + rhs
     assert_frame_equal(
         result.to_str(return_df=True),
@@ -372,19 +372,19 @@ def test_add_expressions_with_dims_and_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['z']. If this is intentional, use .add_dim()",
+            "DataFrame has missing dimensions ['z']. If this is intentional, use .over()",
         ),
     ):
         lhs + rhs
-    lhs = lhs.add_dim("z")
+    lhs = lhs.over("z")
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['x']. If this is intentional, use .add_dim()",
+            "DataFrame has missing dimensions ['x']. If this is intentional, use .over()",
         ),
     ):
         lhs + rhs
-    rhs = rhs.add_dim("x")
+    rhs = rhs.over("x")
     with pytest.raises(
         PyoframeError,
         match=re.escape(

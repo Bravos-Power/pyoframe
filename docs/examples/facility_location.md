@@ -40,19 +40,19 @@ model.con_only_one_closest = model.is_closest.sum("f") == 1
 
 model.dist_x = pf.Variable(model.x_axis, model.facilities)
 model.dist_y = pf.Variable(model.y_axis, model.facilities)
-model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
+model.con_dist_x = model.dist_x == model.customer_position_x.over(
     "f"
-) - model.facility_position.pick(axis="x").add_dim("x")
-model.con_dist_y = model.dist_y == model.customer_position_y.add_dim(
+) - model.facility_position.pick(axis="x").over("x")
+model.con_dist_y = model.dist_y == model.customer_position_y.over(
     "f"
-) - model.facility_position.pick(axis="y").add_dim("y")
+) - model.facility_position.pick(axis="y").over("y")
 model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
-model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
-    model.dist_y**2
-).add_dim("x")
+model.con_dist = model.dist**2 == (model.dist_x**2).over("y") + (model.dist_y**2).over(
+    "x"
+)
 
 M = 2 * 1.414
-model.con_max_distance = model.max_distance.add_dim("x", "y", "f") >= model.dist - M * (
+model.con_max_distance = model.max_distance.over("x", "y", "f") >= model.dist - M * (
     1 - model.is_closest
 )
 
