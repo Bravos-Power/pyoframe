@@ -32,11 +32,11 @@ dev = [
     "polars>=1.32.3",       # constrain since previous versions have changes that break testing
     "pytest==8.4.1",
     "pytest-cov==6.2.1",
-    "sybil[pytest]~=9.2.0", # allows running tests on documentation code
+    "sybil[pytest]==9.2.0", # allows running tests on documentation code
     "pre-commit==4.3.0",    # pre-commit hooks
     "gurobipy==12.0.3",     # used for testing against the gurobi library
     "coverage==7.10.6",     # code coverage
-    "ipykernel~=6.30.1",    # add support for jupyter notebooks
+    "ipykernel==6.30.1",    # add support for jupyter notebooks
     # Automatically install as many solvers as possible
     # (we don't pin since we want to test against the latest)
     "highsbox",
@@ -45,8 +45,8 @@ dev = [
 # We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
 docs = [
     "mkdocs-material~=9.6.18",
-    "mkdocstrings[python]~=1.18.2",                     # used to generate API documentation
-    "mkdocs-git-revision-date-localized-plugin~=1.4.7", # displays lastest update date in documentation
+    "mkdocstrings[python]~=0.30.0",                     # used to generate API documentation
+    "mkdocs-git-revision-date-localized-plugin~=1.4.7", # displays the update date in documentation
     "mkdocs-git-committers-plugin-2~=2.5.0",            # displays who contributed in documentation
     "mkdocs-gen-files~=0.5.0",                          # allows running custom scripts during doc generation
     "mkdocs-section-index~=0.3.10",                     # allows sections to be clickable pages
