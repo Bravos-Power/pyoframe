@@ -76,7 +76,7 @@ def _is_iterable(input: Any | Iterable[Any]) -> bool:
 
 def concat_dimensions(
     df: pl.DataFrame,
-    prefix: str | None = None,
+    prefix: str,
     keep_dims: bool = True,
     ignore_columns: Sequence[str] = RESERVED_COL_KEYS,
     replace_spaces: bool = True,
@@ -102,20 +102,6 @@ def concat_dimensions(
         ...         "dim2": ["Y", "Y", "Y", "N", "N", "N"],
         ...     }
         ... )
-        >>> concat_dimensions(df)
-        shape: (6, 3)
-        ┌──────┬──────┬──────────────┐
-        │ dim1 ┆ dim2 ┆ concated_dim │
-        │ ---  ┆ ---  ┆ ---          │
-        │ i64  ┆ str  ┆ str          │
-        ╞══════╪══════╪══════════════╡
-        │ 1    ┆ Y    ┆ [1,Y]        │
-        │ 2    ┆ Y    ┆ [2,Y]        │
-        │ 3    ┆ Y    ┆ [3,Y]        │
-        │ 1    ┆ N    ┆ [1,N]        │
-        │ 2    ┆ N    ┆ [2,N]        │
-        │ 3    ┆ N    ┆ [3,N]        │
-        └──────┴──────┴──────────────┘
         >>> concat_dimensions(df, prefix="x")
         shape: (6, 3)
         ┌──────┬──────┬──────────────┐
@@ -130,7 +116,7 @@ def concat_dimensions(
         │ 2    ┆ N    ┆ x[2,N]       │
         │ 3    ┆ N    ┆ x[3,N]       │
         └──────┴──────┴──────────────┘
-        >>> concat_dimensions(df, keep_dims=False)
+        >>> concat_dimensions(df, "", keep_dims=False)
         shape: (6, 1)
         ┌──────────────┐
         │ concated_dim │
@@ -157,8 +143,6 @@ def concat_dimensions(
         │ 2             ┆ x            │
         └───────────────┴──────────────┘
     """
-    if prefix is None:
-        prefix = ""
     dimensions = [col for col in df.columns if col not in ignore_columns]
     if dimensions:
         query = pl.concat_str(

@@ -154,7 +154,7 @@ def test_add_expressions():
 
 
 def test_add_expressions_with_vars():
-    expr = Expression(pl.DataFrame({VAR_KEY: [1, 2], COEF_KEY: [1, 2]}))
+    expr = Expression(pl.DataFrame({VAR_KEY: [1, 2], COEF_KEY: [1, 2]}), name="n/a")
     result = expr + expr
     assert_frame_equal(
         result.data,
@@ -168,7 +168,8 @@ def test_add_expressions_with_vars_and_dims():
     expr = Expression(
         pl.DataFrame(
             {"dim1": [1, 1, 2, 2], VAR_KEY: [1, 2, 1, 2], COEF_KEY: [1, 2, 3, 4]}
-        )
+        ),
+        name="n/a",
     )
     result = expr + expr
     assert_frame_equal(

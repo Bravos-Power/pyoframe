@@ -104,7 +104,7 @@ def _multiply_expressions_core(self: Expression, other: Expression) -> Expressio
         .drop(COEF_KEY + "_right")
     )
 
-    return self._new(data)
+    return self._new(data, name=f"{self.name} * {other.name}")
 
 
 def _quadratic_multiplication(self: Expression, other: Expression) -> Expression:
@@ -171,7 +171,7 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
 
     data = _sum_like_terms(data)
 
-    return self._new(data)
+    return self._new(data, name=f"{self.name} * {other.name}")
 
 
 def _add_expressions_core(*expressions: Expression) -> Expression:
@@ -345,7 +345,9 @@ def _add_expressions_core(*expressions: Expression) -> Expression:
     data = pl.concat(expr_data, how="vertical_relaxed")
     data = _sum_like_terms(data)
 
-    new_expr = expressions[0]._new(data)
+    new_expr = expressions[0]._new(
+        data, name=f"({' + '.join(e.name for e in expressions)})"
+    )
     new_expr._unmatched_strategy = propogate_strat
 
     return new_expr
@@ -378,7 +380,7 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
     )
 
     if not dims_in_common:
-        return self._new(self.data.join(target_data, how="cross"))
+        return self._new(self.data.join(target_data, how="cross"), name=self.name)
 
     # If drop, we just do an inner join to get into the shape of the other
     if self._unmatched_strategy == UnmatchedStrategy.DROP:
@@ -387,7 +389,8 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
                 target_data,
                 on=dims_in_common,
                 maintain_order="left" if Config.maintain_order else None,
-            )
+            ),
+            name=self.name,
         )
 
     result = self.data.join(
@@ -401,7 +404,7 @@ def _add_dimension(self: Expression, target: Expression) -> Expression:
         raise PyoframeError(
             f"Cannot add dimension {missing_dims} since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
         )
-    return self._new(result)
+    return self._new(result, self.name)
 
 
 def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
