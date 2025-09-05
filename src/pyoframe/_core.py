@@ -1192,7 +1192,8 @@ class Expression(SupportsMath):
             .otherwise(pl.col(COEF_KEY))
         )
 
-        return self._new(data, name=f"({self.name} + {const})")
+        name = f"({self.name} + {const})" if const >= 0 else f"({self.name} - {-const})"
+        return self._new(data, name=name)
 
     @property
     def constant_terms(self) -> pl.DataFrame:

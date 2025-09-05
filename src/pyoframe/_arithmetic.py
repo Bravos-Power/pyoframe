@@ -347,9 +347,12 @@ Expression 2:\t{right.name}
     data = pl.concat(expr_data, how="vertical_relaxed")
     data = _sum_like_terms(data)
 
-    new_expr = expressions[0]._new(
-        data, name=f"({' + '.join(e.name for e in expressions)})"
-    )
+    full_name = expressions[0].name
+    for expr in expressions[1:]:
+        name = expr.name
+        full_name += f" - {name[1:]}" if name[0] == "-" else f" + {name}"
+
+    new_expr = expressions[0]._new(data, name=f"({full_name})")
     new_expr._unmatched_strategy = propagate_strat
 
     return new_expr
