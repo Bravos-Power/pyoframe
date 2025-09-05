@@ -13,10 +13,10 @@ import polars as pl
 import pyoptinterface as poi
 
 from pyoframe._arithmetic import (
-    _add_expressions,
     _get_dimensions,
-    _multiply_expressions,
     _simplify_expr_df,
+    add,
+    multiply,
 )
 from pyoframe._constants import (
     COEF_KEY,
@@ -1090,7 +1090,7 @@ class Expression(SupportsMath):
             return self._add_const(other)
         other = other.to_expr()
         self._learn_from_other(other)
-        return _add_expressions(self, other)
+        return add(self, other)
 
     def __mul__(self: Expression, other: int | float | SupportsToExpr) -> Expression:
         if isinstance(other, (int, float)):
@@ -1101,7 +1101,7 @@ class Expression(SupportsMath):
 
         other = other.to_expr()
         self._learn_from_other(other)
-        return _multiply_expressions(self, other)
+        return multiply(self, other)
 
     def to_expr(self) -> Expression:
         """Returns the expression itself."""

@@ -91,7 +91,7 @@ include = ["src/pyoframe/*"]
 pythonpath = "src"
 addopts = "--doctest-modules --ignore=scripts"
 filterwarnings = ["error::DeprecationWarning"]
-# doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
+doctest_optionflags = "NORMALIZE_WHITESPACE"
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"
