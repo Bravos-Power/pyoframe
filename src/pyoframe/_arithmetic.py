@@ -218,11 +218,11 @@ def add(*expressions: Expression) -> Expression:
             set(missing_left) <= set(left._allowed_new_dims)
             and set(missing_right) <= set(right._allowed_new_dims)
         ):
-            raise PyoframeError(
-                f"""Cannot add the two expressions below because their dimensions are different ({missing_left} != {missing_right}). If this is intentional, use .over() to broadcast.
-Expression 1:\t{left.name}
-Expression 2:\t{right.name}
-"""
+            _raise_addition_error(
+                left,
+                right,
+                f"their dimensions are different ({left_dims} != {right_dims})",
+                "If this is intentional, use .over(…) to broadcast. Learn more at https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over",
             )
 
         left_old = left
@@ -370,12 +370,28 @@ def _raise_unmatched_values_error(
 ):
     if swapped:
         left, right = right, left
+
+    _raise_addition_error(
+        left,
+        right,
+        "of unmatched values",
+        f"Unmatched values:\n{unmatched_values}\nIf this is intentional, use .drop_unmatched() or .keep_unmatched().",
+    )
+
+
+def _raise_addition_error(
+    left: Expression, right: Expression, reason: str, postfix: str
+):
+    op = "add"
+    right_name = right.name
+    if right_name[0] == "-":
+        op = "subtract"
+        right_name = right_name[1:]
     raise PyoframeError(
-        f"""Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+        f"""Cannot {op} the two expressions below because {reason}.
 Expression 1:\t{left.name}
-Expression 2:\t{right.name}
-Unmatched values:
-{unmatched_values}
+Expression 2:\t{right_name}
+{postfix}
 """
     )
 

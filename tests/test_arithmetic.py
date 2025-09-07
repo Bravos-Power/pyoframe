@@ -10,7 +10,7 @@ from polars.testing import assert_frame_equal
 
 from pyoframe import Config, Expression, Model, Set, Variable, VType
 from pyoframe._arithmetic import PyoframeError
-from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, UnmatchedStrategy
 
 from .util import csvs_to_expr
 
@@ -191,22 +191,22 @@ def test_add_expression_with_over():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .over()"),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr + expr_with_dim
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .over()"),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr_with_dim + expr
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .over()"),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr_with_dim + expr_with_two_dim
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .over()"),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr_with_two_dim + expr_with_dim
     expr.over("dim1") + expr_with_dim
@@ -258,13 +258,13 @@ def test_add_expression_with_vars_and_over_many(solver):
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .over()"),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         lhs + rhs
     lhs = lhs.over("z")
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .over()"),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         lhs + rhs
     rhs = rhs.over("x")
@@ -361,7 +361,7 @@ def test_add_expressions_with_dims_and_missing(default_solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "If this is intentional, use .over()",
+            "If this is intentional, use .over(…)",
         ),
     ):
         lhs + rhs
@@ -369,7 +369,7 @@ def test_add_expressions_with_dims_and_missing(default_solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "If this is intentional, use .over()",
+            "If this is intentional, use .over(…)",
         ),
     ):
         lhs + rhs
@@ -461,6 +461,11 @@ def test_no_propogate():
     """,
     )
 
+    assert expr1.keep_unmatched()._unmatched_strategy == UnmatchedStrategy.KEEP
+    assert expr1._unmatched_strategy == UnmatchedStrategy.UNSET, (
+        "keep_unmatched() should not modify the original expression"
+    )
+
     with pytest.raises(
         PyoframeError,
         match=re.escape(
@@ -481,6 +486,11 @@ def test_no_propogate():
     assert_frame_equal(
         result.to_str(return_df=True),
         pl.DataFrame([[1, "10"]], schema=["dim2", "expression"], orient="row"),
+    )
+
+    assert "random" in expr1.over("random")._allowed_new_dims
+    assert "random" not in expr1._allowed_new_dims, (
+        "over() should not modify the original expression"
     )
 
 

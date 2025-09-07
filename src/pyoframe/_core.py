@@ -75,18 +75,21 @@ class SupportsMath(ModelElement, SupportsToExpr):
 
     def keep_unmatched(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
-        self._unmatched_strategy = UnmatchedStrategy.KEEP
-        return self
+        new = self._new(self.data, name=f"{self.name}.keep_unmatched()")
+        new._unmatched_strategy = UnmatchedStrategy.KEEP
+        return new
 
     def drop_unmatched(self):
         """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
-        self._unmatched_strategy = UnmatchedStrategy.DROP
-        return self
+        new = self._new(self.data, name=f"{self.name}.drop_unmatched()")
+        new._unmatched_strategy = UnmatchedStrategy.DROP
+        return new
 
     def over(self, *dims: str):
         """Indicates that the expression can be broadcasted over the given dimensions during addition and subtraction."""
-        self._allowed_new_dims.extend(dims)
-        return self
+        new = self._new(self.data, name=f"{self.name}.over(…)")
+        new._allowed_new_dims.extend(dims)
+        return new
 
     @return_new
     def rename(self, *args, **kwargs):
@@ -1106,7 +1109,7 @@ class Expression(SupportsMath):
         e = Expression(data, name)
         e._model = self._model
         # Note: We intentionally don't propagate the unmatched strategy to the new expression
-        e._allowed_new_dims = self._allowed_new_dims
+        e._allowed_new_dims = list(self._allowed_new_dims)  # the copy is important!
         return e
 
     def _add_const(self, const: int | float) -> Expression:
@@ -2338,7 +2341,7 @@ class Variable(ModelElementWithId, SupportsMath):
         e._model = self._model
         # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
         e._unmatched_strategy = self._unmatched_strategy
-        e._allowed_new_dims = self._allowed_new_dims
+        e._allowed_new_dims = list(self._allowed_new_dims)
         return e
 
     @return_new
