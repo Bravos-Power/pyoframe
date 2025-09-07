@@ -146,7 +146,7 @@ class _Config:
             >>> population + population_influx
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values.
             Expression 1:   pop
             Expression 2:   influx
             Unmatched values:
@@ -158,6 +158,7 @@ class _Config:
             ╞══════════╪════════════╡
             │ Montreal ┆ null       │
             └──────────┴────────────┘
+            If this is intentional, use .drop_unmatched() or .keep_unmatched().
 
             But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
             >>> pf.Config.disable_unmatched_checks = True

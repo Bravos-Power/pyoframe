@@ -1058,7 +1058,7 @@ class Expression(SupportsMath):
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values.
             Expression 1:   v
             Expression 2:   add
             Unmatched values:
@@ -1070,6 +1070,7 @@ class Expression(SupportsMath):
             ╞══════╪════════════╡
             │ 3    ┆ null       │
             └──────┴────────────┘
+            If this is intentional, use .drop_unmatched() or .keep_unmatched().
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression terms=2 type=linear>
@@ -2358,9 +2359,9 @@ class Variable(ModelElementWithId, SupportsMath):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because of unmatched values.
             Expression 1:   (bat_charge + bat_flow)
-            Expression 2:   -bat_charge.next(…)
+            Expression 2:   bat_charge.next(…)
             Unmatched values:
             shape: (2, 4)
             ┌───────┬─────────┬────────────┬────────────┐
@@ -2371,6 +2372,7 @@ class Variable(ModelElementWithId, SupportsMath):
             │ 18:00 ┆ Toronto ┆ null       ┆ null       │
             │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
             └───────┴─────────┴────────────┴────────────┘
+            If this is intentional, use .drop_unmatched() or .keep_unmatched().
 
             >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
             ...     "time"
