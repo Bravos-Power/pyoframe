@@ -203,14 +203,9 @@ class SupportsMath(ModelElement, SupportsToExpr):
         return self.data.filter(**kwargs).drop(kwargs.keys())
 
     def _add_allowed_new_dims_to_df(self, df):
+        cols = df.columns
         df = df.with_columns(*(pl.lit("*").alias(c) for c in self._allowed_new_dims))
-        # reorder
-        df = df.select(
-            *(
-                [c for c in df.columns if c not in RESERVED_COL_KEYS]
-                + [c for c in df.columns if c in RESERVED_COL_KEYS]
-            )
-        )
+        df = df.select(cols[:-1] + self._allowed_new_dims + [cols[-1]])  # reorder
         return df
 
     def add_dim(self, *dims: str):
@@ -1450,7 +1445,7 @@ class Expression(SupportsMath):
         data = data.with_columns(pl.col(str_col_name).str.strip_chars(characters="  +"))
 
         if not return_df:
-            if dimensions is None:
+            if dimensions is None and not self._allowed_new_dims:
                 data = data.item()
             else:
                 data = self._add_shape_to_columns(data)
@@ -2325,7 +2320,7 @@ class Variable(ModelElementWithId, SupportsMath):
         else:
             with Config.print_polars_config:
                 data = self._add_shape_to_columns(self.data)
-                data = self._add_allowed_new_dims_to_df(data)
+                # we don't try to include the allowed_new_dims because there are none for Variables (only exist on Expression or Sets)
                 result += repr(data)
 
         return result
@@ -2339,9 +2334,7 @@ class Variable(ModelElementWithId, SupportsMath):
         self._assert_has_ids()
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)), name)
         e._model = self._model
-        # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
-        e._unmatched_strategy = self._unmatched_strategy
-        e._allowed_new_dims = list(self._allowed_new_dims)
+        # note: we don't propagate allowed_new_dims or unmatched_strategy because they should always be default for Variables.
         return e
 
     @return_new

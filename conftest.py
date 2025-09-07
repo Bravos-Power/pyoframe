@@ -81,7 +81,9 @@ if SYBIL:
             PythonCodeBlockParser(),
             SkipParser(),
             ClearNamespaceParser(),
-            DocTestParser(optionflags=doctest.ELLIPSIS | NUMBER),
+            DocTestParser(
+                optionflags=doctest.ELLIPSIS | NUMBER | doctest.NORMALIZE_WHITESPACE
+            ),
         ],
         patterns=["*.md"],
         setup=_setup_before_each_test,

@@ -53,6 +53,7 @@ docs = [
     "mkdocs-awesome-nav~=3.1.2",                        # allows use of .nav.yml files
     "doccmd==2025.4.8",                                 # allows running ruff formatter on documentation code
     # "mkdocs-table-reader-plugin~=3.1.0",              # allows displaying .csv files in documentation
+    "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
 ]
 
 
