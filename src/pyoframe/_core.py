@@ -2039,32 +2039,17 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             kwargs["domain"] = self.vtype._to_poi()
 
         if self.dimensions is not None and self._model.use_var_names:
-            df = (
-                concat_dimensions(self.data, prefix=self.name)
-                .with_columns(
-                    pl.col("concated_dim")
-                    .map_elements(
-                        lambda name: self._model.poi.add_variable(
-                            name=name, **kwargs
-                        ).index,
-                        return_dtype=KEY_TYPE,
-                    )
-                    .alias(VAR_KEY)
-                )
-                .drop("concated_dim")
-            )
+            names = concat_dimensions(self.data, prefix=self.name)[
+                "concated_dim"
+            ].to_list()
+            ids = [self._model.poi.add_variable(name=n, **kwargs).index for n in names]
         else:
             if self._model.use_var_names:
                 kwargs["name"] = self.name
 
-            df = self.data.with_columns(
-                pl.lit(0).alias(VAR_KEY).cast(KEY_TYPE)
-            ).with_columns(
-                pl.col(VAR_KEY).map_elements(
-                    lambda _: self._model.poi.add_variable(**kwargs).index,
-                    return_dtype=KEY_TYPE,
-                )
-            )
+            n = 1 if self.dimensions is None else len(self.data)
+            ids = [self._model.poi.add_variable(**kwargs).index for _ in range(n)]
+        df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
 
         self._data = df
 
