@@ -42,10 +42,12 @@ model.ground_emissions_by_flight = ground_data.to_expr()
 >>> model.air_emissions_by_flight + model.ground_emissions_by_flight
 Traceback (most recent call last):
 ...
-pyoframe._constants.PyoframeError: Cannot add the two expressions below because their dimensions are different (['flight_no'] != ['flight_number']).
-Expression 1:	air_emissions_by_flight
-Expression 2:	ground_emissions_by_flight
-If this is intentional, use .over(…) to broadcast. Learn more at https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over
+pyoframe._constants.PyoframeError: Cannot add the two expressions below because their
+  dimensions are different (['flight_no'] != ['flight_number']).
+Expression 1:  air_emissions_by_flight
+Expression 2:  ground_emissions_by_flight
+If this is intentional, use .over(…) to broadcast. Learn more at
+  https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over
 
 ```
 
@@ -73,11 +75,13 @@ model.flight_emissions = (
 >>> model.emission_constraint = model.E_max >= model.flight_emissions
 Traceback (most recent call last):
 ...
-pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because their dimensions are different ([] != ['flight_no']).
-Expression 1:	E_max
-Expression 2:	flight_emissions
-If this is intentional, use .over(…) to broadcast. Learn more at https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over
-
+pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because their
+    dimensions are different ([] != ['flight_no']).
+Expression 1:  E_max
+Expression 2:  flight_emissions
+If this is intentional, use .over(…) to broadcast. Learn more at
+    https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over
+      
 ```
 
 The error indicates that `E_max` has no dimensions while `flight_emissions` has dimensions `flight_no`. The error is raised because, by default, combining terms with differing dimensions is not allowed.
