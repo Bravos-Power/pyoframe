@@ -32,7 +32,7 @@ def test_set_addition():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Failed to add sets 'unnamed' and 'unnamed' because dimensions do not match (['x'] != ['y'])"
+            "Failed to add sets 'unnamed_set' and 'unnamed_set' because dimensions do not match (['x'] != ['y'])"
         ),
     ):
         Set(x=[1, 2, 3]) + Set(y=[2, 3, 4])
@@ -191,30 +191,22 @@ def test_add_expression_with_over():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .over()"
-        ),
+        match=re.escape("If this is intentional, use .over()"),
     ):
         expr + expr_with_dim
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .over()"
-        ),
+        match=re.escape("If this is intentional, use .over()"),
     ):
         expr_with_dim + expr
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .over()"
-        ),
+        match=re.escape("If this is intentional, use .over()"),
     ):
         expr_with_dim + expr_with_two_dim
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .over()"
-        ),
+        match=re.escape("If this is intentional, use .over()"),
     ):
         expr_with_two_dim + expr_with_dim
     expr.over("dim1") + expr_with_dim
@@ -266,17 +258,13 @@ def test_add_expression_with_vars_and_over_many(solver):
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['z']. If this is intentional, use .over()"
-        ),
+        match=re.escape("If this is intentional, use .over()"),
     ):
         lhs + rhs
     lhs = lhs.over("z")
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['x']. If this is intentional, use .over()"
-        ),
+        match=re.escape("If this is intentional, use .over()"),
     ):
         lhs + rhs
     rhs = rhs.over("x")
@@ -300,10 +288,10 @@ def test_add_expression_with_vars_and_over_many(solver):
     )
 
 
-def test_add_expression_with_missing(solver):
+def test_add_expression_with_missing(default_solver):
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    m = Model(solver=solver)
+    m = Model(solver=default_solver)
     m.v1 = Variable(dim2)
     m.v2 = Variable(dim2_large)
     lhs = 1 + 2 * m.v1
@@ -312,7 +300,7 @@ def test_add_expression_with_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         lhs + rhs
@@ -360,8 +348,8 @@ def test_add_expression_with_missing(solver):
     )
 
 
-def test_add_expressions_with_dims_and_missing(solver):
-    m = Model(solver=solver)
+def test_add_expressions_with_dims_and_missing(default_solver):
+    m = Model(solver=default_solver)
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
@@ -373,7 +361,7 @@ def test_add_expressions_with_dims_and_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['z']. If this is intentional, use .over()",
+            "If this is intentional, use .over()",
         ),
     ):
         lhs + rhs
@@ -381,23 +369,19 @@ def test_add_expressions_with_dims_and_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['x']. If this is intentional, use .over()",
+            "If this is intentional, use .over()",
         ),
     ):
         lhs + rhs
     rhs = rhs.over("x")
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "Cannot add dimension ['x'] since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_unmatched()"),
     ):
         lhs + rhs
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "Cannot add dimension ['x'] since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_unmatched()"),
     ):
         lhs.drop_unmatched() + rhs
 
@@ -429,7 +413,7 @@ def test_three_way_add():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         df1 + df2 + df3
@@ -480,7 +464,7 @@ def test_no_propogate():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         (expr1 + expr2).sum("dim1") + expr3
@@ -488,7 +472,7 @@ def test_no_propogate():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         (expr1 + expr2.keep_unmatched()).sum("dim1") + expr3

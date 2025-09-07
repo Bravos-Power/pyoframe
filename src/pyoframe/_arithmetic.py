@@ -39,7 +39,7 @@ def multiply(self: Expression, other: Expression) -> Expression:
         Traceback (most recent call last):
         ...
         pyoframe._constants.PyoframeError: Cannot multiply the two expressions below because the result would be a cubic. Only quadratic or linear expressions are allowed.
-        Expression 1 (quadratic):   (5 * x1) * x2
+        Expression 1 (quadratic):   ((5 * x1) * x2)
         Expression 2 (linear):      x3
     """
     self_degree, other_degree = self.degree(), other.degree()
@@ -225,10 +225,13 @@ Expression 2:\t{right.name}
 """
             )
 
+        left_old = left
         if missing_left:
             left = _broadcast(left, right, common_dims, missing_left)
         if missing_right:
-            right = _broadcast(right, left, common_dims, missing_right)
+            right = _broadcast(
+                right, left_old, common_dims, missing_right, swapped=True
+            )
 
         assert sorted(left._dimensions_unsafe) == sorted(right._dimensions_unsafe)
         expressions = (left, right)
@@ -244,10 +247,13 @@ Expression 2:\t{right.name}
         left, right = expressions[0], expressions[1]
 
         # Order so that drop always comes before keep, and keep always comes before default
-        if (left._unmatched_strategy, right._unmatched_strategy) in (
-            (UnmatchedStrategy.UNSET, UnmatchedStrategy.DROP),
-            (UnmatchedStrategy.UNSET, UnmatchedStrategy.KEEP),
-            (UnmatchedStrategy.KEEP, UnmatchedStrategy.DROP),
+        if swap := (
+            (left._unmatched_strategy, right._unmatched_strategy)
+            in (
+                (UnmatchedStrategy.UNSET, UnmatchedStrategy.DROP),
+                (UnmatchedStrategy.UNSET, UnmatchedStrategy.KEEP),
+                (UnmatchedStrategy.KEEP, UnmatchedStrategy.DROP),
+            )
         ):
             left, right = right, left
 
@@ -285,12 +291,12 @@ Expression 2:\t{right.name}
                 unmatched_vals = outer_join.filter(
                     outer_join.get_column(dims[0]).is_null()
                 )
-                _raise_unmatched_values_error(left, right, unmatched_vals)
+                _raise_unmatched_values_error(left, right, unmatched_vals, swap)
             if outer_join.get_column(dims[0] + "_right").null_count() > 0:
                 unmatched_vals = outer_join.filter(
                     outer_join.get_column(dims[0] + "_right").is_null()
                 )
-                _raise_unmatched_values_error(left, right, unmatched_vals)
+                _raise_unmatched_values_error(left, right, unmatched_vals, swap)
 
         elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
             left_data = get_indices(right).join(
@@ -311,6 +317,7 @@ Expression 2:\t{right.name}
                     left,
                     right,
                     left_data.filter(left_data.get_column(COEF_KEY).is_null()),
+                    swap,
                 )
 
         elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET):
@@ -319,7 +326,7 @@ Expression 2:\t{right.name}
             )
             unmatched = right.data.join(get_indices(left), how="anti", on=dims)
             if len(unmatched) > 0:
-                _raise_unmatched_values_error(left, right, unmatched)
+                _raise_unmatched_values_error(left, right, unmatched, swap)
         else:  # pragma: no cover
             assert False, "This code should've never been reached!"
 
@@ -359,8 +366,10 @@ Expression 2:\t{right.name}
 
 
 def _raise_unmatched_values_error(
-    left: Expression, right: Expression, unmatched_values: pl.DataFrame
+    left: Expression, right: Expression, unmatched_values: pl.DataFrame, swapped: bool
 ):
+    if swapped:
+        left, right = right, left
     raise PyoframeError(
         f"""Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
 Expression 1:\t{left.name}
@@ -376,6 +385,7 @@ def _broadcast(
     target: Expression,
     common_dims: list[str],
     missing_dims: list[str],
+    swapped: bool = False,
 ) -> Expression:
     target_data = target.data.select(target._dimensions_unsafe).unique(
         maintain_order=Config.maintain_order
@@ -404,7 +414,10 @@ def _broadcast(
     right_has_missing = result.get_column(missing_dims[0]).null_count() > 0
     if right_has_missing:
         _raise_unmatched_values_error(
-            self, target, result.filter(result.get_column(missing_dims[0]).is_null())
+            self,
+            target,
+            result.filter(result.get_column(missing_dims[0]).is_null()),
+            swapped,
         )
     return self._new(result, self.name)
 

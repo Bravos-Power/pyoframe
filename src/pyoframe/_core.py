@@ -1069,10 +1069,10 @@ class Expression(SupportsMath):
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=3 terms=3 type=linear> + <Expression height=2 terms=2 type=constant>
-            Due to error:
-            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            Expression 1:   v
+            Expression 2:   add
+            Unmatched values:
             shape: (1, 2)
             ┌──────┬────────────┐
             │ dim1 ┆ dim1_right │
@@ -2370,10 +2370,10 @@ class Variable(ModelElementWithId, SupportsMath):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=8 terms=16 type=linear> + <Expression height=6 terms=6 type=linear>
-            Due to error:
-            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            Expression 1:   (bat_charge + bat_flow)
+            Expression 2:   -bat_charge.next(…)
+            Unmatched values:
             shape: (2, 4)
             ┌───────┬─────────┬────────────┬────────────┐
             │ time  ┆ city    ┆ time_right ┆ city_right │

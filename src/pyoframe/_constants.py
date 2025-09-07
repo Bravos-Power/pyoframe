@@ -146,10 +146,10 @@ class _Config:
             >>> population + population_influx
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=3 terms=3 type=constant> + <Expression height=2 terms=2 type=constant>
-            Due to error:
-            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            Expression 1:   pop
+            Expression 2:   influx
+            Unmatched values:
             shape: (1, 2)
             ┌──────────┬────────────┐
             │ city     ┆ city_right │
