@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
 import polars as pl
@@ -19,6 +19,7 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
+    from pyoframe._core import SupportsMath
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
 
@@ -363,3 +364,17 @@ def for_solvers(*solvers: str):
         return wrapper
 
     return decorator
+
+
+def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., SupportsMath]:
+    """Decorator that upcasts the returned DataFrame to an Expression.
+
+    Requires the first argument (self) to support self._new().
+    """
+
+    @wraps(func)
+    def wrapper(self: SupportsMath, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        return self._new(result, name=f"{self.name}.{func.__name__}(…)")
+
+    return wrapper

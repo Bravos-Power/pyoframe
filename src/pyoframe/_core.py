@@ -44,6 +44,7 @@ from pyoframe._utils import (
     concat_dimensions,
     get_obj_repr,
     parse_inputs_as_iterable,
+    return_new,
     unwrap_single_values,
 )
 
@@ -68,6 +69,10 @@ class SupportsMath(ModelElement, SupportsToExpr):
         self._allowed_new_dims: list[str] = []
         super().__init__(*args, **kwargs)
 
+    @abstractmethod
+    def _new(self, data: pl.DataFrame, name: str) -> SupportsMath:
+        """Helper method to create a new instance of the same (or for Variable derivative) class."""
+
     def keep_unmatched(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
         self._unmatched_strategy = UnmatchedStrategy.KEEP
@@ -83,6 +88,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
         self._allowed_new_dims.extend(dims)
         return self
 
+    @return_new
     def rename(self, *args, **kwargs):
         """Renames one or several of the object's dimensions.
 
@@ -135,10 +141,9 @@ class SupportsMath(ModelElement, SupportsToExpr):
             └───────┴──────────┴──────────────────┘
 
         """
-        return self._new(
-            self.data.rename(*args, **kwargs), name=f"{self.name}.rename(…)"
-        )
+        return self.data.rename(*args, **kwargs)
 
+    @return_new
     def with_columns(self, *args, **kwargs):
         """Creates a new object with modified columns.
 
@@ -148,11 +153,9 @@ class SupportsMath(ModelElement, SupportsToExpr):
             Only use this function if you know what you're doing. It is not recommended to manually modify the columns
             within a Pyoframe object.
         """
-        return self._new(
-            self.data.with_columns(*args, **kwargs),
-            name=f"{self.name}.with_columns(…)",
-        )
+        return self.data.with_columns(*args, **kwargs)
 
+    @return_new
     def filter(self, *args, **kwargs):
         """Creates a copy of the object containing only a subset of the original rows.
 
@@ -163,14 +166,9 @@ class SupportsMath(ModelElement, SupportsToExpr):
             column in the process.
 
         """
-        return self._new(
-            self.data.filter(*args, **kwargs), name=f"{self.name}.filter(…)"
-        )
+        return self.data.filter(*args, **kwargs)
 
-    @abstractmethod
-    def _new(self, data: pl.DataFrame, name: str):
-        """Creates a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
-
+    @return_new
     def pick(self, **kwargs):
         """Filters elements by the given criteria and then drops the filtered dimensions.
 
@@ -199,10 +197,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
         See Also:
             [`Expression.filter`][pyoframe.Expression.filter] or [`Variable.filter`][pyoframe.Variable.filter] if you don't wish to drop the filtered column.
         """
-        return self._new(
-            self.data.filter(**kwargs).drop(kwargs.keys()),
-            name=f"{self.name}.pick(…)",
-        )
+        return self.data.filter(**kwargs).drop(kwargs.keys())
 
     def _add_allowed_new_dims_to_df(self, df):
         df = df.with_columns(*(pl.lit("*").alias(c) for c in self._allowed_new_dims))
@@ -419,7 +414,7 @@ class Set(SupportsMath):
             raise ValueError("Duplicate rows found in input data.")
         super().__init__(df, name="unnamed_set")
 
-    def _new(self, data: pl.DataFrame, name: str):
+    def _new(self, data: pl.DataFrame, name: str) -> Set:
         s = Set(data)
         s.name = name
         s._model = self._model
@@ -646,6 +641,7 @@ class Expression(SupportsMath):
             )
         )
 
+    @return_new
     def sum(self, *over: str):
         """Sums an expression over specified dimensions.
 
@@ -710,14 +706,13 @@ class Expression(SupportsMath):
         )
         remaining_dims = [dim for dim in dims if dim not in over]
 
-        return self._new(
+        return (
             self.data.drop(over)
             .group_by(
                 remaining_dims + self._variable_columns,
                 maintain_order=Config.maintain_order,
             )
-            .sum(),
-            name=f"{self.name}.sum(…)",
+            .sum()
         )
 
     def sum_by(self, *by: str):
@@ -875,7 +870,8 @@ class Expression(SupportsMath):
 
         return mapped_expression
 
-    def rolling_sum(self, over: str, window_size: int) -> Expression:
+    @return_new
+    def rolling_sum(self, over: str, window_size: int):
         """Calculates the rolling sum of the Expression over a specified window size for a given dimension.
 
         This method applies a rolling sum operation over the dimension specified by `over`,
@@ -927,21 +923,19 @@ class Expression(SupportsMath):
         assert over in dims, f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
-        return self._new(
-            pl.concat(
-                [
-                    df.with_columns(pl.col(over).max())
-                    for _, df in self.data.rolling(
-                        index_column=over,
-                        period=f"{window_size}i",
-                        group_by=remaining_dims,
-                    )
-                ]
-            ),
-            name=f"{self.name}.rolling_sum(…)",
+        return pl.concat(
+            [
+                df.with_columns(pl.col(over).max())
+                for _, df in self.data.rolling(
+                    index_column=over,
+                    period=f"{window_size}i",
+                    group_by=remaining_dims,
+                )
+            ]
         )
 
-    def within(self, set: SetTypes) -> Expression:
+    @return_new
+    def within(self, set: SetTypes):
         """Filters this expression to only include the dimensions within the provided set.
 
         Examples:
@@ -972,13 +966,10 @@ class Expression(SupportsMath):
         )
         dims_in_common = [dim for dim in dims if dim in set_dims]
         by_dims = df.select(dims_in_common).unique(maintain_order=Config.maintain_order)
-        return self._new(
-            self.data.join(
-                by_dims,
-                on=dims_in_common,
-                maintain_order="left" if Config.maintain_order else None,
-            ),
-            name=f"{self.name}.within(…)",
+        return self.data.join(
+            by_dims,
+            on=dims_in_common,
+            maintain_order="left" if Config.maintain_order else None,
         )
 
     @property
@@ -2350,7 +2341,8 @@ class Variable(ModelElementWithId, SupportsMath):
         e._allowed_new_dims = self._allowed_new_dims
         return e
 
-    def next(self, dim: str, wrap_around: bool = False) -> Expression:
+    @return_new
+    def next(self, dim: str, wrap_around: bool = False):
         """Creates an expression where the variable at each index is the next variable in the specified dimension.
 
         Parameters:
@@ -2454,4 +2446,5 @@ class Variable(ModelElementWithId, SupportsMath):
             # We use "right" instead of "left" to maintain consistency with the behavior without maintain_order
             maintain_order="right" if Config.maintain_order else None,
         ).drop(["__prev", "__next"], strict=False)
-        return expr._new(data, name=f"{expr.name}.next(…)")
+
+        return data
