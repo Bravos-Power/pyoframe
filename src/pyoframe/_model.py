@@ -286,7 +286,17 @@ class Model:
 
     @property
     def has_objective(self) -> bool:
-        """Returns whether the model's objective has been defined."""
+        """Returns whether the model's objective has been defined.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.has_objective
+            False
+            >>> m.X = pf.Variable()
+            >>> m.maximize = m.X
+            >>> m.has_objective
+            True
+        """
         return self._objective is not None
 
     @property
@@ -295,6 +305,19 @@ class Model:
 
         Raises:
             ValueError: If the objective has not been defined.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.objective
+            Traceback (most recent call last):
+            ...
+            ValueError: Objective is not defined.
+
+            >>> m.maximize = m.X
+            >>> m.objective
+            <Objective terms=1 type=linear>
+            X
 
         See Also:
             [`Model.has_objective`][pyoframe.Model.has_objective]
