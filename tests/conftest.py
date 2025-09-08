@@ -21,6 +21,15 @@ def solver(request):
     return request.param
 
 
+@pytest.fixture
+def default_solver():
+    """Use when the test doesn't need to be repeated for every solver.
+
+    TODO increase the use of default_solver over solver when appropriate to reduce test times.
+    """
+    return _installed_solvers[0]
+
+
 @pytest.fixture(autouse=True)
 def _force_solver_selection():
     # Force each test to use the solver fixture if appropriateF

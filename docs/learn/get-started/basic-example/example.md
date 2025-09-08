@@ -9,6 +9,7 @@ os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 To start, you'll solve a simple optimization problem with Pyoframe.
 
 !!! quote "Problem statement"
+
     Imagine you're a vegetarian hesitating between tofu and chickpeas as
     a source of protein for tomorrow's dinner. You'd like to spend as little money as
     possible while still consuming at least 50 grams of protein. How many blocks
