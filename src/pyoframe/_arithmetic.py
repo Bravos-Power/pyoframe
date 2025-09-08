@@ -58,10 +58,8 @@ Expression 2 ({other.degree(return_str=True)}):\t{other.name}"""
     if self_degree == 1 and other_degree == 1:
         return _quadratic_multiplication(self, other)
 
-    self_name, other_name = (
-        self.name,
-        other.name,
-    )  # don't swap to keep left-right order in debug messages
+    # save names to use in debug messages before any swapping occurs
+    self_name, other_name = self.name, other.name
     if self_degree < other_degree:
         self, other = other, self
         self_degree, other_degree = other_degree, self_degree
@@ -396,6 +394,7 @@ Expression 2:\t{right_name}
     )
 
 
+# TODO consider returning a dataframe instead of an expression to simplify code (e.g. avoid copy_flags)
 def _broadcast(
     self: Expression,
     target: Expression,
