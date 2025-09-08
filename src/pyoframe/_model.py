@@ -29,19 +29,18 @@ if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
 
 
-#  TODO rename use_var_names to solver_uses_variable_names and change order of name and solver
 class Model:
     """The founding block of any Pyoframe optimization model onto which variables, constraints, and an objective can be added.
 
     Parameters:
-        name:
-            The name of the model. Currently it is not used for much.
         solver:
             The solver to use. If `None`, Pyoframe will try to use whichever solver is installed
             (unless [Config.default_solver][pyoframe._Config.default_solver] was changed from its default value of `auto`).
         solver_env:
             Gurobi only: a dictionary of parameters to set when creating the Gurobi environment.
-        use_var_names:
+        name:
+            The name of the model. Currently it is not used for much.
+        solver_uses_variable_names:
             If `True`, the solver will use your custom variable names in its outputs (e.g. during [`Model.write()`][pyoframe.Model.write]).
             This can be useful for debugging `.lp`, `.sol`, and `.ilp` files, but may worsen performance.
         print_uses_variable_names:
@@ -61,7 +60,7 @@ class Model:
 
         Use `solver_env` to, for example, connect to a Gurobi Compute Server:
         >>> m = pf.Model(
-        ...     solver="gurobi",
+        ...     "gurobi",
         ...     solver_env=dict(ComputeServer="myserver", ServerPassword="mypassword"),
         ... )
         Traceback (most recent call last):
@@ -83,7 +82,7 @@ class Model:
         "_attr",
         "attr",
         "sense",
-        "_use_var_names",
+        "_solver_uses_variable_names",
         "ONE",
         "solver_name",
         "minimize",
@@ -92,10 +91,11 @@ class Model:
 
     def __init__(
         self,
-        name: str | None = None,
         solver: SUPPORTED_SOLVER_TYPES | _Solver | None = None,
         solver_env: dict[str, str] | None = None,
-        use_var_names: bool = False,
+        *,
+        name: str | None = None,
+        solver_uses_variable_names: bool = False,
         print_uses_variable_names: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
@@ -112,12 +112,12 @@ class Model:
 
         self._params = Container(self._set_param, self._get_param)
         self._attr = Container(self._set_attr, self._get_attr)
-        self._use_var_names = use_var_names
+        self._solver_uses_variable_names = solver_uses_variable_names
 
     @property
-    def use_var_names(self):
+    def solver_uses_variable_names(self):
         """Whether to pass human-readable variable names to the solver."""
-        return self._use_var_names
+        return self._solver_uses_variable_names
 
     @property
     def attr(self) -> Container:
@@ -139,10 +139,10 @@ class Model:
             <TerminationStatusCode.OPTIMAL: 2>
 
             Some attributes, like `NumVars`, are solver-specific.
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model("gurobi")
             >>> m.attr.NumConstrs
             0
-            >>> m = pf.Model(solver="highs")
+            >>> m = pf.Model("highs")
             >>> m.attr.NumConstrs
             Traceback (most recent call last):
             ...
@@ -165,7 +165,7 @@ class Model:
 
         Examples:
             For example, if you'd like to use Gurobi's barrier method, you can set the `Method` parameter:
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model("gurobi")
             >>> m.params.Method = 2
         """
         return self._params
@@ -186,7 +186,7 @@ class Model:
                     except RuntimeError:
                         pass
                 raise RuntimeError(
-                    'Could not automatically find a solver. Is one installed? If so, specify which one: e.g. Model(solver="gurobi")'
+                    'Could not automatically find a solver. Is one installed? If so, specify which one: e.g. Model("gurobi")'
                 )
             elif isinstance(Config.default_solver, (_Solver, str)):
                 solver = Config.default_solver
@@ -285,13 +285,49 @@ class Model:
         return self._constraints
 
     @property
+    def has_objective(self) -> bool:
+        """Returns whether the model's objective has been defined.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.has_objective
+            False
+            >>> m.X = pf.Variable()
+            >>> m.maximize = m.X
+            >>> m.has_objective
+            True
+        """
+        return self._objective is not None
+
+    @property
     def objective(self) -> Objective:
-        """Returns the model's objective."""
+        """Returns the model's objective.
+
+        Raises:
+            ValueError: If the objective has not been defined.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.objective
+            Traceback (most recent call last):
+            ...
+            ValueError: Objective is not defined.
+            >>> m.maximize = m.X
+            >>> m.objective
+            <Objective terms=1 type=linear>
+            X
+
+        See Also:
+            [`Model.has_objective`][pyoframe.Model.has_objective]
+        """
+        if self._objective is None:
+            raise ValueError("Objective is not defined.")
         return self._objective
 
     @objective.setter
     def objective(self, value: SupportsToExpr | float | int):
-        if self._objective is not None and (
+        if self.has_objective and (
             not isinstance(value, Objective) or not value._constructive
         ):
             raise ValueError("An objective already exists. Use += or -= to modify it.")
@@ -367,7 +403,7 @@ class Model:
             self.name,
             vars=len(self.variables),
             constrs=len(self.constraints),
-            has_objective=bool(self.objective),
+            has_objective=self.has_objective,
             solver=self.solver_name,
         )
 
@@ -375,7 +411,7 @@ class Model:
         """Outputs the model to a file (e.g. a `.lp` file).
 
         Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
-        Set `use_var_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
+        Set `solver_uses_variable_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
 
         Parameters:
             file_path:
@@ -390,7 +426,7 @@ class Model:
 
         kwargs = {}
         if self.solver.name == "highs":
-            if self.use_var_names:
+            if self.solver_uses_variable_names:
                 self.params.write_solution_style = 1
             kwargs["pretty"] = pretty
         self.poi.write(str(file_path), **kwargs)
@@ -407,7 +443,7 @@ class Model:
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
         Examples:
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model("gurobi")
             >>> m.X = pf.Variable(vtype=pf.VType.BINARY, lb=0)
             >>> m.Y = pf.Variable(vtype=pf.VType.INTEGER, lb=0)
             >>> m.Z = pf.Variable(lb=0)
@@ -427,7 +463,7 @@ class Model:
 
             Only works for Gurobi:
 
-            >>> m = pf.Model("max", solver="highs")
+            >>> m = pf.Model("highs")
             >>> m.convert_to_fixed()
             Traceback (most recent call last):
             ...
@@ -443,7 +479,7 @@ class Model:
             This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
 
         Examples:
-            >>> m = pf.Model(solver="gurobi")
+            >>> m = pf.Model("gurobi")
             >>> m.X = pf.Variable(lb=0, ub=2)
             >>> m.Y = pf.Variable(lb=0, ub=2)
             >>> m.bad_constraint = m.X >= 3

@@ -6,7 +6,7 @@ from pyoframe._constants import SUPPORTED_SOLVERS
 _installed_solvers = []
 for s in SUPPORTED_SOLVERS:
     try:
-        pf.Model(solver=s.name)
+        pf.Model(s.name)
         _installed_solvers.append(s)
     except RuntimeError:
         pass

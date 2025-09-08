@@ -1654,7 +1654,7 @@ class Constraint(ModelElementWithId):
         assert self._model is not None
 
         is_quadratic = self.lhs.is_quadratic
-        use_var_names = self._model.use_var_names
+        use_var_names = self._model.solver_uses_variable_names
         kwargs: dict[str, Any] = dict(sense=self.sense._to_poi(), rhs=0)
 
         key_cols = [COEF_KEY] + self.lhs._variable_columns
@@ -1670,7 +1670,7 @@ class Constraint(ModelElementWithId):
         )
 
         if self.dimensions is None:
-            if self._model.use_var_names:
+            if self._model.solver_uses_variable_names:
                 kwargs["name"] = self.name
             df = self.data.with_columns(
                 pl.lit(
@@ -1895,10 +1895,10 @@ class Constraint(ModelElementWithId):
             )
         elif m.sense == ObjSense.MAX:
             penalty *= -1
-        if m.objective is None:
-            m.objective = penalty
-        else:
+        if m.has_objective:
             m.objective += penalty
+        else:
+            m.objective = penalty
 
         return self
 
@@ -2200,13 +2200,13 @@ class Variable(ModelElementWithId, SupportsMath):
             self._model.solver.check_supports_integer_variables()
             kwargs["domain"] = self.vtype._to_poi()
 
-        if self.dimensions is not None and self._model.use_var_names:
+        if self.dimensions is not None and self._model.solver_uses_variable_names:
             names = concat_dimensions(self.data, prefix=self.name)[
                 "concated_dim"
             ].to_list()
             ids = [self._model.poi.add_variable(name=n, **kwargs).index for n in names]
         else:
-            if self._model.use_var_names:
+            if self._model.solver_uses_variable_names:
                 kwargs["name"] = self.name
 
             n = 1 if self.dimensions is None else len(self.data)

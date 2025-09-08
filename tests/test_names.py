@@ -14,7 +14,7 @@ def test_to_expr():
 def test_variables(default_solver):
     assert pf.Variable().name == "unnamed"
 
-    m = pf.Model(solver=default_solver)
+    m = pf.Model(default_solver)
     m.my_var = pf.Variable()
 
     assert m.my_var.name == "my_var"
@@ -22,7 +22,7 @@ def test_variables(default_solver):
 
 
 def test_expressions(default_solver):
-    m = pf.Model(solver=default_solver)
+    m = pf.Model(default_solver)
     m.X = pf.Variable()
     m.Y = pf.Variable()
 
@@ -44,7 +44,7 @@ def test_expressions(default_solver):
 def test_transforms(default_solver):
     df = pl.DataFrame({"dim": [1, 2], "val": [2, 3]})
 
-    m = pf.Model(solver=default_solver)
+    m = pf.Model(default_solver)
     m.X = pf.Variable(df["dim"])
 
     assert m.X.next("dim").name == "X.next(…)"

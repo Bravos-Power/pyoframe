@@ -18,7 +18,7 @@ def solve_model(use_var_names):
     stock_width = params.loc["stock_width"]
     stock_available = params.loc["stock_available"]
 
-    m = pf.Model(use_var_names=use_var_names)
+    m = pf.Model(solver_uses_variable_names=use_var_names)
     m.orders_in_stock = pf.Variable(
         {"stock": range(stock_available)}, orders.index, vtype="integer", lb=0
     )
