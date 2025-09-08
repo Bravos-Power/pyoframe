@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Literal, Protocol, Union, overload
 
@@ -13,10 +13,10 @@ import polars as pl
 import pyoptinterface as poi
 
 from pyoframe._arithmetic import (
-    _add_expressions,
     _get_dimensions,
-    _multiply_expressions,
     _simplify_expr_df,
+    add,
+    multiply,
 )
 from pyoframe._constants import (
     COEF_KEY,
@@ -36,11 +36,7 @@ from pyoframe._constants import (
     VType,
     VTypeValue,
 )
-from pyoframe._model_element import (
-    ModelElement,
-    ModelElementWithId,
-    SupportPolarsMethodMixin,
-)
+from pyoframe._model_element import ModelElement, ModelElementWithId
 from pyoframe._utils import (
     Container,
     FuncArgs,
@@ -48,6 +44,7 @@ from pyoframe._utils import (
     concat_dimensions,
     get_obj_repr,
     parse_inputs_as_iterable,
+    return_new,
     unwrap_single_values,
 )
 
@@ -64,28 +61,168 @@ class SupportsToExpr(Protocol):
         ...
 
 
-class SupportsMath(ABC, SupportsToExpr):
+class SupportsMath(ModelElement, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self._unmatched_strategy = UnmatchedStrategy.UNSET
         self._allowed_new_dims: list[str] = []
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
+
+    @abstractmethod
+    def _new(self, data: pl.DataFrame, name: str) -> SupportsMath:
+        """Helper method to create a new instance of the same (or for Variable derivative) class."""
+
+    def _copy_flags(self, other: SupportsMath):
+        """Copies the flags from another SupportsMath object."""
+        self._unmatched_strategy = other._unmatched_strategy
+        self._allowed_new_dims = other._allowed_new_dims.copy()
 
     def keep_unmatched(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
-        self._unmatched_strategy = UnmatchedStrategy.KEEP
-        return self
+        new = self._new(self.data, name=f"{self.name}.keep_unmatched()")
+        new._copy_flags(self)
+        new._unmatched_strategy = UnmatchedStrategy.KEEP
+        return new
 
     def drop_unmatched(self):
         """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
-        self._unmatched_strategy = UnmatchedStrategy.DROP
-        return self
+        new = self._new(self.data, name=f"{self.name}.drop_unmatched()")
+        new._copy_flags(self)
+        new._unmatched_strategy = UnmatchedStrategy.DROP
+        return new
 
-    def add_dim(self, *dims: str):
+    def over(self, *dims: str):
         """Indicates that the expression can be broadcasted over the given dimensions during addition and subtraction."""
-        self._allowed_new_dims.extend(dims)
-        return self
+        new = self._new(self.data, name=f"{self.name}.over(…)")
+        new._copy_flags(self)
+        new._allowed_new_dims.extend(dims)
+        return new
+
+    @return_new
+    def rename(self, *args, **kwargs):
+        """Renames one or several of the object's dimensions.
+
+        Takes the same arguments as [`polars.DataFrame.rename`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.rename.html).
+
+        See the [portfolio optimization example](../examples/portfolio_optimization.md) for a usage example.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable(
+            ...     {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...     {"city": ["Toronto", "Berlin", "Paris"]},
+            ... )
+            >>> m.v
+            <Variable 'v' height=12>
+            ┌───────┬─────────┬──────────────────┐
+            │ hour  ┆ city    ┆ variable         │
+            │ (4)   ┆ (3)     ┆                  │
+            ╞═══════╪═════════╪══════════════════╡
+            │ 00:00 ┆ Toronto ┆ v[00:00,Toronto] │
+            │ 00:00 ┆ Berlin  ┆ v[00:00,Berlin]  │
+            │ 00:00 ┆ Paris   ┆ v[00:00,Paris]   │
+            │ 06:00 ┆ Toronto ┆ v[06:00,Toronto] │
+            │ 06:00 ┆ Berlin  ┆ v[06:00,Berlin]  │
+            │ …     ┆ …       ┆ …                │
+            │ 12:00 ┆ Berlin  ┆ v[12:00,Berlin]  │
+            │ 12:00 ┆ Paris   ┆ v[12:00,Paris]   │
+            │ 18:00 ┆ Toronto ┆ v[18:00,Toronto] │
+            │ 18:00 ┆ Berlin  ┆ v[18:00,Berlin]  │
+            │ 18:00 ┆ Paris   ┆ v[18:00,Paris]   │
+            └───────┴─────────┴──────────────────┘
+
+            >>> m.v.rename({"city": "location"})
+            <Expression height=12 terms=12 type=linear>
+            ┌───────┬──────────┬──────────────────┐
+            │ hour  ┆ location ┆ expression       │
+            │ (4)   ┆ (3)      ┆                  │
+            ╞═══════╪══════════╪══════════════════╡
+            │ 00:00 ┆ Toronto  ┆ v[00:00,Toronto] │
+            │ 00:00 ┆ Berlin   ┆ v[00:00,Berlin]  │
+            │ 00:00 ┆ Paris    ┆ v[00:00,Paris]   │
+            │ 06:00 ┆ Toronto  ┆ v[06:00,Toronto] │
+            │ 06:00 ┆ Berlin   ┆ v[06:00,Berlin]  │
+            │ …     ┆ …        ┆ …                │
+            │ 12:00 ┆ Berlin   ┆ v[12:00,Berlin]  │
+            │ 12:00 ┆ Paris    ┆ v[12:00,Paris]   │
+            │ 18:00 ┆ Toronto  ┆ v[18:00,Toronto] │
+            │ 18:00 ┆ Berlin   ┆ v[18:00,Berlin]  │
+            │ 18:00 ┆ Paris    ┆ v[18:00,Paris]   │
+            └───────┴──────────┴──────────────────┘
+
+        """
+        return self.data.rename(*args, **kwargs)
+
+    @return_new
+    def with_columns(self, *args, **kwargs):
+        """Creates a new object with modified columns.
+
+        Takes the same arguments as [`polars.DataFrame.with_columns`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.with_columns.html).
+
+        !!! warning
+            Only use this function if you know what you're doing. It is not recommended to manually modify the columns
+            within a Pyoframe object.
+        """
+        return self.data.with_columns(*args, **kwargs)
+
+    @return_new
+    def filter(self, *args, **kwargs):
+        """Creates a copy of the object containing only a subset of the original rows.
+
+        Takes the same arguments as [`polars.DataFrame.filter`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.filter.html).
+
+        See Also:
+            [`Expression.pick`][pyoframe.Expression.pick] or [`Variable.pick`][pyoframe.Variable.pick] if you wish to drop the filtered
+            column in the process.
+
+        """
+        return self.data.filter(*args, **kwargs)
+
+    @return_new
+    def pick(self, **kwargs):
+        """Filters elements by the given criteria and then drops the filtered dimensions.
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.v = pf.Variable(
+            ...     [
+            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...         {"city": ["Toronto", "Berlin", "Paris"]},
+            ...     ]
+            ... )
+            >>> m.v.pick(hour="06:00")
+            <Expression height=3 terms=3 type=linear>
+            ┌─────────┬──────────────────┐
+            │ city    ┆ expression       │
+            │ (3)     ┆                  │
+            ╞═════════╪══════════════════╡
+            │ Toronto ┆ v[06:00,Toronto] │
+            │ Berlin  ┆ v[06:00,Berlin]  │
+            │ Paris   ┆ v[06:00,Paris]   │
+            └─────────┴──────────────────┘
+            >>> m.v.pick(hour="06:00", city="Toronto")
+            <Expression terms=1 type=linear>
+            v[06:00,Toronto]
+
+        See Also:
+            [`Expression.filter`][pyoframe.Expression.filter] or [`Variable.filter`][pyoframe.Variable.filter] if you don't wish to drop the filtered column.
+        """
+        return self.data.filter(**kwargs).drop(kwargs.keys())
+
+    def _add_allowed_new_dims_to_df(self, df):
+        cols = df.columns
+        df = df.with_columns(*(pl.lit("*").alias(c) for c in self._allowed_new_dims))
+        df = df.select(cols[:-1] + self._allowed_new_dims + [cols[-1]])  # reorder
+        return df
+
+    def add_dim(self, *dims: str):  # pragma: no cover
+        """Deprecated, use [`over`][pyoframe.Expression.over] instead."""
+        warnings.warn(
+            "'add_dim' has been renamed to 'over'. Please use 'over' instead.",
+            DeprecationWarning,
+        )
+        return self.over(*dims)
 
     @abstractmethod
     def to_expr(self) -> Expression:
@@ -125,15 +262,17 @@ class SupportsMath(ABC, SupportsToExpr):
             ValueError: Raising an expressions to **3 is not supported. Expressions can only be squared (**2).
         """
         if power == 2:
-            return self * self
+            res = self * self
+            res.name = f"({self.name}**2)"
+            return res
         raise ValueError(
             f"Raising an expressions to **{power} is not supported. Expressions can only be squared (**2)."
         )
 
     def __neg__(self):
         res = self.to_expr() * -1
-        # Negating a constant term should keep the unmatched strategy
-        res._unmatched_strategy = self._unmatched_strategy
+        res.name = f"-{self.name}"
+        res._copy_flags(self)
         return res
 
     def __sub__(self, other):
@@ -252,7 +391,7 @@ SetTypes = Union[
 ]
 
 
-class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
+class Set(SupportsMath):
     """A set which can then be used to index variables.
 
     Examples:
@@ -278,13 +417,12 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         df = self._parse_acceptable_sets(*data_list)
         if not df.is_empty() and df.is_duplicated().any():
             raise ValueError("Duplicate rows found in input data.")
-        super().__init__(df)
+        super().__init__(df, name="unnamed_set")
 
-    def _new(self, data: pl.DataFrame):
+    def _new(self, data: pl.DataFrame, name: str) -> Set:
         s = Set(data)
+        s.name = name
         s._model = self._model
-        # Copy over the unmatched strategy on operations like .rename(), .with_columns(), etc.
-        s._unmatched_strategy = self._unmatched_strategy
         return s
 
     @staticmethod
@@ -340,7 +478,8 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return Expression(
             self.data.with_columns(
                 pl.lit(1).alias(COEF_KEY), pl.lit(CONST_TERM).alias(VAR_KEY)
-            )
+            ),
+            name=self.name,
         )
 
     def __mul__(self, other):
@@ -358,20 +497,26 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                 return self._new(
                     pl.concat([self.data, other.data]).unique(
                         maintain_order=Config.maintain_order
-                    )
+                    ),
+                    name=f"({self.name} + {other.name})",
                 )
             except pl.exceptions.ShapeError as e:
                 if "unable to vstack, column names don't match" in str(e):
                     raise PyoframeError(
-                        f"Failed to add sets '{self._friendly_name}' and '{other._friendly_name}' because dimensions do not match ({self.dimensions} != {other.dimensions}) "
+                        f"Failed to add sets '{self.name}' and '{other.name}' because dimensions do not match ({self.dimensions} != {other.dimensions}) "
                     ) from e
-                raise e
+                raise e  # pragma: no cover
 
         return super().__add__(other)
 
     def __repr__(self):
-        header = get_obj_repr(self, self._friendly_name, height=self.data.height)
+        header = get_obj_repr(
+            self,
+            "unnamed" if self.name == "unnamed_set" else self.name,
+            height=self.data.height,
+        )
         data = self._add_shape_to_columns(self.data)
+        data = self._add_allowed_new_dims_to_df(data)
         with Config.print_polars_config:
             table = repr(data)
 
@@ -424,7 +569,7 @@ class Set(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return df
 
 
-class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
+class Expression(SupportsMath):
     """Represents a linear or quadratic mathematical expression.
 
     Examples:
@@ -454,7 +599,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         └──────┴──────┴──────────────────────────────┘
     """
 
-    def __init__(self, data: pl.DataFrame):
+    def __init__(self, data: pl.DataFrame, name: str | None = None):
         # Sanity checks, VAR_KEY and COEF_KEY must be present
         assert VAR_KEY in data.columns, "Missing variable column."
         assert COEF_KEY in data.columns, "Missing coefficient column."
@@ -463,7 +608,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if Config.enable_is_duplicated_expression_safety_check:
             duplicated_mask = data.drop(COEF_KEY).is_duplicated()
             # In theory this should never happen unless there's a bug in the library
-            if duplicated_mask.any():  # pragma: no cover
+            if duplicated_mask.any():
                 duplicated_data = data.filter(duplicated_mask)
                 raise ValueError(
                     f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
@@ -471,7 +616,15 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
 
         data = _simplify_expr_df(data)
 
-        super().__init__(data)
+        if name is None:
+            warnings.warn(
+                "Expression should be given a name to support troubleshooting.",
+                UserWarning,
+            )
+
+            super().__init__(data)
+        else:
+            super().__init__(data, name=name)
 
     @classmethod
     def constant(cls, constant: int | float) -> Expression:
@@ -489,9 +642,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
                     VAR_KEY: [CONST_TERM],
                 },
                 schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
-            )
+            ),
+            name=str(constant),
         )
 
+    @return_new
     def sum(self, *over: str):
         """Sums an expression over specified dimensions.
 
@@ -556,7 +711,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
         remaining_dims = [dim for dim in dims if dim not in over]
 
-        return self._new(
+        return (
             self.data.drop(over)
             .group_by(
                 remaining_dims + self._variable_columns,
@@ -714,11 +869,14 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         mapped_expression = self * mapping_set
 
         if drop_shared_dims:
-            return mapped_expression.sum(*shared_dims)
+            mapped_expression = mapped_expression.sum(*shared_dims)
+
+        mapped_expression.name = f"{self.name}.map(…)"
 
         return mapped_expression
 
-    def rolling_sum(self, over: str, window_size: int) -> Expression:
+    @return_new
+    def rolling_sum(self, over: str, window_size: int):
         """Calculates the rolling sum of the Expression over a specified window size for a given dimension.
 
         This method applies a rolling sum operation over the dimension specified by `over`,
@@ -770,20 +928,19 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         assert over in dims, f"Cannot sum over {over} as it is not in {dims}"
         remaining_dims = [dim for dim in dims if dim not in over]
 
-        return self._new(
-            pl.concat(
-                [
-                    df.with_columns(pl.col(over).max())
-                    for _, df in self.data.rolling(
-                        index_column=over,
-                        period=f"{window_size}i",
-                        group_by=remaining_dims,
-                    )
-                ]
-            )
+        return pl.concat(
+            [
+                df.with_columns(pl.col(over).max())
+                for _, df in self.data.rolling(
+                    index_column=over,
+                    period=f"{window_size}i",
+                    group_by=remaining_dims,
+                )
+            ]
         )
 
-    def within(self, set: SetTypes) -> Expression:
+    @return_new
+    def within(self, set: SetTypes):
         """Filters this expression to only include the dimensions within the provided set.
 
         Examples:
@@ -814,12 +971,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         )
         dims_in_common = [dim for dim in dims if dim in set_dims]
         by_dims = df.select(dims_in_common).unique(maintain_order=Config.maintain_order)
-        return self._new(
-            self.data.join(
-                by_dims,
-                on=dims_in_common,
-                maintain_order="left" if Config.maintain_order else None,
-            )
+        return self.data.join(
+            by_dims,
+            on=dims_in_common,
+            maintain_order="left" if Config.maintain_order else None,
         )
 
     @property
@@ -864,7 +1019,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> expr *= m.v1
             >>> expr.degree()
             1
-            >>> expr += (m.v2**2).add_dim("dim1")
+            >>> expr += (m.v2**2).over("dim1")
             >>> expr.degree()
             2
             >>> expr.degree(return_str=True)
@@ -910,10 +1065,10 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=3 terms=3 type=linear> + <Expression height=2 terms=2 type=constant>
-            Due to error:
-            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values.
+            Expression 1:   v
+            Expression 2:   add
+            Unmatched values:
             shape: (1, 2)
             ┌──────┬────────────┐
             │ dim1 ┆ dim1_right │
@@ -922,6 +1077,7 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             ╞══════╪════════════╡
             │ 3    ┆ null       │
             └──────┴────────────┘
+            If this is intentional, use .drop_unmatched() or .keep_unmatched().
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression terms=2 type=linear>
@@ -931,15 +1087,20 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             return self._add_const(other)
         other = other.to_expr()
         self._learn_from_other(other)
-        return _add_expressions(self, other)
+        return add(self, other)
 
     def __mul__(self: Expression, other: int | float | SupportsToExpr) -> Expression:
         if isinstance(other, (int, float)):
-            return self.with_columns(pl.col(COEF_KEY) * other)
+            if other == 1:
+                return self
+            return self._new(
+                self.data.with_columns(pl.col(COEF_KEY) * other),
+                name=f"({other} * {self.name})",
+            )
 
         other = other.to_expr()
         self._learn_from_other(other)
-        return _multiply_expressions(self, other)
+        return multiply(self, other)
 
     def to_expr(self) -> Expression:
         """Returns the expression itself."""
@@ -949,11 +1110,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         if self._model is None and other._model is not None:
             self._model = other._model
 
-    def _new(self, data: pl.DataFrame) -> Expression:
-        e = Expression(data)
+    def _new(self, data: pl.DataFrame, name: str) -> Expression:
+        e = Expression(data, name)
         e._model = self._model
-        # Note: We intentionally don't propagate the unmatched strategy to the new expression
-        e._allowed_new_dims = self._allowed_new_dims
         return e
 
     def _add_const(self, const: int | float) -> Expression:
@@ -988,6 +1147,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             │ 3    ┆ 5 + v[3] * v[3] │
             └──────┴─────────────────┘
         """
+        if const == 0:
+            return self
         dim = self.dimensions
         data = self.data
         # Fill in missing constant terms
@@ -1030,7 +1191,8 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
             .otherwise(pl.col(COEF_KEY))
         )
 
-        return self._new(data)
+        name = f"({self.name} + {const})" if const >= 0 else f"({self.name} - {-const})"
+        return self._new(data, name=name)
 
     @property
     def constant_terms(self) -> pl.DataFrame:
@@ -1120,10 +1282,9 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         return df.sum()
 
     def _to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
-        if self.dimensions is not None:
-            raise ValueError(
-                "Only non-dimensioned expressions can be converted to PyOptInterface."
-            )  # pragma: no cover
+        assert self.dimensions is None, (
+            "._to_poi() only works for non-dimensioned expressions."
+        )
 
         if self.is_quadratic:
             return poi.ScalarQuadraticFunction(
@@ -1293,10 +1454,11 @@ class Expression(ModelElement, SupportsMath, SupportPolarsMethodMixin):
         data = data.with_columns(pl.col(str_col_name).str.strip_chars(characters="  +"))
 
         if not return_df:
-            if dimensions is None:
+            if dimensions is None and not self._allowed_new_dims:
                 data = data.item()
             else:
                 data = self._add_shape_to_columns(data)
+                data = self._add_allowed_new_dims_to_df(data)
                 with Config.print_polars_config:
                     data = repr(data)
 
@@ -1703,7 +1865,7 @@ class Constraint(ModelElementWithId):
             )
 
         m = self._model
-        if m is None or self.name is None:
+        if m is None:
             self._to_relax = FuncArgs(args=[cost, max])
             return self
 
@@ -1863,7 +2025,7 @@ class Constraint(ModelElementWithId):
         return (
             get_obj_repr(
                 self,
-                self._friendly_name,
+                self.name,
                 height=len(self) if self.dimensions else None,
                 terms=len(self.lhs.data),
                 type=self.lhs.degree(return_str=True),
@@ -1873,7 +2035,7 @@ class Constraint(ModelElementWithId):
         )
 
 
-class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
+class Variable(ModelElementWithId, SupportsMath):
     """A decision variable for an optimization model.
 
     Parameters:
@@ -2155,7 +2317,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         result = (
             get_obj_repr(
                 self,
-                self._friendly_name,
+                self.name,
                 lb=self.lb,
                 ub=self.ub,
                 height=self.data.height if self.dimensions else None,
@@ -2167,6 +2329,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
         else:
             with Config.print_polars_config:
                 data = self._add_shape_to_columns(self.data)
+                # we don't try to include the allowed_new_dims because there are none for Variables (only exist on Expression or Sets)
                 result += repr(data)
 
         return result
@@ -2174,18 +2337,16 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
     def to_expr(self) -> Expression:
         """Converts the Variable to an Expression."""
         self._assert_has_ids()
-        return self._new(self.data.drop(SOLUTION_KEY, strict=False))
+        return self._new(self.data.drop(SOLUTION_KEY, strict=False), self.name)  # pyright: ignore[reportArgumentType], we know it's safe after _assert_has_ids()
 
-    def _new(self, data: pl.DataFrame):
+    def _new(self, data: pl.DataFrame, name: str) -> Expression:
         self._assert_has_ids()
-        e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)))
+        e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)), name)
         e._model = self._model
-        # We propogate the unmatched strategy intentionally. Without this a .keep_unmatched() on a variable would always be lost.
-        e._unmatched_strategy = self._unmatched_strategy
-        e._allowed_new_dims = self._allowed_new_dims
         return e
 
-    def next(self, dim: str, wrap_around: bool = False) -> Expression:
+    @return_new
+    def next(self, dim: str, wrap_around: bool = False):
         """Creates an expression where the variable at each index is the next variable in the specified dimension.
 
         Parameters:
@@ -2205,10 +2366,10 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Failed to add expressions:
-            <Expression height=8 terms=16 type=linear> + <Expression height=6 terms=6 type=linear>
-            Due to error:
-            DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()
+            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because of unmatched values.
+            Expression 1:   (bat_charge + bat_flow)
+            Expression 2:   bat_charge.next(…)
+            Unmatched values:
             shape: (2, 4)
             ┌───────┬─────────┬────────────┬────────────┐
             │ time  ┆ city    ┆ time_right ┆ city_right │
@@ -2218,6 +2379,7 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             │ 18:00 ┆ Toronto ┆ null       ┆ null       │
             │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
             └───────┴─────────┴────────────┴────────────┘
+            If this is intentional, use .drop_unmatched() or .keep_unmatched().
 
             >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
             ...     "time"
@@ -2289,4 +2451,5 @@ class Variable(ModelElementWithId, SupportsMath, SupportPolarsMethodMixin):
             # We use "right" instead of "left" to maintain consistency with the behavior without maintain_order
             maintain_order="right" if Config.maintain_order else None,
         ).drop(["__prev", "__next"], strict=False)
-        return expr._new(data)
+
+        return data

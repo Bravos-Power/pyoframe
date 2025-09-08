@@ -175,12 +175,7 @@ class Model:
         cls, solver: str | _Solver | None, solver_env: dict[str, str] | None
     ):
         if solver is None:
-            # TODO remove this first condition after a few version releases
-            if Config.default_solver is None:  # pragma: no cover
-                raise ValueError(
-                    "None is no longer a valid value for Config.default_solver. Use 'auto' instead."
-                )
-            elif Config.default_solver == "raise":
+            if Config.default_solver == "raise":
                 raise ValueError(
                     "No solver specified during model construction and automatic solver detection is disabled."
                 )
@@ -190,11 +185,15 @@ class Model:
                         return cls._create_poi_model(solver_option, solver_env)
                     except RuntimeError:
                         pass
-                raise ValueError(
+                raise RuntimeError(
                     'Could not automatically find a solver. Is one installed? If so, specify which one: e.g. Model(solver="gurobi")'
                 )
-            else:
+            elif isinstance(Config.default_solver, (_Solver, str)):
                 solver = Config.default_solver
+            else:
+                raise ValueError(
+                    f"Config.default_solver has an invalid value: {Config.default_solver}."
+                )
 
         if isinstance(solver, str):
             solver = solver.lower()
@@ -244,10 +243,9 @@ class Model:
             )  # pragma: no cover
 
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
-        if constant_var.index != CONST_TERM:
-            raise ValueError(
-                "The first variable should have index 0."
-            )  # pragma: no cover
+        assert constant_var.index == CONST_TERM, (
+            "The first variable should have index 0."
+        )
         return model, solver
 
     @property

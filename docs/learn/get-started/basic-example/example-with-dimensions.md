@@ -7,6 +7,7 @@ os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
 !!! tip "Pyoframe is built on DataFrames"
+
     Most other optimization libraries require you to convert your data from its `DataFrame` format to another format.[^1] Not Pyoframe! DataFrames form the core of Pyoframe making it easy to seamlessly — and efficiently — integrate large datasets into your models.
 
 [^1]: For example, Pyomo converts your DataFrames to individual Python objects, Linopy uses multi-dimensional matrices via xarray, and gurobipy requires Python lists, dictionaries and tuples. While gurobipy-pandas uses dataframes, it only works with Gurobi!
@@ -44,6 +45,7 @@ Load `food_data.csv` using [Polars](https://pola.rs/) or [Pandas](https://pandas
     ```
 
 !!! tip "Pandas vs. Polars: Which should I use?"
+
     Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar libraries for manipulating data with DataFrames. We prefer using Polars because it is much faster (and generally better), but you can use whichever library you're most comfortable with.
     
     Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations. If needed, you can convert a Polars DataFrame back to Pandas using [`polars.DataFrame.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas).

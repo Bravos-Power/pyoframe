@@ -70,7 +70,7 @@ class Objective(Expression):
             expr = Expression.constant(expr)
         else:
             expr = expr.to_expr()
-        super().__init__(expr.data)
+        super().__init__(expr.data, name="objective")
         self._model = expr._model
         if self.dimensions is not None:
             raise ValueError(

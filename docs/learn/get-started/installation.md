@@ -27,7 +27,8 @@ Pyoframe makes it easy to **build** models, but a separate solver is needed to *
 | \*Integer variables cannot be used with quadratic objectives. |
 
 !!! tip "Don't see your preferred solver?"
-Don't hesitate to [request another solver](https://github.com/Bravos-Power/pyoframe/issues/144). We can easily add support for other solvers, particularly COPT and Mosek, given sufficient interest.
+
+    Don't hesitate to [request another solver](https://github.com/Bravos-Power/pyoframe/issues/144). We can easily add support for other solvers, particularly COPT and Mosek, given sufficient interest.
 
 ## Step 3: Install the solver
 
@@ -49,6 +50,7 @@ Select your chosen solver and follow the installation instructions.
     2. Ensure you have a valid Gurobi license installed on your machine.
 
     !!! warning "Do not install Gurobi using `pip`"
+    
         You should not install Gurobi using `pip` because Pyoframe uses Gurobi's C API, which the `pip` installation does not include.
 
 === "Ipopt"

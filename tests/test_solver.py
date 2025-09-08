@@ -20,10 +20,25 @@ def test_solver_works(solver_all):
     pf.Model(solver=solver_all.name)
 
 
-def test_solver_required():
+def test_Config_default_solver():
     pf.Config.default_solver = "raise"
     with pytest.raises(ValueError, match="No solver specified"):
         pf.Model()
+
+    pf.Config.default_solver = "auto"
+    assert pf.Model().solver_name in [s.name for s in SUPPORTED_SOLVERS]
+
+    pf.Config.default_solver = None
+    with pytest.raises(ValueError, match="Config.default_solver has an invalid value"):
+        pf.Model()
+
+
+def test_Config_default_solver_specific(solver):
+    pf.Config.default_solver = solver.name
+    assert pf.Model().solver_name == solver.name
+
+    pf.Config.default_solver = solver
+    assert pf.Model().solver_name == solver.name
 
 
 @pytest.mark.parametrize(
@@ -87,7 +102,7 @@ def test_retrieving_duals_vectorized(solver):
     m.X_ub = m.X <= data[["t", "ub"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).sum().over("c") <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -135,7 +150,7 @@ def test_support_variable_attributes(solver):
     m.X.attr.UpperBound = data[["t", "UpperBound"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).sum().over("c") <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -184,7 +199,7 @@ def test_support_variable_raw_attributes():
     m.X.attr.UB = data[["t", "UB"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).sum().over("c") <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
