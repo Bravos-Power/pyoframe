@@ -25,7 +25,7 @@ KEY_TYPE = pl.UInt32
 class _Solver:
     name: SUPPORTED_SOLVER_TYPES
     supports_integer_variables: bool = True
-    supports_quadratics: bool = True
+    supports_quadratic_constraints: bool = True
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
@@ -46,7 +46,7 @@ class _Solver:
 
 SUPPORTED_SOLVERS = [
     _Solver("gurobi"),
-    _Solver("highs", supports_quadratics=False, supports_duals=False),
+    _Solver("highs", supports_quadratic_constraints=False, supports_duals=False),
     _Solver(
         "ipopt",
         supports_integer_variables=False,

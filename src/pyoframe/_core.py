@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Literal, Protocol, Union, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, Union, overload
 
 import numpy as np
 import pandas as pd
@@ -40,6 +40,7 @@ from pyoframe._model_element import ModelElement, ModelElementWithId
 from pyoframe._utils import (
     Container,
     FuncArgs,
+    SupportsToExpr,
     cast_coef_to_string,
     concat_dimensions,
     get_obj_repr,
@@ -47,21 +48,15 @@ from pyoframe._utils import (
     return_new,
     unwrap_single_values,
 )
+from pyoframe._utils import (
+    expr as to_expr,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
 
-# TODO consider changing this simply to a type and having a helper "Expression.from(object)"
-class SupportsToExpr(Protocol):
-    """Protocol for any object that can be converted to a Pyoframe [Expression][pyoframe.Expression]."""
-
-    def to_expr(self) -> Expression:
-        """Converts the object to a Pyoframe [Expression][pyoframe.Expression]."""
-        ...
-
-
-class SupportsMath(ModelElement, SupportsToExpr):
+class SupportsMath(ModelElement):
     """Any object that can be converted into an expression."""
 
     def __init__(self, *args, **kwargs):
@@ -241,10 +236,10 @@ class SupportsMath(ModelElement, SupportsToExpr):
         """Converts the object to an expression (see `.to_expr()`) and then applies [`Expression.map`][pyoframe.Expression.map]."""
         return self.to_expr().map(*args, **kwargs)
 
-    def __add__(self, *args, **kwargs):
+    def __add__(self, *args, **kwargs) -> Expression | Self:
         return self.to_expr().__add__(*args, **kwargs)
 
-    def __mul__(self, *args, **kwargs):
+    def __mul__(self, *args, **kwargs) -> Expression | Self:
         return self.to_expr().__mul__(*args, **kwargs)
 
     def __pow__(self, power: int):
@@ -999,7 +994,7 @@ class Expression(SupportsMath):
     def degree(self, return_str: Literal[False] = False) -> int: ...
 
     @overload
-    def degree(self, return_str: Literal[True] = True) -> str: ...
+    def degree(self, return_str: Literal[True]) -> str: ...
 
     def degree(self, return_str: bool = False) -> int | str:
         """Returns the degree of the expression (0=constant, 1=linear, 2=quadratic).
@@ -1085,7 +1080,7 @@ class Expression(SupportsMath):
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
-        other = other.to_expr()
+        other = to_expr(other)
         self._learn_from_other(other)
         return add(self, other)
 
@@ -1098,7 +1093,7 @@ class Expression(SupportsMath):
                 name=f"({other} * {self.name})",
             )
 
-        other = other.to_expr()
+        other = to_expr(other)
         self._learn_from_other(other)
         return multiply(self, other)
 
@@ -1288,37 +1283,37 @@ class Expression(SupportsMath):
 
         if self.is_quadratic:
             return poi.ScalarQuadraticFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                var1s=self.data.get_column(VAR_KEY).to_numpy(),
-                var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),
+                coefficients=self.data.get_column(COEF_KEY).to_numpy(),  # pyright: ignore[reportArgumentType]
+                var1s=self.data.get_column(VAR_KEY).to_numpy(),  # pyright: ignore[reportArgumentType]
+                var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),  # pyright: ignore[reportArgumentType]
             )
         else:
             return poi.ScalarAffineFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                variables=self.data.get_column(VAR_KEY).to_numpy(),
+                coefficients=self.data.get_column(COEF_KEY).to_numpy(),  # pyright: ignore[reportArgumentType]
+                variables=self.data.get_column(VAR_KEY).to_numpy(),  # pyright: ignore[reportArgumentType]
             )
 
     @overload
     def to_str(
         self,
+        return_df: Literal[False] = False,
         str_col_name: str = "expression",
         include_const_term: bool = True,
-        return_df: Literal[False] = False,
     ) -> str: ...
 
     @overload
     def to_str(
         self,
+        return_df: Literal[True],
         str_col_name: str = "expression",
         include_const_term: bool = True,
-        return_df: Literal[True] = True,
     ) -> pl.DataFrame: ...
 
     def to_str(
         self,
+        return_df: bool = False,
         str_col_name: str = "expression",
         include_const_term: bool = True,
-        return_df: bool = False,
     ) -> str | pl.DataFrame:
         """Converts the expression to a human-readable string, or several arranged in a table.
 
@@ -1538,7 +1533,7 @@ def sum(
         assert isinstance(over, (str, Sequence))
         if isinstance(over, str):
             over = (over,)
-        return expr.to_expr().sum(*over)
+        return to_expr(expr).sum(*over)
 
 
 def sum_by(
@@ -1552,7 +1547,7 @@ def sum_by(
 
     if isinstance(by, str):
         by = [by]
-    return expr.to_expr().sum_by(*by)
+    return to_expr(expr).sum_by(*by)
 
 
 class Constraint(ModelElementWithId):
@@ -1593,14 +1588,19 @@ class Constraint(ModelElementWithId):
         """Allows reading and writing constraint attributes similarly to [Model.attr][pyoframe.Model.attr]."""
         return self._attr
 
-    def _set_attribute(self, name, value):
+    def _set_attribute(self, name: str, value: Any):
         self._assert_has_ids()
+        pm = self._model.poi  # pyright: ignore[reportOptionalMemberAccess]; if we had ids self._model can't be None
         col_name = name
         try:
-            name = poi.ConstraintAttribute[name]
-            setter = self._model.poi.set_constraint_attribute
-        except KeyError:
-            setter = self._model.poi.set_constraint_raw_attribute
+            attr = poi.ConstraintAttribute[name]
+            setter = pm.set_constraint_attribute
+        except KeyError as e:
+            if hasattr(pm, "set_constraint_raw_attribute"):
+                attr = name
+                setter = pm.set_constraint_raw_attribute  # pyright: ignore[reportAttributeAccessIssue]
+            else:
+                raise e
 
         constr_type = (
             poi.ConstraintType.Quadratic
@@ -1610,7 +1610,7 @@ class Constraint(ModelElementWithId):
 
         if self.dimensions is None:
             for key in self.data.get_column(CONSTRAINT_KEY):
-                setter(poi.ConstraintIndex(constr_type, key), name, value)
+                setter(poi.ConstraintIndex(constr_type, key), attr, value)
         else:
             for key, value in (
                 self.data.join(
@@ -1621,28 +1621,37 @@ class Constraint(ModelElementWithId):
                 .select(pl.col(CONSTRAINT_KEY), pl.col(col_name))
                 .iter_rows()
             ):
-                setter(poi.ConstraintIndex(constr_type, key), name, value)
+                setter(poi.ConstraintIndex(constr_type, key), attr, value)
 
     @unwrap_single_values
     def _get_attribute(self, name):
         self._assert_has_ids()
         col_name = name
+        pm = self._model.poi  # pyright: ignore[reportOptionalMemberAccess]; if we had ids self._model can't be None
         try:
             name = poi.ConstraintAttribute[name]
-            getter = self._model.poi.get_constraint_attribute
-        except KeyError:
-            getter = self._model.poi.get_constraint_raw_attribute
+            getter = pm.get_constraint_attribute
+        except KeyError as e:
+            if hasattr(pm, "get_constraint_raw_attribute"):
+                getter = pm.get_constraint_raw_attribute  # pyright: ignore[reportAttributeAccessIssue]
+            else:
+                raise e
 
-        constr_type = (
-            poi.ConstraintType.Quadratic
-            if self.lhs.is_quadratic
-            else poi.ConstraintType.Linear
-        )
-
-        ids = self.data.get_column(CONSTRAINT_KEY).to_list()
-        attr = [getter(poi.ConstraintIndex(constr_type, v_id), name) for v_id in ids]
-        data = self.data.with_columns(pl.Series(attr).alias(col_name))
-        return data.select(self._dimensions_unsafe + [col_name])
+        with (
+            warnings.catch_warnings()
+        ):  # map_elements without return_dtype= gives a warning
+            warnings.filterwarnings(
+                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
+            )
+            return self.data.with_columns(
+                pl.col(CONSTRAINT_KEY)
+                .map_elements(
+                    lambda v_id: getter(
+                        poi.ConstraintIndex(poi.ConstraintType.Linear, v_id), name
+                    )
+                )
+                .alias(col_name)
+            ).select(self._dimensions_unsafe + [col_name])
 
     def _on_add_to_model(self, model: Model, name: str):
         super()._on_add_to_model(model, name)
@@ -1654,14 +1663,14 @@ class Constraint(ModelElementWithId):
         assert self._model is not None
 
         is_quadratic = self.lhs.is_quadratic
-        use_var_names = self._model.solver_uses_variable_names
+        use_var_names = self._model.use_var_names
         kwargs: dict[str, Any] = dict(sense=self.sense._to_poi(), rhs=0)
 
         key_cols = [COEF_KEY] + self.lhs._variable_columns
         key_cols_polars = [pl.col(c) for c in key_cols]
 
         add_constraint = (
-            self._model.poi.add_quadratic_constraint
+            self._model.poi.add_quadratic_constraint  # pyright: ignore[reportAttributeAccessIssue]; quadratic support checked for above
             if is_quadratic
             else self._model.poi.add_linear_constraint
         )
@@ -1677,7 +1686,7 @@ class Constraint(ModelElementWithId):
                     add_constraint(
                         ScalarFunction(
                             *[self.lhs.data.get_column(c).to_numpy() for c in key_cols]
-                        ),
+                        ),  # pyright: ignore[reportArgumentType, reportCallIssue]
                         **kwargs,
                     ).index
                 )
@@ -1695,7 +1704,7 @@ class Constraint(ModelElementWithId):
                         pl.struct(*key_cols_polars, pl.col("concated_dim"))
                         .map_elements(
                             lambda x: add_constraint(
-                                ScalarFunction(*[np.array(x[c]) for c in key_cols]),
+                                ScalarFunction(*[np.array(x[c]) for c in key_cols]),  # pyright: ignore[reportArgumentType, reportCallIssue]
                                 name=x["concated_dim"],
                                 **kwargs,
                             ).index,
@@ -1710,7 +1719,7 @@ class Constraint(ModelElementWithId):
                     pl.struct(*key_cols_polars)
                     .map_elements(
                         lambda x: add_constraint(
-                            ScalarFunction(*[np.array(x[c]) for c in key_cols]),
+                            ScalarFunction(*[np.array(x[c]) for c in key_cols]),  # pyright: ignore[reportArgumentType, reportCallIssue]
                             **kwargs,
                         ).index,
                         return_dtype=KEY_TYPE,
@@ -1927,7 +1936,7 @@ class Constraint(ModelElementWithId):
     def to_str(self, return_df: Literal[False] = False) -> str: ...
 
     @overload
-    def to_str(self, return_df: Literal[True] = True) -> pl.DataFrame: ...
+    def to_str(self, return_df: Literal[True]) -> pl.DataFrame: ...
 
     def to_str(self, return_df: bool = False) -> str | pl.DataFrame:
         """Converts the constraint to a human-readable string, or several arranged in a table.
@@ -2123,6 +2132,7 @@ class Variable(ModelElementWithId, SupportsMath):
         equals: SupportsToExpr | None = None,
     ):
         if equals is not None:
+            equals = to_expr(equals)
             assert len(indexing_sets) == 0, (
                 "Cannot specify both 'equals' and 'indexing_sets'"
             )
@@ -2151,16 +2161,20 @@ class Variable(ModelElementWithId, SupportsMath):
 
     def _set_attribute(self, name, value):
         self._assert_has_ids()
+        pm = self._model.poi  # pyright: ignore[reportOptionalMemberAccess]; if we had ids self._model can't be None
         col_name = name
         try:
             name = poi.VariableAttribute[name]
-            setter = self._model.poi.set_variable_attribute
-        except KeyError:
-            setter = self._model.poi.set_variable_raw_attribute
+            setter = pm.set_variable_attribute
+        except KeyError as e:
+            if hasattr(pm, "set_variable_raw_attribute"):
+                setter = pm.set_variable_raw_attribute  # pyright: ignore[reportAttributeAccessIssue]
+            else:
+                raise e
 
         if self.dimensions is None:
             for key in self.data.get_column(VAR_KEY):
-                setter(poi.VariableIndex(key), name, value)
+                setter(poi.VariableIndex(key), name, value)  # pyright: ignore[reportArgumentType]
         else:
             for key, v in (
                 self.data.join(
@@ -2171,25 +2185,34 @@ class Variable(ModelElementWithId, SupportsMath):
                 .select(pl.col(VAR_KEY), pl.col(col_name))
                 .iter_rows()
             ):
-                setter(poi.VariableIndex(key), name, v)
+                setter(poi.VariableIndex(key), name, v)  # pyright: ignore[reportArgumentType]
 
     @unwrap_single_values
     def _get_attribute(self, name):
         self._assert_has_ids()
+        pm = self._model.poi  # pyright: ignore[reportOptionalMemberAccess]
         col_name = name
         try:
             name = poi.VariableAttribute[name]
-            getter = self._model.poi.get_variable_attribute
+            getter = pm.get_variable_attribute
         except KeyError:
-            getter = self._model.poi.get_variable_raw_attribute
+            getter = pm.get_variable_raw_attribute
 
-        ids = self.data.get_column(VAR_KEY).to_list()
-        attr = [getter(poi.VariableIndex(v_id), name) for v_id in ids]
-        data = self.data.with_columns(pl.Series(attr).alias(col_name))
-        return data.select(self._dimensions_unsafe + [col_name])
+        with (
+            warnings.catch_warnings()
+        ):  # map_elements without return_dtype= gives a warning
+            warnings.filterwarnings(
+                action="ignore", category=pl.exceptions.MapWithoutReturnDtypeWarning
+            )
+            return self.data.with_columns(
+                pl.col(VAR_KEY)
+                .map_elements(lambda v_id: getter(poi.VariableIndex(v_id), name))
+                .alias(col_name)
+            ).select(self._dimensions_unsafe + [col_name])
 
     def _assign_ids(self):
         assert self._model is not None
+        poi = self._model.poi
 
         kwargs = {}
         if self.lb is not None:
@@ -2200,18 +2223,31 @@ class Variable(ModelElementWithId, SupportsMath):
             self._model.solver.check_supports_integer_variables()
             kwargs["domain"] = self.vtype._to_poi()
 
-        if self.dimensions is not None and self._model.solver_uses_variable_names:
-            names = concat_dimensions(self.data, prefix=self.name)[
-                "concated_dim"
-            ].to_list()
-            ids = [self._model.poi.add_variable(name=n, **kwargs).index for n in names]
+        if self.dimensions is not None and self._model.use_var_names:
+            df = (
+                concat_dimensions(self.data, prefix=self.name)
+                .with_columns(
+                    pl.col("concated_dim")
+                    .map_elements(
+                        lambda name: poi.add_variable(name=name, **kwargs).index,
+                        return_dtype=KEY_TYPE,
+                    )
+                    .alias(VAR_KEY)
+                )
+                .drop("concated_dim")
+            )
         else:
             if self._model.solver_uses_variable_names:
                 kwargs["name"] = self.name
 
-            n = 1 if self.dimensions is None else len(self.data)
-            ids = [self._model.poi.add_variable(**kwargs).index for _ in range(n)]
-        df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
+            df = self.data.with_columns(
+                pl.lit(0).alias(VAR_KEY).cast(KEY_TYPE)
+            ).with_columns(
+                pl.col(VAR_KEY).map_elements(
+                    lambda _: poi.add_variable(**kwargs).index,
+                    return_dtype=KEY_TYPE,
+                )
+            )
 
         self._data = df
 

@@ -37,6 +37,7 @@ dev = [
     "gurobipy==12.0.3",     # used for testing against the gurobi library
     "coverage==7.10.6",     # code coverage
     "ipykernel==6.30.1",    # add support for jupyter notebooks
+    "pyright==1.1.404",     # typechecking
     # Automatically install as many solvers as possible
     # (we don't pin since we want to test against the latest)
     "highsbox",
@@ -55,6 +56,9 @@ docs = [
     # "mkdocs-table-reader-plugin~=3.1.0",              # allows displaying .csv files in documentation
     "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
 ]
+
+[tool.setuptools.package-data]
+"pyoframe" = ["py.typed"]
 
 
 [tool.ruff.lint]
@@ -97,6 +101,9 @@ doctest_optionflags = "NORMALIZE_WHITESPACE"
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"
 local_scheme = "no-local-version"
+
+[tool.pyright]
+include = ["src", "tests/examples"]
 
 [project.urls]
 Homepage = "https://bravos-power.github.io/pyoframe/"

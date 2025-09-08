@@ -20,10 +20,16 @@ from pyoframe._constants import (
     VType,
     _Solver,
 )
-from pyoframe._core import Constraint, SupportsToExpr, Variable
+from pyoframe._core import Constraint, Variable
 from pyoframe._model_element import ModelElement, ModelElementWithId
 from pyoframe._objective import Objective
-from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
+from pyoframe._utils import (
+    Container,
+    NamedVariableMapper,
+    SupportsToExpr,
+    for_solvers,
+    get_obj_repr,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
@@ -285,21 +291,6 @@ class Model:
         return self._constraints
 
     @property
-    def has_objective(self) -> bool:
-        """Returns whether the model's objective has been defined.
-
-        Examples:
-            >>> m = pf.Model()
-            >>> m.has_objective
-            False
-            >>> m.X = pf.Variable()
-            >>> m.maximize = m.X
-            >>> m.has_objective
-            True
-        """
-        return self._objective is not None
-
-    @property
     def objective(self) -> Objective:
         """Returns the model's objective.
 
@@ -324,6 +315,11 @@ class Model:
         if self._objective is None:
             raise ValueError("Objective is not defined.")
         return self._objective
+
+    @property
+    def has_objective(self) -> bool:
+        """Returns whether an objective has been set."""
+        return self._objective is not None
 
     @objective.setter
     def objective(self, value: SupportsToExpr | float | int):
@@ -429,7 +425,7 @@ class Model:
             if self.solver_uses_variable_names:
                 self.params.write_solution_style = 1
             kwargs["pretty"] = pretty
-        self.poi.write(str(file_path), **kwargs)
+        self.poi.write(str(file_path), **kwargs)  # pyright: ignore[reportAttributeAccessIssue]
 
     def optimize(self):
         """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
@@ -469,7 +465,7 @@ class Model:
             ...
             NotImplementedError: Method 'convert_to_fixed' is not implemented for solver 'highs'.
         """
-        self.poi._converttofixed()
+        self.poi._converttofixed()  # pyright: ignore[reportAttributeAccessIssue]
 
     @for_solvers("gurobi", "copt")
     def compute_IIS(self):
@@ -495,7 +491,7 @@ class Model:
             >>> m.bad_constraint.attr.IIS
             True
         """
-        self.poi.computeIIS()
+        self.poi.computeIIS()  # pyright: ignore[reportAttributeAccessIssue]
 
     def dispose(self):
         """Disposes of the model and cleans up the solver environment.
@@ -516,7 +512,7 @@ class Model:
         """
         env = None
         if hasattr(self.poi, "_env"):
-            env = self.poi._env
+            env = self.poi._env  # pyright: ignore[reportAttributeAccessIssue]
         self.poi.close()
         if env is not None:
             env.close()
@@ -531,15 +527,19 @@ class Model:
     def _set_param(self, name, value):
         self.poi.set_raw_parameter(name, value)
 
-    def _get_param(self, name):
-        return self.poi.get_raw_parameter(name)
+    def _get_param(self, name: str):
+        if hasattr(self.poi, "get_raw_parameter"):
+            return self.poi.get_raw_parameter(name)  # pyright: ignore[reportAttributeAccessIssue]
+        raise ValueError(
+            f"Solver '{self.solver_name}' does not support getting parameters."
+        )
 
     def _set_attr(self, name, value):
         try:
             self.poi.set_model_attribute(poi.ModelAttribute[name], value)
         except KeyError as e:
-            if self.solver.name == "gurobi":
-                self.poi.set_model_raw_attribute(name, value)
+            if hasattr(self.poi, "set_model_raw_attribute"):
+                self.poi.set_model_raw_attribute(name, value)  # pyright: ignore[reportAttributeAccessIssue]
             else:
                 raise e
 
@@ -547,7 +547,7 @@ class Model:
         try:
             return self.poi.get_model_attribute(poi.ModelAttribute[name])
         except KeyError as e:
-            if self.solver.name == "gurobi":
-                return self.poi.get_model_raw_attribute(name)
+            if hasattr(self.poi, "get_model_raw_attribute"):
+                return self.poi.get_model_raw_attribute(name)  # pyright: ignore[reportAttributeAccessIssue]
             else:
                 raise e
