@@ -20,10 +20,25 @@ def test_solver_works(solver_all):
     pf.Model(solver=solver_all.name)
 
 
-def test_solver_required():
+def test_Config_default_solver():
     pf.Config.default_solver = "raise"
     with pytest.raises(ValueError, match="No solver specified"):
         pf.Model()
+
+    pf.Config.default_solver = "auto"
+    assert pf.Model().solver_name in [s.name for s in SUPPORTED_SOLVERS]
+
+    pf.Config.default_solver = None
+    with pytest.raises(ValueError, match="Config.default_solver has an invalid value"):
+        pf.Model()
+
+
+def test_Config_default_solver_specific(solver):
+    pf.Config.default_solver = solver.name
+    assert pf.Model().solver_name == solver.name
+
+    pf.Config.default_solver = solver
+    assert pf.Model().solver_name == solver.name
 
 
 @pytest.mark.parametrize(

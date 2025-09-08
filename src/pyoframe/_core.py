@@ -216,7 +216,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
         df = df.select(cols[:-1] + self._allowed_new_dims + [cols[-1]])  # reorder
         return df
 
-    def add_dim(self, *dims: str):
+    def add_dim(self, *dims: str):  # pragma: no cover
         """Deprecated, use [`over`][pyoframe.Expression.over] instead."""
         warnings.warn(
             "'add_dim' has been renamed to 'over'. Please use 'over' instead.",

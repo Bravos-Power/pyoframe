@@ -35,6 +35,10 @@ def test_expressions(default_solver):
     assert (-(2 * (1 - m.X))).name == "-(2 * (-X + 1))"
     assert (m.X**2).name == "(X**2)"
 
+    # null operation
+    assert (m.X + 0).name == "X"
+    assert (m.X * 1).name == "X"
+
 
 def test_transforms(default_solver):
     df = pl.DataFrame({"dim": [1, 2], "val": [2, 3]})

@@ -185,12 +185,12 @@ class Model:
                         return cls._create_poi_model(solver_option, solver_env)
                     except RuntimeError:
                         pass
-                raise ValueError(
+                raise RuntimeError(
                     'Could not automatically find a solver. Is one installed? If so, specify which one: e.g. Model(solver="gurobi")'
                 )
             elif isinstance(Config.default_solver, (_Solver, str)):
                 solver = Config.default_solver
-            else:  # pragma: no cover
+            else:
                 raise ValueError(
                     f"Config.default_solver has an invalid value: {Config.default_solver}."
                 )
