@@ -75,17 +75,20 @@ def _is_iterable(input: Any | Iterable[Any]) -> bool:
     )
 
 
-def concat_dimensions(df: pl.DataFrame, prefix: str) -> pl.DataFrame:
+def concat_dimensions(
+    df: pl.DataFrame, prefix: str, keep_dims: bool = True, to_col: str = "concated_dim"
+) -> pl.DataFrame:
     """Returns a new DataFrame with the column 'concated_dim'.
 
-    Reserved columns are ignored. Spaces are replaced with underscores
-
+    Reserved columns are ignored. Spaces are replaced with underscores.
 
     Parameters:
         df:
             The input DataFrame.
         prefix:
-            The prefix to be added to the concatenated dimension.
+            The prefix to be added to the concated dimension.
+        keep_dims:
+            If `True`, the original dimensions are kept in the new DataFrame.
 
     Examples:
         >>> import polars as pl
@@ -109,17 +112,52 @@ def concat_dimensions(df: pl.DataFrame, prefix: str) -> pl.DataFrame:
         │ 2    ┆ N    ┆ x[2,N]       │
         │ 3    ┆ N    ┆ x[3,N]       │
         └──────┴──────┴──────────────┘
-    """
-    dimensions = [col for col in df.columns if col not in RESERVED_COL_KEYS]
-    assert dimensions, "concat_dimensions only works for dimensioned DataFrames."
+        >>> concat_dimensions(df, prefix="", keep_dims=False)
+        shape: (6, 1)
+        ┌──────────────┐
+        │ concated_dim │
+        │ ---          │
+        │ str          │
+        ╞══════════════╡
+        │ [1,Y]        │
+        │ [2,Y]        │
+        │ [3,Y]        │
+        │ [1,N]        │
+        │ [2,N]        │
+        │ [3,N]        │
+        └──────────────┘
 
-    return df.with_columns(
-        concated_dim=pl.concat_str(
+        Properly handles cases with no dimensions and ignores reserved columns
+        >>> df = pl.DataFrame({VAR_KEY: [1, 2]})
+        >>> concat_dimensions(df, prefix="x")
+        shape: (2, 2)
+        ┌───────────────┬──────────────┐
+        │ __variable_id ┆ concated_dim │
+        │ ---           ┆ ---          │
+        │ i64           ┆ str          │
+        ╞═══════════════╪══════════════╡
+        │ 1             ┆ x            │
+        │ 2             ┆ x            │
+        └───────────────┴──────────────┘
+    """
+    if prefix is None:
+        prefix = ""
+    dimensions = [col for col in df.columns if col not in RESERVED_COL_KEYS]
+    if dimensions:
+        query = pl.concat_str(
             pl.lit(prefix + "["),
             pl.concat_str(*dimensions, separator=","),
             pl.lit("]"),
-        ).str.replace_all(" ", "_")
-    )
+        )
+    else:
+        query = pl.lit(prefix)
+
+    df = df.with_columns(query.str.replace_all(" ", "_").alias(to_col))
+
+    if not keep_dims:
+        df = df.drop(*dimensions)
+
+    return df
 
 
 def cast_coef_to_string(
