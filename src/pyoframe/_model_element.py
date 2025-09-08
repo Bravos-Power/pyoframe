@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING
 
 import polars as pl
 
@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover
 class ModelElement(ABC):
     """The base class for elements of a Model such as [][pyoframe.Variable] and [][pyoframe.Constraint]."""
 
-    def __init__(self, data: pl.DataFrame, **kwargs) -> None:
+    def __init__(self, data: pl.DataFrame, name="unnamed") -> None:
         # Sanity checks, no duplicate column names
         assert len(data.columns) == len(set(data.columns)), (
             "Duplicate column names found."
@@ -47,8 +47,7 @@ class ModelElement(ABC):
 
         self._data = data
         self._model: Model | None = None
-        self.name = None
-        super().__init__(**kwargs)
+        self.name: str = name  # gets overwritten if object is added to model
 
     def _on_add_to_model(self, model: Model, name: str):
         self.name = name
@@ -58,11 +57,6 @@ class ModelElement(ABC):
     def data(self) -> pl.DataFrame:
         """Returns the object's underlying Polars DataFrame."""
         return self._data
-
-    @property
-    def _friendly_name(self) -> str:
-        """Returns the name of the element, or `'unnamed'` if it has no name."""
-        return self.name if self.name is not None else "unnamed"
 
     @property
     def dimensions(self) -> list[str] | None:
@@ -156,124 +150,6 @@ class ModelElement(ABC):
         if dims is None:
             return 1
         return self.data.select(dims).n_unique()
-
-
-# TODO: merge with SupportsMath?
-class SupportPolarsMethodMixin(ABC):
-    def rename(self, *args, **kwargs):
-        """Renames one or several of the object's dimensions.
-
-        Takes the same arguments as [`polars.DataFrame.rename`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.rename.html).
-
-        See the [portfolio optimization example](../examples/portfolio_optimization.md) for a usage example.
-
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable(
-            ...     {"hour": ["00:00", "06:00", "12:00", "18:00"]},
-            ...     {"city": ["Toronto", "Berlin", "Paris"]},
-            ... )
-            >>> m.v
-            <Variable 'v' height=12>
-            ┌───────┬─────────┬──────────────────┐
-            │ hour  ┆ city    ┆ variable         │
-            │ (4)   ┆ (3)     ┆                  │
-            ╞═══════╪═════════╪══════════════════╡
-            │ 00:00 ┆ Toronto ┆ v[00:00,Toronto] │
-            │ 00:00 ┆ Berlin  ┆ v[00:00,Berlin]  │
-            │ 00:00 ┆ Paris   ┆ v[00:00,Paris]   │
-            │ 06:00 ┆ Toronto ┆ v[06:00,Toronto] │
-            │ 06:00 ┆ Berlin  ┆ v[06:00,Berlin]  │
-            │ …     ┆ …       ┆ …                │
-            │ 12:00 ┆ Berlin  ┆ v[12:00,Berlin]  │
-            │ 12:00 ┆ Paris   ┆ v[12:00,Paris]   │
-            │ 18:00 ┆ Toronto ┆ v[18:00,Toronto] │
-            │ 18:00 ┆ Berlin  ┆ v[18:00,Berlin]  │
-            │ 18:00 ┆ Paris   ┆ v[18:00,Paris]   │
-            └───────┴─────────┴──────────────────┘
-
-            >>> m.v.rename({"city": "location"})
-            <Expression height=12 terms=12 type=linear>
-            ┌───────┬──────────┬──────────────────┐
-            │ hour  ┆ location ┆ expression       │
-            │ (4)   ┆ (3)      ┆                  │
-            ╞═══════╪══════════╪══════════════════╡
-            │ 00:00 ┆ Toronto  ┆ v[00:00,Toronto] │
-            │ 00:00 ┆ Berlin   ┆ v[00:00,Berlin]  │
-            │ 00:00 ┆ Paris    ┆ v[00:00,Paris]   │
-            │ 06:00 ┆ Toronto  ┆ v[06:00,Toronto] │
-            │ 06:00 ┆ Berlin   ┆ v[06:00,Berlin]  │
-            │ …     ┆ …        ┆ …                │
-            │ 12:00 ┆ Berlin   ┆ v[12:00,Berlin]  │
-            │ 12:00 ┆ Paris    ┆ v[12:00,Paris]   │
-            │ 18:00 ┆ Toronto  ┆ v[18:00,Toronto] │
-            │ 18:00 ┆ Berlin   ┆ v[18:00,Berlin]  │
-            │ 18:00 ┆ Paris    ┆ v[18:00,Paris]   │
-            └───────┴──────────┴──────────────────┘
-
-        """
-        return self._new(self.data.rename(*args, **kwargs))
-
-    def with_columns(self, *args, **kwargs):
-        """Creates a new object with modified columns.
-
-        Takes the same arguments as [`polars.DataFrame.with_columns`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.with_columns.html).
-
-        !!! warning
-            Only use this function if you know what you're doing. It is not recommended to manually modify the columns
-            within a Pyoframe object.
-        """
-        return self._new(self.data.with_columns(*args, **kwargs))
-
-    def filter(self, *args, **kwargs):
-        """Creates a copy of the object containing only a subset of the original rows.
-
-        Takes the same arguments as [`polars.DataFrame.filter`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.filter.html).
-
-        See Also:
-            [`Expression.pick`][pyoframe.Expression.pick] or [`Variable.pick`][pyoframe.Variable.pick] if you wish to drop the filtered
-            column in the process.
-
-        """
-        return self._new(self.data.filter(*args, **kwargs))
-
-    @abstractmethod
-    def _new(self, data: pl.DataFrame) -> Self:
-        """Creates a new instance of the same class with the given data (for e.g. on .rename(), .with_columns(), etc.)."""
-
-    @property
-    @abstractmethod
-    def data(self) -> pl.DataFrame: ...
-
-    def pick(self, **kwargs):
-        """Filters elements by the given criteria and then drops the filtered dimensions.
-
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable(
-            ...     [
-            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
-            ...         {"city": ["Toronto", "Berlin", "Paris"]},
-            ...     ]
-            ... )
-            >>> m.v.pick(hour="06:00")
-            <Expression height=3 terms=3 type=linear>
-            ┌─────────┬──────────────────┐
-            │ city    ┆ expression       │
-            │ (3)     ┆                  │
-            ╞═════════╪══════════════════╡
-            │ Toronto ┆ v[06:00,Toronto] │
-            │ Berlin  ┆ v[06:00,Berlin]  │
-            │ Paris   ┆ v[06:00,Paris]   │
-            └─────────┴──────────────────┘
-            >>> m.v.pick(hour="06:00", city="Toronto")
-            <Expression terms=1 type=linear>
-            v[06:00,Toronto]
-
-        See Also:
-            [`Expression.filter`][pyoframe.Expression.filter] or [`Variable.filter`][pyoframe.Variable.filter] if you don't wish to drop the filtered column.
-        """
-        return self._new(self.data.filter(**kwargs).drop(kwargs.keys()))
 
 
 class ModelElementWithId(ModelElement):

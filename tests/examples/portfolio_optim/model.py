@@ -84,7 +84,7 @@ def solve_model(use_var_names=True, solver: SUPPORTED_SOLVER_TYPES = "gurobi"):
     max_weight = params.loc["max_weight"]
 
     # Create model
-    m = pf.Model(use_var_names=use_var_names, solver=solver)
+    m = pf.Model(solver, solver_uses_variable_names=use_var_names)
 
     # Decision variables: portfolio weights
     m.weight = pf.Variable(assets.index, lb=0, ub=max_weight)

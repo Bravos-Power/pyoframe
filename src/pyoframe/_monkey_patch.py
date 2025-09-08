@@ -46,10 +46,12 @@ def polars_df_to_expr(self: pl.DataFrame) -> Expression:
         │ 3   ┆ 6   ┆ 9          │
         └─────┴─────┴────────────┘
     """
+    name = self.columns[-1]
     return Expression(
-        self.rename({self.columns[-1]: COEF_KEY})
+        self.rename({name: COEF_KEY})
         .drop_nulls(COEF_KEY)
-        .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY))
+        .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY)),
+        name=name,
     )
 
 

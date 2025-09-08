@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Protocol, Union
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Union
 
 import pandas as pd
 import polars as pl
@@ -19,7 +19,7 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe._core import Expression
+    from pyoframe._core import Expression, SupportsMath
     from pyoframe._model import Variable
     from pyoframe._model_element import ModelElementWithId
 
@@ -93,14 +93,11 @@ def _is_iterable(input: Any | Iterable[Any]) -> bool:
 
 
 def concat_dimensions(
-    df: pl.DataFrame,
-    prefix: str | None = None,
-    keep_dims: bool = True,
-    ignore_columns: Sequence[str] = RESERVED_COL_KEYS,
-    replace_spaces: bool = True,
-    to_col: str = "concated_dim",
+    df: pl.DataFrame, prefix: str, keep_dims: bool = True, to_col: str = "concated_dim"
 ) -> pl.DataFrame:
-    """Returns a new DataFrame with the column 'concated_dim'. Reserved columns are ignored.
+    """Returns a new DataFrame with the column 'concated_dim'.
+
+    Reserved columns are ignored. Spaces are replaced with underscores.
 
     Parameters:
         df:
@@ -109,8 +106,6 @@ def concat_dimensions(
             The prefix to be added to the concated dimension.
         keep_dims:
             If `True`, the original dimensions are kept in the new DataFrame.
-        replace_spaces : bool, optional
-            If `True`, replaces spaces with underscores.
 
     Examples:
         >>> import polars as pl
@@ -120,20 +115,6 @@ def concat_dimensions(
         ...         "dim2": ["Y", "Y", "Y", "N", "N", "N"],
         ...     }
         ... )
-        >>> concat_dimensions(df)
-        shape: (6, 3)
-        ┌──────┬──────┬──────────────┐
-        │ dim1 ┆ dim2 ┆ concated_dim │
-        │ ---  ┆ ---  ┆ ---          │
-        │ i64  ┆ str  ┆ str          │
-        ╞══════╪══════╪══════════════╡
-        │ 1    ┆ Y    ┆ [1,Y]        │
-        │ 2    ┆ Y    ┆ [2,Y]        │
-        │ 3    ┆ Y    ┆ [3,Y]        │
-        │ 1    ┆ N    ┆ [1,N]        │
-        │ 2    ┆ N    ┆ [2,N]        │
-        │ 3    ┆ N    ┆ [3,N]        │
-        └──────┴──────┴──────────────┘
         >>> concat_dimensions(df, prefix="x")
         shape: (6, 3)
         ┌──────┬──────┬──────────────┐
@@ -148,7 +129,7 @@ def concat_dimensions(
         │ 2    ┆ N    ┆ x[2,N]       │
         │ 3    ┆ N    ┆ x[3,N]       │
         └──────┴──────┴──────────────┘
-        >>> concat_dimensions(df, keep_dims=False)
+        >>> concat_dimensions(df, prefix="", keep_dims=False)
         shape: (6, 1)
         ┌──────────────┐
         │ concated_dim │
@@ -162,7 +143,8 @@ def concat_dimensions(
         │ [2,N]        │
         │ [3,N]        │
         └──────────────┘
-        >>> # Properly handles cases with no dimensions and ignores reserved columns
+
+        Properly handles cases with no dimensions and ignores reserved columns
         >>> df = pl.DataFrame({VAR_KEY: [1, 2]})
         >>> concat_dimensions(df, prefix="x")
         shape: (2, 2)
@@ -177,7 +159,7 @@ def concat_dimensions(
     """
     if prefix is None:
         prefix = ""
-    dimensions = [col for col in df.columns if col not in ignore_columns]
+    dimensions = [col for col in df.columns if col not in RESERVED_COL_KEYS]
     if dimensions:
         query = pl.concat_str(
             pl.lit(prefix + "["),
@@ -187,10 +169,7 @@ def concat_dimensions(
     else:
         query = pl.lit(prefix)
 
-    df = df.with_columns(query.alias(to_col))
-
-    if replace_spaces:
-        df = df.with_columns(pl.col(to_col).str.replace_all(" ", "_"))
+    df = df.with_columns(query.str.replace_all(" ", "_").alias(to_col))
 
     if not keep_dims:
         df = df.drop(*dimensions)
@@ -397,3 +376,18 @@ def for_solvers(*solvers: str):
         return wrapper
 
     return decorator
+
+
+# TODO: rename and change to return_expr once Set is split away from SupportsMath
+def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., SupportsMath]:
+    """Decorator that upcasts the returned DataFrame to an Expression.
+
+    Requires the first argument (self) to support self._new().
+    """
+
+    @wraps(func)
+    def wrapper(self: SupportsMath, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        return self._new(result, name=f"{self.name}.{func.__name__}(…)")
+
+    return wrapper

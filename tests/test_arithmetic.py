@@ -10,7 +10,7 @@ from polars.testing import assert_frame_equal
 
 from pyoframe import Config, Expression, Model, Set, Variable, VType
 from pyoframe._arithmetic import PyoframeError
-from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, UnmatchedStrategy
 
 from .util import csvs_to_expr
 
@@ -32,7 +32,7 @@ def test_set_addition():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "Failed to add sets 'unnamed' and 'unnamed' because dimensions do not match (['x'] != ['y'])"
+            "Failed to add sets 'unnamed_set' and 'unnamed_set' because dimensions do not match (['x'] != ['y'])"
         ),
     ):
         Set(x=[1, 2, 3]) + Set(y=[2, 3, 4])
@@ -59,8 +59,8 @@ def test_multiplication_no_common_dimensions():
     )
 
 
-def test_within_set(solver):
-    m = Model(solver=solver)
+def test_within_set(default_solver):
+    m = Model(default_solver)
     small_set = Set(x=[1, 2], y=["a"])
     large_set = Set(x=[1, 2, 3], y=["a", "b", "c"], z=[1])
     m.v = Variable(large_set)
@@ -101,8 +101,8 @@ def test_filter_constraint():
     )
 
 
-def test_filter_variable(solver):
-    m = Model(solver=solver)
+def test_filter_variable(default_solver):
+    m = Model(default_solver)
     m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
     result = m.v.filter(dim1=2)
     assert isinstance(result, Expression)
@@ -154,7 +154,7 @@ def test_add_expressions():
 
 
 def test_add_expressions_with_vars():
-    expr = Expression(pl.DataFrame({VAR_KEY: [1, 2], COEF_KEY: [1, 2]}))
+    expr = Expression(pl.DataFrame({VAR_KEY: [1, 2], COEF_KEY: [1, 2]}), name="n/a")
     result = expr + expr
     assert_frame_equal(
         result.data,
@@ -168,7 +168,8 @@ def test_add_expressions_with_vars_and_dims():
     expr = Expression(
         pl.DataFrame(
             {"dim1": [1, 1, 2, 2], VAR_KEY: [1, 2, 1, 2], COEF_KEY: [1, 2, 3, 4]}
-        )
+        ),
+        name="n/a",
     )
     result = expr + expr
     assert_frame_equal(
@@ -181,7 +182,7 @@ def test_add_expressions_with_vars_and_dims():
     )
 
 
-def test_add_expression_with_add_dim():
+def test_add_expression_with_over():
     expr = pl.DataFrame({"value": [1]}).to_expr()
     expr_with_dim = pl.DataFrame({"dim1": [1], "value": [1]}).to_expr()
     expr_with_two_dim = pl.DataFrame(
@@ -190,42 +191,34 @@ def test_add_expression_with_add_dim():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
-        ),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr + expr_with_dim
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim1']. If this is intentional, use .add_dim()"
-        ),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr_with_dim + expr
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
-        ),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr_with_dim + expr_with_two_dim
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['dim2']. If this is intentional, use .add_dim()"
-        ),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         expr_with_two_dim + expr_with_dim
-    expr.add_dim("dim1") + expr_with_dim
-    expr.add_dim("dim1", "dim2") + expr_with_two_dim
-    expr_with_dim.add_dim("dim2") + expr_with_two_dim
+    expr.over("dim1") + expr_with_dim
+    expr.over("dim1", "dim2") + expr_with_two_dim
+    expr_with_dim.over("dim2") + expr_with_two_dim
 
 
-def test_add_expression_with_vars_and_add_dim(solver):
-    m = Model(solver=solver)
+def test_add_expression_with_vars_and_over(default_solver):
+    m = Model(default_solver)
     m.v = Variable()
     expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
-    lhs = (1 + 2 * m.v).add_dim("dim1")
+    lhs = (1 + 2 * m.v).over("dim1")
     result = lhs + expr_with_dim
     expected_result = pl.DataFrame(
         {
@@ -253,11 +246,11 @@ def test_add_expression_with_vars_and_add_dim(solver):
     )
 
 
-def test_add_expression_with_vars_and_add_dim_many(solver):
+def test_add_expression_with_vars_and_over_many(default_solver):
     dim1 = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim3 = Set(z=[4, 5])
-    m = Model(solver=solver)
+    m = Model(default_solver)
     m.v1 = Variable(dim1, dim2)
     m.v2 = Variable(dim3, dim2)
     lhs = 1 + 2 * m.v1
@@ -265,20 +258,16 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['z']. If this is intentional, use .add_dim()"
-        ),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         lhs + rhs
-    lhs = lhs.add_dim("z")
+    lhs = lhs.over("z")
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "DataFrame has missing dimensions ['x']. If this is intentional, use .add_dim()"
-        ),
+        match=re.escape("If this is intentional, use .over(…)"),
     ):
         lhs + rhs
-    rhs = rhs.add_dim("x")
+    rhs = rhs.over("x")
     result = lhs + rhs
     assert_frame_equal(
         result.to_str(return_df=True),
@@ -299,10 +288,10 @@ def test_add_expression_with_vars_and_add_dim_many(solver):
     )
 
 
-def test_add_expression_with_missing(solver):
+def test_add_expression_with_missing(default_solver):
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
-    m = Model(solver=solver)
+    m = Model(default_solver)
     m.v1 = Variable(dim2)
     m.v2 = Variable(dim2_large)
     lhs = 1 + 2 * m.v1
@@ -311,7 +300,7 @@ def test_add_expression_with_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         lhs + rhs
@@ -359,8 +348,8 @@ def test_add_expression_with_missing(solver):
     )
 
 
-def test_add_expressions_with_dims_and_missing(solver):
-    m = Model(solver=solver)
+def test_add_expressions_with_dims_and_missing(default_solver):
+    m = Model(default_solver)
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
@@ -372,31 +361,27 @@ def test_add_expressions_with_dims_and_missing(solver):
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['z']. If this is intentional, use .add_dim()",
+            "If this is intentional, use .over(…)",
         ),
     ):
         lhs + rhs
-    lhs = lhs.add_dim("z")
+    lhs = lhs.over("z")
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has missing dimensions ['x']. If this is intentional, use .add_dim()",
+            "If this is intentional, use .over(…)",
         ),
     ):
         lhs + rhs
-    rhs = rhs.add_dim("x")
+    rhs = rhs.over("x")
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "Cannot add dimension ['x'] since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_unmatched()"),
     ):
         lhs + rhs
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "Cannot add dimension ['x'] since it contains unmatched values. If this is intentional, consider using .drop_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_unmatched()"),
     ):
         lhs.drop_unmatched() + rhs
 
@@ -405,14 +390,14 @@ def test_add_expressions_with_dims_and_missing(solver):
         result.to_str(return_df=True),
         pl.DataFrame(
             [
-                [1, "a", 4, "4 +2 v1[1,a] +4 v2[a,4]"],
-                [1, "a", 5, "4 +2 v1[1,a] +4 v2[a,5]"],
-                [1, "b", 4, "4 +2 v1[1,b] +4 v2[b,4]"],
-                [1, "b", 5, "4 +2 v1[1,b] +4 v2[b,5]"],
-                [2, "a", 4, "4 +2 v1[2,a] +4 v2[a,4]"],
-                [2, "a", 5, "4 +2 v1[2,a] +4 v2[a,5]"],
-                [2, "b", 4, "4 +2 v1[2,b] +4 v2[b,4]"],
-                [2, "b", 5, "4 +2 v1[2,b] +4 v2[b,5]"],
+                [1, "a", 4, "4 +4 v2[a,4] +2 v1[1,a]"],
+                [1, "a", 5, "4 +4 v2[a,5] +2 v1[1,a]"],
+                [1, "b", 4, "4 +4 v2[b,4] +2 v1[1,b]"],
+                [1, "b", 5, "4 +4 v2[b,5] +2 v1[1,b]"],
+                [2, "a", 4, "4 +4 v2[a,4] +2 v1[2,a]"],
+                [2, "a", 5, "4 +4 v2[a,5] +2 v1[2,a]"],
+                [2, "b", 4, "4 +4 v2[b,4] +2 v1[2,b]"],
+                [2, "b", 5, "4 +4 v2[b,5] +2 v1[2,b]"],
             ],
             schema=["x", "y", "z", "expression"],
             orient="row",
@@ -428,7 +413,7 @@ def test_three_way_add():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         df1 + df2 + df3
@@ -458,7 +443,7 @@ def test_three_way_add():
     )
 
 
-def test_no_propogate():
+def test_propagation_unmatched():
     expr1, expr2, expr3 = csvs_to_expr(
         """
     dim1,dim2,value
@@ -476,10 +461,15 @@ def test_no_propogate():
     """,
     )
 
+    assert expr1.keep_unmatched()._unmatched_strategy == UnmatchedStrategy.KEEP
+    assert expr1._unmatched_strategy == UnmatchedStrategy.UNSET, (
+        "keep_unmatched() should not modify the original expression"
+    )
+
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         (expr1 + expr2).sum("dim1") + expr3
@@ -487,7 +477,7 @@ def test_no_propogate():
     with pytest.raises(
         PyoframeError,
         match=re.escape(
-            "DataFrame has unmatched values. If this is intentional, use .drop_unmatched() or .keep_unmatched()"
+            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
         ),
     ):
         (expr1 + expr2.keep_unmatched()).sum("dim1") + expr3
@@ -499,12 +489,45 @@ def test_no_propogate():
     )
 
 
+def test_propagation_over():
+    set_x = Set(x=[1, 2, 3])
+    set_xy = Set(x=[1, 2], y=["a", "b"])
+    expr1 = set_x.to_expr()
+    expr2 = set_xy.to_expr()
+
+    assert "random" in expr1.over("random")._allowed_new_dims
+    assert "random" not in expr1._allowed_new_dims, (
+        "over() should not modify the original expression"
+    )
+
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape("If this is intentional, use .over(…)"),
+    ):
+        expr1 + expr2
+
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape("because of unmatched values."),
+    ):
+        expr1.over("y") + expr2
+
+    res1 = expr1.over("y").drop_unmatched() + expr2
+    res2 = expr1.drop_unmatched().over("y") + expr2
+    assert_frame_equal(res1.data, res2.data)
+
+    # check that negation also carries properties
+    res1 = -expr1.over("y").drop_unmatched() + expr2
+    res2 = -expr1.drop_unmatched().over("y") + expr2
+    assert_frame_equal(res1.data, res2.data)
+
+
 def test_variable_equals(solver):
     if not solver.supports_integer_variables:
         pytest.skip(
             f"Solver {solver.name} does not support integer or binary variables, skipping test."
         )
-    m = Model(solver=solver)
+    m = Model(solver)
     index = Set(x=[1, 2, 3])
 
     m.Choose = Variable(index, vtype=VType.BINARY)
@@ -521,8 +544,8 @@ def test_variable_equals(solver):
     assert m.maximize.evaluate() == 300
 
 
-def test_adding_expressions_that_cancel(solver):
-    m = Model(solver=solver)
+def test_adding_expressions_that_cancel(default_solver):
+    m = Model(default_solver)
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
     m.y = Variable(pl.DataFrame({"t": [0, 1]}))
 
@@ -532,14 +555,14 @@ def test_adding_expressions_that_cancel(solver):
     m.c = coef_1 * m.x + coef_2 * m.x + m.y >= 0
 
 
-def test_adding_cancelling_expressions_no_dim(solver):
-    m = Model(solver=solver)
+def test_adding_cancelling_expressions_no_dim(default_solver):
+    m = Model(default_solver)
     m.X = Variable()
     m.c = m.X - m.X >= 0
 
 
-def test_adding_empty_expression(solver):
-    m = Model(solver=solver)
+def test_adding_empty_expression(default_solver):
+    m = Model(default_solver)
     m.x = Variable(pl.DataFrame({"t": [0, 1]}))
     m.y = Variable(pl.DataFrame({"t": [0, 1]}))
     m.z = Variable(pl.DataFrame({"t": [0, 1]}))
@@ -548,8 +571,8 @@ def test_adding_empty_expression(solver):
     m.c_3 = m.z + 0 * m.x + 0 * m.y >= 0
 
 
-def test_to_and_from_quadratic(solver):
-    m = Model(solver=solver)
+def test_to_and_from_quadratic(default_solver):
+    m = Model(default_solver)
     df = pl.DataFrame({"dim": [1, 2, 3], "value": [1, 2, 3]})
     m.x1 = Variable()
     m.x2 = Variable()

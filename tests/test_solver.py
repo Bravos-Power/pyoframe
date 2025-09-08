@@ -17,13 +17,28 @@ def test_solver_works(solver_all):
 
     Note that the function parameter cannot be named "solver" (otherwise it uses the fixture).
     """
-    pf.Model(solver=solver_all.name)
+    pf.Model(solver_all.name)
 
 
-def test_solver_required():
+def test_Config_default_solver():
     pf.Config.default_solver = "raise"
     with pytest.raises(ValueError, match="No solver specified"):
         pf.Model()
+
+    pf.Config.default_solver = "auto"
+    assert pf.Model().solver_name in [s.name for s in SUPPORTED_SOLVERS]
+
+    pf.Config.default_solver = None
+    with pytest.raises(ValueError, match="Config.default_solver has an invalid value"):
+        pf.Model()
+
+
+def test_Config_default_solver_specific(solver):
+    pf.Config.default_solver = solver.name
+    assert pf.Model().solver_name == solver.name
+
+    pf.Config.default_solver = solver
+    assert pf.Model().solver_name == solver.name
 
 
 @pytest.mark.parametrize(
@@ -33,7 +48,7 @@ def test_solver_required():
     "dimensioned", [True, False], ids=["dimensioned", "un-dimensioned"]
 )
 def test_retrieving_duals(solver, sense, dimensioned):
-    m = pf.Model(solver=solver, sense=sense)
+    m = pf.Model(solver, sense=sense)
 
     if dimensioned:
         dim = pf.Set(x=[1, 2])
@@ -79,7 +94,7 @@ def test_retrieving_duals(solver, sense, dimensioned):
 
 
 def test_retrieving_duals_vectorized(solver):
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver)
     data = pl.DataFrame(
         {"t": [1, 2], "ub": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -87,7 +102,7 @@ def test_retrieving_duals_vectorized(solver):
     m.X_ub = m.X <= data[["t", "ub"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).sum().over("c") <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -127,7 +142,7 @@ def test_retrieving_duals_vectorized(solver):
 
 
 def test_support_variable_attributes(solver):
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver)
     data = pl.DataFrame(
         {"t": [1, 2], "UpperBound": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -135,7 +150,7 @@ def test_support_variable_attributes(solver):
     m.X.attr.UpperBound = data[["t", "UpperBound"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).sum().over("c") <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -176,7 +191,7 @@ def test_support_variable_attributes(solver):
 
 def test_support_variable_raw_attributes():
     solver = "gurobi"
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver)
     data = pl.DataFrame(
         {"t": [1, 2], "UB": [100, 10], "coef": [2, 1], "obj_coef": [0.2, 2]}
     )
@@ -184,7 +199,7 @@ def test_support_variable_raw_attributes():
     m.X.attr.UB = data[["t", "UB"]]
 
     constraint_bounds = pl.DataFrame({"c": [1, 2], "bound": [100, 150]})
-    m.max_AB = (data[["t", "coef"]] * m.X).add_dim("c").sum() <= constraint_bounds
+    m.max_AB = (data[["t", "coef"]] * m.X).sum().over("c") <= constraint_bounds
     m.maximize = (data[["t", "obj_coef"]] * m.X).sum()
 
     m.optimize()
@@ -217,7 +232,7 @@ def test_support_variable_raw_attributes():
 
 def test_setting_gurobi_constraint_attr():
     # Build an unbounded model
-    m = pf.Model(solver="gurobi")
+    m = pf.Model("gurobi")
     m.A = pf.Variable()
     m.B = pf.Variable(pf.Set(y=[1, 2, 3]))
     m.A_con = m.A >= 10
@@ -239,7 +254,7 @@ def test_setting_gurobi_constraint_attr():
 
 def test_setting_gurobi_model_attr():
     # Build an unbounded model
-    m = pf.Model(solver="gurobi")
+    m = pf.Model("gurobi")
     m.A = pf.Variable(lb=0)
     m.maximize = m.A
 
@@ -256,7 +271,7 @@ def test_setting_gurobi_model_attr():
 
 
 def test_const_term_in_objective(use_var_names, solver):
-    m = pf.Model(solver=solver, use_var_names=use_var_names)
+    m = pf.Model(solver, solver_uses_variable_names=use_var_names)
     m.A = pf.Variable(ub=10)
     m.maximize = 10 + m.A
 
@@ -269,7 +284,7 @@ def test_integers_throw_error(solver: _Solver):
     if solver.supports_integer_variables:
         pytest.skip("This test is only valid for solvers that do not support integers")
 
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver)
     with pytest.raises(
         ValueError, match="does not support integer or binary variables"
     ):
@@ -284,7 +299,7 @@ def test_write_throws_error(solver: _Solver):
     if solver.supports_write:
         pytest.skip("This test is only valid for solvers that support writing models")
 
-    m = pf.Model(solver=solver)
+    m = pf.Model(solver)
     m.A = pf.Variable(ub=10)
     m.maximize = m.A
     m.optimize()

@@ -47,13 +47,14 @@ dev = [
 docs = [
     "mkdocs-material~=9.6.18",
     "mkdocstrings[python]~=0.30.0",                     # used to generate API documentation
-    "mkdocs-git-revision-date-localized-plugin~=1.4.7", # displays lastest update date in documentation
+    "mkdocs-git-revision-date-localized-plugin~=1.4.7", # displays the update date in documentation
     "mkdocs-git-committers-plugin-2~=2.5.0",            # displays who contributed in documentation
     "mkdocs-gen-files~=0.5.0",                          # allows running custom scripts during doc generation
     "mkdocs-section-index~=0.3.10",                     # allows sections to be clickable pages
     "mkdocs-awesome-nav~=3.1.2",                        # allows use of .nav.yml files
     "doccmd==2025.4.8",                                 # allows running ruff formatter on documentation code
     # "mkdocs-table-reader-plugin~=3.1.0",              # allows displaying .csv files in documentation
+    "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
 ]
 
 [tool.setuptools.package-data]
@@ -79,7 +80,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"{docs,tests}/**" = ["D101", "D102", "D103", "D104"]
+"{docs,tests,scripts}/**" = ["D101", "D102", "D103", "D104"]
 "conftest.py" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
@@ -94,8 +95,8 @@ include = ["src/pyoframe/*"]
 [tool.pytest.ini_options]
 pythonpath = "src"
 addopts = "--doctest-modules --ignore=scripts"
-filterwarnings = ["error::DeprecationWarning"]
-# doctest_optionflags = "NUMBER"  # To enable if needed. doesn't work yet with Sybil
+filterwarnings = ["error"]  # treat all warnings as errors
+doctest_optionflags = "NORMALIZE_WHITESPACE"
 
 [tool.setuptools_scm]
 version_file = "src/pyoframe/_version.py"

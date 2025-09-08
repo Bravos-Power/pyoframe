@@ -12,7 +12,7 @@ from pyoframe import Model, Variable
 
 
 def test_variables_to_string(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.x1 = Variable()
     m.x2 = Variable()
     m.x3 = Variable()
@@ -28,7 +28,7 @@ def test_variables_to_string_with_dimensions(solver):
             "y": [1, 1, 2, 2],
         }
     )
-    m = Model(solver=solver)
+    m = Model(solver)
     m.v1 = Variable(df)
     m.v2 = Variable(df)
     m.v3 = Variable(df)
@@ -53,7 +53,7 @@ def test_variables_to_string_with_dimensions(solver):
 
 
 def test_expression_with_const_to_str(solver):
-    m = Model(solver=solver)
+    m = Model(solver)
     m.x1 = Variable()
     expr = 5 + 2 * m.x1
     assert str(expr) == "2 x1 +5"
@@ -62,7 +62,7 @@ def test_expression_with_const_to_str(solver):
 def test_constraint_to_str(solver):
     if not solver.supports_quadratic_constraints:
         pytest.skip("Solver does not support quadratic constraints.")
-    m = Model(solver=solver)
+    m = Model(solver)
     m.x1 = Variable()
     m.constraint = m.x1**2 <= 5
     assert (
@@ -92,7 +92,7 @@ def test_write_lp(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing LP files.")
     with TemporaryDirectory() as tmpdir:
-        m = Model(solver=solver, use_var_names=use_var_names)
+        m = Model(solver, solver_uses_variable_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -125,7 +125,7 @@ def test_write_sol(use_var_names, solver):
     if not solver.supports_write:
         pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
-        m = Model(solver=solver, use_var_names=use_var_names)
+        m = Model(solver, solver_uses_variable_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
