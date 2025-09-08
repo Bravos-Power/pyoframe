@@ -1,4 +1,4 @@
-"""Tests related to the propagation of names in Pyoframe objects."""
+"""Tests related to the propagation of ModelElement.name in Pyoframe objects."""
 
 import polars as pl
 import pytest

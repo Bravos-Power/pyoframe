@@ -73,21 +73,29 @@ class SupportsMath(ModelElement, SupportsToExpr):
     def _new(self, data: pl.DataFrame, name: str) -> SupportsMath:
         """Helper method to create a new instance of the same (or for Variable derivative) class."""
 
+    def _copy_flags(self, other: SupportsMath):
+        """Copies the flags from another SupportsMath object."""
+        self._unmatched_strategy = other._unmatched_strategy
+        self._allowed_new_dims = other._allowed_new_dims.copy()
+
     def keep_unmatched(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
         new = self._new(self.data, name=f"{self.name}.keep_unmatched()")
+        new._copy_flags(self)
         new._unmatched_strategy = UnmatchedStrategy.KEEP
         return new
 
     def drop_unmatched(self):
         """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
         new = self._new(self.data, name=f"{self.name}.drop_unmatched()")
+        new._copy_flags(self)
         new._unmatched_strategy = UnmatchedStrategy.DROP
         return new
 
     def over(self, *dims: str):
         """Indicates that the expression can be broadcasted over the given dimensions during addition and subtraction."""
         new = self._new(self.data, name=f"{self.name}.over(…)")
+        new._copy_flags(self)
         new._allowed_new_dims.extend(dims)
         return new
 
@@ -263,9 +271,8 @@ class SupportsMath(ModelElement, SupportsToExpr):
 
     def __neg__(self):
         res = self.to_expr() * -1
-        # Negating a constant term should keep the unmatched strategy
-        res._unmatched_strategy = self._unmatched_strategy
         res.name = f"-{self.name}"
+        res._copy_flags(self)
         return res
 
     def __sub__(self, other):
@@ -416,8 +423,6 @@ class Set(SupportsMath):
         s = Set(data)
         s.name = name
         s._model = self._model
-        # Copy over the unmatched strategy on operations like .rename(), .with_columns(), etc.
-        s._unmatched_strategy = self._unmatched_strategy
         return s
 
     @staticmethod
@@ -500,7 +505,7 @@ class Set(SupportsMath):
                     raise PyoframeError(
                         f"Failed to add sets '{self.name}' and '{other.name}' because dimensions do not match ({self.dimensions} != {other.dimensions}) "
                     ) from e
-                raise e
+                raise e  # pragma: no cover
 
         return super().__add__(other)
 
@@ -603,7 +608,7 @@ class Expression(SupportsMath):
         if Config.enable_is_duplicated_expression_safety_check:
             duplicated_mask = data.drop(COEF_KEY).is_duplicated()
             # In theory this should never happen unless there's a bug in the library
-            if duplicated_mask.any():  # pragma: no cover
+            if duplicated_mask.any():
                 duplicated_data = data.filter(duplicated_mask)
                 raise ValueError(
                     f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
@@ -613,7 +618,8 @@ class Expression(SupportsMath):
 
         if name is None:
             warnings.warn(
-                "Expression should be given a name to support troubleshooting."
+                "Expression should be given a name to support troubleshooting.",
+                DeprecationWarning,
             )
 
             super().__init__(data)
@@ -1084,6 +1090,8 @@ class Expression(SupportsMath):
 
     def __mul__(self: Expression, other: int | float | SupportsToExpr) -> Expression:
         if isinstance(other, (int, float)):
+            if other == 1:
+                return self
             return self._new(
                 self.data.with_columns(pl.col(COEF_KEY) * other),
                 name=f"({other} * {self.name})",
@@ -1104,8 +1112,6 @@ class Expression(SupportsMath):
     def _new(self, data: pl.DataFrame, name: str) -> Expression:
         e = Expression(data, name)
         e._model = self._model
-        # Note: We intentionally don't propagate the unmatched strategy to the new expression
-        e._allowed_new_dims = list(self._allowed_new_dims)  # the copy is important!
         return e
 
     def _add_const(self, const: int | float) -> Expression:
@@ -1140,6 +1146,8 @@ class Expression(SupportsMath):
             │ 3    ┆ 5 + v[3] * v[3] │
             └──────┴─────────────────┘
         """
+        if const == 0:
+            return self
         dim = self.dimensions
         data = self.data
         # Fill in missing constant terms
@@ -1273,10 +1281,9 @@ class Expression(SupportsMath):
         return df.sum()
 
     def _to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
-        if self.dimensions is not None:
-            raise ValueError(
-                "Only non-dimensioned expressions can be converted to PyOptInterface."
-            )  # pragma: no cover
+        assert self.dimensions is None, (
+            "._to_poi() only works for non-dimensioned expressions."
+        )
 
         if self.is_quadratic:
             return poi.ScalarQuadraticFunction(
@@ -2335,7 +2342,6 @@ class Variable(ModelElementWithId, SupportsMath):
         self._assert_has_ids()
         e = Expression(data.with_columns(pl.lit(1.0).alias(COEF_KEY)), name)
         e._model = self._model
-        # note: we don't propagate allowed_new_dims or unmatched_strategy because they should always be default for Variables.
         return e
 
     @return_new

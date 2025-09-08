@@ -408,11 +408,13 @@ def _broadcast(
     )
 
     if not common_dims:
-        return self._new(self.data.join(target_data, how="cross"), name=self.name)
+        res = self._new(self.data.join(target_data, how="cross"), name=self.name)
+        res._copy_flags(self)
+        return res
 
     # If drop, we just do an inner join to get into the shape of the other
     if self._unmatched_strategy == UnmatchedStrategy.DROP:
-        return self._new(
+        res = self._new(
             self.data.join(
                 target_data,
                 on=common_dims,
@@ -420,6 +422,8 @@ def _broadcast(
             ),
             name=self.name,
         )
+        res._copy_flags(self)
+        return res
 
     result = self.data.join(
         target_data,
@@ -435,7 +439,9 @@ def _broadcast(
             result.filter(result.get_column(missing_dims[0]).is_null()),
             swapped,
         )
-    return self._new(result, self.name)
+    res = self._new(result, self.name)
+    res._copy_flags(self)
+    return res
 
 
 def _sum_like_terms(df: pl.DataFrame) -> pl.DataFrame:
