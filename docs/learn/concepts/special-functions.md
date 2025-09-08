@@ -10,17 +10,32 @@ Pyoframe has a few special functions that make working with dataframes easy and 
 
 ## `Expression.map()`
 
-## Adding elements with differing dimensions using `.over(…)`
+## Addition modifiers
 
-<!-- TODO refine the use of the term "combine" below to clarify when .over() applies (addition, sub, constraints) and when it doesn't ("multiplication") -->
+The transforms described in this section (`.over(…)`, `.keep_unmatched()`, and `.drop_unmatched()`) are "addition modifiers" — they modify how additions are performed in Pyoframe.
 
-**To help catch mistakes, adding and subtracting expressions with differing dimensions is disallowed by default. [`.over(…)`][pyoframe.Expression.over] overrides this default, indicating that an addition or subtraction should be performed by "broadcasting" the differing dimensions.**
+!!! warning "Addition modifier rules apply to addition, subtraction, and constraint creation."
+
+    Addition modifier rules apply to addition _and subtraction_ because, in Pyoframe, subtractions are computed using addition (`a - b` is computed as `a + (-1 * b)`).
+
+    Addition modifier rules also apply when creating constraints (using `<=` or `>=` operators) because Pyoframe combines the left and right hand side of constraints using subtraction (`a <= b` becomes `a - b <= 0`).
+
+!!! warning "Order of operations for addition modifiers"
+
+    Addition modifiers must be applied _after_ all other operations.[^1] For example, `my_obj.drop_unmatched().sum("time")` won't work but `my_obj.sum("time").drop_unmatched()` will.
+
+[^1]: The exception to this rule is negation. As one might expect, `-my_obj.drop_unmatched()` works the same as `(-my_obj).drop_unmatched()` even though, in the former case, a negation is applied _after_ the addition modifier.
+
+### Adding expressions with differing dimensions using `.over(…)`
+
+
+To help catch mistakes, adding expressions with differing dimensions is disallowed by default. [`.over(…)`][pyoframe.Expression.over] overrides this default and **indicates that an addition should be performed by "broadcasting" the differing dimensions.**
 
 The following example helps illustrate when `.over(…)` should and shouldn't be used.
 
 Say you're developing an optimization model to study aviation emissions. You'd like to add the air emissions with the ground emissions (emissions from [taxiing](https://en.wikipedia.org/wiki/Taxiing)) to create an expression representing the total emissions on a flight-by-flight basis. Unfortunately, doing so gives an error:
 
-<!-- invisible-code-block: python 
+<!-- invisible-code-block: python
 ```python
 import pyoframe as pf
 import polars as pl
@@ -37,7 +52,6 @@ model.ground_emissions_by_flight = ground_data.to_expr()
 ```
 -->
 
-
 ```pycon
 >>> model.air_emissions_by_flight + model.ground_emissions_by_flight
 Traceback (most recent call last):
@@ -47,20 +61,20 @@ pyoframe._constants.PyoframeError: Cannot add the two expressions below because 
 Expression 1:  air_emissions_by_flight
 Expression 2:  ground_emissions_by_flight
 If this is intentional, use .over(…) to broadcast. Learn more at
-  https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over
+  https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-expressions-with-differing-dimensions-using-over
 
 ```
 
 This error helps you catch a mistake. The error informs us that `model.air_emissions_by_flight` has dimension _`flight_no`_ but `model.ground_emissions_by_flight` has dimension _`flight_number`_ (not `flight_no`). Oops! Seems like the two datasets containing the emissions data had slightly different column names.
 
-Benign mistakes like these are relatively common and Pyoframe's defaults help you catch these mistakes early. Now, lets examine a case where `.over(…)` is needed.
+Benign mistakes like these are relatively common and Pyoframe's defaults help you catch these mistakes early. Now, let's examine a case where `.over(…)` is needed.
 
 Say, you'd like to see what happens if, instead of minimizing total emissions, you were to minimize the emissions of the _most emitting flight_. Mathematically, you'd like to minimize $`E_{max}`$ where
 $`E_{max} \geq e_i`$ for every flight $`i`$ with emissions $`e_i`$.
 
 You might try the following in Pyoframe, but will get an error:
 
-<!-- invisible-code-block: python 
+<!-- invisible-code-block: python
 ```python
 model.flight_emissions = (
     model.air_emissions_by_flight
@@ -80,8 +94,8 @@ pyoframe._constants.PyoframeError: Cannot subtract the two expressions below bec
 Expression 1:  E_max
 Expression 2:  flight_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-    https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over
-      
+    https://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-expressions-with-differing-dimensions-using-over
+
 ```
 
 The error indicates that `E_max` has no dimensions while `flight_emissions` has dimensions `flight_no`. The error is raised because, by default, combining terms with differing dimensions is not allowed.
@@ -115,25 +129,27 @@ Notice how applying `.over("flight_no")` added a dimension `flight_no` with valu
 
 ```
 
+### `drop_unmatched` and `keep_unmatched`
 
+!!! info "Work in progress"
 
-## `drop_unmatched` and `keep_unmatched`
+    This documentation could use some help. [Learn how you can contribute](../../contribute/index.md).
 
 ## `DataFrame.to_expr()`
 
 !!! abstract "Summary"
-    [`pandas.DataFrame.to_expr()`](../../reference/pandas.DataFrame.to_expr.md) and [`polars.DataFrame.to_expr()`](../../reference/polars.DataFrame.to_expr.md) allow users to manually convert their DataFrames to Pyoframe [Expressions][pyoframe.Expression] when Pyoframe is unable to perform an automatic conversation.
+[`pandas.DataFrame.to_expr()`](../../reference/pandas.DataFrame.to_expr.md) and [`polars.DataFrame.to_expr()`](../../reference/polars.DataFrame.to_expr.md) allow users to manually convert their DataFrames to Pyoframe [Expressions][pyoframe.Expression] when Pyoframe is unable to perform an automatic conversation.
 
 Pyoframe conveniently allows users to use [Polars DataFrames](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html) and [Pandas DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) in their mathematical expressions. To do so, Pyoframe automatically detects these DataFrames and converts them to Pyoframe [Expressions][pyoframe.Expression] whenever there is a mathematical operation (e.g., `*`, `-`, `+`) involving at least one Pyoframe object (e.g. [Variable][pyoframe.Variable], [Set][pyoframe.Set], [Expression][pyoframe.Expression], etc.).
 
-However, if **neither** the left or right terms of a mathematical operation is a Pyoframe object, Pyoframe will not automatically convert DataFrames[^1]. In these situations, users can manually convert their DataFrames to Pyoframe expressions using `.to_expr()`.
+However, if **neither** the left or right terms of a mathematical operation is a Pyoframe object, Pyoframe will not automatically convert DataFrames[^2]. In these situations, users can manually convert their DataFrames to Pyoframe expressions using `.to_expr()`.
 
 Additionally, users should use `.to_expr()` whenever they wish to use [over][pyoframe.Expression.over], [drop_unmatched][pyoframe.Expression.drop_unmatched], or [keep_unmatched][pyoframe.Expression.keep_unmatched] on a DataFrame.
 
 !!! info "Under the hood"
-    How is `.to_expr()` a valid Pandas and Polars method? `import pyoframe` causes Pyoframe to [monkey patch](https://stackoverflow.com/questions/5626193/what-is-monkey-patching) the Pandas and Polars libraries. One of the patches adds the `.to_expr()` method to both `pandas.DataFrame` and `polars.DataFrame` (see [`monkey_patch.py`](https://github.com/Bravos-Power/pyoframe/tree/main/src/pyoframe)).
+How is `.to_expr()` a valid Pandas and Polars method? `import pyoframe` causes Pyoframe to [monkey patch](https://stackoverflow.com/questions/5626193/what-is-monkey-patching) the Pandas and Polars libraries. One of the patches adds the `.to_expr()` method to both `pandas.DataFrame` and `polars.DataFrame` (see [`monkey_patch.py`](https://github.com/Bravos-Power/pyoframe/tree/main/src/pyoframe)).
 
-[^1]: After all, how could it? If a user decides to write code that adds two DataFrames together, Pyoframe shouldn't (and couldn't) interfere.
+[^2]: After all, how could it? If a user decides to write code that adds two DataFrames together, Pyoframe shouldn't (and couldn't) interfere.
 
 ### Example
 
@@ -155,8 +171,8 @@ Now, saw we wanted an expression representing the total yearly population change
 
 ```pycon
 >>> (
-...     model.immigration 
-...     + population_data[["year", "births"]] 
+...     model.immigration
+...     + population_data[["year", "births"]]
 ...     + population_data[["year", "deaths"]]
 ... )
 <Expression height=2 terms=4 type=linear>
@@ -174,9 +190,9 @@ But, if we simply change the order of the terms in our addition, we get an error
 
 ```pycon
 >>> (
-...     population_data[["year", "births"]] 
+...     population_data[["year", "births"]]
 ...     + population_data[["year", "deaths"]]
-...     + model.immigration 
+...     + model.immigration
 ... )
 Traceback (most recent call last):
 ...
@@ -200,7 +216,7 @@ How do we avoid these weird behaviors? Users can manually convert their DataFram
 >>> (
 ...     population_data[["year", "births"]].to_expr()
 ...     + population_data[["year", "deaths"]].to_expr()
-...     + model.immigration 
+...     + model.immigration
 ... )
 <Expression height=2 terms=4 type=linear>
 ┌──────┬─────────────────────────────┐

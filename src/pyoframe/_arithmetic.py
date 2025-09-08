@@ -220,7 +220,7 @@ def add(*expressions: Expression) -> Expression:
                 left,
                 right,
                 f"their\n\tdimensions are different ({left_dims} != {right_dims})",
-                "If this is intentional, use .over(…) to broadcast. Learn more at\n\thttps://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-elements-with-differing-dimensions-using-over",
+                "If this is intentional, use .over(…) to broadcast. Learn more at\n\thttps://bravos-power.github.io/pyoframe/learn/concepts/special-functions/#adding-expressions-with-differing-dimensions-using-over",
             )
 
         left_old = left
