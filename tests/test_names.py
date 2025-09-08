@@ -27,6 +27,7 @@ def test_expressions(default_solver):
     m.Y = pf.Variable()
 
     assert (m.X - 1).name == "(X - 1)"
+    assert (m.X - pf.Expression.constant(1)).name == "(X - 1)"
     assert (1 + m.X).name == "(X + 1)"
     assert (m.X * -2).name == "(-2 * X)"
     assert (m.X - m.Y).name == "(X - Y)"

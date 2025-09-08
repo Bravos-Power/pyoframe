@@ -91,7 +91,7 @@ include = ["src/pyoframe/*"]
 [tool.pytest.ini_options]
 pythonpath = "src"
 addopts = "--doctest-modules --ignore=scripts"
-filterwarnings = ["error::DeprecationWarning"]
+filterwarnings = ["error"]  # treat all warnings as errors
 doctest_optionflags = "NORMALIZE_WHITESPACE"
 
 [tool.setuptools_scm]

@@ -619,7 +619,7 @@ class Expression(SupportsMath):
         if name is None:
             warnings.warn(
                 "Expression should be given a name to support troubleshooting.",
-                DeprecationWarning,
+                UserWarning,
             )
 
             super().__init__(data)
@@ -642,7 +642,8 @@ class Expression(SupportsMath):
                     VAR_KEY: [CONST_TERM],
                 },
                 schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
-            )
+            ),
+            name=str(constant),
         )
 
     @return_new
