@@ -58,7 +58,7 @@ docs = [
 ]
 
 [tool.setuptools.package-data]
-"pyoframe" = ["py.typed", "pandas-stubs/**/*.pyi", "polars-stubs/**/*.pyi"]
+"pyoframe" = ["py.typed"]
 
 
 [tool.ruff.lint]

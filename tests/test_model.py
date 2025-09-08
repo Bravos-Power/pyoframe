@@ -61,8 +61,6 @@ def test_set_objective(solver):
 
 
 def test_quadratic_objective(solver):
-    if not solver.supports_quadratic_constraints:
-        pytest.skip("Highs solver does not support quadratic objectives.")
     m = pf.Model(solver)
     m.A = pf.Variable(lb=0, ub=5)
     m.B = pf.Variable(lb=0, ub=10)

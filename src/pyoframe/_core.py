@@ -36,7 +36,7 @@ from pyoframe._constants import (
     VType,
     VTypeValue,
 )
-from pyoframe._model_element import ModelElementWithId
+from pyoframe._model_element import ModelElement, ModelElementWithId
 from pyoframe._utils import (
     Container,
     FuncArgs,
@@ -56,7 +56,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
 
-class SupportsMath(SupportsToExpr):
+class SupportsMath(ModelElement):
     """Any object that can be converted into an expression."""
 
     def __init__(self, *args, **kwargs):
