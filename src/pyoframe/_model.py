@@ -313,7 +313,6 @@ class Model:
             Traceback (most recent call last):
             ...
             ValueError: Objective is not defined.
-
             >>> m.maximize = m.X
             >>> m.objective
             <Objective terms=1 type=linear>
