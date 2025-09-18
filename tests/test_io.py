@@ -1,6 +1,7 @@
 """Tests related to converting Pyoframe objects to strings or writing them to files."""
 
 import os
+import re
 from tempfile import TemporaryDirectory
 
 import gurobipy as gp
@@ -9,6 +10,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from pyoframe import Model, Variable
+from pyoframe._constants import _Solver
 
 
 def test_variables_to_string(solver):
@@ -88,11 +90,28 @@ x1 * x1 <= 5"""
     )
 
 
-def test_write_lp(use_var_names, solver):
+def test_write_lp(use_var_names, solver: _Solver):
+    m = Model(solver=solver, solver_uses_variable_names=use_var_names)
+
     if not solver.supports_write:
-        pytest.skip(f"{solver.name} does not support writing LP files.")
+        with pytest.raises(
+            NotImplementedError,
+            match=re.escape(f"{solver.name} does not support .write()"),
+        ):
+            m.write("test.lp")
+        return
+
+    if not use_var_names and solver.supports_repeat_names:
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                f"{solver.name} requires solver_uses_variable_names=True to use .write()"
+            ),
+        ):
+            m.write("test.lp")
+        return
+
     with TemporaryDirectory() as tmpdir:
-        m = Model(solver, solver_uses_variable_names=use_var_names)
         cities = pl.DataFrame(
             {
                 "city": ["Toronto", "Montreal", "Vancouver"],
@@ -122,7 +141,9 @@ def test_write_lp(use_var_names, solver):
 
 
 def test_write_sol(use_var_names, solver):
-    if not solver.supports_write:
+    if not solver.supports_write or (
+        not use_var_names and solver.supports_repeat_names
+    ):
         pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(solver, solver_uses_variable_names=use_var_names)
