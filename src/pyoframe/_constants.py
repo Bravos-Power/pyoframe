@@ -30,11 +30,11 @@ class _Solver:
     supports_objective_sense: bool = True
     supports_write: bool = True
     supports_repeat_names: bool = False
-    """Whether variables or constraints can have repeated names.
+    """Variables and constraints can be assigned identical names.
 
-    Since Gurobi supports repeat names, we automatically set all the variable names to 'V' and
-    all the constraint names to 'C'. This is faster than allowing Gurobi to generate distinct
-    names for every variable and constraint.
+    When True, Pyoframe sets all the variable names to 'V' and all the
+    constraint names to 'C' since this is faster than allowing Gurobi to
+    generate distinct names for every variable and constraint.
     """
 
     def __repr__(self):
