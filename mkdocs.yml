@@ -61,6 +61,7 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - markdown_katex  # For rendering LaTeX math
 
 plugins:
   - search
@@ -70,19 +71,22 @@ plugins:
         python:
           options:
             unwrap_annotated: true
-            show_bases: false  # Do not show base classes in the class documentation.
-            inherited_members: true  # Include inherited methods in children classes.
-            filters: ["!^_"]  # Exclude dunder methods from documentation.
+            show_bases: false # Do not show base classes in the class documentation.
+            inherited_members: true # Include inherited methods in children classes.
+            filters: ["!^_"] # Exclude dunder methods from documentation.
             show_if_no_docstring: true
+            show_signature: true
+            show_signature_annotations: true
             summary:
               attributes: true
               functions: true
               classes: true
               modules: false
-            extensions:
+            extensions: # https://mkdocstrings.github.io/python/usage/configuration/general/?h=griffe#extensions
               - dataclasses
+              - scripts/griffe_extensions.py
             merge_init_into_class: true
-            show_labels: false  # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
+            show_labels: false # https://mkdocstrings.github.io/python/usage/configuration/members/#show_labels
             docstring_options:
               ignore_init_summary: true
               trim_doctest_flags: true

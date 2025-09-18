@@ -21,7 +21,7 @@ def solve_model(use_var_names=True):
         {"digit": "row", "digit_right": "column"}
     )
 
-    m = pf.Model(use_var_names=use_var_names)
+    m = pf.Model(solver_uses_variable_names=use_var_names)
     m.Y = pf.Variable(grid.join(one_to_nine, how="cross"), vtype=pf.VType.BINARY)
 
     m.given_values = m.Y.drop_unmatched() == pf.Set(init_values)

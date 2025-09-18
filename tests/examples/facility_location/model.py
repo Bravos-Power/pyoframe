@@ -9,7 +9,7 @@ import pyoframe as pf
 
 
 def solve_model(use_var_names=False, G=4, F=3):
-    model = pf.Model(use_var_names=use_var_names, sense="min")
+    model = pf.Model(solver_uses_variable_names=use_var_names, sense="min")
 
     g_range = range(G)
     model.facilities = pf.Set(f=range(F))
@@ -33,21 +33,21 @@ def solve_model(use_var_names=False, G=4, F=3):
 
     model.dist_x = pf.Variable(model.x_axis, model.facilities)
     model.dist_y = pf.Variable(model.y_axis, model.facilities)
-    model.con_dist_x = model.dist_x == model.customer_position_x.add_dim(
+    model.con_dist_x = model.dist_x == model.customer_position_x.over(
         "f"
-    ) - model.facility_position.pick(d=1).add_dim("x")
-    model.con_dist_y = model.dist_y == model.customer_position_y.add_dim(
+    ) - model.facility_position.pick(d=1).over("x")
+    model.con_dist_y = model.dist_y == model.customer_position_y.over(
         "f"
-    ) - model.facility_position.pick(d=2).add_dim("y")
+    ) - model.facility_position.pick(d=2).over("y")
     model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
-    model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
+    model.con_dist = model.dist**2 == (model.dist_x**2).over("y") + (
         model.dist_y**2
-    ).add_dim("x")
+    ).over("x")
 
     M = (
         2 * 1.414
     )  # Twice the max distance which ensures that when is_closest is 0, the constraint is not binding.
-    model.con_max_distance = model.max_distance.add_dim(
+    model.con_max_distance = model.max_distance.over(
         "x", "y", "f"
     ) >= model.dist - M * (1 - model.is_closest)
 

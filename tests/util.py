@@ -57,13 +57,13 @@ def csvs_to_expr(
 
 
 _tolerances = {
-    "gurobi": {"rtol": 1e-5, "atol": 1e-8},
-    "highs": {"rtol": 1e-5, "atol": 1e-8},
-    "ipopt": {"rtol": 1e-5, "atol": 1e-5},
+    "gurobi": {"rel_tol": 1e-5, "abs_tol": 1e-8},
+    "highs": {"rel_tol": 1e-5, "abs_tol": 1e-8},
+    "ipopt": {"rel_tol": 1e-5, "abs_tol": 1e-5},
 }
 
 
-def get_tol_pl(solver) -> dict[Literal["atol"] | Literal["rtol"], float]:
+def get_tol_pl(solver) -> dict[Literal["abs_tol"] | Literal["rel_tol"], float]:
     """Return tolerances for Polars' assert_frame_equal()."""
     if not isinstance(solver, str):
         solver = solver.name
@@ -76,6 +76,6 @@ def get_tol(solver):
         solver = solver.name
     tol = _tolerances[solver]
     return dict(
-        rel=tol["rtol"],
-        abs=tol["atol"],
+        rel=tol["rel_tol"],
+        abs=tol["abs_tol"],
     )

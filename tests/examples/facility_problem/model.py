@@ -20,7 +20,7 @@ def solve_model(use_var_names):
         .set_index(["wharehouse", "plant"])["cost"]
     )
 
-    m = pf.Model(use_var_names=use_var_names)
+    m = pf.Model(solver_uses_variable_names=use_var_names)
     m.open = pf.Variable(plants.index, vtype="binary")
     m.transport = pf.Variable(warehouses.index, plants.index, lb=0)
 

@@ -6,7 +6,7 @@ from pyoframe._constants import SUPPORTED_SOLVERS
 _installed_solvers = []
 for s in SUPPORTED_SOLVERS:
     try:
-        pf.Model(solver=s.name)
+        pf.Model(s.name)
         _installed_solvers.append(s)
     except RuntimeError:
         pass
@@ -19,6 +19,15 @@ def solver(request):
     if request.param not in _installed_solvers:
         return pytest.skip("Solver not installed.")
     return request.param
+
+
+@pytest.fixture
+def default_solver():
+    """Use when the test doesn't need to be repeated for every solver.
+
+    TODO increase the use of default_solver over solver when appropriate to reduce test times.
+    """
+    return _installed_solvers[0]
 
 
 @pytest.fixture(autouse=True)

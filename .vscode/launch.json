@@ -5,8 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug mkdocs",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "mkdocs",
+            "args": [
+                "serve"
+            ]
+        },
+        {
             "name": "Snakemake",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "module": "snakemake",
             "args": [

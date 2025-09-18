@@ -206,14 +206,14 @@ def test_gurobi_model_matches(example):
         compare_results_dir(example.get_results_path(), tmpdir, "gurobi")
 
 
-def write_results(example: Example, model, results_dir, solver: _Solver):
+def write_results(example: Example, model: pf.Model, results_dir, solver: _Solver):
     if solver.supports_write and (
-        model.use_var_names or not solver.supports_repeat_names
+        model.solver_uses_variable_names or not solver.supports_repeat_names
     ):
         readability = "pretty" if model.use_var_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
-    if model.objective is not None:
+    if model.has_objective:
         pl.DataFrame({"value": [model.objective.value]}).write_csv(
             results_dir / "objective.csv"
         )
