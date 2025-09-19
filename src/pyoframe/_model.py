@@ -413,14 +413,15 @@ class Model:
         These files can be useful for manually debugging a model.
         Consult your solver documentation to learn more.
 
-        When creating your model, set `solver_uses_variable_names` to make the outputed file human-readable.
+        When creating your model, set [`solver_uses_variable_names`][pyoframe.Model]
+        to make the outputed file human-readable.
 
         ```python
         m = pf.Model(solver_uses_variable_names=True)
         ```
 
-        For Gurobi, `solver_uses_variable_names=True` is mandatory when using .write(). This may become mandatory for other
-        solvers too without notice.
+        For Gurobi, `solver_uses_variable_names=True` is mandatory when using
+        .write(). This may become mandatory for other solvers too without notice.
 
         Parameters:
             file_path:
