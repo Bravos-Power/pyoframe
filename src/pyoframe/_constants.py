@@ -29,23 +29,22 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
-
-    def check_supports_integer_variables(self):
-        if not self.supports_integer_variables:
-            raise ValueError(
-                f"Solver {self.name} does not support integer or binary variables."
-            )
-
-    def check_supports_write(self):
-        if not self.supports_write:
-            raise ValueError(f"Solver {self.name} does not support .write()")
+    block_auto_names: bool = False
+    """
+    When True, Pyoframe blocks automatic variable and constraint name
+    generation to improve performance by setting all the variable names to 'V'
+    and all the constraint names to 'C'. This should only be True for solvers
+    that support conflicting variable and constraint names. Benchmarking
+    should be performed to verify that this improves performance before turning
+    this on for other solvers.
+    """
 
     def __repr__(self):
         return self.name
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi"),
+    _Solver("gurobi", block_auto_names=True),
     _Solver("highs", supports_quadratics=False, supports_duals=False),
     _Solver(
         "ipopt",

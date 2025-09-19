@@ -39,6 +39,10 @@ We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documen
 - `ruff format`: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)
 - `doccmd --language=python --no-pad-file --command="ruff format" docs/`: to format the code in the documentation.
 
+## Additional tips
+
+- If you use `.unique`, `.join`, `.sort`, or `.group_by` on a Polars dataframe, make sure to set the `maintain_order` parameter appropriately (typically, `maintain_order=Config.maintain_order`).
+
 ## Details for repository maintainers
 
 ### Expired Gurobi License

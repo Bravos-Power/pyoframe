@@ -408,10 +408,20 @@ class Model:
         )
 
     def write(self, file_path: Path | str, pretty: bool = False):
-        """Outputs the model to a file (e.g. a `.lp` file).
+        """Outputs the model or the solution to a file (e.g. a `.lp`, `.sol`, `.mps`, or `.ilp` file).
 
-        Typical usage includes writing the solution to a `.sol` file as well as writing the problem to a `.lp` or `.mps` file.
-        Set `solver_uses_variable_names` in your model constructor to `True` if you'd like the output to contain human-readable names (useful for debugging).
+        These files can be useful for manually debugging a model.
+        Consult your solver documentation to learn more.
+
+        When creating your model, set [`solver_uses_variable_names`][pyoframe.Model]
+        to make the outputed file human-readable.
+
+        ```python
+        m = pf.Model(solver_uses_variable_names=True)
+        ```
+
+        For Gurobi, `solver_uses_variable_names=True` is mandatory when using
+        .write(). This may become mandatory for other solvers too without notice.
 
         Parameters:
             file_path:
@@ -419,7 +429,12 @@ class Model:
             pretty:
                 Only used when writing .sol files in HiGHS. If `True`, will use HiGH's pretty print columnar style which contains more information.
         """
-        self.solver.check_supports_write()
+        if not self.solver.supports_write:
+            raise NotImplementedError(f"{self.solver.name} does not support .write()")
+        if not self.solver_uses_variable_names and self.solver.block_auto_names:
+            raise ValueError(
+                f"{self.solver.name} requires solver_uses_variable_names=True to use .write()"
+            )
 
         file_path = Path(file_path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -529,10 +544,20 @@ class Model:
             self.poi.close()
 
     def _set_param(self, name, value):
-        self.poi.set_raw_parameter(name, value)
+        try:
+            self.poi.set_raw_parameter(name, value)
+        except KeyError as e:
+            raise KeyError(
+                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+            ) from e
 
     def _get_param(self, name):
-        return self.poi.get_raw_parameter(name)
+        try:
+            return self.poi.get_raw_parameter(name)
+        except KeyError as e:
+            raise KeyError(
+                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+            ) from e
 
     def _set_attr(self, name, value):
         try:
