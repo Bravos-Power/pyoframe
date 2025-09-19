@@ -1674,8 +1674,10 @@ class Constraint(ModelElementWithId):
         if self.dimensions is None:
             if self._model.solver_uses_variable_names:
                 name = self.name
+            elif self._model.solver.block_auto_names:
+                name = "C"
             else:
-                name = "C" if self._model.solver.supports_repeat_names else ""
+                name = ""
             create_expression = (
                 poi.ScalarQuadraticFunction
                 if is_quadratic
@@ -1765,7 +1767,7 @@ class Constraint(ModelElementWithId):
                 # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
                 # Specifying "" is the same as not specifying anything, see pyoptinterface:
                 # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-                name = "C" if self._model.solver.supports_repeat_names else ""
+                name = "C" if self._model.solver.block_auto_names else ""
                 create_expression = poi.ScalarAffineFunction
                 ids = [
                     add_constraint(
@@ -2281,7 +2283,7 @@ class Variable(ModelElementWithId, SupportsMath):
         else:
             if self._model.solver_uses_variable_names:
                 name = self.name
-            elif solver.supports_repeat_names:
+            elif solver.block_auto_names:
                 name = "V"
             else:
                 name = ""

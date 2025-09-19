@@ -29,12 +29,14 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
-    supports_repeat_names: bool = False
-    """Variables and constraints can be assigned identical names.
-
-    When True, Pyoframe sets all the variable names to 'V' and all the
-    constraint names to 'C' since this is faster than allowing Gurobi to
-    generate distinct names for every variable and constraint.
+    block_auto_names: bool = False
+    """
+    When True, Pyoframe blocks automatic variable and constraint name
+    generation to improve performance by setting all the variable names to 'V'
+    and all the constraint names to 'C'. This should only be True for solvers
+    that support conflicting variable and constraint names. Benchmarking
+    should be performed to verify that this improves performance before turning
+    this on for other solvers.
     """
 
     def __repr__(self):
@@ -42,7 +44,7 @@ class _Solver:
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi", supports_repeat_names=True),
+    _Solver("gurobi", block_auto_names=True),
     _Solver("highs", supports_quadratics=False, supports_duals=False),
     _Solver(
         "ipopt",
