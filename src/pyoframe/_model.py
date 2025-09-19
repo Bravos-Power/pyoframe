@@ -449,7 +449,6 @@ class Model:
     def optimize(self):
         """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
         self.poi.optimize()
-        #  TODO raise error if not solved to optimality
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:

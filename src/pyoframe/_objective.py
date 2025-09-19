@@ -83,7 +83,9 @@ class Objective(Expression):
 
         This value is obtained by directly querying the solver.
         """
-        assert self._model is not None
+        assert self._model is not None, (
+            "Objective must be part of a model before it is queried."
+        )
 
         if (
             self._model.attr.TerminationStatus
