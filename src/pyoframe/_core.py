@@ -1671,7 +1671,9 @@ class Constraint(ModelElementWithId):
             else self._model.poi._add_linear_constraint
         )
 
-        if self.dimensions is None:
+        dims = self.dimensions
+
+        if dims is None:
             if self._model.solver_uses_variable_names:
                 name = self.name
             elif self._model.solver.block_auto_names:
@@ -1704,9 +1706,9 @@ class Constraint(ModelElementWithId):
                 else poi.ScalarAffineFunction  # when called multiple times the default constructor is fastest
             )
             # TODO optimize use_var_names to match the not use_var_names techniques
-            df = self.lhs.data.group_by(
-                self.dimensions, maintain_order=Config.maintain_order
-            ).agg(*key_cols_polars)
+            df = self.lhs.data.group_by(dims, maintain_order=Config.maintain_order).agg(
+                *key_cols_polars
+            )
 
             df = (
                 concat_dimensions(df, prefix=self.name)
@@ -1727,27 +1729,39 @@ class Constraint(ModelElementWithId):
             )
             df = df.drop(key_cols)
         else:
-            df = self.lhs.data.sort(
-                self.dimensions, maintain_order=Config.maintain_order
-            )
+            df = self.lhs.data
+            if Config.maintain_order:
+                # This adds a 5-10% overhead on _assign_ids but ensures the order
+                # is the same as the input data
+                df_unique = df.select(dims).unique(maintain_order=True)
+                df = (
+                    df.join(
+                        df_unique.with_row_index(),
+                        on=dims,
+                        maintain_order="left",
+                    )
+                    .sort("index", maintain_order=True)
+                    .drop("index")
+                )
+            else:
+                df = df.sort(dims, maintain_order=False)
+                # must maintain order otherwise results are wrong!
+                df_unique = df.select(dims).unique(maintain_order=True)
             coefs = df.get_column(COEF_KEY).to_list()
             vars = df.get_column(VAR_KEY).to_list()
             if is_quadratic:
                 vars2 = df.get_column(QUAD_VAR_KEY).to_list()
-            df = df.drop(*key_cols)
+
             split = (
                 df.lazy()
                 .with_row_index()
-                .filter(pl.struct(self.dimensions).is_first_distinct())
+                .filter(pl.struct(dims).is_first_distinct())
                 .select("index")
                 .collect()
                 .to_series()
                 .to_list()
-            )
-            split.append(df.height)
-
-            # Always maintain order otherwise results are just plain wrong
-            df = df.unique(maintain_order=True)
+            ) + [df.height]
+            del df
 
             # Note: list comprehension was slightly faster than using polars map_elements
             # Note 2: not specifying the argument name (`expr=`) was also slightly faster.
@@ -1780,7 +1794,9 @@ class Constraint(ModelElementWithId):
                         split
                     )  # pairwise is faster than looping over range(len(self.data) - 1)
                 ]
-            df = df.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(CONSTRAINT_KEY))
+            df = df_unique.with_columns(
+                pl.Series(ids, dtype=KEY_TYPE).alias(CONSTRAINT_KEY)
+            )
 
         self._data = df
 
