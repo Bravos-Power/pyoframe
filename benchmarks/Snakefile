@@ -1,0 +1,83 @@
+import importlib
+import os
+from snakemake.utils import available_cpu_count
+from pyoframe._constants import SUPPORTED_SOLVERS
+
+configfile: "config.yaml"
+
+include: "src/energy_planning/Snakefile"
+
+wildcard_constraints:
+    problem="[a-z_]+",
+    library="[a-z]+",
+    solver="[a-z]+",
+    size="\d+"
+
+def generate_all_runs(problem):
+    import itertools
+
+    problem_data = config["problems"][problem]
+    libraries = problem_data["libraries"]
+    if problem_data is None or "size" not in problem_data:
+        sizes = [0]
+    else:
+        sizes = problem_data["size"]
+    
+    runs = [
+        (size, library, solver)
+        for size, library, solver in itertools.product(
+            sizes,
+            libraries.keys(),
+            config["solvers"]
+        )
+        if (type(libraries[library]) is bool and libraries[library]) or size <= libraries[library]
+    ]
+
+    return runs
+
+
+
+rule all:
+    input:
+        expand("results/{problem}/combined_results.png", problem=config["problems"])
+
+rule plot_results:
+    input:
+        lambda wildcards: [
+            f"results/{wildcards.problem}/{library}_{solver}_{size}.tsv"
+            for size, library, solver in generate_all_runs(wildcards.problem)
+        ]
+    output:
+        "results/{problem}/combined_results.csv",
+        "results/{problem}/combined_results.png",
+        "results/{problem}/normalized_results.png"
+    script:
+        "src/benchmark_utils/plot_results.py"
+
+rule run_benchmark:
+    threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
+    input:
+        lambda wildcards: directory("input_data/{problem}/final_inputs") if config["problems"][wildcards.problem].get("requires_inputs", False) else []
+    benchmark:
+        repeat("results/{problem}/{library}_{solver}_{size}.tsv", config["repeat"])
+    shell:
+        "python src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}" + (" --input-dir {input}" if input else "")
+
+rule profile:
+    threads: available_cpu_count()
+    output:
+        "results/{problem}/{library}_{solver}_{size}.prof"
+    shell:
+        # --native doesn't work for rust calls back to Python wh
+        "py-spy record --native -s -t -f speedscope --rate 20 -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}.prof -- python src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}"
+
+rule mem_profile:
+    threads: available_cpu_count()
+    output:
+        "results/{problem}/{library}_{solver}_{size}_memray.html"
+    shell:
+        """
+        memray run --trace-python-allocators --follow-fork --native --aggregate -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin src/benchmark_utils/run_benchmark.py {wildcards.problem} --library {wildcards.library} --solver {wildcards.solver} --size {wildcards.size}
+        memray flamegraph -o results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.html results/{wildcards.problem}/{wildcards.library}_{wildcards.solver}_{wildcards.size}_memray.bin
+        """
+
