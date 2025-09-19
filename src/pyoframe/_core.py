@@ -1028,6 +1028,7 @@ class Expression(SupportsMath):
         """
         if self.is_quadratic:
             return "quadratic" if return_str else 2
+        # TODO improve performance of .evaluate() by ensuring early exit if linear
         elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
             return "linear" if return_str else 1
         else:
@@ -1229,53 +1230,79 @@ class Expression(SupportsMath):
 
     @unwrap_single_values
     def evaluate(self) -> pl.DataFrame:
-        """Computes the value of the expression using the variables' solutions. Only available after the model has been solved.
+        """Computes the value of the expression using the variables' solutions.
+
+        Returns:
+            A Polars `DataFrame` for dimensioned expressions a `float` for dimensionless expressions.
 
         Examples:
             >>> m = pf.Model()
-            >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, ub=10)
-            >>> m.expr_1 = 2 * m.X + 1
-            >>> m.expr_2 = m.expr_1.sum()
-            >>> m.maximize = m.expr_2 - 3
-            >>> m.attr.Silent = True
-            >>> m.optimize()
-            >>> m.expr_1.evaluate()
+            >>> m.X = pf.Variable({"dim1": [1, 2, 3]}, lb=10, ub=10)
+            >>> m.expr = 2 * m.X * m.X + 1
+
+            >>> m.expr.evaluate()
+            Traceback (most recent call last):
+            ...
+            ValueError: Cannot evaluate the expression 'expr' before calling model.optimize().
+
+            >>> m.constant_expression = m.expr - 2 * m.X * m.X
+            >>> m.constant_expression.evaluate()
             shape: (3, 2)
             ┌──────┬──────────┐
             │ dim1 ┆ solution │
             │ ---  ┆ ---      │
             │ i64  ┆ f64      │
             ╞══════╪══════════╡
-            │ 1    ┆ 21.0     │
-            │ 2    ┆ 21.0     │
-            │ 3    ┆ 21.0     │
+            │ 1    ┆ 1.0      │
+            │ 2    ┆ 1.0      │
+            │ 3    ┆ 1.0      │
             └──────┴──────────┘
-            >>> m.expr_2.evaluate()
-            63.0
+
+
+            >>> m.optimize()
+            >>> m.expr.evaluate()
+            shape: (3, 2)
+            ┌──────┬──────────┐
+            │ dim1 ┆ solution │
+            │ ---  ┆ ---      │
+            │ i64  ┆ f64      │
+            ╞══════╪══════════╡
+            │ 1    ┆ 201.0    │
+            │ 2    ┆ 201.0    │
+            │ 3    ┆ 201.0    │
+            └──────┴──────────┘
+
+            >>> m.expr.sum().evaluate()
+            603.0
+
         """
         assert self._model is not None, (
             "Expression must be added to the model to use .value"
         )
 
-        df = self.data
+        df = self.data.rename({COEF_KEY: SOLUTION_KEY})
         sm = self._model.poi
         attr = poi.VariableAttribute.Value
-        for var_col in self._variable_columns:
-            df = df.with_columns(
-                (
-                    pl.col(COEF_KEY)
-                    * pl.col(var_col).map_elements(
-                        lambda v_id: (
-                            sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
-                            if v_id != CONST_TERM
-                            else 1
-                        ),
-                        return_dtype=pl.Float64,
-                    )
-                ).alias(COEF_KEY)
-            ).drop(var_col)
 
-        df = df.rename({COEF_KEY: SOLUTION_KEY})
+        if self.degree() == 0:
+            df = df.drop(self._variable_columns)
+        elif (
+            self._model.attr.TerminationStatus
+            == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
+        ):
+            raise ValueError(
+                f"Cannot evaluate the expression '{self.name}' before calling model.optimize()."
+            )
+        else:
+            for var_col in self._variable_columns:
+                values = [
+                    sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
+                    for v_id in df.get_column(var_col).to_list()
+                ]
+
+                df = df.drop(var_col).with_columns(
+                    pl.col(SOLUTION_KEY) * pl.Series(values, dtype=pl.Float64)
+                )
 
         dims = self.dimensions
         if dims is not None:
@@ -1661,21 +1688,22 @@ class Constraint(ModelElementWithId):
         is_quadratic = self.lhs.is_quadratic
         use_var_names = self._model.solver_uses_variable_names
         sense = self.sense._to_poi()
-
-        key_cols = [COEF_KEY] + self.lhs._variable_columns
-        key_cols_polars = [pl.col(c) for c in key_cols]
-
+        dims = self.dimensions
+        df = self.lhs.data
         add_constraint = (
             self._model.poi._add_quadratic_constraint
             if is_quadratic
             else self._model.poi._add_linear_constraint
         )
 
-        if self.dimensions is None:
+        # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
+        # Specifying "" is the same as not specifying anything, see pyoptinterface:
+        # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
+        name = "C" if self._model.solver.block_auto_names else ""
+
+        if dims is None:
             if self._model.solver_uses_variable_names:
                 name = self.name
-            else:
-                name = "C" if self._model.solver.supports_repeat_names else ""
             create_expression = (
                 poi.ScalarQuadraticFunction
                 if is_quadratic
@@ -1685,7 +1713,10 @@ class Constraint(ModelElementWithId):
                 pl.lit(
                     add_constraint(
                         create_expression(
-                            *(self.lhs.data.get_column(c).to_numpy() for c in key_cols)
+                            *(
+                                df.get_column(c).to_numpy()
+                                for c in ([COEF_KEY] + self.lhs._variable_columns)
+                            )
                         ),
                         sense,
                         0,
@@ -1695,90 +1726,97 @@ class Constraint(ModelElementWithId):
                 .alias(CONSTRAINT_KEY)
                 .cast(KEY_TYPE)
             )
-        elif use_var_names:
+        else:
             create_expression = (
                 poi.ScalarQuadraticFunction
                 if is_quadratic
                 else poi.ScalarAffineFunction  # when called multiple times the default constructor is fastest
             )
-            # TODO optimize use_var_names to match the not use_var_names techniques
-            df = self.lhs.data.group_by(
-                self.dimensions, maintain_order=Config.maintain_order
-            ).agg(*key_cols_polars)
-
-            df = (
-                concat_dimensions(df, prefix=self.name)
-                .with_columns(
-                    pl.struct(*key_cols_polars, pl.col("concated_dim"))
-                    .map_elements(
-                        lambda x: add_constraint(
-                            create_expression(*(x[c] for c in key_cols)),
-                            sense,
-                            0,
-                            x["concated_dim"],
-                        ).index,
-                        return_dtype=KEY_TYPE,
+            if Config.maintain_order:
+                # This adds a 5-10% overhead on _assign_ids but ensures the order
+                # is the same as the input data
+                df_unique = df.select(dims).unique(maintain_order=True)
+                df = (
+                    df.join(
+                        df_unique.with_row_index(),
+                        on=dims,
+                        maintain_order="left",
                     )
-                    .alias(CONSTRAINT_KEY)
+                    .sort("index", maintain_order=True)
+                    .drop("index")
                 )
-                .drop("concated_dim")
-            )
-            df = df.drop(key_cols)
-        else:
-            df = self.lhs.data.sort(
-                self.dimensions, maintain_order=Config.maintain_order
-            )
+            else:
+                df = df.sort(dims, maintain_order=False)
+                # must maintain order otherwise results are wrong!
+                df_unique = df.select(dims).unique(maintain_order=True)
             coefs = df.get_column(COEF_KEY).to_list()
             vars = df.get_column(VAR_KEY).to_list()
             if is_quadratic:
                 vars2 = df.get_column(QUAD_VAR_KEY).to_list()
-            df = df.drop(*key_cols)
+
             split = (
                 df.lazy()
                 .with_row_index()
-                .filter(pl.struct(self.dimensions).is_first_distinct())
+                .filter(pl.struct(dims).is_first_distinct())
                 .select("index")
                 .collect()
                 .to_series()
                 .to_list()
-            )
-            split.append(df.height)
-
-            # Always maintain order otherwise results are just plain wrong
-            df = df.unique(maintain_order=True)
+            ) + [df.height]
+            del df
 
             # Note: list comprehension was slightly faster than using polars map_elements
             # Note 2: not specifying the argument name (`expr=`) was also slightly faster.
             # Note 3: we could have merged the if-else using an expansion operator (*) but that is slow.
             # Note 4: using kwargs is slow and including the constant term for linear expressions is faster.
-            if is_quadratic:
-                create_expression = poi.ScalarQuadraticFunction
-                ids = [
-                    add_constraint(
-                        create_expression(coefs[s0:s1], vars[s0:s1], vars2[s0:s1]),
-                        sense,
-                        0,
-                    ).index
-                    for s0, s1 in pairwise(split)
-                ]
+            if use_var_names:
+                names = concat_dimensions(df_unique, prefix=self.name)[
+                    "concated_dim"
+                ].to_list()
+                if is_quadratic:
+                    ids = [
+                        add_constraint(
+                            create_expression(coefs[s0:s1], vars[s0:s1], vars2[s0:s1]),
+                            sense,
+                            0,
+                            names[i],
+                        ).index
+                        for i, (s0, s1) in enumerate(pairwise(split))
+                    ]
+                else:
+                    ids = [
+                        add_constraint(
+                            create_expression(coefs[s0:s1], vars[s0:s1], 0),
+                            sense,
+                            0,
+                            names[i],
+                        ).index
+                        for i, (s0, s1) in enumerate(pairwise(split))
+                    ]
             else:
-                # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
-                # Specifying "" is the same as not specifying anything, see pyoptinterface:
-                # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-                name = "C" if self._model.solver.supports_repeat_names else ""
-                create_expression = poi.ScalarAffineFunction
-                ids = [
-                    add_constraint(
-                        create_expression(coefs[s0:s1], vars[s0:s1], 0),
-                        sense,
-                        0,
-                        name,
-                    ).index
-                    for s0, s1 in pairwise(
-                        split
-                    )  # pairwise is faster than looping over range(len(self.data) - 1)
-                ]
-            df = df.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(CONSTRAINT_KEY))
+                if is_quadratic:
+                    ids = [
+                        add_constraint(
+                            create_expression(coefs[s0:s1], vars[s0:s1], vars2[s0:s1]),
+                            sense,
+                            0,
+                            name,
+                        ).index
+                        for s0, s1 in pairwise(split)
+                    ]
+                else:
+                    ids = [
+                        add_constraint(
+                            create_expression(coefs[s0:s1], vars[s0:s1], 0),
+                            sense,
+                            0,
+                            name,
+                        ).index
+                        for s0, s1 in pairwise(split)
+                    ]
+            df = df_unique.with_columns(
+                pl.Series(ids, dtype=KEY_TYPE).alias(CONSTRAINT_KEY)
+            )
 
         self._data = df
 
@@ -2279,9 +2317,9 @@ class Variable(ModelElementWithId, SupportsMath):
             else:
                 ids = [poi_add_var(lb, ub, name=name).index for name in names]
         else:
-            if self._model.use_var_names:
+            if self._model.solver_uses_variable_names:
                 name = self.name
-            elif solver.supports_repeat_names:
+            elif solver.block_auto_names:
                 name = "V"
             else:
                 name = ""

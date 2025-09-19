@@ -1,7 +1,5 @@
 """Tests for the Objective class."""
 
-import re
-
 import pytest
 
 import pyoframe as pf
@@ -14,11 +12,6 @@ def test_get_obj_value(solver):
         )
     m = pf.Model(solver=solver)
     m.X = pf.Variable(ub=5)
-
-    with pytest.raises(
-        AttributeError, match=re.escape("'NoneType' object has no attribute 'value'")
-    ):
-        m.objective.value
 
     m.maximize = m.X
 

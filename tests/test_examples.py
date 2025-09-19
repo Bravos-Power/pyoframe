@@ -207,10 +207,11 @@ def test_gurobi_model_matches(example):
 
 
 def write_results(example: Example, model: pf.Model, results_dir, solver: _Solver):
-    if solver.supports_write and (
-        model.solver_uses_variable_names or not solver.supports_repeat_names
-    ):
-        readability = "pretty" if model.use_var_names else "machine"
+    supports_write = solver.supports_write and (
+        model.solver_uses_variable_names or not solver.block_auto_names
+    )
+    if supports_write:
+        readability = "pretty" if model.solver_uses_variable_names else "machine"
         model.write(results_dir / f"problem-{model.solver.name}-{readability}.lp")
 
     if model.has_objective:
@@ -219,10 +220,7 @@ def write_results(example: Example, model: pf.Model, results_dir, solver: _Solve
         )
 
     if example.unique_solution:
-        if solver.supports_write and (
-            model.use_var_names or not solver.supports_repeat_names
-        ):
-            readability = "pretty" if model.use_var_names else "machine"
+        if supports_write:
             model.write(results_dir / f"solution-{model.solver.name}-{readability}.sol")
 
         module = example.import_model_module()
