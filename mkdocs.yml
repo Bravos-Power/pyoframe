@@ -112,6 +112,7 @@ extra_javascript:
 
 extra:
   version:
+    #  https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
     provider: mike
     default: latest
     alias: true

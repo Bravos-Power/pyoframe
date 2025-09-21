@@ -1,3 +1,4 @@
+# This workflow ensures that `ruff format` passes on pull requests.
 name: Check linting with Ruff
 on: [pull_request]
 
