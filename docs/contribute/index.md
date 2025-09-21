@@ -23,7 +23,7 @@ pip install --editable .[dev,docs]
 pre-commit install
 ```
 
-4. Run `pytest` to make sure everything is working. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
+4. Run `pytest` to make sure everything is working. The only errors you should see are those related to a solver not being installed. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
 
 ## Writing documentation
 
@@ -38,6 +38,7 @@ We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documen
 - `ruff check`: Ensures all the linter tests pass
 - `ruff format`: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)
 - `doccmd --language=python --no-pad-file --command="ruff format" docs/`: to format the code in the documentation.
+- `mike serve` to see a local version of the documentation with the version selector.
 
 ## Additional tips
 
