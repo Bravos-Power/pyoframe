@@ -1,9 +1,9 @@
-# This workflow runs every time a new tag is released and publishes the documentation to the website.
-name: Docs
+# This workflow runs on every commit to main and publishes a development version of the documentation to the website.
+name: Publish dev docs
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+  push:
+    branches: [main]
 env:
   ENABLED_GIT_REVISION_DATE: true
   ENABLED_GIT_COMMITTERS: true
@@ -16,7 +16,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Needed for git-revision-date-localized plugin
-          fetch-tags: true
       - name: Configure Git Credentials
         run: |
           git config user.name github-actions[bot]
@@ -33,18 +32,8 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install .[docs]
-      - name: Get latest tag
-        id: tags
-        run: |
-          # Get the latest tag like v1.2.3, remove the leading 'v' if present, and remove the patch version
-          latest_tag=$(git describe --tags --abbrev=0)
-          clean_tag=${latest_tag#v}
-          minor_tag=$(echo "$clean_tag" | cut -d. -f1-2)
-
-          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
-          echo "minor_tag=$minor_tag" >> $GITHUB_ENV
       # Some examples
       # https://github.com/squidfunk/mkdocs-material/discussions/6546
       # https://github.com/arduino/arduino-cli/blob/master/.github/workflows/deploy-cobra-mkdocs-versioned-poetry.yml
       # https://blog.grosdouli.dev/blog/mkdocs-mike-integration#setup-github-workflows
-      - run: mike deploy --update-aliases --push --title $latest_tag $minor_tag latest
+      - run: mike deploy --push dev

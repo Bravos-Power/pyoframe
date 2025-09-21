@@ -1,3 +1,4 @@
+# This workflow runs when a new release is published and uploads the package to PyPI.
 name: PyPi Publishing
 
 on:

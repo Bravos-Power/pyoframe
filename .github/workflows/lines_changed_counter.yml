@@ -1,3 +1,5 @@
+# This workflow adds a comment to pull requests with the number of lines added, deleted, and changed.
+
 # MIT License
 # Copyright (c) 2021 Viacheslav Poturaev
 name: Comment on PR with lines changed

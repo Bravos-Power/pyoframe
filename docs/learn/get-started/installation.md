@@ -5,13 +5,16 @@
 Install Pyoframe using your preferred package manager:
 
 === "pip"
-`cmd
+
+    ```cmd
     pip install pyoframe
-    `
+    ```
+
 === "uv"
-`cmd
+
+    ```cmd
     uv add pyoframe
-    `
+    ```
 
 ## Step 2: Choose a solver
 
@@ -50,7 +53,7 @@ Select your chosen solver and follow the installation instructions.
     2. Ensure you have a valid Gurobi license installed on your machine.
 
     !!! warning "Do not install Gurobi using `pip`"
-    
+
         You should not install Gurobi using `pip` because Pyoframe uses Gurobi's C API, which the `pip` installation does not include.
 
 === "Ipopt"

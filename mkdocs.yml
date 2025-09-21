@@ -105,11 +105,17 @@ plugins:
   - gen-files:
       scripts:
         - scripts/generate_api_reference.py
+  - mike
 
 extra_javascript:
   - javascripts/feedback.js
 
 extra:
+  version:
+    #  https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
+    provider: mike
+    default: latest
+    alias: true
   analytics:
     provider: custom
     feedback:
