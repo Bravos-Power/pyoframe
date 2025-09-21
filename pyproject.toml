@@ -59,6 +59,7 @@ docs = [
     "mkdocs-table-reader-plugin~=3.1.0",                # allows displaying .csv files in documentation
     "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
     "mike==2.1.3",                                      # allows versioned documentation
+    "ruff==0.12.11",                                    # needed by mkdocstrings_handlers for formatting signatures
 ]
 
 

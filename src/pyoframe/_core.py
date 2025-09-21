@@ -885,10 +885,10 @@ class Expression(SupportsMath):
 
 
         Parameters:
-            over :
+            over:
                 The name of the dimension (column) over which the rolling sum is calculated.
                 This dimension must exist within the Expression's dimensions.
-            window_size :
+            window_size:
                 The size of the moving window in terms of number of records.
                 The rolling sum is calculated over this many consecutive elements.
 

@@ -130,5 +130,11 @@ extra:
           data: 0
           note: Let us know how we can improve this page.
 
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
 watch:
   - src
