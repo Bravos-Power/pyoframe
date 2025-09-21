@@ -1,10 +1,10 @@
 # This workflow runs on pull requests and tests that building the docs works
-name: Test documentation
+name: Test documentation builds
 on:
   pull_request:
     branches: ["*"]
 jobs:
-  mkdocs_build:
+  run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
