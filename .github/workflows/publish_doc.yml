@@ -31,4 +31,4 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install .[docs]
-      - run: mkdocs gh-deploy --force
+      - run: mike deploy --update-aliases --push ${{ github.event.release.tag_name }} latest

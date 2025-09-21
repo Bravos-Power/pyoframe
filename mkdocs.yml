@@ -111,6 +111,10 @@ extra_javascript:
   - javascripts/feedback.js
 
 extra:
+  version:
+    provider: mike
+    default: latest
+    alias: true
   analytics:
     provider: custom
     feedback:
