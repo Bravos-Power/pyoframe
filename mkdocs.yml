@@ -105,6 +105,7 @@ plugins:
   - gen-files:
       scripts:
         - scripts/generate_api_reference.py
+  - mike
 
 extra_javascript:
   - javascripts/feedback.js
