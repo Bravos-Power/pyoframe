@@ -27,8 +27,8 @@ dependencies = [
 [project.optional-dependencies]
 highs = ["highsbox"]
 ipopt = [
-    "pyoptinterface[nlp]", 
-    "llvmlite<=0.44.0"  # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
+    "pyoptinterface[nlp]",
+    "llvmlite<=0.44.0",    # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
 ]
 dev = [
     "ruff==0.12.11",        # code formatter
@@ -44,7 +44,7 @@ dev = [
     # (we don't pin since we want to test against the latest)
     "highsbox",
     "pyoptinterface[nlp]",
-    "llvmlite<=0.44.0"  # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
+    "llvmlite<=0.44.0",    # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
 ]
 # We split out docs because mkdocs-awesome-nav is not compatible with Python 3.9
 docs = [
@@ -56,8 +56,8 @@ docs = [
     "mkdocs-section-index~=0.3.10",                     # allows sections to be clickable pages
     "mkdocs-awesome-nav~=3.1.2",                        # allows use of .nav.yml files
     "doccmd==2025.4.8",                                 # allows running ruff formatter on documentation code
-    # "mkdocs-table-reader-plugin~=3.1.0",              # allows displaying .csv files in documentation
-    "markdown-katex==202406.1035", # allows rendering LaTeX math in documentation
+    "mkdocs-table-reader-plugin~=3.1.0",                # allows displaying .csv files in documentation
+    "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
     "mike==2.1.3",                                      # allows versioned documentation
 ]
 
