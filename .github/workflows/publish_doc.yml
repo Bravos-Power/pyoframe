@@ -12,6 +12,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: build-docs
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,3 +49,5 @@ jobs:
       # https://github.com/arduino/arduino-cli/blob/master/.github/workflows/deploy-cobra-mkdocs-versioned-poetry.yml
       # https://blog.grosdouli.dev/blog/mkdocs-mike-integration#setup-github-workflows
       - run: mike deploy --update-aliases --push --title $latest_tag $minor_tag latest
+        env:
+          MKDOCS_GIT_COMMITTERS_APIKEY : ${{ secrets.MKDOCS_GIT_COMMITTERS_APIKEY }}
