@@ -114,7 +114,7 @@ extra_css:
   - stylesheets/extra.css
 
 extra:
-  pre_release: !ENV [DOCS_PRERELEASE, true]
+  pre_release: !ENV [DOCS_PRERELEASE, false]
   version:
     #  https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
     provider: mike
