@@ -110,7 +110,11 @@ plugins:
 extra_javascript:
   - javascripts/feedback.js
 
+extra_css:
+  - stylesheets/extra.css
+
 extra:
+  pre_release: !ENV [DOCS_PRERELEASE, true]
   version:
     #  https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
     provider: mike
