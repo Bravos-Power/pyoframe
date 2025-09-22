@@ -12,7 +12,7 @@ dynamic = ["version"]
 license = "MIT"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: OS  Independent",
+    "Operating System :: OS Independent",
     "Development Status :: 3 - Alpha",
     "Natural Language :: English",
 ]
