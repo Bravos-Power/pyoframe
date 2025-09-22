@@ -3,7 +3,6 @@ hide:
   - navigation
   - toc
   - actions
-template: home.html
 ---
 # Pyoframe: Formulate huge optimization models 
 
