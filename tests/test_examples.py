@@ -26,11 +26,14 @@ class Example:
     unique_solution: bool = True
     is_mip: bool = False
     is_quadratic: bool = False
+    is_non_convex_quadratic: bool = False
 
     def supports_solver(self, solver: _Solver) -> bool:
         if self.is_mip and not solver.supports_integer_variables:
             return False
         if self.is_quadratic and not solver.supports_quadratics:
+            return False
+        if self.is_non_convex_quadratic and not solver.supports_non_convex_quadratics:
             return False
         return True
 
@@ -66,7 +69,13 @@ EXAMPLES = [
     Example("diet_problem"),
     Example("facility_problem", is_mip=True),
     Example("cutting_stock_problem", unique_solution=False, is_mip=True),
-    Example("facility_location", unique_solution=False, is_mip=True, is_quadratic=True),
+    Example(
+        "facility_location",
+        unique_solution=False,
+        is_mip=True,
+        is_quadratic=True,
+        is_non_convex_quadratic=True,
+    ),
     Example("sudoku", is_mip=True),
     Example("production_planning"),
     Example("portfolio_optim", is_quadratic=True),

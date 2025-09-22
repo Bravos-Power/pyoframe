@@ -34,7 +34,7 @@ import pyoframe as pf
 _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
 
-def solve_model(use_var_names=True, solver="gurobi"):
+def solve_model(use_var_names=True):
     """Portfolio Optimization Test Case - Quadratic Programming with IPOPT.
 
     This example demonstrates IPOPT's capability to solve quadratic programming problems
@@ -83,7 +83,7 @@ def solve_model(use_var_names=True, solver="gurobi"):
     max_weight = params.loc["max_weight"]
 
     # Create model
-    m = pf.Model(solver, solver_uses_variable_names=use_var_names)
+    m = pf.Model(solver_uses_variable_names=use_var_names)
 
     # Decision variables: portfolio weights
     m.weight = pf.Variable(assets.index, lb=0, ub=max_weight)
@@ -139,38 +139,56 @@ def print_results(model):
 
 
 if __name__ == "__main__":
-    # Test with both solvers
+    # Test with all three solvers that support quadratics
     print("Testing with Gurobi:")
-    model_gurobi = solve_model(use_var_names=True, solver="gurobi")
+    pf.Config.default_solver = "gurobi"
+    model_gurobi = solve_model(use_var_names=True)
     print_results(model_gurobi)
 
     print("\n" + "=" * 70 + "\n")
 
+    print("Testing with COPT:")
+    pf.Config.default_solver = "copt"
+    model_copt = solve_model(use_var_names=True)
+    print_results(model_copt)
+
+    print("\n" + "=" * 70 + "\n")
+
     print("Testing with IPOPT:")
-    model_ipopt = solve_model(use_var_names=True, solver="ipopt")
+    pf.Config.default_solver = "ipopt"
+    model_ipopt = solve_model(use_var_names=True)
     print_results(model_ipopt)
 
-    # Compare solutions
+    # Compare all three solutions
     print("\n" + "=" * 70 + "\n")
     print("Comparing solutions:")
 
     gurobi_weights = {
         row[0]: row[1] for row in model_gurobi.weight.solution.iter_rows()
     }
+    copt_weights = {row[0]: row[1] for row in model_copt.weight.solution.iter_rows()}
     ipopt_weights = {row[0]: row[1] for row in model_ipopt.weight.solution.iter_rows()}
 
     max_diff = 0
     for asset in gurobi_weights:
-        diff = abs(gurobi_weights[asset] - ipopt_weights[asset])
-        max_diff = max(max_diff, diff)
+        diff_copt = abs(gurobi_weights[asset] - copt_weights[asset])
+        diff_ipopt = abs(gurobi_weights[asset] - ipopt_weights[asset])
+        max_diff = max(max_diff, diff_copt, diff_ipopt)
         print(
-            f"  {asset}: Gurobi={gurobi_weights[asset]:.6f}, IPOPT={ipopt_weights[asset]:.6f}, Diff={diff:.6f}"
+            f"  {asset}: Gurobi={gurobi_weights[asset]:.6f}, "
+            f"COPT={copt_weights[asset]:.6f}, "
+            f"IPOPT={ipopt_weights[asset]:.6f}"
         )
 
     print(f"\nMaximum weight difference: {max_diff:.6f}")
-    print(
-        f"Objective difference: {abs(model_gurobi.objective.value - model_ipopt.objective.value):.6f}"
-    )
+    print(f"Gurobi objective: {model_gurobi.objective.value:.6f}")
+    print(f"COPT objective: {model_copt.objective.value:.6f}")
+    print(f"IPOPT objective: {model_ipopt.objective.value:.6f}")
+
+    if max_diff < 1e-3:
+        print("\n✓ All solvers found the same solution (within tolerance)")
+    else:
+        print("\n✗ Solutions differ significantly")
 
     # Manually calculate portfolio variance to verify
     print("\nManual variance calculation:")
@@ -187,9 +205,10 @@ if __name__ == "__main__":
     variance_manual = np.dot(w, np.dot(cov_matrix.values, w))
     print(f"Manual calculation: {variance_manual:.6f}")
     print(f"Gurobi reported: {model_gurobi.objective.value:.6f}")
+    print(f"COPT reported: {model_copt.objective.value:.6f}")
     print(f"IPOPT reported: {model_ipopt.objective.value:.6f}")
 
     if max_diff < 1e-3:
-        print("\n✓ Both solvers found the same solution (within tolerance)")
+        print("\n✓ All solvers found the same solution (within tolerance)")
     else:
         print("\n✗ Solutions differ significantly")

@@ -26,6 +26,7 @@ class _Solver:
     name: SUPPORTED_SOLVER_TYPES
     supports_integer_variables: bool = True
     supports_quadratics: bool = True
+    supports_non_convex_quadratics: bool = True
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
@@ -52,6 +53,9 @@ SUPPORTED_SOLVERS = [
         supports_objective_sense=False,
         supports_write=False,
     ),
+    _Solver(
+        "copt", block_auto_names=False, supports_non_convex_quadratics=False
+    ),  # COPT does not support non convex quadratics
 ]
 
 
@@ -404,7 +408,7 @@ VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt"]
 assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
     s.name for s in SUPPORTED_SOLVERS
 }

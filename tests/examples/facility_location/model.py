@@ -43,9 +43,9 @@ def solve_model(use_var_names, G=4, F=3):
         "f"
     ) - model.facility_position.pick(d=2).over("y")
     model.dist = pf.Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
-    model.con_dist = model.dist**2 == (model.dist_x**2).over("y") + (
-        model.dist_y**2
-    ).over("x")
+    model.con_dist = (
+        model.dist** 2 == (model.dist_x**2).over("y") + (model.dist_y**2).over("x")
+    )  # This is the non-convex quadratic constraint COPT complains about, z^2 = x^2 + y^2 defines a cone.
 
     M = (
         2 * 1.414

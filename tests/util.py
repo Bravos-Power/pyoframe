@@ -60,6 +60,7 @@ _tolerances = {
     "gurobi": {"rel_tol": 1e-5, "abs_tol": 1e-8},
     "highs": {"rel_tol": 1e-5, "abs_tol": 1e-8},
     "ipopt": {"rel_tol": 1e-5, "abs_tol": 1e-5},
+    "copt": {"rel_tol": 1e-5, "abs_tol": 1e-8},
 }
 
 
