@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
+<! -- https://github.com/squidfunk/mkdocs-material/discussions/5803 -->
+{% if config.extra.pre_release %}
+  {% block announce %}
+    You are currently viewing <strong>pre-release</strong> documentation.  This may contain features that have not yet been packaged. For the most accurate information, please <strong><a href="{{ '../' ~ base_url }}">access the release version</a></strong>.
+  {% endblock %}
+{% endif %}
+
 {% block outdated %}
-  You're not viewing the latest version.
-  <a href="{{ '../' ~ base_url }}"> 
-
-
-    <strong>Go to latest.</strong>
-  </a>
+  You are currently viewing <strong>outdated</strong> documentation.  For the most up-to-date information, please <strong><a href="{{ '../' ~ base_url }}">refer to the latest release</a></strong>.
 {% endblock %}
