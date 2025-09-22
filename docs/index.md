@@ -3,11 +3,10 @@ hide:
   - navigation
   - toc
   - actions
-template: home.html
 ---
-# Pyoframe: Formulate huge optimization models 
+# Pyoframe: Formulate huge optimization models
 
-Tired of slow or archaic modelling frameworks like Pyomo and GAMS? 
+Tired of slow or archaic modelling frameworks like Pyomo and GAMS?
 Here are some reasons we think you'd like Pyoframe:
 
 - Python library for building **LP and MILP models**
@@ -38,8 +37,8 @@ Here are some reasons we think you'd like Pyoframe:
 -   :material-scale-balance:{ .lg .middle } __Deep dive__
 
     ---
-    Understand our unique approach to building models with Polars dataframes. 
-    
+    Understand our unique approach to building models with Polars dataframes.
+
     [:octicons-arrow-right-24: Deep dive](#) -->
 
 -   :material-format-font:{ .lg .middle } __API Reference__
