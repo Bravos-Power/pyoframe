@@ -118,7 +118,9 @@ extra:
   version:
     #  https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/
     provider: mike
-    default: latest
+    default:
+      - latest
+      - dev  # included so that there's no outdated warning
     alias: true
   analytics:
     provider: custom
