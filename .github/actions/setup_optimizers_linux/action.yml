@@ -8,9 +8,12 @@ inputs:
   GUROBI_WLS:
     description: "..."
     required: true
-  # COPT_CLIENT_INI:
-  #   description: "..."
-  #   required: true
+  COPT_CLIENT_KEY:
+    description: "..."
+    required: true
+  COPT_CLIENT_DAT:
+    description: "..."
+    required: true
   # MOSEK_LICENSE:
   #   description: "..."
   #   required: true
@@ -46,8 +49,7 @@ runs:
       run: |
         curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/12.0/gurobi12.0.2_linux64.tar.gz
         curl -L -o ~/installers/idaes-solvers.tar.gz https://github.com/IDAES/idaes-ext/releases/download/3.4.2/idaes-solvers-ubuntu2204-x86_64.tar.gz
-
-    # curl -L -o ~/installers/copt.tar.gz https://pub.shanshu.ai/download/copt/7.2.8/linux64/CardinalOptimizer-7.2.8-lnx64.tar.gz
+        curl -L -o ~/installers/copt.tar.gz https://pub.shanshu.ai/download/copt/7.2.11/linux64/CardinalOptimizer-7.2.11-lnx64.tar.gz
     # curl -L -o ~/installers/mosek.tar.bz2 https://download.mosek.com/stable/10.2.0/mosektoolslinux64x86.tar.bz2
 
     - name: Setup Gurobi Installation
@@ -76,28 +78,28 @@ runs:
         timeout_minutes: 1
         command: gurobi_cl
 
-    # - name: Setup COPT Installation
-    #   shell: bash
-    #   env:
-    #     COPT_CLIENT_INI: ${{ inputs.COPT_CLIENT_INI }}
-    #   run: |
-    #     tar xfz ~/installers/copt.tar.gz -C ~/
-    #     ls ~/copt72
-    #     # set environment variables
-    #     export COPT_HOME="${HOME}/copt72"
-    #     echo "COPT_HOME=${COPT_HOME}" >> $GITHUB_ENV
-    #     echo "PATH=${PATH}:${COPT_HOME}/bin" >> $GITHUB_ENV
-    #     echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${COPT_HOME}/lib" >> $GITHUB_ENV
-    #     echo $COPT_HOME
-
-    #     # Just use the size-limited license
-    #     # echo "$COPT_CLIENT_INI" > ~/client.ini
-    #     # echo "COPT_LICENSE_DIR=${HOME}" >> $GITHUB_ENV
-    # - name: Test COPT
-    #   if: ${{ inputs.CHECK_LICENSE == 'true' }}
-    #   shell: bash
-    #   run: |
-    #     copt_cmd -c "quit"
+    - name: Setup COPT Installation
+      shell: bash
+      env:
+        COPT_CLIENT_KEY: ${{ inputs.COPT_CLIENT_KEY }}
+        COPT_CLIENT_DAT: ${{ inputs.COPT_CLIENT_DAT }}
+      run: |
+        tar xfz ~/installers/copt.tar.gz -C ~/
+        ls ~/copt72
+        # set environment variables
+        export COPT_HOME="${HOME}/copt72"
+        echo "COPT_HOME=${COPT_HOME}" >> $GITHUB_ENV
+        echo "PATH=${PATH}:${COPT_HOME}/bin" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${COPT_HOME}/lib" >> $GITHUB_ENV
+        echo $COPT_HOME
+        echo "$COPT_CLIENT_KEY" > ~/license.key
+        echo "$COPT_CLIENT_DAT" > ~/license.dat
+        echo "COPT_LICENSE_DIR=${HOME}" >> $GITHUB_ENV
+    - name: Test COPT
+      if: ${{ inputs.CHECK_LICENSE == 'true' }}
+      shell: bash
+      run: |
+        copt_cmd -c "quit"
 
     # - name: Setup MOSEK Installation
     #   shell: bash
