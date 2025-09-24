@@ -1,0 +1,11 @@
+name: whoami
+
+on: [pull_request]
+  
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - run: whoami
+      
