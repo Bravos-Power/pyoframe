@@ -27,21 +27,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Verify inputs
-      shell: bash
-      run: |
-        if [ -z "${COPT_LICENSE_KEY}" ]; then
-          echo "❌ Error: COPT_LICENSE_KEY is empty. Please provide it as a secret."
-          exit 1
-        fi
-        if [ -z "${COPT_LICENSE_DAT}" ]; then
-          echo "❌ Error: COPT_LICENSE_DAT is empty. Please provide it as a secret."
-          exit 1
-        fi
-        if [ -z "${GUROBI_WLS}" ]; then
-          echo "❌ Error: GUROBI_WLS is empty. Please provide it as a secret."
-          exit 1
-        fi
     - name: Create directory to store installers
       shell: bash
       run: |
