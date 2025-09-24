@@ -3,7 +3,7 @@ name: Docs
 on:
   workflow_dispatch:
   release:
-    types: [published]
+    types: [released]
 env:
   ENABLED_GIT_REVISION_DATE: true
   ENABLED_GIT_COMMITTERS: true
