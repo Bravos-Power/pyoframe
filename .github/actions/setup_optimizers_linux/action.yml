@@ -92,8 +92,8 @@ runs:
         echo "PATH=${PATH}:${COPT_HOME}/bin" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${COPT_HOME}/lib" >> $GITHUB_ENV
         echo $COPT_HOME
-        echo "$COPT_CLIENT_KEY" > ${HOME}/bin/license.key
-        echo "$COPT_CLIENT_DAT" > ${HOME}/bin/license.dat
+        echo "$COPT_CLIENT_KEY" > ${COPT_HOME}/bin/license.key
+        echo "$COPT_CLIENT_DAT" > ${COPT_HOME}/bin/license.dat
     - name: Test COPT
       if: ${{ inputs.CHECK_LICENSE == 'true' }}
       shell: bash

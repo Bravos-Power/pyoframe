@@ -82,7 +82,8 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: pip install -e .[dev]
-      - uses: ./.github/actions/setup_optimizers_linux
+      - name: Setup optimizers
+        uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
           COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
