@@ -8,10 +8,10 @@ inputs:
   GUROBI_WLS:
     description: "..."
     required: true
-  COPT_CLIENT_KEY:
+  COPT_LICENSE_KEY:
     description: "..."
     required: true
-  COPT_CLIENT_DAT:
+  COPT_LICENSE_DAT:
     description: "..."
     required: true
   # MOSEK_LICENSE:
@@ -27,6 +27,21 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Verify inputs
+      shell: bash
+      run: |
+        if [ -z "${COPT_LICENSE_KEY}" ]; then
+          echo "❌ Error: COPT_LICENSE_KEY is empty. Please provide it as a secret."
+          exit 1
+        fi
+        if [ -z "${COPT_LICENSE_DAT}" ]; then
+          echo "❌ Error: COPT_LICENSE_DAT is empty. Please provide it as a secret."
+          exit 1
+        fi
+        if [ -z "${GUROBI_WLS}" ]; then
+          echo "❌ Error: GUROBI_WLS is empty. Please provide it as a secret."
+          exit 1
+        fi
     - name: Create directory to store installers
       shell: bash
       run: |
@@ -81,8 +96,8 @@ runs:
     - name: Setup COPT Installation
       shell: bash
       env:
-        COPT_CLIENT_KEY: ${{ inputs.COPT_CLIENT_KEY }}
-        COPT_CLIENT_DAT: ${{ inputs.COPT_CLIENT_DAT }}
+        COPT_LICENSE_KEY: ${{ inputs.COPT_LICENSE_KEY }}
+        COPT_LICENSE_DAT: ${{ inputs.COPT_LICENSE_DAT }}
       run: |
         tar xfz ~/installers/copt.tar.gz -C ~/
         ls ~/copt72
@@ -92,9 +107,8 @@ runs:
         echo "PATH=${PATH}:${COPT_HOME}/bin" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${COPT_HOME}/lib" >> $GITHUB_ENV
         echo $COPT_HOME
-        echo "$COPT_CLIENT_KEY" > ~/license.key
-        echo "$COPT_CLIENT_DAT" > ~/license.dat
-        echo "COPT_LICENSE_DIR=${HOME}" >> $GITHUB_ENV
+        echo "$COPT_LICENSE_KEY" > ${COPT_HOME}/bin/license.key
+        echo "$COPT_LICENSE_DAT" > ${COPT_HOME}/bin/license.dat
     - name: Test COPT
       if: ${{ inputs.CHECK_LICENSE == 'true' }}
       shell: bash

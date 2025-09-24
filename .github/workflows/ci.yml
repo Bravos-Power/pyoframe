@@ -59,7 +59,6 @@ jobs:
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository) || 
       (github.event_name != 'pull_request_target' && github.event_name != 'pull_request')
     runs-on: ubuntu-latest
-    environment: testing
     needs: check_permissions
     continue-on-error: ${{ !matrix.latest }}
     strategy:
@@ -81,12 +80,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
+      - run: |
+          echo "COPT_LICENSE_KEY length: ${#COPT_LICENSE_KEY}"
+        env:
+          COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
       - name: Setup optimizers
         uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
-          COPT_CLIENT_KEY: ${{ secrets.COPT_CLIENT_KEY }}
-          COPT_CLIENT_DAT: ${{ secrets.COPT_CLIENT_DAT }}
+          COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
+          COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
           CHECK_LICENSE: true
       - name: Install dependencies
         run: pip install -e .[dev]
