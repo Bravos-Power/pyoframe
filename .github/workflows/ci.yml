@@ -80,10 +80,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-      - run: |
-          echo "COPT_LICENSE_KEY length: ${#COPT_LICENSE_KEY}"
-        env:
-          COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
       - name: Setup optimizers
         uses: ./.github/actions/setup_optimizers_linux
         with:
