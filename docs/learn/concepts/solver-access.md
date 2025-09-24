@@ -1,4 +1,6 @@
-# Solver interface  
+# Solver interface
+
+Pyoframe provides a friendly API that allows you to read and set the various attributes and parameters your solver has to offer.
 
 ## Model attributes
 
@@ -9,7 +11,7 @@ m = pf.Model()
 m.attr.Silent = True
 ```
 
-Pyoframe supports all [PyOptInterface attributes](https://metab0t.github.io/PyOptInterface/model.html#id1) and, when using Gurobi, all [Gurobi attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes/model.html).
+Pyoframe supports a set of [standard attributes](https://metab0t.github.io/PyOptInterface/model.html#id1) as well as additional [Gurobi attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes/model.html) and [COPT attributes](https://guide.coap.online/copt/en-doc/attribute.html).
 
 ```pycon
 >>> m.optimize()
@@ -22,10 +24,10 @@ Pyoframe supports all [PyOptInterface attributes](https://metab0t.github.io/PyOp
 
 ## Model parameters
 
-How to set solver parameters depends on the solver you're using, check the [PyOptInterface documentation](https://metab0t.github.io/PyOptInterface/getting_started.html) to review which parameters and attributes can be accessed for each solver:
+Every solver has a set of parameters that you can read or set using `model.params.<your-param>`.
 
 === "Gurobi"
-    Gurobi supports the `params` interface for all parameters listed in their [documentation](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html).
+    Refer to the list of [Gurobi parameters](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html).
     
     ```python
     m = pf.Model("gurobi")
@@ -34,7 +36,7 @@ How to set solver parameters depends on the solver you're using, check the [PyOp
     ```
 
 === "COPT"
-    COPT supports the `params` interface for all parameters listed in their [documentation](https://guide.coap.online/copt/en-doc/parameter.html).
+    Refer to the list of [COPT parameters](https://guide.coap.online/copt/en-doc/parameter.html).
     
     ```python
     m = pf.Model("copt")
@@ -43,25 +45,25 @@ How to set solver parameters depends on the solver you're using, check the [PyOp
     ```
 
 === "HiGHS"
-    HiGHS parameters must be set using the raw parameter interface. See [HiGHS options](https://ergo-code.github.io/HiGHS/stable/options/definitions/) for available parameters.
+    Refer to the list of [HiGHS options](https://ergo-code.github.io/HiGHS/stable/options/definitions/).
     
     ```python
     m = pf.Model("highs")
-    m.poi.set_raw_parameter("time_limit", 100.0)
-    m.poi.set_raw_parameter("mip_rel_gap", 0.01)
+    m.params.time_limit = 100.0
+    m.params.mip_rel_gap = 0.01
     ```
 
 === "Ipopt"
-    Ipopt parameters must be set using the raw parameter interface. See [Ipopt options](https://coin-or.github.io/Ipopt/OPTIONS.html) for available parameters.
+    Refer to the list of [Ipopt options](https://coin-or.github.io/Ipopt/OPTIONS.html).
     
     ```python
     m = pf.Model("ipopt")
-    m.poi.set_raw_parameter("tol", 1e-6)
-    m.poi.set_raw_parameter("max_iter", 1000)
+    m.params.tol = 1e-6
+    m.params.max_iter = 1000
     ```
     
-    !!! note
-        Ipopt does not support `get_raw_parameter` to retrieve parameter values.
+    !!! warning
+        Ipopt does not support reading parameters (only setting them).
 
 
 ## Variable and constraint attributes
@@ -76,32 +78,21 @@ m.X.attr.PrimalStart = 5  # Set initial value for warm start
 
 If the variable or constraint is dimensioned, the attribute can accept/return a DataFrame instead of a constant.
 
-## Solver-specific raw access
-
-For advanced users who need access to solver-specific features not exposed through the standard interface:
-
-```python
-# Get raw parameter value
-value = m.poi.get_raw_parameter("ParameterName")
-
-# Set raw parameter value
-m.poi.set_raw_parameter("ParameterName", value)
-
-# Get raw attribute value
-attr_value = m.poi.get_raw_attribute("AttributeName")
-```
-
 ## License configuration (COPT and Gurobi)
 
 Both COPT and Gurobi support advanced license configurations through the `solver_env` parameter:
 
+<!-- skip: start "Example servers don't actually work" -->
+
 === "COPT"
+
     ```python
     # Cluster configuration
     m = pf.Model("copt", solver_env={"CLIENT_CLUSTER": "cluster.example.com"})
     ```
 
 === "Gurobi"
+
     ```python
     # Compute server
     m = pf.Model(
@@ -109,3 +100,5 @@ Both COPT and Gurobi support advanced license configurations through the `solver
         solver_env={"ComputeServer": "server.example.com", "ServerPassword": "password"},
     )
     ```
+
+<!-- skip: end -->
