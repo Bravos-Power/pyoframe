@@ -61,8 +61,8 @@ def test_expression_with_const_to_str(solver):
     assert str(expr) == "2 x1 +5"
 
 
-def test_constraint_to_str(solver):
-    if not solver.supports_quadratics:
+def test_constraint_to_str(solver: _Solver):
+    if not solver.supports_quadratic_constraints:
         pytest.skip("Solver does not support quadratic constraints.")
     m = Model(solver)
     m.x1 = Variable()

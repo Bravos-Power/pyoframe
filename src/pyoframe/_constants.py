@@ -25,8 +25,8 @@ KEY_TYPE = pl.UInt32
 class _Solver:
     name: SUPPORTED_SOLVER_TYPES
     supports_integer_variables: bool = True
-    supports_quadratics: bool = True
-    supports_non_convex_quadratics: bool = True
+    supports_quadratic_constraints: bool = True
+    supports_non_convex: bool = True
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
@@ -44,9 +44,9 @@ class _Solver:
     """
 
     def __post_init__(self):
-        if self.supports_non_convex_quadratics:
-            assert self.supports_quadratics, (
-                "Cannot support non-convex quadratics without supporting quadratics."
+        if self.supports_non_convex:
+            assert self.supports_quadratic_constraints, (
+                "Non-convex solvers typically support quadratic constraints. Are you sure this is correct?"
             )
 
     def __repr__(self):
@@ -55,14 +55,19 @@ class _Solver:
 
 SUPPORTED_SOLVERS = [
     _Solver("gurobi", accelerate_with_repeat_names=True),
-    _Solver("highs", supports_quadratics=False, supports_duals=False),
+    _Solver(
+        "highs",
+        supports_quadratic_constraints=False,
+        supports_non_convex=False,
+        supports_duals=False,
+    ),
     _Solver(
         "ipopt",
         supports_integer_variables=False,
         supports_objective_sense=False,
         supports_write=False,
     ),
-    _Solver("copt", supports_non_convex_quadratics=False),
+    _Solver("copt", supports_non_convex=False),
 ]
 
 

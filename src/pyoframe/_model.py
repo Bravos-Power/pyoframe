@@ -76,7 +76,7 @@ class Model:
         "_var_map",
         "name",
         "solver",
-        "poi",
+        "_poi",
         "_params",
         "params",
         "_attr",
@@ -99,7 +99,7 @@ class Model:
         print_uses_variable_names: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
-        self.poi, self.solver = Model._create_poi_model(solver, solver_env)
+        self._poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name: str = self.solver.name
         self._variables: list[Variable] = []
         self._constraints: list[Constraint] = []
@@ -113,6 +113,14 @@ class Model:
         self._params = Container(self._set_param, self._get_param)
         self._attr = Container(self._set_attr, self._get_attr)
         self._solver_uses_variable_names = solver_uses_variable_names
+
+    @property
+    def poi(self):
+        """The underlying PyOptInterface model used to interact with the solver.
+
+        Modifying the underlying model directly is not recommended and may lead to unexpected behaviors.
+        """
+        return self._poi
 
     @property
     def solver_uses_variable_names(self):
