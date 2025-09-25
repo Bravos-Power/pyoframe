@@ -217,7 +217,7 @@ def test_gurobi_model_matches(example):
 
 def write_results(example: Example, model: pf.Model, results_dir, solver: _Solver):
     supports_write = solver.supports_write and (
-        model.solver_uses_variable_names or not solver.block_auto_names
+        model.solver_uses_variable_names or not solver.accelerate_with_repeat_names
     )
     if supports_write:
         readability = "pretty" if model.solver_uses_variable_names else "machine"

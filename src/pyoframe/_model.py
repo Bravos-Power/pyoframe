@@ -445,7 +445,10 @@ class Model:
         """
         if not self.solver.supports_write:
             raise NotImplementedError(f"{self.solver.name} does not support .write()")
-        if not self.solver_uses_variable_names and self.solver.block_auto_names:
+        if (
+            not self.solver_uses_variable_names
+            and self.solver.accelerate_with_repeat_names
+        ):
             raise ValueError(
                 f"{self.solver.name} requires solver_uses_variable_names=True to use .write()"
             )

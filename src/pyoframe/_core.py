@@ -1699,7 +1699,7 @@ class Constraint(ModelElementWithId):
         # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
         # Specifying "" is the same as not specifying anything, see pyoptinterface:
         # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-        name = "C" if self._model.solver.block_auto_names else ""
+        name = "C" if self._model.solver.accelerate_with_repeat_names else ""
 
         if dims is None:
             if self._model.solver_uses_variable_names:
@@ -2319,7 +2319,7 @@ class Variable(ModelElementWithId, SupportsMath):
         else:
             if self._model.solver_uses_variable_names:
                 name = self.name
-            elif solver.block_auto_names:
+            elif solver.accelerate_with_repeat_names:
                 name = "V"
             else:
                 name = ""

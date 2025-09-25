@@ -101,7 +101,7 @@ def test_write_lp(use_var_names, solver: _Solver):
             m.write("test.lp")
         return
 
-    if not use_var_names and solver.block_auto_names:
+    if not use_var_names and solver.accelerate_with_repeat_names:
         with pytest.raises(
             ValueError,
             match=re.escape(
@@ -141,7 +141,10 @@ def test_write_lp(use_var_names, solver: _Solver):
 
 
 def test_write_sol(use_var_names, solver):
-    if not (solver.supports_write and (use_var_names or not solver.block_auto_names)):
+    if not (
+        solver.supports_write
+        and (use_var_names or not solver.accelerate_with_repeat_names)
+    ):
         pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
         m = Model(solver, solver_uses_variable_names=use_var_names)
