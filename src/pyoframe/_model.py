@@ -76,7 +76,7 @@ class Model:
         "_var_map",
         "name",
         "solver",
-        "poi",
+        "_poi",
         "_params",
         "params",
         "_attr",
@@ -99,7 +99,7 @@ class Model:
         print_uses_variable_names: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
-        self.poi, self.solver = Model._create_poi_model(solver, solver_env)
+        self._poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name: str = self.solver.name
         self._variables: list[Variable] = []
         self._constraints: list[Constraint] = []
@@ -115,6 +115,14 @@ class Model:
         self._solver_uses_variable_names = solver_uses_variable_names
 
     @property
+    def poi(self):
+        """The underlying PyOptInterface model used to interact with the solver.
+
+        Modifying the underlying model directly is not recommended and may lead to unexpected behaviors.
+        """
+        return self._poi
+
+    @property
     def solver_uses_variable_names(self):
         """Whether to pass human-readable variable names to the solver."""
         return self._solver_uses_variable_names
@@ -125,8 +133,9 @@ class Model:
 
         Several model attributes are common across all solvers making it easy to switch between solvers (see supported attributes for
         [Gurobi](https://metab0t.github.io/PyOptInterface/gurobi.html#supported-model-attribute),
-        [HiGHS](https://metab0t.github.io/PyOptInterface/highs.html), and
-        [Ipopt](https://metab0t.github.io/PyOptInterface/ipopt.html)).
+        [HiGHS](https://metab0t.github.io/PyOptInterface/highs.html),
+        [Ipopt](https://metab0t.github.io/PyOptInterface/ipopt.html)), and
+        [COPT](https://metab0t.github.io/PyOptInterface/copt.html).
 
         We additionally support all of [Gurobi's attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes.html#sec:Attributes) when using Gurobi.
 
@@ -161,7 +170,8 @@ class Model:
         See the list of available parameters for
         [Gurobi](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#sec:Parameters),
         [HiGHS](https://ergo-code.github.io/HiGHS/stable/options/definitions/),
-        and [Ipopt](https://coin-or.github.io/Ipopt/OPTIONS.html).
+        [Ipopt](https://coin-or.github.io/Ipopt/OPTIONS.html),
+        and [COPT](https://guide.coap.online/copt/en-doc/parameter.html).
 
         Examples:
             For example, if you'd like to use Gurobi's barrier method, you can set the `Method` parameter:
@@ -237,6 +247,18 @@ class Model:
                         "Could not find the Ipopt solver. Are you sure you've properly installed it and added it to your PATH?"
                     ) from e
                 raise e
+        elif solver.name == "copt":
+            from pyoptinterface import copt
+
+            if solver_env is None:
+                env = copt.Env()
+            else:
+                # COPT uses EnvConfig for configuration
+                env_config = copt.EnvConfig()
+                for key, value in solver_env.items():
+                    env_config.set(key, value)
+                env = copt.Env(env_config)
+            model = copt.Model(env)
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."
@@ -431,7 +453,10 @@ class Model:
         """
         if not self.solver.supports_write:
             raise NotImplementedError(f"{self.solver.name} does not support .write()")
-        if not self.solver_uses_variable_names and self.solver.block_auto_names:
+        if (
+            not self.solver_uses_variable_names
+            and self.solver.accelerate_with_repeat_names
+        ):
             raise ValueError(
                 f"{self.solver.name} requires solver_uses_variable_names=True to use .write()"
             )
@@ -488,10 +513,10 @@ class Model:
 
     @for_solvers("gurobi", "copt")
     def compute_IIS(self):
-        """Gurobi only: Computes the Irreducible Infeasible Set (IIS) of the model.
+        """Gurobi and COPT only: Computes the Irreducible Infeasible Set (IIS) of the model.
 
-        !!! warning "Gurobi only"
-            This method only works with the Gurobi solver. Open an issue if you'd like to see support for other solvers.
+        !!! warning "Gurobi and COPT only"
+            This method only works with the Gurobi and COPT solver. Open an issue if you'd like to see support for other solvers.
 
         Examples:
             >>> m = pf.Model("gurobi")

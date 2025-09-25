@@ -25,33 +25,49 @@ KEY_TYPE = pl.UInt32
 class _Solver:
     name: SUPPORTED_SOLVER_TYPES
     supports_integer_variables: bool = True
-    supports_quadratics: bool = True
+    supports_quadratic_constraints: bool = True
+    supports_non_convex: bool = True
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
-    block_auto_names: bool = False
+    accelerate_with_repeat_names: bool = False
     """
-    When True, Pyoframe blocks automatic variable and constraint name
-    generation to improve performance by setting all the variable names to 'V'
-    and all the constraint names to 'C'. This should only be True for solvers
-    that support conflicting variable and constraint names. Benchmarking
-    should be performed to verify that this improves performance before turning
-    this on for other solvers.
+    If True, Pyoframe sets all the variable and constraint names to 'V'
+    and 'C', respectively, which, for some solvers, was found to improve
+    performance. This setting should only be enabled for a given solver after
+    testing that a) it actually improves performance, and b) the solver can
+    handle conflicting variable and constraint names.
+    So far, only Gurobi has been tested.
+    Note, that when enabled, Model.write() is not supported
+    (unless solver_uses_variable_names=True) because the outputted files would
+    be meaningless as all variables/constraints would have identical names.
     """
+
+    def __post_init__(self):
+        if self.supports_non_convex:
+            assert self.supports_quadratic_constraints, (
+                "Non-convex solvers typically support quadratic constraints. Are you sure this is correct?"
+            )
 
     def __repr__(self):
         return self.name
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi", block_auto_names=True),
-    _Solver("highs", supports_quadratics=False, supports_duals=False),
+    _Solver("gurobi", accelerate_with_repeat_names=True),
+    _Solver(
+        "highs",
+        supports_quadratic_constraints=False,
+        supports_non_convex=False,
+        supports_duals=False,
+    ),
     _Solver(
         "ipopt",
         supports_integer_variables=False,
         supports_objective_sense=False,
         supports_write=False,
     ),
+    _Solver("copt", supports_non_convex=False),
 ]
 
 
@@ -404,7 +420,7 @@ VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt"]
 assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
     s.name for s in SUPPORTED_SOLVERS
 }

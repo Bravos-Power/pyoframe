@@ -25,12 +25,21 @@ class Example:
     folder_name: str
     unique_solution: bool = True
     is_mip: bool = False
-    is_quadratic: bool = False
+    is_quadratically_constrained: bool = False
+    is_non_convex: bool = False
 
     def supports_solver(self, solver: _Solver) -> bool:
+        if solver.name == "highs" and self.folder_name == "portfolio_optim":
+            # TODO: see bug #184
+            return False
         if self.is_mip and not solver.supports_integer_variables:
             return False
-        if self.is_quadratic and not solver.supports_quadratics:
+        if (
+            self.is_quadratically_constrained
+            and not solver.supports_quadratic_constraints
+        ):
+            return False
+        if self.is_non_convex and not solver.supports_non_convex:
             return False
         return True
 
@@ -66,10 +75,16 @@ EXAMPLES = [
     Example("diet_problem"),
     Example("facility_problem", is_mip=True),
     Example("cutting_stock_problem", unique_solution=False, is_mip=True),
-    Example("facility_location", unique_solution=False, is_mip=True, is_quadratic=True),
+    Example(
+        "facility_location",
+        unique_solution=False,
+        is_mip=True,
+        is_quadratically_constrained=True,
+        is_non_convex=True,
+    ),
     Example("sudoku", is_mip=True),
     Example("production_planning"),
-    Example("portfolio_optim", is_quadratic=True),
+    Example("portfolio_optim"),
     Example("pumped_storage", is_mip=True),
 ]
 
@@ -208,7 +223,7 @@ def test_gurobi_model_matches(example):
 
 def write_results(example: Example, model: pf.Model, results_dir, solver: _Solver):
     supports_write = solver.supports_write and (
-        model.solver_uses_variable_names or not solver.block_auto_names
+        model.solver_uses_variable_names or not solver.accelerate_with_repeat_names
     )
     if supports_write:
         readability = "pretty" if model.solver_uses_variable_names else "machine"
