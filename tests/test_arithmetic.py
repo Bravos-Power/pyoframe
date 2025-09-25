@@ -10,7 +10,7 @@ from polars.testing import assert_frame_equal
 
 from pyoframe import Config, Expression, Model, Set, Variable, VType
 from pyoframe._arithmetic import PyoframeError
-from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, UnmatchedStrategy
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, ExtrasStrategy
 
 from .util import csvs_to_expr
 
@@ -330,7 +330,7 @@ def test_add_expression_with_missing(default_solver):
         ),
     )
 
-    Config.disable_unmatched_checks = True
+    Config.disable_extras_checks = True
     result = lhs + rhs
     assert_frame_equal(
         result.to_str(return_df=True),
@@ -439,7 +439,7 @@ def test_three_way_add():
     )
 
 
-def test_propagation_unmatched():
+def test_propagation_extras():
     expr1, expr2, expr3 = csvs_to_expr(
         """
     dim1,dim2,value
@@ -457,8 +457,8 @@ def test_propagation_unmatched():
     """,
     )
 
-    assert expr1.keep_extras()._unmatched_strategy == UnmatchedStrategy.KEEP
-    assert expr1._unmatched_strategy == UnmatchedStrategy.UNSET, (
+    assert expr1.keep_extras()._extras_strategy == ExtrasStrategy.KEEP
+    assert expr1._extras_strategy == ExtrasStrategy.UNSET, (
         "keep_extras() should not modify the original expression"
     )
 
@@ -500,7 +500,7 @@ def test_propagation_over():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("because of unmatched values."),
+        match=re.escape("because of extra values."),
     ):
         expr1.over("y") + expr2
 

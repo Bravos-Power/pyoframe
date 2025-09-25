@@ -14,8 +14,8 @@ from pyoframe._constants import (
     RESERVED_COL_KEYS,
     VAR_KEY,
     Config,
+    ExtrasStrategy,
     PyoframeError,
-    UnmatchedStrategy,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -160,17 +160,17 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
 
 def add(*expressions: Expression) -> Expression:
     """Add multiple expressions together."""
-    # Mapping of how a sum of two expressions should propagate the unmatched strategy
+    # Mapping of how a sum of two expressions should propagate the extras strategy
     propagation_strategies = {
-        (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP): UnmatchedStrategy.DROP,
+        (ExtrasStrategy.DROP, ExtrasStrategy.DROP): ExtrasStrategy.DROP,
         (
-            UnmatchedStrategy.UNSET,
-            UnmatchedStrategy.UNSET,
-        ): UnmatchedStrategy.UNSET,
-        (UnmatchedStrategy.KEEP, UnmatchedStrategy.KEEP): UnmatchedStrategy.KEEP,
-        (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP): UnmatchedStrategy.UNSET,
-        (UnmatchedStrategy.DROP, UnmatchedStrategy.UNSET): UnmatchedStrategy.DROP,
-        (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET): UnmatchedStrategy.KEEP,
+            ExtrasStrategy.UNSET,
+            ExtrasStrategy.UNSET,
+        ): ExtrasStrategy.UNSET,
+        (ExtrasStrategy.KEEP, ExtrasStrategy.KEEP): ExtrasStrategy.KEEP,
+        (ExtrasStrategy.DROP, ExtrasStrategy.KEEP): ExtrasStrategy.UNSET,
+        (ExtrasStrategy.DROP, ExtrasStrategy.UNSET): ExtrasStrategy.DROP,
+        (ExtrasStrategy.KEEP, ExtrasStrategy.UNSET): ExtrasStrategy.KEEP,
     }
 
     assert len(expressions) > 1, "Need at least two expressions to add together."
@@ -180,15 +180,14 @@ def add(*expressions: Expression) -> Expression:
     if dims is None:
         requires_join = False
         dims = []
-    elif Config.disable_unmatched_checks:
+    elif Config.disable_extras_checks:
         requires_join = any(
-            expr._unmatched_strategy
-            not in (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET)
+            expr._extras_strategy not in (ExtrasStrategy.KEEP, ExtrasStrategy.UNSET)
             for expr in expressions
         )
     else:
         requires_join = any(
-            expr._unmatched_strategy != UnmatchedStrategy.KEEP for expr in expressions
+            expr._extras_strategy != ExtrasStrategy.KEEP for expr in expressions
         )
 
     has_dim_conflict = any(
@@ -246,11 +245,11 @@ def add(*expressions: Expression) -> Expression:
 
         # Order so that drop always comes before keep, and keep always comes before default
         if swap := (
-            (left._unmatched_strategy, right._unmatched_strategy)
+            (left._extras_strategy, right._extras_strategy)
             in (
-                (UnmatchedStrategy.UNSET, UnmatchedStrategy.DROP),
-                (UnmatchedStrategy.UNSET, UnmatchedStrategy.KEEP),
-                (UnmatchedStrategy.KEEP, UnmatchedStrategy.DROP),
+                (ExtrasStrategy.UNSET, ExtrasStrategy.DROP),
+                (ExtrasStrategy.UNSET, ExtrasStrategy.KEEP),
+                (ExtrasStrategy.KEEP, ExtrasStrategy.DROP),
             )
         ):
             left, right = right, left
@@ -260,11 +259,11 @@ def add(*expressions: Expression) -> Expression:
 
         left_data, right_data = left.data, right.data
 
-        strat = (left._unmatched_strategy, right._unmatched_strategy)
+        strat = (left._extras_strategy, right._extras_strategy)
 
         propagate_strat = propagation_strategies[strat]  # type: ignore
 
-        if strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.DROP):
+        if strat == (ExtrasStrategy.DROP, ExtrasStrategy.DROP):
             left_data = left.data.join(
                 get_indices(right),
                 on=dims,
@@ -275,9 +274,9 @@ def add(*expressions: Expression) -> Expression:
                 on=dims,
                 maintain_order="left" if Config.maintain_order else None,
             )
-        elif strat == (UnmatchedStrategy.UNSET, UnmatchedStrategy.UNSET):
-            assert not Config.disable_unmatched_checks, (
-                "This code should not be reached when unmatched checks are disabled."
+        elif strat == (ExtrasStrategy.UNSET, ExtrasStrategy.UNSET):
+            assert not Config.disable_extras_checks, (
+                "This code should not be reached when checks for extra values are disabled."
             )
             outer_join = get_indices(left).join(
                 get_indices(right),
@@ -286,24 +285,22 @@ def add(*expressions: Expression) -> Expression:
                 maintain_order="left_right" if Config.maintain_order else None,
             )
             if outer_join.get_column(dims[0]).null_count() > 0:
-                unmatched_vals = outer_join.filter(
-                    outer_join.get_column(dims[0]).is_null()
-                )
-                _raise_unmatched_values_error(left, right, unmatched_vals, swap)
+                extra_vals = outer_join.filter(outer_join.get_column(dims[0]).is_null())
+                _raise_extras_error(left, right, extra_vals, swap)
             if outer_join.get_column(dims[0] + "_right").null_count() > 0:
-                unmatched_vals = outer_join.filter(
+                extra_vals = outer_join.filter(
                     outer_join.get_column(dims[0] + "_right").is_null()
                 )
-                _raise_unmatched_values_error(left, right, unmatched_vals, swap)
+                _raise_extras_error(left, right, extra_vals, swap)
 
-        elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.KEEP):
+        elif strat == (ExtrasStrategy.DROP, ExtrasStrategy.KEEP):
             left_data = get_indices(right).join(
                 left.data,
                 how="left",
                 on=dims,
                 maintain_order="left" if Config.maintain_order else None,
             )
-        elif strat == (UnmatchedStrategy.DROP, UnmatchedStrategy.UNSET):
+        elif strat == (ExtrasStrategy.DROP, ExtrasStrategy.UNSET):
             left_data = get_indices(right).join(
                 left.data,
                 how="left",
@@ -311,26 +308,26 @@ def add(*expressions: Expression) -> Expression:
                 maintain_order="left" if Config.maintain_order else None,
             )
             if left_data.get_column(COEF_KEY).null_count() > 0:
-                _raise_unmatched_values_error(
+                _raise_extras_error(
                     left,
                     right,
                     left_data.filter(left_data.get_column(COEF_KEY).is_null()),
                     swap,
                 )
 
-        elif strat == (UnmatchedStrategy.KEEP, UnmatchedStrategy.UNSET):
-            assert not Config.disable_unmatched_checks, (
-                "This code should not be reached when unmatched checks are disabled."
+        elif strat == (ExtrasStrategy.KEEP, ExtrasStrategy.UNSET):
+            assert not Config.disable_extras_checks, (
+                "This code should not be reached when checks for extra values are disabled."
             )
-            unmatched = right.data.join(get_indices(left), how="anti", on=dims)
-            if len(unmatched) > 0:
-                _raise_unmatched_values_error(left, right, unmatched, swap)
+            extras = right.data.join(get_indices(left), how="anti", on=dims)
+            if len(extras) > 0:
+                _raise_extras_error(left, right, extras, swap)
         else:  # pragma: no cover
             assert False, "This code should've never been reached!"
 
         expr_data = [left_data, right_data]
     else:
-        propagate_strat = expressions[0]._unmatched_strategy
+        propagate_strat = expressions[0]._extras_strategy
         expr_data = [expr.data for expr in expressions]
 
     # Add quadratic column if it is needed and doesn't already exist
@@ -358,13 +355,13 @@ def add(*expressions: Expression) -> Expression:
         full_name += f" - {name[1:]}" if name[0] == "-" else f" + {name}"
 
     new_expr = expressions[0]._new(data, name=f"({full_name})")
-    new_expr._unmatched_strategy = propagate_strat
+    new_expr._extras_strategy = propagate_strat
 
     return new_expr
 
 
-def _raise_unmatched_values_error(
-    left: Expression, right: Expression, unmatched_values: pl.DataFrame, swapped: bool
+def _raise_extras_error(
+    left: Expression, right: Expression, extra_values: pl.DataFrame, swapped: bool
 ):
     if swapped:
         left, right = right, left
@@ -372,8 +369,8 @@ def _raise_unmatched_values_error(
     _raise_addition_error(
         left,
         right,
-        "of unmatched values",
-        f"Unmatched values:\n{unmatched_values}\nIf this is intentional, use .drop_extras() or .keep_extras().",
+        "of extra values",
+        f"Extra values:\n{extra_values}\nIf this is intentional, use .drop_extras() or .keep_extras().",
     )
 
 
@@ -412,7 +409,7 @@ def _broadcast(
         return res
 
     # If drop, we just do an inner join to get into the shape of the other
-    if self._unmatched_strategy == UnmatchedStrategy.DROP:
+    if self._extras_strategy == ExtrasStrategy.DROP:
         res = self._new(
             self.data.join(
                 target_data,
@@ -432,7 +429,7 @@ def _broadcast(
     )
     right_has_missing = result.get_column(missing_dims[0]).null_count() > 0
     if right_has_missing:
-        _raise_unmatched_values_error(
+        _raise_extras_error(
             self,
             target,
             result.filter(result.get_column(missing_dims[0]).is_null()),

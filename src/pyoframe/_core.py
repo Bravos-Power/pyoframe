@@ -29,9 +29,9 @@ from pyoframe._constants import (
     VAR_KEY,
     Config,
     ConstraintSense,
+    ExtrasStrategy,
     ObjSense,
     PyoframeError,
-    UnmatchedStrategy,
     VType,
     VTypeValue,
 )
@@ -65,7 +65,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
     """Any object that can be converted into an expression."""
 
     def __init__(self, *args, **kwargs):
-        self._unmatched_strategy = UnmatchedStrategy.UNSET
+        self._extras_strategy = ExtrasStrategy.UNSET
         self._allowed_new_dims: list[str] = []
         super().__init__(*args, **kwargs)
 
@@ -75,21 +75,21 @@ class SupportsMath(ModelElement, SupportsToExpr):
 
     def _copy_flags(self, other: SupportsMath):
         """Copies the flags from another SupportsMath object."""
-        self._unmatched_strategy = other._unmatched_strategy
+        self._extras_strategy = other._extras_strategy
         self._allowed_new_dims = other._allowed_new_dims.copy()
 
     def keep_extras(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
         new = self._new(self.data, name=f"{self.name}.keep_extras()")
         new._copy_flags(self)
-        new._unmatched_strategy = UnmatchedStrategy.KEEP
+        new._extras_strategy = ExtrasStrategy.KEEP
         return new
 
     def drop_extras(self):
         """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
         new = self._new(self.data, name=f"{self.name}.drop_extras()")
         new._copy_flags(self)
-        new._unmatched_strategy = UnmatchedStrategy.DROP
+        new._extras_strategy = ExtrasStrategy.DROP
         return new
 
     def over(self, *dims: str):
@@ -1067,10 +1067,10 @@ class Expression(SupportsMath):
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values.
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of extra values.
             Expression 1:   v
             Expression 2:   add
-            Unmatched values:
+            Extra values:
             shape: (1, 2)
             ┌──────┬────────────┐
             │ dim1 ┆ dim1_right │
@@ -2486,10 +2486,10 @@ class Variable(ModelElementWithId, SupportsMath):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because of unmatched values.
+            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because of extra values.
             Expression 1:   (bat_charge + bat_flow)
             Expression 2:   bat_charge.next(…)
-            Unmatched values:
+            Extra values:
             shape: (2, 4)
             ┌───────┬─────────┬────────────┬────────────┐
             │ time  ┆ city    ┆ time_right ┆ city_right │
