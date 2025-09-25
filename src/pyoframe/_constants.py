@@ -138,8 +138,8 @@ class _Config:
         (unless [`.drop_extras()`][pyoframe.Expression.drop_extras] was applied).
 
         !!! warning
-            This might improve performance, but it will suppress the errors that alert developers to unexpected
-            behaviors (see [here](../learn/concepts/special-functions.md#drop_extras-and-keep_extras)).
+            This might improve performance, but it will suppress the errors that alert you of unexpected
+            behaviors ([learn more](../learn/concepts/addition.md)).
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:

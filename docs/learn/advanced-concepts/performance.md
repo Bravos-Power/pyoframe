@@ -20,7 +20,7 @@ pf.Config.maintain_order = False
 
 ## Disable checks for extra values
 
-Disabling checks for extra values means that, instead of raising [extra value exceptions](../concepts/special-functions.md#drop_extras-and-keep_extras), pyoframe will process sums with extra values as if [`keep_extras`][pyoframe.Expression.keep_extras] had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable checks for extra values, we recommend you do so only after thoroughly testing your model and ensuring that all potential extra value exceptions have been handled.
+Disabling checks for extra values means that, instead of raising [extra value exceptions](../concepts/addition.md), pyoframe will process sums with extra values as if [`keep_extras`][pyoframe.Expression.keep_extras] had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable checks for extra values, we recommend you do so only after thoroughly testing your model and ensuring that all potential extra value exceptions have been handled.
 
 The following code disables checks for extra values:
 

@@ -39,7 +39,7 @@ m.minimize = total_cost
 m.optimize()
 ```
 
-1. `.drop_extras()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/concepts/special-functions.md#drop_extras-and-keep_extras)
+1. `.drop_extras()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/concepts/addition.md)
 
 So the solution is...
 
