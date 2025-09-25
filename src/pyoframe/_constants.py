@@ -134,12 +134,12 @@ class _Config:
         """When `True`, improves performance by skipping unmatched checks (not recommended).
 
         When `True`, unmatched checks are disabled which effectively means that all expressions
-        are treated as if they contained [`.keep_unmatched()`][pyoframe.Expression.keep_unmatched]
-        (unless [`.drop_unmatched()`][pyoframe.Expression.drop_unmatched] was applied).
+        are treated as if they contained [`.keep_extras()`][pyoframe.Expression.keep_extras]
+        (unless [`.drop_extras()`][pyoframe.Expression.drop_extras] was applied).
 
         !!! warning
             This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
-            behaviors (see [here](../learn/concepts/special-functions.md#drop_unmatched-and-keep_unmatched)).
+            behaviors (see [here](../learn/concepts/special-functions.md#drop_extras-and-keep_extras)).
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:
@@ -173,9 +173,9 @@ class _Config:
             ╞══════════╪════════════╡
             │ Montreal ┆ null       │
             └──────────┴────────────┘
-            If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            If this is intentional, use .drop_extras() or .keep_extras().
 
-            But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
+            But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
             >>> pf.Config.disable_unmatched_checks = True
             >>> population + population_influx
             <Expression height=3 terms=3 type=constant>

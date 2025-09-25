@@ -78,16 +78,16 @@ class SupportsMath(ModelElement, SupportsToExpr):
         self._unmatched_strategy = other._unmatched_strategy
         self._allowed_new_dims = other._allowed_new_dims.copy()
 
-    def keep_unmatched(self):
+    def keep_extras(self):
         """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
-        new = self._new(self.data, name=f"{self.name}.keep_unmatched()")
+        new = self._new(self.data, name=f"{self.name}.keep_extras()")
         new._copy_flags(self)
         new._unmatched_strategy = UnmatchedStrategy.KEEP
         return new
 
-    def drop_unmatched(self):
+    def drop_extras(self):
         """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
-        new = self._new(self.data, name=f"{self.name}.drop_unmatched()")
+        new = self._new(self.data, name=f"{self.name}.drop_extras()")
         new._copy_flags(self)
         new._unmatched_strategy = UnmatchedStrategy.DROP
         return new
@@ -1079,7 +1079,7 @@ class Expression(SupportsMath):
             ╞══════╪════════════╡
             │ 3    ┆ null       │
             └──────┴────────────┘
-            If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            If this is intentional, use .drop_extras() or .keep_extras().
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression terms=2 type=linear>
@@ -2499,11 +2499,9 @@ class Variable(ModelElementWithId, SupportsMath):
             │ 18:00 ┆ Toronto ┆ null       ┆ null       │
             │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
             └───────┴─────────┴────────────┴────────────┘
-            If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            If this is intentional, use .drop_extras() or .keep_extras().
 
-            >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
-            ...     "time"
-            ... )
+            >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
             <Constraint 'unnamed' height=6 terms=18 type=linear>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │

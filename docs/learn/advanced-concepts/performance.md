@@ -20,7 +20,7 @@ pf.Config.maintain_order = False
 
 ## Disable unmatched checks
 
-Disabling unmatched checks means that, instead of raising [unmatched term exceptions](../concepts/special-functions.md#drop_unmatched-and-keep_unmatched), pyoframe will process sums with unmatched terms as if [`keep_unmatched`][pyoframe.Expression.keep_unmatched] had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable unmatched checks, we recommend you do so only after thoroughly testing your model and ensuring that all potential unmatched term exceptions have been handled.
+Disabling unmatched checks means that, instead of raising [unmatched term exceptions](../concepts/special-functions.md#drop_extras-and-keep_extras), pyoframe will process sums with unmatched terms as if [`keep_extras`][pyoframe.Expression.keep_extras] had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable unmatched checks, we recommend you do so only after thoroughly testing your model and ensuring that all potential unmatched term exceptions have been handled.
 
 The following code disables unmatched checks:
 

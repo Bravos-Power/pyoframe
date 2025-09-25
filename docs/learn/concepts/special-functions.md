@@ -12,7 +12,7 @@ Pyoframe has a few special functions that make working with dataframes easy and 
 
 ## Addition modifiers
 
-The transforms described in this section (`.over(…)`, `.keep_unmatched()`, and `.drop_unmatched()`) are "addition modifiers" — they modify how additions are performed in Pyoframe.
+The transforms described in this section (`.over(…)`, `.keep_extras()`, and `.drop_extras()`) are "addition modifiers" — they modify how additions are performed in Pyoframe.
 
 !!! warning "Addition modifier rules apply to addition, subtraction, and constraint creation."
 
@@ -22,9 +22,9 @@ The transforms described in this section (`.over(…)`, `.keep_unmatched()`, and
 
 !!! warning "Order of operations for addition modifiers"
 
-    Addition modifiers must be applied _after_ all other operations.[^1] For example, `my_obj.drop_unmatched().sum("time")` won't work but `my_obj.sum("time").drop_unmatched()` will.
+    Addition modifiers must be applied _after_ all other operations.[^1] For example, `my_obj.drop_extras().sum("time")` won't work but `my_obj.sum("time").drop_extras()` will.
 
-[^1]: The exception to this rule is negation. As one might expect, `-my_obj.drop_unmatched()` works the same as `(-my_obj).drop_unmatched()` even though, in the former case, a negation is applied _after_ the addition modifier.
+[^1]: The exception to this rule is negation. As one might expect, `-my_obj.drop_extras()` works the same as `(-my_obj).drop_extras()` even though, in the former case, a negation is applied _after_ the addition modifier.
 
 ### Adding expressions with differing dimensions using `.over(…)`
 
@@ -124,7 +124,7 @@ Notice how applying `.over("flight_no")` added a dimension `flight_no` with valu
 
 ```
 
-### `drop_unmatched` and `keep_unmatched`
+### `drop_extras` and `keep_extras`
 
 !!! info "Work in progress"
 
@@ -140,7 +140,7 @@ Pyoframe conveniently allows users to use [Polars DataFrames](https://docs.pola.
 
 However, if **neither** the left or right terms of a mathematical operation is a Pyoframe object, Pyoframe will not automatically convert DataFrames[^2]. In these situations, users can manually convert their DataFrames to Pyoframe expressions using `.to_expr()`.
 
-Additionally, users should use `.to_expr()` whenever they wish to use [over][pyoframe.Expression.over], [drop_unmatched][pyoframe.Expression.drop_unmatched], or [keep_unmatched][pyoframe.Expression.keep_unmatched] on a DataFrame.
+Additionally, users should use `.to_expr()` whenever they wish to use [over][pyoframe.Expression.over], [drop_extras][pyoframe.Expression.drop_extras], or [keep_extras][pyoframe.Expression.keep_extras] on a DataFrame.
 
 !!! info "Under the hood"
 

@@ -299,13 +299,11 @@ def test_add_expression_with_missing(default_solver):
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
     ):
         lhs + rhs
 
-    result = lhs + rhs.drop_unmatched()
+    result = lhs + rhs.drop_extras()
     assert_frame_equal(
         result.to_str(return_df=True),
         pl.DataFrame(
@@ -318,7 +316,7 @@ def test_add_expression_with_missing(default_solver):
         ),
     )
 
-    result = lhs + rhs.keep_unmatched()
+    result = lhs + rhs.keep_extras()
     assert_frame_equal(
         result.to_str(return_df=True),
         pl.DataFrame(
@@ -376,16 +374,16 @@ def test_add_expressions_with_dims_and_missing(default_solver):
     rhs = rhs.over("x")
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_unmatched()"),
+        match=re.escape("If this is intentional, use .drop_extras()"),
     ):
         lhs + rhs
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_unmatched()"),
+        match=re.escape("If this is intentional, use .drop_extras()"),
     ):
-        lhs.drop_unmatched() + rhs
+        lhs.drop_extras() + rhs
 
-    result = lhs + rhs.drop_unmatched()
+    result = lhs + rhs.drop_extras()
     assert_frame_equal(
         result.to_str(return_df=True),
         pl.DataFrame(
@@ -412,16 +410,14 @@ def test_three_way_add():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
     ):
         df1 + df2 + df3
 
     # Should not throw any errors
-    df2.keep_unmatched() + df1 + df3
-    df1 + df3 + df2.keep_unmatched()
-    result = df1 + df2.keep_unmatched() + df3
+    df2.keep_extras() + df1 + df3
+    df1 + df3 + df2.keep_extras()
+    result = df1 + df2.keep_extras() + df3
     assert_frame_equal(
         result.data,
         pl.DataFrame(
@@ -432,9 +428,9 @@ def test_three_way_add():
     )
 
     # Should not throw any errors
-    df2.drop_unmatched() + df1 + df3
-    df1 + df3 + df2.drop_unmatched()
-    result = df1 + df2.drop_unmatched() + df3
+    df2.drop_extras() + df1 + df3
+    df1 + df3 + df2.drop_extras()
+    result = df1 + df2.drop_extras() + df3
     assert_frame_equal(
         result.data,
         pl.DataFrame({"dim1": [1], VAR_KEY: [CONST_TERM], COEF_KEY: [9]}),
@@ -461,28 +457,24 @@ def test_propagation_unmatched():
     """,
     )
 
-    assert expr1.keep_unmatched()._unmatched_strategy == UnmatchedStrategy.KEEP
+    assert expr1.keep_extras()._unmatched_strategy == UnmatchedStrategy.KEEP
     assert expr1._unmatched_strategy == UnmatchedStrategy.UNSET, (
-        "keep_unmatched() should not modify the original expression"
+        "keep_extras() should not modify the original expression"
     )
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
     ):
         (expr1 + expr2).sum("dim1") + expr3
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "If this is intentional, use .drop_unmatched() or .keep_unmatched()"
-        ),
+        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
     ):
-        (expr1 + expr2.keep_unmatched()).sum("dim1") + expr3
+        (expr1 + expr2.keep_extras()).sum("dim1") + expr3
 
-    result = (expr1 + expr2.keep_unmatched()).sum("dim1") + expr3.drop_unmatched()
+    result = (expr1 + expr2.keep_extras()).sum("dim1") + expr3.drop_extras()
     assert_frame_equal(
         result.to_str(return_df=True),
         pl.DataFrame([[1, "10"]], schema=["dim2", "expression"], orient="row"),
@@ -512,13 +504,13 @@ def test_propagation_over():
     ):
         expr1.over("y") + expr2
 
-    res1 = expr1.over("y").drop_unmatched() + expr2
-    res2 = expr1.drop_unmatched().over("y") + expr2
+    res1 = expr1.over("y").drop_extras() + expr2
+    res2 = expr1.drop_extras().over("y") + expr2
     assert_frame_equal(res1.data, res2.data)
 
     # check that negation also carries properties
-    res1 = -expr1.over("y").drop_unmatched() + expr2
-    res2 = -expr1.drop_unmatched().over("y") + expr2
+    res1 = -expr1.over("y").drop_extras() + expr2
+    res2 = -expr1.drop_extras().over("y") + expr2
     assert_frame_equal(res1.data, res2.data)
 
 

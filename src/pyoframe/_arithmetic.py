@@ -373,7 +373,7 @@ def _raise_unmatched_values_error(
         left,
         right,
         "of unmatched values",
-        f"Unmatched values:\n{unmatched_values}\nIf this is intentional, use .drop_unmatched() or .keep_unmatched().",
+        f"Unmatched values:\n{unmatched_values}\nIf this is intentional, use .drop_extras() or .keep_extras().",
     )
 
 

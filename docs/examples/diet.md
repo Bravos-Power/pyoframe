@@ -28,9 +28,9 @@ m.Buy = pf.Variable(food["food"], lb=0, ub=food[["food", "stock"]])
 
 nutrient_intake = (m.Buy * food_nutrients).sum_by("category")
 m.min_nutrients = (
-    nutrients[["category", "min"]] <= nutrient_intake.drop_unmatched()  # (1)!
+    nutrients[["category", "min"]] <= nutrient_intake.drop_extras()  # (1)!
 )
-m.max_nutrients = nutrient_intake.drop_unmatched() <= nutrients[["category", "max"]]
+m.max_nutrients = nutrient_intake.drop_extras() <= nutrients[["category", "max"]]
 
 total_cost = (m.Buy * food[["food", "cost"]]).sum()
 m.minimize = total_cost
@@ -39,7 +39,7 @@ m.minimize = total_cost
 m.optimize()
 ```
 
-1. `.drop_unmatched()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/concepts/special-functions.md#drop_unmatched-and-keep_unmatched)
+1. `.drop_extras()` ensures that if `min_nutrient` is `null` for certain foods, no constraint will be created for those foods. [Learn more](../learn/concepts/special-functions.md#drop_extras-and-keep_extras)
 
 So the solution is...
 
