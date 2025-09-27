@@ -104,7 +104,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
         new._extras_strategy = ExtrasStrategy.DROP
         return new
 
-    def keep_unmatched(self):
+    def keep_unmatched(self):  # pragma: no cover
         """Deprecated, use [`keep_extras`][pyoframe.Expression.keep_extras] instead."""
         warnings.warn(
             "'keep_unmatched' has been renamed to 'keep_extras'. Please use 'keep_extras' instead.",
@@ -112,7 +112,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
         )
         return self.keep_extras()
 
-    def drop_unmatched(self):
+    def drop_unmatched(self):  # pragma: no cover
         """Deprecated, use [`drop_extras`][pyoframe.Expression.drop_extras] instead."""
         warnings.warn(
             "'drop_unmatched' has been renamed to 'drop_extras'. Please use 'drop_extras' instead.",
