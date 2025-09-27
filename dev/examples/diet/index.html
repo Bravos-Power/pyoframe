@@ -654,6 +654,8 @@
       
         
       
+        
+      
     
     
     
@@ -703,6 +705,29 @@
   
   <span class="md-ellipsis">
     Pyoframe basics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/concepts/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Addition and its quirks
     
   </span>
   
@@ -1810,9 +1835,9 @@ os.chdir(os.path.join(os.getcwd(), "tests/examples/diet_problem/input_data"))
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">nutrient_intake</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">Buy</span> <span class="o">*</span> <span class="n">food_nutrients</span><span class="p">)</span><span class="o">.</span><span class="n">sum_by</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">m</span><span class="o">.</span><span class="n">min_nutrients</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">nutrients</span><span class="p">[[</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">]]</span> <span class="o">&lt;=</span> <span class="n">nutrient_intake</span><span class="o">.</span><span class="n">drop_unmatched</span><span class="p">()</span>  <span class="c1"># (1)!</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">nutrients</span><span class="p">[[</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;min&quot;</span><span class="p">]]</span> <span class="o">&lt;=</span> <span class="n">nutrient_intake</span><span class="o">.</span><span class="n">drop_extras</span><span class="p">()</span>  <span class="c1"># (1)!</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">m</span><span class="o">.</span><span class="n">max_nutrients</span> <span class="o">=</span> <span class="n">nutrient_intake</span><span class="o">.</span><span class="n">drop_unmatched</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">nutrients</span><span class="p">[[</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">]]</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">m</span><span class="o">.</span><span class="n">max_nutrients</span> <span class="o">=</span> <span class="n">nutrient_intake</span><span class="o">.</span><span class="n">drop_extras</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">nutrients</span><span class="p">[[</span><span class="s2">&quot;category&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">]]</span>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="n">total_cost</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">Buy</span> <span class="o">*</span> <span class="n">food</span><span class="p">[[</span><span class="s2">&quot;food&quot;</span><span class="p">,</span> <span class="s2">&quot;cost&quot;</span><span class="p">]])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 </span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="n">total_cost</span>
@@ -1821,7 +1846,7 @@ os.chdir(os.path.join(os.getcwd(), "tests/examples/diet_problem/input_data"))
 </span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
 </span></code></pre></div>
 <ol>
-<li><code>.drop_unmatched()</code> ensures that if <code>min_nutrient</code> is <code>null</code> for certain foods, no constraint will be created for those foods. <a href="../../learn/concepts/special-functions/#drop_unmatched-and-keep_unmatched">Learn more</a></li>
+<li><code>.drop_extras()</code> ensures that if <code>min_nutrient</code> is <code>null</code> for certain foods, no constraint will be created for those foods. <a href="../../learn/concepts/addition/">Learn more</a></li>
 </ol>
 <p>So the solution is...</p>
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">total_cost</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
@@ -1866,7 +1891,7 @@ os.chdir(os.path.join(os.getcwd(), "tests/examples/diet_problem/input_data"))
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 12, 2025 01:46:21 UTC">August 12, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2025 23:07:32 UTC">September 27, 2025</span>
   </span>
 
     

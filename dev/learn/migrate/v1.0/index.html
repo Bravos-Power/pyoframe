@@ -664,6 +664,8 @@
       
         
       
+        
+      
     
     
     
@@ -716,6 +718,29 @@
   
   <span class="md-ellipsis">
     Pyoframe basics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Addition and its quirks
     
   </span>
   
@@ -1107,9 +1132,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-review-code-for-other-breaking-changes" class="md-nav__link">
+  <a href="#4-rename-keep_unmatched-and-drop_unmatched-with-keep_extras-and-drop_extras" class="md-nav__link">
     <span class="md-ellipsis">
-      4. Review code for other breaking changes
+      4. Rename .keep_unmatched() and .drop_unmatched() with .keep_extras() and .drop_extras()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-review-code-for-other-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Review code for other breaking changes
     </span>
   </a>
   
@@ -1820,9 +1854,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-review-code-for-other-breaking-changes" class="md-nav__link">
+  <a href="#4-rename-keep_unmatched-and-drop_unmatched-with-keep_extras-and-drop_extras" class="md-nav__link">
     <span class="md-ellipsis">
-      4. Review code for other breaking changes
+      4. Rename .keep_unmatched() and .drop_unmatched() with .keep_extras() and .drop_extras()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-review-code-for-other-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Review code for other breaking changes
     </span>
   </a>
   
@@ -1873,7 +1916,7 @@
 <li><strong>New features</strong> including support for the <a href="https://coin-or.github.io/Ipopt/">Ipopt</a> solver, the <a href="https://www.shanshu.ai/copt">COPT</a> solver, and the ability to improve performance with <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;maintain_order&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt;&lt;/code&gt;" href="../../../reference/pyoframe.Config/#pyoframe._constants._Config.maintain_order"><code>pf.Config.maintain_order=False</code></a>.</li>
 <li><strong>Improved performance</strong> after rewriting internal functions based on extensive benchmarking.</li>
 <li><strong>Smoother developer experience</strong>, notably error messages explain the mathematical operations that led to an error and Pyoframe objects now print as legible tables.</li>
-<li><strong>Improved documentation</strong> including a revamped <a href="../../../reference/">API page</a>, an <a href="../../../examples/">examples page</a>, new explanations of functions like <a href="../../concepts/special-functions/#adding-expressions-with-differing-dimensions-using-over"><code>.over(…)</code></a>, and the ability to view previous versions of the documentation.</li>
+<li><strong>Improved documentation</strong> including a revamped <a href="../../../reference/">API page</a>, an <a href="../../../examples/">examples page</a>, new explanations of functions like <a href="../../concepts/addition/#adding-expressions-with-differing-dimensions-using-over"><code>.over(…)</code></a>, and the ability to view previous versions of the documentation.</li>
 <li><strong>More readable syntax</strong> like our decision to rename <code>add_dim</code> to <code>over</code> and the changes to <code>.sum()</code> (see below).</li>
 </ul>
 <p>Unfortunately, these improvements involve some breaking changes. This page will guide you in migrating your code to v1.0.</p>
@@ -1883,9 +1926,10 @@
 <p>Summary:</p>
 <ol>
 <li><a href="#1-update-all-calls-to-pfmodel"><code>pf.Model(…)</code> has a new signature</a></li>
-<li><a href="#2-replace-pfsum-obj-with-objsum"><code>add_dim(…)</code> was renamed to <code>over(…)</code></a></li>
-<li><a href="#3-rename-add_dim-to-over"><code>pf.sum(…, obj)</code> was replaced by <code>obj.sum(…)</code></a></li>
-<li><a href="#4-review-code-for-other-breaking-changes">Other less common breaking changes</a></li>
+<li><a href="#2-replace-pfsum-obj-with-objsum"><code>pf.sum(…, obj)</code> was replaced by <code>obj.sum(…)</code></a></li>
+<li><a href="#3-rename-add_dim-to-over"><code>add_dim(…)</code> was renamed to <code>over(…)</code></a></li>
+<li><a href="#4-rename-keep_unmatched-and-drop_unmatched-with-keep_extras-and-drop_extras"><code>keep_unmatched()</code> and <code>drop_unmatched</code> were renamed to <code>keep_extras()</code> and <code>drop_extras()</code></a></li>
+<li><a href="#5-review-code-for-other-breaking-changes">Other less common breaking changes</a></li>
 </ol>
 <p>Follow the steps below to upgrade to v1.0.</p>
 <h3 id="1-update-all-calls-to-pfmodel">1. Update all calls to <code>pf.Model(…)</code></h3>
@@ -1926,11 +1970,20 @@
 </span></code></pre></div>
 <p>Please update all uses of <code>pf.sum</code> and <code>pf.sum_by</code> accordingly.</p>
 <h3 id="3-rename-add_dim-to-over">3. Rename <code>.add_dim(…)</code> to <code>.over(…)</code></h3>
-<p>For clarity, <code>.add_dim(…)</code> was renamed to <a href="../../concepts/special-functions/#adding-expressions-with-differing-dimensions-using-over"><code>.over(…)</code></a>. Please update your code accordingly.</p>
+<p>For clarity, <code>.add_dim(…)</code> was renamed to <a href="../../concepts/addition/#adding-expressions-with-differing-dimensions-using-over"><code>.over(…)</code></a>. Please update your code accordingly.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">add_dim</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>  <span class="c1"># before</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>  <span class="c1"># after</span>
 </span></code></pre></div>
-<h3 id="4-review-code-for-other-breaking-changes">4. Review code for other breaking changes</h3>
+<h3 id="4-rename-keep_unmatched-and-drop_unmatched-with-keep_extras-and-drop_extras">4. Rename <code>.keep_unmatched()</code> and <code>.drop_unmatched()</code> with <code>.keep_extras()</code> and <code>.drop_extras()</code></h3>
+<p>For clarity, <code>.keep_unmatched()</code> and <code>.drop_unmatched()</code> were renamed to <code>.keep_extras()</code> and <code>.drop_extras()</code>, respectively.
+Please update your code accordingly.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">keep_unmatched</span><span class="p">()</span>  <span class="c1"># before</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">keep_extras</span><span class="p">()</span>  <span class="c1"># after</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">drop_unmatched</span><span class="p">()</span>  <span class="c1"># before</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">drop_extras</span><span class="p">()</span>  <span class="c1"># after</span>
+</span></code></pre></div>
+<h3 id="5-review-code-for-other-breaking-changes">5. Review code for other breaking changes</h3>
 <p>Steps 1 to 3 should cover most breaking changes. For completeness, below are
 some additional breaking changes that you are less likely to encounter.</p>
 <ol>
@@ -1941,7 +1994,7 @@ some additional breaking changes that you are less likely to encounter.</p>
 <p>If you try to read <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;objective&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Objective&lt;/span&gt;&lt;/code&gt;" href="../../../reference/pyoframe.Model/#pyoframe.Model.objective"><code>model.objective</code></a> before having defined an objective, an error will be raised. Prior to v1.0 <code>None</code> was returned.</p>
 </li>
 <li>
-<p><code>.over(…)</code>, <code>.keep_unmatched()</code>, and <code>.drop_unmatched()</code> now have a well-defined "order of operations." They must be applied <em>after</em> all other transforms. For example, <code>my_obj.drop_unmatched().sum("time")</code> no longer works because <code>my_obj.sum("time").drop_unmatched()</code> should be used instead. <a href="../../concepts/special-functions/#addition-modifiers">Learn more</a>.</p>
+<p><code>.over(…)</code>, <code>.keep_extras()</code>, and <code>.drop_extras()</code> now have a well-defined "order of operations." They must be applied <em>after</em> all other transforms. For example, <code>my_obj.drop_extras().sum("time")</code> no longer works because <code>my_obj.sum("time").drop_extras()</code> should be used instead. <a href="../../concepts/addition/">Learn more</a>.</p>
 </li>
 <li>
 <p><code>pf.Config.print_max_set_elements</code>, <code>pf.Config.print_max_line_length</code>, and <code>pf.Config.print_max_lines</code> no longer exist. Use <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;print_max_terms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;/code&gt;" href="../../../reference/pyoframe.Config/#pyoframe._constants._Config.print_max_terms"><code>pf.Config.print_max_terms</code></a> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;print_polars_config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;/code&gt;" href="../../../reference/pyoframe.Config/#pyoframe._constants._Config.print_polars_config"><code>pf.Config.print_polars_config</code></a> instead.</p>
@@ -1953,7 +2006,10 @@ some additional breaking changes that you are less likely to encounter.</p>
 <p><code>pf.Config.default_solver</code> now defaults to <code>"auto"</code> instead of <code>None</code> to clarify that by default, the solver will be automatically detected. Don't set <code>pf.Config.default_solver = None</code>.</p>
 </li>
 <li>
-<p><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Path&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pretty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/pyoframe.Model/#pyoframe.Model.write"><code>Model.write(…)</code></a> is no longer available when using Gurobi and <a class="autorefs autorefs-internal" href="../../../reference/pyoframe.Model/#pyoframe.Model"><code>solver_uses_variable_names=False</code></a>.</p>
+<p><code>pf.Config.disable_unmatched_checks</code> has been renamed to <code>pf.Config.disable_extras_checks</code>.</p>
+</li>
+<li>
+<p>Gurobi users: <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;file_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Path&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pretty&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/pyoframe.Model/#pyoframe.Model.write"><code>Model.write(…)</code></a> is now only available when <a class="autorefs autorefs-internal" href="../../../reference/pyoframe.Model/#pyoframe.Model"><code>solver_uses_variable_names=True</code></a>.</p>
 </li>
 </ol>
 <!-- skip: end -->
@@ -1988,7 +2044,7 @@ some additional breaking changes that you are less likely to encounter.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 25, 2025 21:42:54 UTC">September 25, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2025 23:07:32 UTC">September 27, 2025</span>
   </span>
 
     
@@ -2016,9 +2072,9 @@ some additional breaking changes that you are less likely to encounter.</p>
     
     <nav>
       
-        <a href="https://github.com/eduardosalaz" class="md-author" title="@eduardosalaz">
+        <a href="https://github.com/staadecker" class="md-author" title="@staadecker">
           
-          <img src="https://avatars.githubusercontent.com/u/56232104?v=4&size=72" alt="eduardosalaz">
+          <img src="https://avatars.githubusercontent.com/u/13053829?v=4&size=72" alt="staadecker">
         </a>
       
         <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
@@ -2026,9 +2082,9 @@ some additional breaking changes that you are less likely to encounter.</p>
           <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
         </a>
       
-        <a href="https://github.com/staadecker" class="md-author" title="@staadecker">
+        <a href="https://github.com/eduardosalaz" class="md-author" title="@eduardosalaz">
           
-          <img src="https://avatars.githubusercontent.com/u/13053829?v=4&size=72" alt="staadecker">
+          <img src="https://avatars.githubusercontent.com/u/56232104?v=4&size=72" alt="eduardosalaz">
         </a>
       
       

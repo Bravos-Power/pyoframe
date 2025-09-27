@@ -762,6 +762,8 @@
       
         
       
+        
+      
     
     
     
@@ -814,6 +816,29 @@
   
   <span class="md-ellipsis">
     Pyoframe basics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../concepts/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Addition and its quirks
     
   </span>
   
@@ -1942,7 +1967,7 @@ os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 <p>Previously, you created two variables: <code>m.tofu_blocks</code> and <code>m.chickpea_cans</code>. Instead, create a single variable <strong>dimensioned over the column <code>food</code></strong>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Buy</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;food&quot;</span><span class="p">],</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Printing the variable shows that it contains a <code>food</code> dimension with indices <code>tofu</code> and <code>chickpeas</code>!</p>
+<p>Printing the variable shows that it contains a <code>food</code> dimension with labels <code>tofu</code> and <code>chickpeas</code>!</p>
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Buy</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="go">&lt;Variable &#39;Buy&#39; lb=0 height=2&gt;</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="go">┌──────────────┬───────────────────┐</span>
@@ -2019,7 +2044,7 @@ assert m.Buy.solution["solution"].to_list() == [2, 1]
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="go">│ chickpea_can ┆ 1        │</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="go">└──────────────┴──────────┘</span>
 </span></code></pre></div>
-<p>Notice that since <code>m.Buy</code> is dimensioned, <code>m.Buy.solution</code> returned a DataFrame with the solution for each of indices.</p>
+<p>Notice that since <code>m.Buy</code> is dimensioned, <code>m.Buy.solution</code> returned a DataFrame with the solution for each of the labels.</p>
 <div class="admonition info">
 <p class="admonition-title">Returning Pandas DataFrames</p>
 <p>Pyoframe currently always returns Polars DataFrames but you can easily convert them to Pandas using <a href="https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas"><code>.to_pandas()</code></a>. In the future, we plan to add support for automatically returning Pandas DataFrames. <a href="https://github.com/Bravos-Power/pyoframe/issues/47">Upvote the issue</a> if you'd like this feature.</p>
@@ -2056,7 +2081,7 @@ assert m.Buy.solution["solution"].to_list() == [2, 1]
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 8, 2025 17:31:28 UTC">September 8, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2025 23:07:32 UTC">September 27, 2025</span>
   </span>
 
     

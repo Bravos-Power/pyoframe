@@ -654,6 +654,8 @@
       
         
       
+        
+      
     
     
     
@@ -703,6 +705,29 @@
   
   <span class="md-ellipsis">
     Pyoframe basics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learn/concepts/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Addition and its quirks
     
   </span>
   
@@ -1435,6 +1460,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pyoframe.Constraint.dimensionless" class="md-nav__link">
+    <span class="md-ellipsis">
+      dimensionless
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pyoframe.Constraint.dimensions" class="md-nav__link">
     <span class="md-ellipsis">
       dimensions
@@ -1860,6 +1894,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pyoframe.Constraint.dimensionless" class="md-nav__link">
+    <span class="md-ellipsis">
+      dimensionless
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pyoframe.Constraint.dimensions" class="md-nav__link">
     <span class="md-ellipsis">
       dimensions
@@ -2125,6 +2168,17 @@ This way, the right-hand side is always zero, and constraints only need to manag
             </td>
           </tr>
           <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;dimensionless&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;pyoframe.Constraint.dimensionless&lt;/code&gt;)" href="#pyoframe.Constraint.dimensionless">dimensionless</a></code></td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether the object has no dimensions.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
             <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;dimensions&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;pyoframe.Constraint.dimensions&lt;/code&gt;)" href="#pyoframe.Constraint.dimensions">dimensions</a></code></td>
             <td>
                   <code><span title="list">list</span>[<span title="str">str</span>] | None</code>
@@ -2185,7 +2239,7 @@ This way, the right-hand side is always zero, and constraints only need to manag
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The number of indices in each dimension.</p>
+                <p>The number of distinct labels in each dimension.</p>
               </div>
             </td>
           </tr>
@@ -2194,35 +2248,35 @@ This way, the right-hand side is always zero, and constraints only need to manag
 
                   <details class="quote">
                     <summary>Source code in <code>pyoframe/_core.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1603">1603</a></span>
-<span class="normal"><a href="#__codelineno-0-1604">1604</a></span>
-<span class="normal"><a href="#__codelineno-0-1605">1605</a></span>
-<span class="normal"><a href="#__codelineno-0-1606">1606</a></span>
-<span class="normal"><a href="#__codelineno-0-1607">1607</a></span>
-<span class="normal"><a href="#__codelineno-0-1608">1608</a></span>
-<span class="normal"><a href="#__codelineno-0-1609">1609</a></span>
-<span class="normal"><a href="#__codelineno-0-1610">1610</a></span>
-<span class="normal"><a href="#__codelineno-0-1611">1611</a></span>
-<span class="normal"><a href="#__codelineno-0-1612">1612</a></span>
-<span class="normal"><a href="#__codelineno-0-1613">1613</a></span>
-<span class="normal"><a href="#__codelineno-0-1614">1614</a></span>
-<span class="normal"><a href="#__codelineno-0-1615">1615</a></span>
-<span class="normal"><a href="#__codelineno-0-1616">1616</a></span>
-<span class="normal"><a href="#__codelineno-0-1617">1617</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1603"><a id="__codelineno-0-1603" name="__codelineno-0-1603"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">ConstraintSense</span><span class="p">):</span>
-</span><span id="__span-0-1604"><a id="__codelineno-0-1604" name="__codelineno-0-1604"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">lhs</span>
-</span><span id="__span-0-1605"><a id="__codelineno-0-1605" name="__codelineno-0-1605"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">_model</span>
-</span><span id="__span-0-1606"><a id="__codelineno-0-1606" name="__codelineno-0-1606"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">=</span> <span class="n">sense</span>
-</span><span id="__span-0-1607"><a id="__codelineno-0-1607" name="__codelineno-0-1607"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_to_relax</span><span class="p">:</span> <span class="n">FuncArgs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-1608"><a id="__codelineno-0-1608" name="__codelineno-0-1608"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_attribute</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">)</span>
-</span><span id="__span-0-1609"><a id="__codelineno-0-1609" name="__codelineno-0-1609"></a>
-</span><span id="__span-0-1610"><a id="__codelineno-0-1610" name="__codelineno-0-1610"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">dimensions</span>
-</span><span id="__span-0-1611"><a id="__codelineno-0-1611" name="__codelineno-0-1611"></a>    <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-1612"><a id="__codelineno-0-1612" name="__codelineno-0-1612"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-</span><span id="__span-0-1613"><a id="__codelineno-0-1613" name="__codelineno-0-1613"></a>        <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span>
-</span><span id="__span-0-1614"><a id="__codelineno-0-1614" name="__codelineno-0-1614"></a>        <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
-</span><span id="__span-0-1615"><a id="__codelineno-0-1615" name="__codelineno-0-1615"></a>    <span class="p">)</span>
-</span><span id="__span-0-1616"><a id="__codelineno-0-1616" name="__codelineno-0-1616"></a>
-</span><span id="__span-0-1617"><a id="__codelineno-0-1617" name="__codelineno-0-1617"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1644">1644</a></span>
+<span class="normal"><a href="#__codelineno-0-1645">1645</a></span>
+<span class="normal"><a href="#__codelineno-0-1646">1646</a></span>
+<span class="normal"><a href="#__codelineno-0-1647">1647</a></span>
+<span class="normal"><a href="#__codelineno-0-1648">1648</a></span>
+<span class="normal"><a href="#__codelineno-0-1649">1649</a></span>
+<span class="normal"><a href="#__codelineno-0-1650">1650</a></span>
+<span class="normal"><a href="#__codelineno-0-1651">1651</a></span>
+<span class="normal"><a href="#__codelineno-0-1652">1652</a></span>
+<span class="normal"><a href="#__codelineno-0-1653">1653</a></span>
+<span class="normal"><a href="#__codelineno-0-1654">1654</a></span>
+<span class="normal"><a href="#__codelineno-0-1655">1655</a></span>
+<span class="normal"><a href="#__codelineno-0-1656">1656</a></span>
+<span class="normal"><a href="#__codelineno-0-1657">1657</a></span>
+<span class="normal"><a href="#__codelineno-0-1658">1658</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1644"><a id="__codelineno-0-1644" name="__codelineno-0-1644"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">ConstraintSense</span><span class="p">):</span>
+</span><span id="__span-0-1645"><a id="__codelineno-0-1645" name="__codelineno-0-1645"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">lhs</span>
+</span><span id="__span-0-1646"><a id="__codelineno-0-1646" name="__codelineno-0-1646"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">_model</span>
+</span><span id="__span-0-1647"><a id="__codelineno-0-1647" name="__codelineno-0-1647"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">=</span> <span class="n">sense</span>
+</span><span id="__span-0-1648"><a id="__codelineno-0-1648" name="__codelineno-0-1648"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_to_relax</span><span class="p">:</span> <span class="n">FuncArgs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-1649"><a id="__codelineno-0-1649" name="__codelineno-0-1649"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_attribute</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">)</span>
+</span><span id="__span-0-1650"><a id="__codelineno-0-1650" name="__codelineno-0-1650"></a>
+</span><span id="__span-0-1651"><a id="__codelineno-0-1651" name="__codelineno-0-1651"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">dimensions</span>
+</span><span id="__span-0-1652"><a id="__codelineno-0-1652" name="__codelineno-0-1652"></a>    <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-1653"><a id="__codelineno-0-1653" name="__codelineno-0-1653"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+</span><span id="__span-0-1654"><a id="__codelineno-0-1654" name="__codelineno-0-1654"></a>        <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span id="__span-0-1655"><a id="__codelineno-0-1655" name="__codelineno-0-1655"></a>        <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
+</span><span id="__span-0-1656"><a id="__codelineno-0-1656" name="__codelineno-0-1656"></a>    <span class="p">)</span>
+</span><span id="__span-0-1657"><a id="__codelineno-0-1657" name="__codelineno-0-1657"></a>
+</span><span id="__span-0-1658"><a id="__codelineno-0-1658" name="__codelineno-0-1658"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
                   </details>
 
@@ -2267,6 +2321,40 @@ This way, the right-hand side is always zero, and constraints only need to manag
     <div class="doc doc-contents ">
 
         <p>Returns the object's underlying Polars DataFrame.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="pyoframe.Constraint.dimensionless" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">dimensionless</span><span class="p">:</span> <span class="nb">bool</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Whether the object has no dimensions.</p>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>A variable with no dimensions</p>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">()</span><span class="o">.</span><span class="n">dimensionless</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="go">True</span>
+</span></code></pre></div>
+    <p>A variable with dimensions of "hour" and "city"</p>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">... </span>    <span class="p">[</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;hour&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;00:00&quot;</span><span class="p">,</span> <span class="s2">&quot;06:00&quot;</span><span class="p">,</span> <span class="s2">&quot;12:00&quot;</span><span class="p">,</span> <span class="s2">&quot;18:00&quot;</span><span class="p">]},</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span> <span class="s2">&quot;Berlin&quot;</span><span class="p">,</span> <span class="s2">&quot;Paris&quot;</span><span class="p">]},</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">... </span>    <span class="p">]</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">... </span><span class="p">)</span><span class="o">.</span><span class="n">dimensionless</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="go">False</span>
+</span></code></pre></div>
 
     </div>
 
@@ -2404,7 +2492,7 @@ This way, the right-hand side is always zero, and constraints only need to manag
 
     <div class="doc doc-contents ">
 
-        <p>The number of indices in each dimension.</p>
+        <p>The number of distinct labels in each dimension.</p>
 
 
 <p><span class="doc-section-title">Examples:</span></p>
@@ -2458,45 +2546,45 @@ For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</
 
             <details class="quote">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2004">2004</a></span>
-<span class="normal"><a href="#__codelineno-0-2005">2005</a></span>
-<span class="normal"><a href="#__codelineno-0-2006">2006</a></span>
-<span class="normal"><a href="#__codelineno-0-2007">2007</a></span>
-<span class="normal"><a href="#__codelineno-0-2008">2008</a></span>
-<span class="normal"><a href="#__codelineno-0-2009">2009</a></span>
-<span class="normal"><a href="#__codelineno-0-2010">2010</a></span>
-<span class="normal"><a href="#__codelineno-0-2011">2011</a></span>
-<span class="normal"><a href="#__codelineno-0-2012">2012</a></span>
-<span class="normal"><a href="#__codelineno-0-2013">2013</a></span>
-<span class="normal"><a href="#__codelineno-0-2014">2014</a></span>
-<span class="normal"><a href="#__codelineno-0-2015">2015</a></span>
-<span class="normal"><a href="#__codelineno-0-2016">2016</a></span>
-<span class="normal"><a href="#__codelineno-0-2017">2017</a></span>
-<span class="normal"><a href="#__codelineno-0-2018">2018</a></span>
-<span class="normal"><a href="#__codelineno-0-2019">2019</a></span>
-<span class="normal"><a href="#__codelineno-0-2020">2020</a></span>
-<span class="normal"><a href="#__codelineno-0-2021">2021</a></span>
-<span class="normal"><a href="#__codelineno-0-2022">2022</a></span>
-<span class="normal"><a href="#__codelineno-0-2023">2023</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2004"><a id="__codelineno-0-2004" name="__codelineno-0-2004"></a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="__span-0-2005"><a id="__codelineno-0-2005" name="__codelineno-0-2005"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the estimated size of the constraint.</span>
-</span><span id="__span-0-2006"><a id="__codelineno-0-2006" name="__codelineno-0-2006"></a>
-</span><span id="__span-0-2007"><a id="__codelineno-0-2007" name="__codelineno-0-2007"></a><span class="sd">    Includes the size of the underlying expression (`Constraint.lhs`).</span>
-</span><span id="__span-0-2008"><a id="__codelineno-0-2008" name="__codelineno-0-2008"></a>
-</span><span id="__span-0-2009"><a id="__codelineno-0-2009" name="__codelineno-0-2009"></a><span class="sd">    See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details on signature and behavior.</span>
-</span><span id="__span-0-2010"><a id="__codelineno-0-2010" name="__codelineno-0-2010"></a>
-</span><span id="__span-0-2011"><a id="__codelineno-0-2011" name="__codelineno-0-2011"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-2012"><a id="__codelineno-0-2012" name="__codelineno-0-2012"></a><span class="sd">        An dimensionless constraint has contains a 32 bit constraint id and, for each term, a 64 bit coefficient with a 32 bit variable id.</span>
-</span><span id="__span-0-2013"><a id="__codelineno-0-2013" name="__codelineno-0-2013"></a><span class="sd">        For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</span>
-</span><span id="__span-0-2014"><a id="__codelineno-0-2014" name="__codelineno-0-2014"></a>
-</span><span id="__span-0-2015"><a id="__codelineno-0-2015" name="__codelineno-0-2015"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-2016"><a id="__codelineno-0-2016" name="__codelineno-0-2016"></a><span class="sd">        &gt;&gt;&gt; m.x = pf.Variable()</span>
-</span><span id="__span-0-2017"><a id="__codelineno-0-2017" name="__codelineno-0-2017"></a><span class="sd">        &gt;&gt;&gt; m.con = m.x &lt;= 4</span>
-</span><span id="__span-0-2018"><a id="__codelineno-0-2018" name="__codelineno-0-2018"></a><span class="sd">        &gt;&gt;&gt; m.con.estimated_size()</span>
-</span><span id="__span-0-2019"><a id="__codelineno-0-2019" name="__codelineno-0-2019"></a><span class="sd">        28</span>
-</span><span id="__span-0-2020"><a id="__codelineno-0-2020" name="__codelineno-0-2020"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-2021"><a id="__codelineno-0-2021" name="__codelineno-0-2021"></a>    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span>
-</span><span id="__span-0-2022"><a id="__codelineno-0-2022" name="__codelineno-0-2022"></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-</span><span id="__span-0-2023"><a id="__codelineno-0-2023" name="__codelineno-0-2023"></a>    <span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2045">2045</a></span>
+<span class="normal"><a href="#__codelineno-0-2046">2046</a></span>
+<span class="normal"><a href="#__codelineno-0-2047">2047</a></span>
+<span class="normal"><a href="#__codelineno-0-2048">2048</a></span>
+<span class="normal"><a href="#__codelineno-0-2049">2049</a></span>
+<span class="normal"><a href="#__codelineno-0-2050">2050</a></span>
+<span class="normal"><a href="#__codelineno-0-2051">2051</a></span>
+<span class="normal"><a href="#__codelineno-0-2052">2052</a></span>
+<span class="normal"><a href="#__codelineno-0-2053">2053</a></span>
+<span class="normal"><a href="#__codelineno-0-2054">2054</a></span>
+<span class="normal"><a href="#__codelineno-0-2055">2055</a></span>
+<span class="normal"><a href="#__codelineno-0-2056">2056</a></span>
+<span class="normal"><a href="#__codelineno-0-2057">2057</a></span>
+<span class="normal"><a href="#__codelineno-0-2058">2058</a></span>
+<span class="normal"><a href="#__codelineno-0-2059">2059</a></span>
+<span class="normal"><a href="#__codelineno-0-2060">2060</a></span>
+<span class="normal"><a href="#__codelineno-0-2061">2061</a></span>
+<span class="normal"><a href="#__codelineno-0-2062">2062</a></span>
+<span class="normal"><a href="#__codelineno-0-2063">2063</a></span>
+<span class="normal"><a href="#__codelineno-0-2064">2064</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2045"><a id="__codelineno-0-2045" name="__codelineno-0-2045"></a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="__span-0-2046"><a id="__codelineno-0-2046" name="__codelineno-0-2046"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the estimated size of the constraint.</span>
+</span><span id="__span-0-2047"><a id="__codelineno-0-2047" name="__codelineno-0-2047"></a>
+</span><span id="__span-0-2048"><a id="__codelineno-0-2048" name="__codelineno-0-2048"></a><span class="sd">    Includes the size of the underlying expression (`Constraint.lhs`).</span>
+</span><span id="__span-0-2049"><a id="__codelineno-0-2049" name="__codelineno-0-2049"></a>
+</span><span id="__span-0-2050"><a id="__codelineno-0-2050" name="__codelineno-0-2050"></a><span class="sd">    See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details on signature and behavior.</span>
+</span><span id="__span-0-2051"><a id="__codelineno-0-2051" name="__codelineno-0-2051"></a>
+</span><span id="__span-0-2052"><a id="__codelineno-0-2052" name="__codelineno-0-2052"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2053"><a id="__codelineno-0-2053" name="__codelineno-0-2053"></a><span class="sd">        An dimensionless constraint has contains a 32 bit constraint id and, for each term, a 64 bit coefficient with a 32 bit variable id.</span>
+</span><span id="__span-0-2054"><a id="__codelineno-0-2054" name="__codelineno-0-2054"></a><span class="sd">        For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</span>
+</span><span id="__span-0-2055"><a id="__codelineno-0-2055" name="__codelineno-0-2055"></a>
+</span><span id="__span-0-2056"><a id="__codelineno-0-2056" name="__codelineno-0-2056"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2057"><a id="__codelineno-0-2057" name="__codelineno-0-2057"></a><span class="sd">        &gt;&gt;&gt; m.x = pf.Variable()</span>
+</span><span id="__span-0-2058"><a id="__codelineno-0-2058" name="__codelineno-0-2058"></a><span class="sd">        &gt;&gt;&gt; m.con = m.x &lt;= 4</span>
+</span><span id="__span-0-2059"><a id="__codelineno-0-2059" name="__codelineno-0-2059"></a><span class="sd">        &gt;&gt;&gt; m.con.estimated_size()</span>
+</span><span id="__span-0-2060"><a id="__codelineno-0-2060" name="__codelineno-0-2060"></a><span class="sd">        28</span>
+</span><span id="__span-0-2061"><a id="__codelineno-0-2061" name="__codelineno-0-2061"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-2062"><a id="__codelineno-0-2062" name="__codelineno-0-2062"></a>    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span>
+</span><span id="__span-0-2063"><a id="__codelineno-0-2063" name="__codelineno-0-2063"></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+</span><span id="__span-0-2064"><a id="__codelineno-0-2064" name="__codelineno-0-2064"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2519,11 +2607,11 @@ For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</
 
             <details class="quote">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1865">1865</a></span>
-<span class="normal"><a href="#__codelineno-0-1866">1866</a></span>
-<span class="normal"><a href="#__codelineno-0-1867">1867</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1865"><a id="__codelineno-0-1865" name="__codelineno-0-1865"></a><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="__span-0-1866"><a id="__codelineno-0-1866" name="__codelineno-0-1866"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Syntactic sugar on `Constraint.lhs.data.filter()`, to help debugging.&quot;&quot;&quot;</span>
-</span><span id="__span-0-1867"><a id="__codelineno-0-1867" name="__codelineno-0-1867"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1906">1906</a></span>
+<span class="normal"><a href="#__codelineno-0-1907">1907</a></span>
+<span class="normal"><a href="#__codelineno-0-1908">1908</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1906"><a id="__codelineno-0-1906" name="__codelineno-0-1906"></a><span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="__span-0-1907"><a id="__codelineno-0-1907" name="__codelineno-0-1907"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Syntactic sugar on `Constraint.lhs.data.filter()`, to help debugging.&quot;&quot;&quot;</span>
+</span><span id="__span-0-1908"><a id="__codelineno-0-1908" name="__codelineno-0-1908"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2695,48 +2783,7 @@ make them negative for maximization problems.</p>
 
             <details class="quote">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1869">1869</a></span>
-<span class="normal"><a href="#__codelineno-0-1870">1870</a></span>
-<span class="normal"><a href="#__codelineno-0-1871">1871</a></span>
-<span class="normal"><a href="#__codelineno-0-1872">1872</a></span>
-<span class="normal"><a href="#__codelineno-0-1873">1873</a></span>
-<span class="normal"><a href="#__codelineno-0-1874">1874</a></span>
-<span class="normal"><a href="#__codelineno-0-1875">1875</a></span>
-<span class="normal"><a href="#__codelineno-0-1876">1876</a></span>
-<span class="normal"><a href="#__codelineno-0-1877">1877</a></span>
-<span class="normal"><a href="#__codelineno-0-1878">1878</a></span>
-<span class="normal"><a href="#__codelineno-0-1879">1879</a></span>
-<span class="normal"><a href="#__codelineno-0-1880">1880</a></span>
-<span class="normal"><a href="#__codelineno-0-1881">1881</a></span>
-<span class="normal"><a href="#__codelineno-0-1882">1882</a></span>
-<span class="normal"><a href="#__codelineno-0-1883">1883</a></span>
-<span class="normal"><a href="#__codelineno-0-1884">1884</a></span>
-<span class="normal"><a href="#__codelineno-0-1885">1885</a></span>
-<span class="normal"><a href="#__codelineno-0-1886">1886</a></span>
-<span class="normal"><a href="#__codelineno-0-1887">1887</a></span>
-<span class="normal"><a href="#__codelineno-0-1888">1888</a></span>
-<span class="normal"><a href="#__codelineno-0-1889">1889</a></span>
-<span class="normal"><a href="#__codelineno-0-1890">1890</a></span>
-<span class="normal"><a href="#__codelineno-0-1891">1891</a></span>
-<span class="normal"><a href="#__codelineno-0-1892">1892</a></span>
-<span class="normal"><a href="#__codelineno-0-1893">1893</a></span>
-<span class="normal"><a href="#__codelineno-0-1894">1894</a></span>
-<span class="normal"><a href="#__codelineno-0-1895">1895</a></span>
-<span class="normal"><a href="#__codelineno-0-1896">1896</a></span>
-<span class="normal"><a href="#__codelineno-0-1897">1897</a></span>
-<span class="normal"><a href="#__codelineno-0-1898">1898</a></span>
-<span class="normal"><a href="#__codelineno-0-1899">1899</a></span>
-<span class="normal"><a href="#__codelineno-0-1900">1900</a></span>
-<span class="normal"><a href="#__codelineno-0-1901">1901</a></span>
-<span class="normal"><a href="#__codelineno-0-1902">1902</a></span>
-<span class="normal"><a href="#__codelineno-0-1903">1903</a></span>
-<span class="normal"><a href="#__codelineno-0-1904">1904</a></span>
-<span class="normal"><a href="#__codelineno-0-1905">1905</a></span>
-<span class="normal"><a href="#__codelineno-0-1906">1906</a></span>
-<span class="normal"><a href="#__codelineno-0-1907">1907</a></span>
-<span class="normal"><a href="#__codelineno-0-1908">1908</a></span>
-<span class="normal"><a href="#__codelineno-0-1909">1909</a></span>
-<span class="normal"><a href="#__codelineno-0-1910">1910</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1910">1910</a></span>
 <span class="normal"><a href="#__codelineno-0-1911">1911</a></span>
 <span class="normal"><a href="#__codelineno-0-1912">1912</a></span>
 <span class="normal"><a href="#__codelineno-0-1913">1913</a></span>
@@ -2828,140 +2875,181 @@ make them negative for maximization problems.</p>
 <span class="normal"><a href="#__codelineno-0-1999">1999</a></span>
 <span class="normal"><a href="#__codelineno-0-2000">2000</a></span>
 <span class="normal"><a href="#__codelineno-0-2001">2001</a></span>
-<span class="normal"><a href="#__codelineno-0-2002">2002</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1869"><a id="__codelineno-0-1869" name="__codelineno-0-1869"></a><span class="k">def</span><span class="w"> </span><span class="nf">relax</span><span class="p">(</span>
-</span><span id="__span-0-1870"><a id="__codelineno-0-1870" name="__codelineno-0-1870"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">cost</span><span class="p">:</span> <span class="n">SupportsToExpr</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="n">SupportsToExpr</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-1871"><a id="__codelineno-0-1871" name="__codelineno-0-1871"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Constraint</span><span class="p">:</span>
-</span><span id="__span-0-1872"><a id="__codelineno-0-1872" name="__codelineno-0-1872"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows the constraint to be violated at a `cost` and, optionally, up to a maximum.</span>
-</span><span id="__span-0-1873"><a id="__codelineno-0-1873" name="__codelineno-0-1873"></a>
-</span><span id="__span-0-1874"><a id="__codelineno-0-1874" name="__codelineno-0-1874"></a><span class="sd">    Warning:</span>
-</span><span id="__span-0-1875"><a id="__codelineno-0-1875" name="__codelineno-0-1875"></a><span class="sd">        `.relax()` must be called before the constraint is assigned to the [Model][pyoframe.Model] (see examples below).</span>
-</span><span id="__span-0-1876"><a id="__codelineno-0-1876" name="__codelineno-0-1876"></a>
-</span><span id="__span-0-1877"><a id="__codelineno-0-1877" name="__codelineno-0-1877"></a><span class="sd">    Parameters:</span>
-</span><span id="__span-0-1878"><a id="__codelineno-0-1878" name="__codelineno-0-1878"></a><span class="sd">        cost:</span>
-</span><span id="__span-0-1879"><a id="__codelineno-0-1879" name="__codelineno-0-1879"></a><span class="sd">            The cost of violating the constraint. Costs should be positive because Pyoframe will automatically</span>
-</span><span id="__span-0-1880"><a id="__codelineno-0-1880" name="__codelineno-0-1880"></a><span class="sd">            make them negative for maximization problems.</span>
-</span><span id="__span-0-1881"><a id="__codelineno-0-1881" name="__codelineno-0-1881"></a><span class="sd">        max:</span>
-</span><span id="__span-0-1882"><a id="__codelineno-0-1882" name="__codelineno-0-1882"></a><span class="sd">            The maximum value of the relaxation variable.</span>
-</span><span id="__span-0-1883"><a id="__codelineno-0-1883" name="__codelineno-0-1883"></a>
-</span><span id="__span-0-1884"><a id="__codelineno-0-1884" name="__codelineno-0-1884"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-1885"><a id="__codelineno-0-1885" name="__codelineno-0-1885"></a><span class="sd">        The same constraint</span>
-</span><span id="__span-0-1886"><a id="__codelineno-0-1886" name="__codelineno-0-1886"></a>
-</span><span id="__span-0-1887"><a id="__codelineno-0-1887" name="__codelineno-0-1887"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-1888"><a id="__codelineno-0-1888" name="__codelineno-0-1888"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-1889"><a id="__codelineno-0-1889" name="__codelineno-0-1889"></a><span class="sd">        &gt;&gt;&gt; m.hours_sleep = pf.Variable(lb=0)</span>
-</span><span id="__span-0-1890"><a id="__codelineno-0-1890" name="__codelineno-0-1890"></a><span class="sd">        &gt;&gt;&gt; m.hours_day = pf.Variable(lb=0)</span>
-</span><span id="__span-0-1891"><a id="__codelineno-0-1891" name="__codelineno-0-1891"></a><span class="sd">        &gt;&gt;&gt; m.hours_in_day = m.hours_sleep + m.hours_day == 24</span>
-</span><span id="__span-0-1892"><a id="__codelineno-0-1892" name="__codelineno-0-1892"></a><span class="sd">        &gt;&gt;&gt; m.maximize = m.hours_day</span>
-</span><span id="__span-0-1893"><a id="__codelineno-0-1893" name="__codelineno-0-1893"></a><span class="sd">        &gt;&gt;&gt; m.must_sleep = (m.hours_sleep &gt;= 8).relax(cost=2, max=3)</span>
-</span><span id="__span-0-1894"><a id="__codelineno-0-1894" name="__codelineno-0-1894"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
-</span><span id="__span-0-1895"><a id="__codelineno-0-1895" name="__codelineno-0-1895"></a><span class="sd">        &gt;&gt;&gt; m.hours_day.solution</span>
-</span><span id="__span-0-1896"><a id="__codelineno-0-1896" name="__codelineno-0-1896"></a><span class="sd">        16.0</span>
-</span><span id="__span-0-1897"><a id="__codelineno-0-1897" name="__codelineno-0-1897"></a><span class="sd">        &gt;&gt;&gt; m.maximize += 2 * m.hours_day</span>
-</span><span id="__span-0-1898"><a id="__codelineno-0-1898" name="__codelineno-0-1898"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
-</span><span id="__span-0-1899"><a id="__codelineno-0-1899" name="__codelineno-0-1899"></a><span class="sd">        &gt;&gt;&gt; m.hours_day.solution</span>
-</span><span id="__span-0-1900"><a id="__codelineno-0-1900" name="__codelineno-0-1900"></a><span class="sd">        19.0</span>
-</span><span id="__span-0-1901"><a id="__codelineno-0-1901" name="__codelineno-0-1901"></a>
-</span><span id="__span-0-1902"><a id="__codelineno-0-1902" name="__codelineno-0-1902"></a><span class="sd">        `relax` can only be called after the sense of the model has been defined.</span>
-</span><span id="__span-0-1903"><a id="__codelineno-0-1903" name="__codelineno-0-1903"></a>
-</span><span id="__span-0-1904"><a id="__codelineno-0-1904" name="__codelineno-0-1904"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-1905"><a id="__codelineno-0-1905" name="__codelineno-0-1905"></a><span class="sd">        &gt;&gt;&gt; m.hours_sleep = pf.Variable(lb=0)</span>
-</span><span id="__span-0-1906"><a id="__codelineno-0-1906" name="__codelineno-0-1906"></a><span class="sd">        &gt;&gt;&gt; m.hours_day = pf.Variable(lb=0)</span>
-</span><span id="__span-0-1907"><a id="__codelineno-0-1907" name="__codelineno-0-1907"></a><span class="sd">        &gt;&gt;&gt; m.hours_in_day = m.hours_sleep + m.hours_day == 24</span>
-</span><span id="__span-0-1908"><a id="__codelineno-0-1908" name="__codelineno-0-1908"></a><span class="sd">        &gt;&gt;&gt; m.must_sleep = (m.hours_sleep &gt;= 8).relax(cost=2, max=3)</span>
-</span><span id="__span-0-1909"><a id="__codelineno-0-1909" name="__codelineno-0-1909"></a><span class="sd">        Traceback (most recent call last):</span>
-</span><span id="__span-0-1910"><a id="__codelineno-0-1910" name="__codelineno-0-1910"></a><span class="sd">        ...</span>
-</span><span id="__span-0-1911"><a id="__codelineno-0-1911" name="__codelineno-0-1911"></a><span class="sd">        ValueError: Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).</span>
-</span><span id="__span-0-1912"><a id="__codelineno-0-1912" name="__codelineno-0-1912"></a>
-</span><span id="__span-0-1913"><a id="__codelineno-0-1913" name="__codelineno-0-1913"></a><span class="sd">        One way to solve this is by setting the sense directly on the model. See how this works fine:</span>
+<span class="normal"><a href="#__codelineno-0-2002">2002</a></span>
+<span class="normal"><a href="#__codelineno-0-2003">2003</a></span>
+<span class="normal"><a href="#__codelineno-0-2004">2004</a></span>
+<span class="normal"><a href="#__codelineno-0-2005">2005</a></span>
+<span class="normal"><a href="#__codelineno-0-2006">2006</a></span>
+<span class="normal"><a href="#__codelineno-0-2007">2007</a></span>
+<span class="normal"><a href="#__codelineno-0-2008">2008</a></span>
+<span class="normal"><a href="#__codelineno-0-2009">2009</a></span>
+<span class="normal"><a href="#__codelineno-0-2010">2010</a></span>
+<span class="normal"><a href="#__codelineno-0-2011">2011</a></span>
+<span class="normal"><a href="#__codelineno-0-2012">2012</a></span>
+<span class="normal"><a href="#__codelineno-0-2013">2013</a></span>
+<span class="normal"><a href="#__codelineno-0-2014">2014</a></span>
+<span class="normal"><a href="#__codelineno-0-2015">2015</a></span>
+<span class="normal"><a href="#__codelineno-0-2016">2016</a></span>
+<span class="normal"><a href="#__codelineno-0-2017">2017</a></span>
+<span class="normal"><a href="#__codelineno-0-2018">2018</a></span>
+<span class="normal"><a href="#__codelineno-0-2019">2019</a></span>
+<span class="normal"><a href="#__codelineno-0-2020">2020</a></span>
+<span class="normal"><a href="#__codelineno-0-2021">2021</a></span>
+<span class="normal"><a href="#__codelineno-0-2022">2022</a></span>
+<span class="normal"><a href="#__codelineno-0-2023">2023</a></span>
+<span class="normal"><a href="#__codelineno-0-2024">2024</a></span>
+<span class="normal"><a href="#__codelineno-0-2025">2025</a></span>
+<span class="normal"><a href="#__codelineno-0-2026">2026</a></span>
+<span class="normal"><a href="#__codelineno-0-2027">2027</a></span>
+<span class="normal"><a href="#__codelineno-0-2028">2028</a></span>
+<span class="normal"><a href="#__codelineno-0-2029">2029</a></span>
+<span class="normal"><a href="#__codelineno-0-2030">2030</a></span>
+<span class="normal"><a href="#__codelineno-0-2031">2031</a></span>
+<span class="normal"><a href="#__codelineno-0-2032">2032</a></span>
+<span class="normal"><a href="#__codelineno-0-2033">2033</a></span>
+<span class="normal"><a href="#__codelineno-0-2034">2034</a></span>
+<span class="normal"><a href="#__codelineno-0-2035">2035</a></span>
+<span class="normal"><a href="#__codelineno-0-2036">2036</a></span>
+<span class="normal"><a href="#__codelineno-0-2037">2037</a></span>
+<span class="normal"><a href="#__codelineno-0-2038">2038</a></span>
+<span class="normal"><a href="#__codelineno-0-2039">2039</a></span>
+<span class="normal"><a href="#__codelineno-0-2040">2040</a></span>
+<span class="normal"><a href="#__codelineno-0-2041">2041</a></span>
+<span class="normal"><a href="#__codelineno-0-2042">2042</a></span>
+<span class="normal"><a href="#__codelineno-0-2043">2043</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1910"><a id="__codelineno-0-1910" name="__codelineno-0-1910"></a><span class="k">def</span><span class="w"> </span><span class="nf">relax</span><span class="p">(</span>
+</span><span id="__span-0-1911"><a id="__codelineno-0-1911" name="__codelineno-0-1911"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">cost</span><span class="p">:</span> <span class="n">SupportsToExpr</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="n">SupportsToExpr</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-1912"><a id="__codelineno-0-1912" name="__codelineno-0-1912"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Constraint</span><span class="p">:</span>
+</span><span id="__span-0-1913"><a id="__codelineno-0-1913" name="__codelineno-0-1913"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Allows the constraint to be violated at a `cost` and, optionally, up to a maximum.</span>
 </span><span id="__span-0-1914"><a id="__codelineno-0-1914" name="__codelineno-0-1914"></a>
-</span><span id="__span-0-1915"><a id="__codelineno-0-1915" name="__codelineno-0-1915"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model(sense=&quot;max&quot;)</span>
-</span><span id="__span-0-1916"><a id="__codelineno-0-1916" name="__codelineno-0-1916"></a><span class="sd">        &gt;&gt;&gt; m.hours_sleep = pf.Variable(lb=0)</span>
-</span><span id="__span-0-1917"><a id="__codelineno-0-1917" name="__codelineno-0-1917"></a><span class="sd">        &gt;&gt;&gt; m.hours_day = pf.Variable(lb=0)</span>
-</span><span id="__span-0-1918"><a id="__codelineno-0-1918" name="__codelineno-0-1918"></a><span class="sd">        &gt;&gt;&gt; m.hours_in_day = m.hours_sleep + m.hours_day == 24</span>
-</span><span id="__span-0-1919"><a id="__codelineno-0-1919" name="__codelineno-0-1919"></a><span class="sd">        &gt;&gt;&gt; m.must_sleep = (m.hours_sleep &gt;= 8).relax(cost=2, max=3)</span>
-</span><span id="__span-0-1920"><a id="__codelineno-0-1920" name="__codelineno-0-1920"></a>
-</span><span id="__span-0-1921"><a id="__codelineno-0-1921" name="__codelineno-0-1921"></a><span class="sd">        And now an example with dimensions:</span>
-</span><span id="__span-0-1922"><a id="__codelineno-0-1922" name="__codelineno-0-1922"></a>
-</span><span id="__span-0-1923"><a id="__codelineno-0-1923" name="__codelineno-0-1923"></a><span class="sd">        &gt;&gt;&gt; homework_due_tomorrow = pl.DataFrame(</span>
-</span><span id="__span-0-1924"><a id="__codelineno-0-1924" name="__codelineno-0-1924"></a><span class="sd">        ...     {</span>
-</span><span id="__span-0-1925"><a id="__codelineno-0-1925" name="__codelineno-0-1925"></a><span class="sd">        ...         &quot;project&quot;: [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;],</span>
-</span><span id="__span-0-1926"><a id="__codelineno-0-1926" name="__codelineno-0-1926"></a><span class="sd">        ...         &quot;cost_per_hour_underdelivered&quot;: [10, 20, 30],</span>
-</span><span id="__span-0-1927"><a id="__codelineno-0-1927" name="__codelineno-0-1927"></a><span class="sd">        ...         &quot;hours_to_finish&quot;: [9, 9, 9],</span>
-</span><span id="__span-0-1928"><a id="__codelineno-0-1928" name="__codelineno-0-1928"></a><span class="sd">        ...         &quot;max_underdelivered&quot;: [1, 9, 9],</span>
-</span><span id="__span-0-1929"><a id="__codelineno-0-1929" name="__codelineno-0-1929"></a><span class="sd">        ...     }</span>
-</span><span id="__span-0-1930"><a id="__codelineno-0-1930" name="__codelineno-0-1930"></a><span class="sd">        ... )</span>
-</span><span id="__span-0-1931"><a id="__codelineno-0-1931" name="__codelineno-0-1931"></a><span class="sd">        &gt;&gt;&gt; m.hours_spent = pf.Variable(homework_due_tomorrow[&quot;project&quot;], lb=0)</span>
-</span><span id="__span-0-1932"><a id="__codelineno-0-1932" name="__codelineno-0-1932"></a><span class="sd">        &gt;&gt;&gt; m.must_finish_project = (</span>
-</span><span id="__span-0-1933"><a id="__codelineno-0-1933" name="__codelineno-0-1933"></a><span class="sd">        ...     m.hours_spent</span>
-</span><span id="__span-0-1934"><a id="__codelineno-0-1934" name="__codelineno-0-1934"></a><span class="sd">        ...     &gt;= homework_due_tomorrow[[&quot;project&quot;, &quot;hours_to_finish&quot;]]</span>
-</span><span id="__span-0-1935"><a id="__codelineno-0-1935" name="__codelineno-0-1935"></a><span class="sd">        ... ).relax(</span>
-</span><span id="__span-0-1936"><a id="__codelineno-0-1936" name="__codelineno-0-1936"></a><span class="sd">        ...     homework_due_tomorrow[[&quot;project&quot;, &quot;cost_per_hour_underdelivered&quot;]],</span>
-</span><span id="__span-0-1937"><a id="__codelineno-0-1937" name="__codelineno-0-1937"></a><span class="sd">        ...     max=homework_due_tomorrow[[&quot;project&quot;, &quot;max_underdelivered&quot;]],</span>
-</span><span id="__span-0-1938"><a id="__codelineno-0-1938" name="__codelineno-0-1938"></a><span class="sd">        ... )</span>
-</span><span id="__span-0-1939"><a id="__codelineno-0-1939" name="__codelineno-0-1939"></a><span class="sd">        &gt;&gt;&gt; m.only_one_day = m.hours_spent.sum(&quot;project&quot;) &lt;= 24</span>
-</span><span id="__span-0-1940"><a id="__codelineno-0-1940" name="__codelineno-0-1940"></a><span class="sd">        &gt;&gt;&gt; # Relaxing a constraint after it has already been assigned will give an error</span>
-</span><span id="__span-0-1941"><a id="__codelineno-0-1941" name="__codelineno-0-1941"></a><span class="sd">        &gt;&gt;&gt; m.only_one_day.relax(1)</span>
-</span><span id="__span-0-1942"><a id="__codelineno-0-1942" name="__codelineno-0-1942"></a><span class="sd">        Traceback (most recent call last):</span>
-</span><span id="__span-0-1943"><a id="__codelineno-0-1943" name="__codelineno-0-1943"></a><span class="sd">        ...</span>
-</span><span id="__span-0-1944"><a id="__codelineno-0-1944" name="__codelineno-0-1944"></a><span class="sd">        ValueError: .relax() must be called before the Constraint is added to the model</span>
-</span><span id="__span-0-1945"><a id="__codelineno-0-1945" name="__codelineno-0-1945"></a><span class="sd">        &gt;&gt;&gt; m.attr.Silent = True</span>
-</span><span id="__span-0-1946"><a id="__codelineno-0-1946" name="__codelineno-0-1946"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
-</span><span id="__span-0-1947"><a id="__codelineno-0-1947" name="__codelineno-0-1947"></a><span class="sd">        &gt;&gt;&gt; m.maximize.value</span>
-</span><span id="__span-0-1948"><a id="__codelineno-0-1948" name="__codelineno-0-1948"></a><span class="sd">        -50.0</span>
-</span><span id="__span-0-1949"><a id="__codelineno-0-1949" name="__codelineno-0-1949"></a><span class="sd">        &gt;&gt;&gt; m.hours_spent.solution</span>
-</span><span id="__span-0-1950"><a id="__codelineno-0-1950" name="__codelineno-0-1950"></a><span class="sd">        shape: (3, 2)</span>
-</span><span id="__span-0-1951"><a id="__codelineno-0-1951" name="__codelineno-0-1951"></a><span class="sd">        ┌─────────┬──────────┐</span>
-</span><span id="__span-0-1952"><a id="__codelineno-0-1952" name="__codelineno-0-1952"></a><span class="sd">        │ project ┆ solution │</span>
-</span><span id="__span-0-1953"><a id="__codelineno-0-1953" name="__codelineno-0-1953"></a><span class="sd">        │ ---     ┆ ---      │</span>
-</span><span id="__span-0-1954"><a id="__codelineno-0-1954" name="__codelineno-0-1954"></a><span class="sd">        │ str     ┆ f64      │</span>
-</span><span id="__span-0-1955"><a id="__codelineno-0-1955" name="__codelineno-0-1955"></a><span class="sd">        ╞═════════╪══════════╡</span>
-</span><span id="__span-0-1956"><a id="__codelineno-0-1956" name="__codelineno-0-1956"></a><span class="sd">        │ A       ┆ 8.0      │</span>
-</span><span id="__span-0-1957"><a id="__codelineno-0-1957" name="__codelineno-0-1957"></a><span class="sd">        │ B       ┆ 7.0      │</span>
-</span><span id="__span-0-1958"><a id="__codelineno-0-1958" name="__codelineno-0-1958"></a><span class="sd">        │ C       ┆ 9.0      │</span>
-</span><span id="__span-0-1959"><a id="__codelineno-0-1959" name="__codelineno-0-1959"></a><span class="sd">        └─────────┴──────────┘</span>
-</span><span id="__span-0-1960"><a id="__codelineno-0-1960" name="__codelineno-0-1960"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-1961"><a id="__codelineno-0-1961" name="__codelineno-0-1961"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_ids</span><span class="p">:</span>
-</span><span id="__span-0-1962"><a id="__codelineno-0-1962" name="__codelineno-0-1962"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="__span-0-1963"><a id="__codelineno-0-1963" name="__codelineno-0-1963"></a>            <span class="s2">&quot;.relax() must be called before the Constraint is added to the model&quot;</span>
-</span><span id="__span-0-1964"><a id="__codelineno-0-1964" name="__codelineno-0-1964"></a>        <span class="p">)</span>
-</span><span id="__span-0-1965"><a id="__codelineno-0-1965" name="__codelineno-0-1965"></a>
-</span><span id="__span-0-1966"><a id="__codelineno-0-1966" name="__codelineno-0-1966"></a>    <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
-</span><span id="__span-0-1967"><a id="__codelineno-0-1967" name="__codelineno-0-1967"></a>    <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-1968"><a id="__codelineno-0-1968" name="__codelineno-0-1968"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_to_relax</span> <span class="o">=</span> <span class="n">FuncArgs</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">cost</span><span class="p">,</span> <span class="nb">max</span><span class="p">])</span>
-</span><span id="__span-0-1969"><a id="__codelineno-0-1969" name="__codelineno-0-1969"></a>        <span class="k">return</span> <span class="bp">self</span>
-</span><span id="__span-0-1970"><a id="__codelineno-0-1970" name="__codelineno-0-1970"></a>
-</span><span id="__span-0-1971"><a id="__codelineno-0-1971" name="__codelineno-0-1971"></a>    <span class="n">var_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_relaxation&quot;</span>
-</span><span id="__span-0-1972"><a id="__codelineno-0-1972" name="__codelineno-0-1972"></a>    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">var_name</span><span class="p">),</span> <span class="p">(</span>
-</span><span id="__span-0-1973"><a id="__codelineno-0-1973" name="__codelineno-0-1973"></a>        <span class="s2">&quot;Conflicting names, relaxation variable already exists on the model.&quot;</span>
-</span><span id="__span-0-1974"><a id="__codelineno-0-1974" name="__codelineno-0-1974"></a>    <span class="p">)</span>
-</span><span id="__span-0-1975"><a id="__codelineno-0-1975" name="__codelineno-0-1975"></a>    <span class="n">var</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ub</span><span class="o">=</span><span class="nb">max</span><span class="p">)</span>
-</span><span id="__span-0-1976"><a id="__codelineno-0-1976" name="__codelineno-0-1976"></a>    <span class="nb">setattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
-</span><span id="__span-0-1977"><a id="__codelineno-0-1977" name="__codelineno-0-1977"></a>
-</span><span id="__span-0-1978"><a id="__codelineno-0-1978" name="__codelineno-0-1978"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">LE</span><span class="p">:</span>
-</span><span id="__span-0-1979"><a id="__codelineno-0-1979" name="__codelineno-0-1979"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-=</span> <span class="n">var</span>
-</span><span id="__span-0-1980"><a id="__codelineno-0-1980" name="__codelineno-0-1980"></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">GE</span><span class="p">:</span>
-</span><span id="__span-0-1981"><a id="__codelineno-0-1981" name="__codelineno-0-1981"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">+=</span> <span class="n">var</span>
-</span><span id="__span-0-1982"><a id="__codelineno-0-1982" name="__codelineno-0-1982"></a>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="__span-0-1983"><a id="__codelineno-0-1983" name="__codelineno-0-1983"></a>        <span class="c1"># TODO</span>
-</span><span id="__span-0-1984"><a id="__codelineno-0-1984" name="__codelineno-0-1984"></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-</span><span id="__span-0-1985"><a id="__codelineno-0-1985" name="__codelineno-0-1985"></a>            <span class="s2">&quot;Relaxation for equalities has not yet been implemented. Submit a pull request!&quot;</span>
-</span><span id="__span-0-1986"><a id="__codelineno-0-1986" name="__codelineno-0-1986"></a>        <span class="p">)</span>
-</span><span id="__span-0-1987"><a id="__codelineno-0-1987" name="__codelineno-0-1987"></a>
-</span><span id="__span-0-1988"><a id="__codelineno-0-1988" name="__codelineno-0-1988"></a>    <span class="n">penalty</span> <span class="o">=</span> <span class="n">var</span> <span class="o">*</span> <span class="n">cost</span>
-</span><span id="__span-0-1989"><a id="__codelineno-0-1989" name="__codelineno-0-1989"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
-</span><span id="__span-0-1990"><a id="__codelineno-0-1990" name="__codelineno-0-1990"></a>        <span class="n">penalty</span> <span class="o">=</span> <span class="n">penalty</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span id="__span-0-1991"><a id="__codelineno-0-1991" name="__codelineno-0-1991"></a>    <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">sense</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-1992"><a id="__codelineno-0-1992" name="__codelineno-0-1992"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span id="__span-0-1993"><a id="__codelineno-0-1993" name="__codelineno-0-1993"></a>            <span class="s2">&quot;Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).&quot;</span>
-</span><span id="__span-0-1994"><a id="__codelineno-0-1994" name="__codelineno-0-1994"></a>        <span class="p">)</span>
-</span><span id="__span-0-1995"><a id="__codelineno-0-1995" name="__codelineno-0-1995"></a>    <span class="k">elif</span> <span class="n">m</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ObjSense</span><span class="o">.</span><span class="n">MAX</span><span class="p">:</span>
-</span><span id="__span-0-1996"><a id="__codelineno-0-1996" name="__codelineno-0-1996"></a>        <span class="n">penalty</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-0-1997"><a id="__codelineno-0-1997" name="__codelineno-0-1997"></a>    <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">has_objective</span><span class="p">:</span>
-</span><span id="__span-0-1998"><a id="__codelineno-0-1998" name="__codelineno-0-1998"></a>        <span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">+=</span> <span class="n">penalty</span>
-</span><span id="__span-0-1999"><a id="__codelineno-0-1999" name="__codelineno-0-1999"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2000"><a id="__codelineno-0-2000" name="__codelineno-0-2000"></a>        <span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">penalty</span>
-</span><span id="__span-0-2001"><a id="__codelineno-0-2001" name="__codelineno-0-2001"></a>
-</span><span id="__span-0-2002"><a id="__codelineno-0-2002" name="__codelineno-0-2002"></a>    <span class="k">return</span> <span class="bp">self</span>
+</span><span id="__span-0-1915"><a id="__codelineno-0-1915" name="__codelineno-0-1915"></a><span class="sd">    Warning:</span>
+</span><span id="__span-0-1916"><a id="__codelineno-0-1916" name="__codelineno-0-1916"></a><span class="sd">        `.relax()` must be called before the constraint is assigned to the [Model][pyoframe.Model] (see examples below).</span>
+</span><span id="__span-0-1917"><a id="__codelineno-0-1917" name="__codelineno-0-1917"></a>
+</span><span id="__span-0-1918"><a id="__codelineno-0-1918" name="__codelineno-0-1918"></a><span class="sd">    Parameters:</span>
+</span><span id="__span-0-1919"><a id="__codelineno-0-1919" name="__codelineno-0-1919"></a><span class="sd">        cost:</span>
+</span><span id="__span-0-1920"><a id="__codelineno-0-1920" name="__codelineno-0-1920"></a><span class="sd">            The cost of violating the constraint. Costs should be positive because Pyoframe will automatically</span>
+</span><span id="__span-0-1921"><a id="__codelineno-0-1921" name="__codelineno-0-1921"></a><span class="sd">            make them negative for maximization problems.</span>
+</span><span id="__span-0-1922"><a id="__codelineno-0-1922" name="__codelineno-0-1922"></a><span class="sd">        max:</span>
+</span><span id="__span-0-1923"><a id="__codelineno-0-1923" name="__codelineno-0-1923"></a><span class="sd">            The maximum value of the relaxation variable.</span>
+</span><span id="__span-0-1924"><a id="__codelineno-0-1924" name="__codelineno-0-1924"></a>
+</span><span id="__span-0-1925"><a id="__codelineno-0-1925" name="__codelineno-0-1925"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-1926"><a id="__codelineno-0-1926" name="__codelineno-0-1926"></a><span class="sd">        The same constraint</span>
+</span><span id="__span-0-1927"><a id="__codelineno-0-1927" name="__codelineno-0-1927"></a>
+</span><span id="__span-0-1928"><a id="__codelineno-0-1928" name="__codelineno-0-1928"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-1929"><a id="__codelineno-0-1929" name="__codelineno-0-1929"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-1930"><a id="__codelineno-0-1930" name="__codelineno-0-1930"></a><span class="sd">        &gt;&gt;&gt; m.hours_sleep = pf.Variable(lb=0)</span>
+</span><span id="__span-0-1931"><a id="__codelineno-0-1931" name="__codelineno-0-1931"></a><span class="sd">        &gt;&gt;&gt; m.hours_day = pf.Variable(lb=0)</span>
+</span><span id="__span-0-1932"><a id="__codelineno-0-1932" name="__codelineno-0-1932"></a><span class="sd">        &gt;&gt;&gt; m.hours_in_day = m.hours_sleep + m.hours_day == 24</span>
+</span><span id="__span-0-1933"><a id="__codelineno-0-1933" name="__codelineno-0-1933"></a><span class="sd">        &gt;&gt;&gt; m.maximize = m.hours_day</span>
+</span><span id="__span-0-1934"><a id="__codelineno-0-1934" name="__codelineno-0-1934"></a><span class="sd">        &gt;&gt;&gt; m.must_sleep = (m.hours_sleep &gt;= 8).relax(cost=2, max=3)</span>
+</span><span id="__span-0-1935"><a id="__codelineno-0-1935" name="__codelineno-0-1935"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-1936"><a id="__codelineno-0-1936" name="__codelineno-0-1936"></a><span class="sd">        &gt;&gt;&gt; m.hours_day.solution</span>
+</span><span id="__span-0-1937"><a id="__codelineno-0-1937" name="__codelineno-0-1937"></a><span class="sd">        16.0</span>
+</span><span id="__span-0-1938"><a id="__codelineno-0-1938" name="__codelineno-0-1938"></a><span class="sd">        &gt;&gt;&gt; m.maximize += 2 * m.hours_day</span>
+</span><span id="__span-0-1939"><a id="__codelineno-0-1939" name="__codelineno-0-1939"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-1940"><a id="__codelineno-0-1940" name="__codelineno-0-1940"></a><span class="sd">        &gt;&gt;&gt; m.hours_day.solution</span>
+</span><span id="__span-0-1941"><a id="__codelineno-0-1941" name="__codelineno-0-1941"></a><span class="sd">        19.0</span>
+</span><span id="__span-0-1942"><a id="__codelineno-0-1942" name="__codelineno-0-1942"></a>
+</span><span id="__span-0-1943"><a id="__codelineno-0-1943" name="__codelineno-0-1943"></a><span class="sd">        `relax` can only be called after the sense of the model has been defined.</span>
+</span><span id="__span-0-1944"><a id="__codelineno-0-1944" name="__codelineno-0-1944"></a>
+</span><span id="__span-0-1945"><a id="__codelineno-0-1945" name="__codelineno-0-1945"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-1946"><a id="__codelineno-0-1946" name="__codelineno-0-1946"></a><span class="sd">        &gt;&gt;&gt; m.hours_sleep = pf.Variable(lb=0)</span>
+</span><span id="__span-0-1947"><a id="__codelineno-0-1947" name="__codelineno-0-1947"></a><span class="sd">        &gt;&gt;&gt; m.hours_day = pf.Variable(lb=0)</span>
+</span><span id="__span-0-1948"><a id="__codelineno-0-1948" name="__codelineno-0-1948"></a><span class="sd">        &gt;&gt;&gt; m.hours_in_day = m.hours_sleep + m.hours_day == 24</span>
+</span><span id="__span-0-1949"><a id="__codelineno-0-1949" name="__codelineno-0-1949"></a><span class="sd">        &gt;&gt;&gt; m.must_sleep = (m.hours_sleep &gt;= 8).relax(cost=2, max=3)</span>
+</span><span id="__span-0-1950"><a id="__codelineno-0-1950" name="__codelineno-0-1950"></a><span class="sd">        Traceback (most recent call last):</span>
+</span><span id="__span-0-1951"><a id="__codelineno-0-1951" name="__codelineno-0-1951"></a><span class="sd">        ...</span>
+</span><span id="__span-0-1952"><a id="__codelineno-0-1952" name="__codelineno-0-1952"></a><span class="sd">        ValueError: Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).</span>
+</span><span id="__span-0-1953"><a id="__codelineno-0-1953" name="__codelineno-0-1953"></a>
+</span><span id="__span-0-1954"><a id="__codelineno-0-1954" name="__codelineno-0-1954"></a><span class="sd">        One way to solve this is by setting the sense directly on the model. See how this works fine:</span>
+</span><span id="__span-0-1955"><a id="__codelineno-0-1955" name="__codelineno-0-1955"></a>
+</span><span id="__span-0-1956"><a id="__codelineno-0-1956" name="__codelineno-0-1956"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model(sense=&quot;max&quot;)</span>
+</span><span id="__span-0-1957"><a id="__codelineno-0-1957" name="__codelineno-0-1957"></a><span class="sd">        &gt;&gt;&gt; m.hours_sleep = pf.Variable(lb=0)</span>
+</span><span id="__span-0-1958"><a id="__codelineno-0-1958" name="__codelineno-0-1958"></a><span class="sd">        &gt;&gt;&gt; m.hours_day = pf.Variable(lb=0)</span>
+</span><span id="__span-0-1959"><a id="__codelineno-0-1959" name="__codelineno-0-1959"></a><span class="sd">        &gt;&gt;&gt; m.hours_in_day = m.hours_sleep + m.hours_day == 24</span>
+</span><span id="__span-0-1960"><a id="__codelineno-0-1960" name="__codelineno-0-1960"></a><span class="sd">        &gt;&gt;&gt; m.must_sleep = (m.hours_sleep &gt;= 8).relax(cost=2, max=3)</span>
+</span><span id="__span-0-1961"><a id="__codelineno-0-1961" name="__codelineno-0-1961"></a>
+</span><span id="__span-0-1962"><a id="__codelineno-0-1962" name="__codelineno-0-1962"></a><span class="sd">        And now an example with dimensions:</span>
+</span><span id="__span-0-1963"><a id="__codelineno-0-1963" name="__codelineno-0-1963"></a>
+</span><span id="__span-0-1964"><a id="__codelineno-0-1964" name="__codelineno-0-1964"></a><span class="sd">        &gt;&gt;&gt; homework_due_tomorrow = pl.DataFrame(</span>
+</span><span id="__span-0-1965"><a id="__codelineno-0-1965" name="__codelineno-0-1965"></a><span class="sd">        ...     {</span>
+</span><span id="__span-0-1966"><a id="__codelineno-0-1966" name="__codelineno-0-1966"></a><span class="sd">        ...         &quot;project&quot;: [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;],</span>
+</span><span id="__span-0-1967"><a id="__codelineno-0-1967" name="__codelineno-0-1967"></a><span class="sd">        ...         &quot;cost_per_hour_underdelivered&quot;: [10, 20, 30],</span>
+</span><span id="__span-0-1968"><a id="__codelineno-0-1968" name="__codelineno-0-1968"></a><span class="sd">        ...         &quot;hours_to_finish&quot;: [9, 9, 9],</span>
+</span><span id="__span-0-1969"><a id="__codelineno-0-1969" name="__codelineno-0-1969"></a><span class="sd">        ...         &quot;max_underdelivered&quot;: [1, 9, 9],</span>
+</span><span id="__span-0-1970"><a id="__codelineno-0-1970" name="__codelineno-0-1970"></a><span class="sd">        ...     }</span>
+</span><span id="__span-0-1971"><a id="__codelineno-0-1971" name="__codelineno-0-1971"></a><span class="sd">        ... )</span>
+</span><span id="__span-0-1972"><a id="__codelineno-0-1972" name="__codelineno-0-1972"></a><span class="sd">        &gt;&gt;&gt; m.hours_spent = pf.Variable(homework_due_tomorrow[&quot;project&quot;], lb=0)</span>
+</span><span id="__span-0-1973"><a id="__codelineno-0-1973" name="__codelineno-0-1973"></a><span class="sd">        &gt;&gt;&gt; m.must_finish_project = (</span>
+</span><span id="__span-0-1974"><a id="__codelineno-0-1974" name="__codelineno-0-1974"></a><span class="sd">        ...     m.hours_spent</span>
+</span><span id="__span-0-1975"><a id="__codelineno-0-1975" name="__codelineno-0-1975"></a><span class="sd">        ...     &gt;= homework_due_tomorrow[[&quot;project&quot;, &quot;hours_to_finish&quot;]]</span>
+</span><span id="__span-0-1976"><a id="__codelineno-0-1976" name="__codelineno-0-1976"></a><span class="sd">        ... ).relax(</span>
+</span><span id="__span-0-1977"><a id="__codelineno-0-1977" name="__codelineno-0-1977"></a><span class="sd">        ...     homework_due_tomorrow[[&quot;project&quot;, &quot;cost_per_hour_underdelivered&quot;]],</span>
+</span><span id="__span-0-1978"><a id="__codelineno-0-1978" name="__codelineno-0-1978"></a><span class="sd">        ...     max=homework_due_tomorrow[[&quot;project&quot;, &quot;max_underdelivered&quot;]],</span>
+</span><span id="__span-0-1979"><a id="__codelineno-0-1979" name="__codelineno-0-1979"></a><span class="sd">        ... )</span>
+</span><span id="__span-0-1980"><a id="__codelineno-0-1980" name="__codelineno-0-1980"></a><span class="sd">        &gt;&gt;&gt; m.only_one_day = m.hours_spent.sum(&quot;project&quot;) &lt;= 24</span>
+</span><span id="__span-0-1981"><a id="__codelineno-0-1981" name="__codelineno-0-1981"></a><span class="sd">        &gt;&gt;&gt; # Relaxing a constraint after it has already been assigned will give an error</span>
+</span><span id="__span-0-1982"><a id="__codelineno-0-1982" name="__codelineno-0-1982"></a><span class="sd">        &gt;&gt;&gt; m.only_one_day.relax(1)</span>
+</span><span id="__span-0-1983"><a id="__codelineno-0-1983" name="__codelineno-0-1983"></a><span class="sd">        Traceback (most recent call last):</span>
+</span><span id="__span-0-1984"><a id="__codelineno-0-1984" name="__codelineno-0-1984"></a><span class="sd">        ...</span>
+</span><span id="__span-0-1985"><a id="__codelineno-0-1985" name="__codelineno-0-1985"></a><span class="sd">        ValueError: .relax() must be called before the Constraint is added to the model</span>
+</span><span id="__span-0-1986"><a id="__codelineno-0-1986" name="__codelineno-0-1986"></a><span class="sd">        &gt;&gt;&gt; m.attr.Silent = True</span>
+</span><span id="__span-0-1987"><a id="__codelineno-0-1987" name="__codelineno-0-1987"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-1988"><a id="__codelineno-0-1988" name="__codelineno-0-1988"></a><span class="sd">        &gt;&gt;&gt; m.maximize.value</span>
+</span><span id="__span-0-1989"><a id="__codelineno-0-1989" name="__codelineno-0-1989"></a><span class="sd">        -50.0</span>
+</span><span id="__span-0-1990"><a id="__codelineno-0-1990" name="__codelineno-0-1990"></a><span class="sd">        &gt;&gt;&gt; m.hours_spent.solution</span>
+</span><span id="__span-0-1991"><a id="__codelineno-0-1991" name="__codelineno-0-1991"></a><span class="sd">        shape: (3, 2)</span>
+</span><span id="__span-0-1992"><a id="__codelineno-0-1992" name="__codelineno-0-1992"></a><span class="sd">        ┌─────────┬──────────┐</span>
+</span><span id="__span-0-1993"><a id="__codelineno-0-1993" name="__codelineno-0-1993"></a><span class="sd">        │ project ┆ solution │</span>
+</span><span id="__span-0-1994"><a id="__codelineno-0-1994" name="__codelineno-0-1994"></a><span class="sd">        │ ---     ┆ ---      │</span>
+</span><span id="__span-0-1995"><a id="__codelineno-0-1995" name="__codelineno-0-1995"></a><span class="sd">        │ str     ┆ f64      │</span>
+</span><span id="__span-0-1996"><a id="__codelineno-0-1996" name="__codelineno-0-1996"></a><span class="sd">        ╞═════════╪══════════╡</span>
+</span><span id="__span-0-1997"><a id="__codelineno-0-1997" name="__codelineno-0-1997"></a><span class="sd">        │ A       ┆ 8.0      │</span>
+</span><span id="__span-0-1998"><a id="__codelineno-0-1998" name="__codelineno-0-1998"></a><span class="sd">        │ B       ┆ 7.0      │</span>
+</span><span id="__span-0-1999"><a id="__codelineno-0-1999" name="__codelineno-0-1999"></a><span class="sd">        │ C       ┆ 9.0      │</span>
+</span><span id="__span-0-2000"><a id="__codelineno-0-2000" name="__codelineno-0-2000"></a><span class="sd">        └─────────┴──────────┘</span>
+</span><span id="__span-0-2001"><a id="__codelineno-0-2001" name="__codelineno-0-2001"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-2002"><a id="__codelineno-0-2002" name="__codelineno-0-2002"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_ids</span><span class="p">:</span>
+</span><span id="__span-0-2003"><a id="__codelineno-0-2003" name="__codelineno-0-2003"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="__span-0-2004"><a id="__codelineno-0-2004" name="__codelineno-0-2004"></a>            <span class="s2">&quot;.relax() must be called before the Constraint is added to the model&quot;</span>
+</span><span id="__span-0-2005"><a id="__codelineno-0-2005" name="__codelineno-0-2005"></a>        <span class="p">)</span>
+</span><span id="__span-0-2006"><a id="__codelineno-0-2006" name="__codelineno-0-2006"></a>
+</span><span id="__span-0-2007"><a id="__codelineno-0-2007" name="__codelineno-0-2007"></a>    <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+</span><span id="__span-0-2008"><a id="__codelineno-0-2008" name="__codelineno-0-2008"></a>    <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2009"><a id="__codelineno-0-2009" name="__codelineno-0-2009"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_to_relax</span> <span class="o">=</span> <span class="n">FuncArgs</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="n">cost</span><span class="p">,</span> <span class="nb">max</span><span class="p">])</span>
+</span><span id="__span-0-2010"><a id="__codelineno-0-2010" name="__codelineno-0-2010"></a>        <span class="k">return</span> <span class="bp">self</span>
+</span><span id="__span-0-2011"><a id="__codelineno-0-2011" name="__codelineno-0-2011"></a>
+</span><span id="__span-0-2012"><a id="__codelineno-0-2012" name="__codelineno-0-2012"></a>    <span class="n">var_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_relaxation&quot;</span>
+</span><span id="__span-0-2013"><a id="__codelineno-0-2013" name="__codelineno-0-2013"></a>    <span class="k">assert</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">var_name</span><span class="p">),</span> <span class="p">(</span>
+</span><span id="__span-0-2014"><a id="__codelineno-0-2014" name="__codelineno-0-2014"></a>        <span class="s2">&quot;Conflicting names, relaxation variable already exists on the model.&quot;</span>
+</span><span id="__span-0-2015"><a id="__codelineno-0-2015" name="__codelineno-0-2015"></a>    <span class="p">)</span>
+</span><span id="__span-0-2016"><a id="__codelineno-0-2016" name="__codelineno-0-2016"></a>    <span class="n">var</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ub</span><span class="o">=</span><span class="nb">max</span><span class="p">)</span>
+</span><span id="__span-0-2017"><a id="__codelineno-0-2017" name="__codelineno-0-2017"></a>    <span class="nb">setattr</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">var</span><span class="p">)</span>
+</span><span id="__span-0-2018"><a id="__codelineno-0-2018" name="__codelineno-0-2018"></a>
+</span><span id="__span-0-2019"><a id="__codelineno-0-2019" name="__codelineno-0-2019"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">LE</span><span class="p">:</span>
+</span><span id="__span-0-2020"><a id="__codelineno-0-2020" name="__codelineno-0-2020"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-=</span> <span class="n">var</span>
+</span><span id="__span-0-2021"><a id="__codelineno-0-2021" name="__codelineno-0-2021"></a>    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">GE</span><span class="p">:</span>
+</span><span id="__span-0-2022"><a id="__codelineno-0-2022" name="__codelineno-0-2022"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">+=</span> <span class="n">var</span>
+</span><span id="__span-0-2023"><a id="__codelineno-0-2023" name="__codelineno-0-2023"></a>    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+</span><span id="__span-0-2024"><a id="__codelineno-0-2024" name="__codelineno-0-2024"></a>        <span class="c1"># TODO</span>
+</span><span id="__span-0-2025"><a id="__codelineno-0-2025" name="__codelineno-0-2025"></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+</span><span id="__span-0-2026"><a id="__codelineno-0-2026" name="__codelineno-0-2026"></a>            <span class="s2">&quot;Relaxation for equalities has not yet been implemented. Submit a pull request!&quot;</span>
+</span><span id="__span-0-2027"><a id="__codelineno-0-2027" name="__codelineno-0-2027"></a>        <span class="p">)</span>
+</span><span id="__span-0-2028"><a id="__codelineno-0-2028" name="__codelineno-0-2028"></a>
+</span><span id="__span-0-2029"><a id="__codelineno-0-2029" name="__codelineno-0-2029"></a>    <span class="n">penalty</span> <span class="o">=</span> <span class="n">var</span> <span class="o">*</span> <span class="n">cost</span>
+</span><span id="__span-0-2030"><a id="__codelineno-0-2030" name="__codelineno-0-2030"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">:</span>
+</span><span id="__span-0-2031"><a id="__codelineno-0-2031" name="__codelineno-0-2031"></a>        <span class="n">penalty</span> <span class="o">=</span> <span class="n">penalty</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span id="__span-0-2032"><a id="__codelineno-0-2032" name="__codelineno-0-2032"></a>    <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">sense</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2033"><a id="__codelineno-0-2033" name="__codelineno-0-2033"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span id="__span-0-2034"><a id="__codelineno-0-2034" name="__codelineno-0-2034"></a>            <span class="s2">&quot;Cannot relax a constraint before the objective sense has been set. Try setting the objective first or using Model(sense=...).&quot;</span>
+</span><span id="__span-0-2035"><a id="__codelineno-0-2035" name="__codelineno-0-2035"></a>        <span class="p">)</span>
+</span><span id="__span-0-2036"><a id="__codelineno-0-2036" name="__codelineno-0-2036"></a>    <span class="k">elif</span> <span class="n">m</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ObjSense</span><span class="o">.</span><span class="n">MAX</span><span class="p">:</span>
+</span><span id="__span-0-2037"><a id="__codelineno-0-2037" name="__codelineno-0-2037"></a>        <span class="n">penalty</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-0-2038"><a id="__codelineno-0-2038" name="__codelineno-0-2038"></a>    <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">has_objective</span><span class="p">:</span>
+</span><span id="__span-0-2039"><a id="__codelineno-0-2039" name="__codelineno-0-2039"></a>        <span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">+=</span> <span class="n">penalty</span>
+</span><span id="__span-0-2040"><a id="__codelineno-0-2040" name="__codelineno-0-2040"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2041"><a id="__codelineno-0-2041" name="__codelineno-0-2041"></a>        <span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">penalty</span>
+</span><span id="__span-0-2042"><a id="__codelineno-0-2042" name="__codelineno-0-2042"></a>
+</span><span id="__span-0-2043"><a id="__codelineno-0-2043" name="__codelineno-0-2043"></a>    <span class="k">return</span> <span class="bp">self</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3078,48 +3166,7 @@ make them negative for maximization problems.</p>
 
             <details class="quote">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2031">2031</a></span>
-<span class="normal"><a href="#__codelineno-0-2032">2032</a></span>
-<span class="normal"><a href="#__codelineno-0-2033">2033</a></span>
-<span class="normal"><a href="#__codelineno-0-2034">2034</a></span>
-<span class="normal"><a href="#__codelineno-0-2035">2035</a></span>
-<span class="normal"><a href="#__codelineno-0-2036">2036</a></span>
-<span class="normal"><a href="#__codelineno-0-2037">2037</a></span>
-<span class="normal"><a href="#__codelineno-0-2038">2038</a></span>
-<span class="normal"><a href="#__codelineno-0-2039">2039</a></span>
-<span class="normal"><a href="#__codelineno-0-2040">2040</a></span>
-<span class="normal"><a href="#__codelineno-0-2041">2041</a></span>
-<span class="normal"><a href="#__codelineno-0-2042">2042</a></span>
-<span class="normal"><a href="#__codelineno-0-2043">2043</a></span>
-<span class="normal"><a href="#__codelineno-0-2044">2044</a></span>
-<span class="normal"><a href="#__codelineno-0-2045">2045</a></span>
-<span class="normal"><a href="#__codelineno-0-2046">2046</a></span>
-<span class="normal"><a href="#__codelineno-0-2047">2047</a></span>
-<span class="normal"><a href="#__codelineno-0-2048">2048</a></span>
-<span class="normal"><a href="#__codelineno-0-2049">2049</a></span>
-<span class="normal"><a href="#__codelineno-0-2050">2050</a></span>
-<span class="normal"><a href="#__codelineno-0-2051">2051</a></span>
-<span class="normal"><a href="#__codelineno-0-2052">2052</a></span>
-<span class="normal"><a href="#__codelineno-0-2053">2053</a></span>
-<span class="normal"><a href="#__codelineno-0-2054">2054</a></span>
-<span class="normal"><a href="#__codelineno-0-2055">2055</a></span>
-<span class="normal"><a href="#__codelineno-0-2056">2056</a></span>
-<span class="normal"><a href="#__codelineno-0-2057">2057</a></span>
-<span class="normal"><a href="#__codelineno-0-2058">2058</a></span>
-<span class="normal"><a href="#__codelineno-0-2059">2059</a></span>
-<span class="normal"><a href="#__codelineno-0-2060">2060</a></span>
-<span class="normal"><a href="#__codelineno-0-2061">2061</a></span>
-<span class="normal"><a href="#__codelineno-0-2062">2062</a></span>
-<span class="normal"><a href="#__codelineno-0-2063">2063</a></span>
-<span class="normal"><a href="#__codelineno-0-2064">2064</a></span>
-<span class="normal"><a href="#__codelineno-0-2065">2065</a></span>
-<span class="normal"><a href="#__codelineno-0-2066">2066</a></span>
-<span class="normal"><a href="#__codelineno-0-2067">2067</a></span>
-<span class="normal"><a href="#__codelineno-0-2068">2068</a></span>
-<span class="normal"><a href="#__codelineno-0-2069">2069</a></span>
-<span class="normal"><a href="#__codelineno-0-2070">2070</a></span>
-<span class="normal"><a href="#__codelineno-0-2071">2071</a></span>
-<span class="normal"><a href="#__codelineno-0-2072">2072</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2072">2072</a></span>
 <span class="normal"><a href="#__codelineno-0-2073">2073</a></span>
 <span class="normal"><a href="#__codelineno-0-2074">2074</a></span>
 <span class="normal"><a href="#__codelineno-0-2075">2075</a></span>
@@ -3168,97 +3215,138 @@ make them negative for maximization problems.</p>
 <span class="normal"><a href="#__codelineno-0-2118">2118</a></span>
 <span class="normal"><a href="#__codelineno-0-2119">2119</a></span>
 <span class="normal"><a href="#__codelineno-0-2120">2120</a></span>
-<span class="normal"><a href="#__codelineno-0-2121">2121</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2031"><a id="__codelineno-0-2031" name="__codelineno-0-2031"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_df</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="__span-0-2032"><a id="__codelineno-0-2032" name="__codelineno-0-2032"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts the constraint to a human-readable string, or several arranged in a table.</span>
-</span><span id="__span-0-2033"><a id="__codelineno-0-2033" name="__codelineno-0-2033"></a>
-</span><span id="__span-0-2034"><a id="__codelineno-0-2034" name="__codelineno-0-2034"></a><span class="sd">    Long expressions are truncated according to [`Config.print_max_terms`][pyoframe._Config.print_max_terms] and [`Config.print_polars_config`][pyoframe._Config.print_polars_config].</span>
-</span><span id="__span-0-2035"><a id="__codelineno-0-2035" name="__codelineno-0-2035"></a>
-</span><span id="__span-0-2036"><a id="__codelineno-0-2036" name="__codelineno-0-2036"></a><span class="sd">    Parameters:</span>
-</span><span id="__span-0-2037"><a id="__codelineno-0-2037" name="__codelineno-0-2037"></a><span class="sd">        return_df:</span>
-</span><span id="__span-0-2038"><a id="__codelineno-0-2038" name="__codelineno-0-2038"></a><span class="sd">            If `True`, returns a DataFrame containing strings instead of the string representation of the DataFrame.</span>
-</span><span id="__span-0-2039"><a id="__codelineno-0-2039" name="__codelineno-0-2039"></a>
-</span><span id="__span-0-2040"><a id="__codelineno-0-2040" name="__codelineno-0-2040"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-2041"><a id="__codelineno-0-2041" name="__codelineno-0-2041"></a><span class="sd">        &gt;&gt;&gt; import polars as pl</span>
-</span><span id="__span-0-2042"><a id="__codelineno-0-2042" name="__codelineno-0-2042"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-2043"><a id="__codelineno-0-2043" name="__codelineno-0-2043"></a><span class="sd">        &gt;&gt;&gt; x = pf.Set(x=range(1000))</span>
-</span><span id="__span-0-2044"><a id="__codelineno-0-2044" name="__codelineno-0-2044"></a><span class="sd">        &gt;&gt;&gt; y = pf.Set(y=range(1000))</span>
-</span><span id="__span-0-2045"><a id="__codelineno-0-2045" name="__codelineno-0-2045"></a><span class="sd">        &gt;&gt;&gt; m.V = pf.Variable(x, y)</span>
-</span><span id="__span-0-2046"><a id="__codelineno-0-2046" name="__codelineno-0-2046"></a><span class="sd">        &gt;&gt;&gt; expr = 2 * m.V * m.V</span>
-</span><span id="__span-0-2047"><a id="__codelineno-0-2047" name="__codelineno-0-2047"></a><span class="sd">        &gt;&gt;&gt; print((expr &lt;= 3).to_str())</span>
-</span><span id="__span-0-2048"><a id="__codelineno-0-2048" name="__codelineno-0-2048"></a><span class="sd">        ┌────────┬────────┬────────────────────────────────┐</span>
-</span><span id="__span-0-2049"><a id="__codelineno-0-2049" name="__codelineno-0-2049"></a><span class="sd">        │ x      ┆ y      ┆ constraint                     │</span>
-</span><span id="__span-0-2050"><a id="__codelineno-0-2050" name="__codelineno-0-2050"></a><span class="sd">        │ (1000) ┆ (1000) ┆                                │</span>
-</span><span id="__span-0-2051"><a id="__codelineno-0-2051" name="__codelineno-0-2051"></a><span class="sd">        ╞════════╪════════╪════════════════════════════════╡</span>
-</span><span id="__span-0-2052"><a id="__codelineno-0-2052" name="__codelineno-0-2052"></a><span class="sd">        │ 0      ┆ 0      ┆ 2 V[0,0] * V[0,0] &lt;= 3         │</span>
-</span><span id="__span-0-2053"><a id="__codelineno-0-2053" name="__codelineno-0-2053"></a><span class="sd">        │ 0      ┆ 1      ┆ 2 V[0,1] * V[0,1] &lt;= 3         │</span>
-</span><span id="__span-0-2054"><a id="__codelineno-0-2054" name="__codelineno-0-2054"></a><span class="sd">        │ 0      ┆ 2      ┆ 2 V[0,2] * V[0,2] &lt;= 3         │</span>
-</span><span id="__span-0-2055"><a id="__codelineno-0-2055" name="__codelineno-0-2055"></a><span class="sd">        │ 0      ┆ 3      ┆ 2 V[0,3] * V[0,3] &lt;= 3         │</span>
-</span><span id="__span-0-2056"><a id="__codelineno-0-2056" name="__codelineno-0-2056"></a><span class="sd">        │ 0      ┆ 4      ┆ 2 V[0,4] * V[0,4] &lt;= 3         │</span>
-</span><span id="__span-0-2057"><a id="__codelineno-0-2057" name="__codelineno-0-2057"></a><span class="sd">        │ …      ┆ …      ┆ …                              │</span>
-</span><span id="__span-0-2058"><a id="__codelineno-0-2058" name="__codelineno-0-2058"></a><span class="sd">        │ 999    ┆ 995    ┆ 2 V[999,995] * V[999,995] &lt;= 3 │</span>
-</span><span id="__span-0-2059"><a id="__codelineno-0-2059" name="__codelineno-0-2059"></a><span class="sd">        │ 999    ┆ 996    ┆ 2 V[999,996] * V[999,996] &lt;= 3 │</span>
-</span><span id="__span-0-2060"><a id="__codelineno-0-2060" name="__codelineno-0-2060"></a><span class="sd">        │ 999    ┆ 997    ┆ 2 V[999,997] * V[999,997] &lt;= 3 │</span>
-</span><span id="__span-0-2061"><a id="__codelineno-0-2061" name="__codelineno-0-2061"></a><span class="sd">        │ 999    ┆ 998    ┆ 2 V[999,998] * V[999,998] &lt;= 3 │</span>
-</span><span id="__span-0-2062"><a id="__codelineno-0-2062" name="__codelineno-0-2062"></a><span class="sd">        │ 999    ┆ 999    ┆ 2 V[999,999] * V[999,999] &lt;= 3 │</span>
-</span><span id="__span-0-2063"><a id="__codelineno-0-2063" name="__codelineno-0-2063"></a><span class="sd">        └────────┴────────┴────────────────────────────────┘</span>
-</span><span id="__span-0-2064"><a id="__codelineno-0-2064" name="__codelineno-0-2064"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum(&quot;x&quot;)</span>
-</span><span id="__span-0-2065"><a id="__codelineno-0-2065" name="__codelineno-0-2065"></a><span class="sd">        &gt;&gt;&gt; print((expr &gt;= 3).to_str())</span>
-</span><span id="__span-0-2066"><a id="__codelineno-0-2066" name="__codelineno-0-2066"></a><span class="sd">        ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐</span>
-</span><span id="__span-0-2067"><a id="__codelineno-0-2067" name="__codelineno-0-2067"></a><span class="sd">        │ y      ┆ constraint                                                                              │</span>
-</span><span id="__span-0-2068"><a id="__codelineno-0-2068" name="__codelineno-0-2068"></a><span class="sd">        │ (1000) ┆                                                                                         │</span>
-</span><span id="__span-0-2069"><a id="__codelineno-0-2069" name="__codelineno-0-2069"></a><span class="sd">        ╞════════╪═════════════════════════════════════════════════════════════════════════════════════════╡</span>
-</span><span id="__span-0-2070"><a id="__codelineno-0-2070" name="__codelineno-0-2070"></a><span class="sd">        │ 0      ┆ 2 V[0,0] * V[0,0] +2 V[1,0] * V[1,0] +2 V[2,0] * V[2,0] +2 V[3,0] * V[3,0] +2 V[4,0] *  │</span>
-</span><span id="__span-0-2071"><a id="__codelineno-0-2071" name="__codelineno-0-2071"></a><span class="sd">        │        ┆ V[4,0] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2072"><a id="__codelineno-0-2072" name="__codelineno-0-2072"></a><span class="sd">        │ 1      ┆ 2 V[0,1] * V[0,1] +2 V[1,1] * V[1,1] +2 V[2,1] * V[2,1] +2 V[3,1] * V[3,1] +2 V[4,1] *  │</span>
-</span><span id="__span-0-2073"><a id="__codelineno-0-2073" name="__codelineno-0-2073"></a><span class="sd">        │        ┆ V[4,1] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2074"><a id="__codelineno-0-2074" name="__codelineno-0-2074"></a><span class="sd">        │ 2      ┆ 2 V[0,2] * V[0,2] +2 V[1,2] * V[1,2] +2 V[2,2] * V[2,2] +2 V[3,2] * V[3,2] +2 V[4,2] *  │</span>
-</span><span id="__span-0-2075"><a id="__codelineno-0-2075" name="__codelineno-0-2075"></a><span class="sd">        │        ┆ V[4,2] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2076"><a id="__codelineno-0-2076" name="__codelineno-0-2076"></a><span class="sd">        │ 3      ┆ 2 V[0,3] * V[0,3] +2 V[1,3] * V[1,3] +2 V[2,3] * V[2,3] +2 V[3,3] * V[3,3] +2 V[4,3] *  │</span>
-</span><span id="__span-0-2077"><a id="__codelineno-0-2077" name="__codelineno-0-2077"></a><span class="sd">        │        ┆ V[4,3] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2078"><a id="__codelineno-0-2078" name="__codelineno-0-2078"></a><span class="sd">        │ 4      ┆ 2 V[0,4] * V[0,4] +2 V[1,4] * V[1,4] +2 V[2,4] * V[2,4] +2 V[3,4] * V[3,4] +2 V[4,4] *  │</span>
-</span><span id="__span-0-2079"><a id="__codelineno-0-2079" name="__codelineno-0-2079"></a><span class="sd">        │        ┆ V[4,4] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2080"><a id="__codelineno-0-2080" name="__codelineno-0-2080"></a><span class="sd">        │ …      ┆ …                                                                                       │</span>
-</span><span id="__span-0-2081"><a id="__codelineno-0-2081" name="__codelineno-0-2081"></a><span class="sd">        │ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │</span>
-</span><span id="__span-0-2082"><a id="__codelineno-0-2082" name="__codelineno-0-2082"></a><span class="sd">        │        ┆ V[3,995] +2 V[4,99…                                                                     │</span>
-</span><span id="__span-0-2083"><a id="__codelineno-0-2083" name="__codelineno-0-2083"></a><span class="sd">        │ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │</span>
-</span><span id="__span-0-2084"><a id="__codelineno-0-2084" name="__codelineno-0-2084"></a><span class="sd">        │        ┆ V[3,996] +2 V[4,99…                                                                     │</span>
-</span><span id="__span-0-2085"><a id="__codelineno-0-2085" name="__codelineno-0-2085"></a><span class="sd">        │ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │</span>
-</span><span id="__span-0-2086"><a id="__codelineno-0-2086" name="__codelineno-0-2086"></a><span class="sd">        │        ┆ V[3,997] +2 V[4,99…                                                                     │</span>
-</span><span id="__span-0-2087"><a id="__codelineno-0-2087" name="__codelineno-0-2087"></a><span class="sd">        │ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │</span>
-</span><span id="__span-0-2088"><a id="__codelineno-0-2088" name="__codelineno-0-2088"></a><span class="sd">        │        ┆ V[3,998] +2 V[4,99…                                                                     │</span>
-</span><span id="__span-0-2089"><a id="__codelineno-0-2089" name="__codelineno-0-2089"></a><span class="sd">        │ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │</span>
-</span><span id="__span-0-2090"><a id="__codelineno-0-2090" name="__codelineno-0-2090"></a><span class="sd">        │        ┆ V[3,999] +2 V[4,99…                                                                     │</span>
-</span><span id="__span-0-2091"><a id="__codelineno-0-2091" name="__codelineno-0-2091"></a><span class="sd">        └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘</span>
-</span><span id="__span-0-2092"><a id="__codelineno-0-2092" name="__codelineno-0-2092"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum(&quot;y&quot;)</span>
-</span><span id="__span-0-2093"><a id="__codelineno-0-2093" name="__codelineno-0-2093"></a><span class="sd">        &gt;&gt;&gt; print((expr == 3).to_str())</span>
-</span><span id="__span-0-2094"><a id="__codelineno-0-2094" name="__codelineno-0-2094"></a><span class="sd">        2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] +2 V[0,4] * V[0,4] … = 3</span>
-</span><span id="__span-0-2095"><a id="__codelineno-0-2095" name="__codelineno-0-2095"></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="__span-0-2096"><a id="__codelineno-0-2096" name="__codelineno-0-2096"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span>
-</span><span id="__span-0-2097"><a id="__codelineno-0-2097" name="__codelineno-0-2097"></a>    <span class="n">str_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">to_str</span><span class="p">(</span>
-</span><span id="__span-0-2098"><a id="__codelineno-0-2098" name="__codelineno-0-2098"></a>        <span class="n">include_const_term</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_df</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">str_col_name</span><span class="o">=</span><span class="s2">&quot;constraint&quot;</span>
-</span><span id="__span-0-2099"><a id="__codelineno-0-2099" name="__codelineno-0-2099"></a>    <span class="p">)</span>
-</span><span id="__span-0-2100"><a id="__codelineno-0-2100" name="__codelineno-0-2100"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">constant_terms</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-0-2101"><a id="__codelineno-0-2101" name="__codelineno-0-2101"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">cast_coef_to_string</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">drop_ones</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">always_show_sign</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="__span-0-2102"><a id="__codelineno-0-2102" name="__codelineno-0-2102"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="s2">&quot;rhs&quot;</span><span class="p">})</span>
-</span><span id="__span-0-2103"><a id="__codelineno-0-2103" name="__codelineno-0-2103"></a>    <span class="k">if</span> <span class="n">dims</span><span class="p">:</span>
-</span><span id="__span-0-2104"><a id="__codelineno-0-2104" name="__codelineno-0-2104"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">str_table</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span id="__span-0-2105"><a id="__codelineno-0-2105" name="__codelineno-0-2105"></a>            <span class="n">rhs</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">maintain_order</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">coalesce</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="__span-0-2106"><a id="__codelineno-0-2106" name="__codelineno-0-2106"></a>        <span class="p">)</span>
-</span><span id="__span-0-2107"><a id="__codelineno-0-2107" name="__codelineno-0-2107"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2108"><a id="__codelineno-0-2108" name="__codelineno-0-2108"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">str_table</span><span class="p">,</span> <span class="n">rhs</span><span class="p">],</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2109"><a id="__codelineno-0-2109" name="__codelineno-0-2109"></a>    <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
-</span><span id="__span-0-2110"><a id="__codelineno-0-2110" name="__codelineno-0-2110"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">concat_str</span><span class="p">(</span><span class="s2">&quot;constraint&quot;</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">),</span> <span class="s2">&quot;rhs&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2111"><a id="__codelineno-0-2111" name="__codelineno-0-2111"></a>    <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;rhs&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2112"><a id="__codelineno-0-2112" name="__codelineno-0-2112"></a>
-</span><span id="__span-0-2113"><a id="__codelineno-0-2113" name="__codelineno-0-2113"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_df</span><span class="p">:</span>
-</span><span id="__span-0-2114"><a id="__codelineno-0-2114" name="__codelineno-0-2114"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-2115"><a id="__codelineno-0-2115" name="__codelineno-0-2115"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-</span><span id="__span-0-2116"><a id="__codelineno-0-2116" name="__codelineno-0-2116"></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2117"><a id="__codelineno-0-2117" name="__codelineno-0-2117"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_shape_to_columns</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
-</span><span id="__span-0-2118"><a id="__codelineno-0-2118" name="__codelineno-0-2118"></a>            <span class="k">with</span> <span class="n">Config</span><span class="o">.</span><span class="n">print_polars_config</span><span class="p">:</span>
-</span><span id="__span-0-2119"><a id="__codelineno-0-2119" name="__codelineno-0-2119"></a>                <span class="n">constr_str</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
-</span><span id="__span-0-2120"><a id="__codelineno-0-2120" name="__codelineno-0-2120"></a>
-</span><span id="__span-0-2121"><a id="__codelineno-0-2121" name="__codelineno-0-2121"></a>    <span class="k">return</span> <span class="n">constr_str</span>
+<span class="normal"><a href="#__codelineno-0-2121">2121</a></span>
+<span class="normal"><a href="#__codelineno-0-2122">2122</a></span>
+<span class="normal"><a href="#__codelineno-0-2123">2123</a></span>
+<span class="normal"><a href="#__codelineno-0-2124">2124</a></span>
+<span class="normal"><a href="#__codelineno-0-2125">2125</a></span>
+<span class="normal"><a href="#__codelineno-0-2126">2126</a></span>
+<span class="normal"><a href="#__codelineno-0-2127">2127</a></span>
+<span class="normal"><a href="#__codelineno-0-2128">2128</a></span>
+<span class="normal"><a href="#__codelineno-0-2129">2129</a></span>
+<span class="normal"><a href="#__codelineno-0-2130">2130</a></span>
+<span class="normal"><a href="#__codelineno-0-2131">2131</a></span>
+<span class="normal"><a href="#__codelineno-0-2132">2132</a></span>
+<span class="normal"><a href="#__codelineno-0-2133">2133</a></span>
+<span class="normal"><a href="#__codelineno-0-2134">2134</a></span>
+<span class="normal"><a href="#__codelineno-0-2135">2135</a></span>
+<span class="normal"><a href="#__codelineno-0-2136">2136</a></span>
+<span class="normal"><a href="#__codelineno-0-2137">2137</a></span>
+<span class="normal"><a href="#__codelineno-0-2138">2138</a></span>
+<span class="normal"><a href="#__codelineno-0-2139">2139</a></span>
+<span class="normal"><a href="#__codelineno-0-2140">2140</a></span>
+<span class="normal"><a href="#__codelineno-0-2141">2141</a></span>
+<span class="normal"><a href="#__codelineno-0-2142">2142</a></span>
+<span class="normal"><a href="#__codelineno-0-2143">2143</a></span>
+<span class="normal"><a href="#__codelineno-0-2144">2144</a></span>
+<span class="normal"><a href="#__codelineno-0-2145">2145</a></span>
+<span class="normal"><a href="#__codelineno-0-2146">2146</a></span>
+<span class="normal"><a href="#__codelineno-0-2147">2147</a></span>
+<span class="normal"><a href="#__codelineno-0-2148">2148</a></span>
+<span class="normal"><a href="#__codelineno-0-2149">2149</a></span>
+<span class="normal"><a href="#__codelineno-0-2150">2150</a></span>
+<span class="normal"><a href="#__codelineno-0-2151">2151</a></span>
+<span class="normal"><a href="#__codelineno-0-2152">2152</a></span>
+<span class="normal"><a href="#__codelineno-0-2153">2153</a></span>
+<span class="normal"><a href="#__codelineno-0-2154">2154</a></span>
+<span class="normal"><a href="#__codelineno-0-2155">2155</a></span>
+<span class="normal"><a href="#__codelineno-0-2156">2156</a></span>
+<span class="normal"><a href="#__codelineno-0-2157">2157</a></span>
+<span class="normal"><a href="#__codelineno-0-2158">2158</a></span>
+<span class="normal"><a href="#__codelineno-0-2159">2159</a></span>
+<span class="normal"><a href="#__codelineno-0-2160">2160</a></span>
+<span class="normal"><a href="#__codelineno-0-2161">2161</a></span>
+<span class="normal"><a href="#__codelineno-0-2162">2162</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2072"><a id="__codelineno-0-2072" name="__codelineno-0-2072"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_df</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="__span-0-2073"><a id="__codelineno-0-2073" name="__codelineno-0-2073"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts the constraint to a human-readable string, or several arranged in a table.</span>
+</span><span id="__span-0-2074"><a id="__codelineno-0-2074" name="__codelineno-0-2074"></a>
+</span><span id="__span-0-2075"><a id="__codelineno-0-2075" name="__codelineno-0-2075"></a><span class="sd">    Long expressions are truncated according to [`Config.print_max_terms`][pyoframe._Config.print_max_terms] and [`Config.print_polars_config`][pyoframe._Config.print_polars_config].</span>
+</span><span id="__span-0-2076"><a id="__codelineno-0-2076" name="__codelineno-0-2076"></a>
+</span><span id="__span-0-2077"><a id="__codelineno-0-2077" name="__codelineno-0-2077"></a><span class="sd">    Parameters:</span>
+</span><span id="__span-0-2078"><a id="__codelineno-0-2078" name="__codelineno-0-2078"></a><span class="sd">        return_df:</span>
+</span><span id="__span-0-2079"><a id="__codelineno-0-2079" name="__codelineno-0-2079"></a><span class="sd">            If `True`, returns a DataFrame containing strings instead of the string representation of the DataFrame.</span>
+</span><span id="__span-0-2080"><a id="__codelineno-0-2080" name="__codelineno-0-2080"></a>
+</span><span id="__span-0-2081"><a id="__codelineno-0-2081" name="__codelineno-0-2081"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2082"><a id="__codelineno-0-2082" name="__codelineno-0-2082"></a><span class="sd">        &gt;&gt;&gt; import polars as pl</span>
+</span><span id="__span-0-2083"><a id="__codelineno-0-2083" name="__codelineno-0-2083"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2084"><a id="__codelineno-0-2084" name="__codelineno-0-2084"></a><span class="sd">        &gt;&gt;&gt; x = pf.Set(x=range(1000))</span>
+</span><span id="__span-0-2085"><a id="__codelineno-0-2085" name="__codelineno-0-2085"></a><span class="sd">        &gt;&gt;&gt; y = pf.Set(y=range(1000))</span>
+</span><span id="__span-0-2086"><a id="__codelineno-0-2086" name="__codelineno-0-2086"></a><span class="sd">        &gt;&gt;&gt; m.V = pf.Variable(x, y)</span>
+</span><span id="__span-0-2087"><a id="__codelineno-0-2087" name="__codelineno-0-2087"></a><span class="sd">        &gt;&gt;&gt; expr = 2 * m.V * m.V</span>
+</span><span id="__span-0-2088"><a id="__codelineno-0-2088" name="__codelineno-0-2088"></a><span class="sd">        &gt;&gt;&gt; print((expr &lt;= 3).to_str())</span>
+</span><span id="__span-0-2089"><a id="__codelineno-0-2089" name="__codelineno-0-2089"></a><span class="sd">        ┌────────┬────────┬────────────────────────────────┐</span>
+</span><span id="__span-0-2090"><a id="__codelineno-0-2090" name="__codelineno-0-2090"></a><span class="sd">        │ x      ┆ y      ┆ constraint                     │</span>
+</span><span id="__span-0-2091"><a id="__codelineno-0-2091" name="__codelineno-0-2091"></a><span class="sd">        │ (1000) ┆ (1000) ┆                                │</span>
+</span><span id="__span-0-2092"><a id="__codelineno-0-2092" name="__codelineno-0-2092"></a><span class="sd">        ╞════════╪════════╪════════════════════════════════╡</span>
+</span><span id="__span-0-2093"><a id="__codelineno-0-2093" name="__codelineno-0-2093"></a><span class="sd">        │ 0      ┆ 0      ┆ 2 V[0,0] * V[0,0] &lt;= 3         │</span>
+</span><span id="__span-0-2094"><a id="__codelineno-0-2094" name="__codelineno-0-2094"></a><span class="sd">        │ 0      ┆ 1      ┆ 2 V[0,1] * V[0,1] &lt;= 3         │</span>
+</span><span id="__span-0-2095"><a id="__codelineno-0-2095" name="__codelineno-0-2095"></a><span class="sd">        │ 0      ┆ 2      ┆ 2 V[0,2] * V[0,2] &lt;= 3         │</span>
+</span><span id="__span-0-2096"><a id="__codelineno-0-2096" name="__codelineno-0-2096"></a><span class="sd">        │ 0      ┆ 3      ┆ 2 V[0,3] * V[0,3] &lt;= 3         │</span>
+</span><span id="__span-0-2097"><a id="__codelineno-0-2097" name="__codelineno-0-2097"></a><span class="sd">        │ 0      ┆ 4      ┆ 2 V[0,4] * V[0,4] &lt;= 3         │</span>
+</span><span id="__span-0-2098"><a id="__codelineno-0-2098" name="__codelineno-0-2098"></a><span class="sd">        │ …      ┆ …      ┆ …                              │</span>
+</span><span id="__span-0-2099"><a id="__codelineno-0-2099" name="__codelineno-0-2099"></a><span class="sd">        │ 999    ┆ 995    ┆ 2 V[999,995] * V[999,995] &lt;= 3 │</span>
+</span><span id="__span-0-2100"><a id="__codelineno-0-2100" name="__codelineno-0-2100"></a><span class="sd">        │ 999    ┆ 996    ┆ 2 V[999,996] * V[999,996] &lt;= 3 │</span>
+</span><span id="__span-0-2101"><a id="__codelineno-0-2101" name="__codelineno-0-2101"></a><span class="sd">        │ 999    ┆ 997    ┆ 2 V[999,997] * V[999,997] &lt;= 3 │</span>
+</span><span id="__span-0-2102"><a id="__codelineno-0-2102" name="__codelineno-0-2102"></a><span class="sd">        │ 999    ┆ 998    ┆ 2 V[999,998] * V[999,998] &lt;= 3 │</span>
+</span><span id="__span-0-2103"><a id="__codelineno-0-2103" name="__codelineno-0-2103"></a><span class="sd">        │ 999    ┆ 999    ┆ 2 V[999,999] * V[999,999] &lt;= 3 │</span>
+</span><span id="__span-0-2104"><a id="__codelineno-0-2104" name="__codelineno-0-2104"></a><span class="sd">        └────────┴────────┴────────────────────────────────┘</span>
+</span><span id="__span-0-2105"><a id="__codelineno-0-2105" name="__codelineno-0-2105"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum(&quot;x&quot;)</span>
+</span><span id="__span-0-2106"><a id="__codelineno-0-2106" name="__codelineno-0-2106"></a><span class="sd">        &gt;&gt;&gt; print((expr &gt;= 3).to_str())</span>
+</span><span id="__span-0-2107"><a id="__codelineno-0-2107" name="__codelineno-0-2107"></a><span class="sd">        ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐</span>
+</span><span id="__span-0-2108"><a id="__codelineno-0-2108" name="__codelineno-0-2108"></a><span class="sd">        │ y      ┆ constraint                                                                              │</span>
+</span><span id="__span-0-2109"><a id="__codelineno-0-2109" name="__codelineno-0-2109"></a><span class="sd">        │ (1000) ┆                                                                                         │</span>
+</span><span id="__span-0-2110"><a id="__codelineno-0-2110" name="__codelineno-0-2110"></a><span class="sd">        ╞════════╪═════════════════════════════════════════════════════════════════════════════════════════╡</span>
+</span><span id="__span-0-2111"><a id="__codelineno-0-2111" name="__codelineno-0-2111"></a><span class="sd">        │ 0      ┆ 2 V[0,0] * V[0,0] +2 V[1,0] * V[1,0] +2 V[2,0] * V[2,0] +2 V[3,0] * V[3,0] +2 V[4,0] *  │</span>
+</span><span id="__span-0-2112"><a id="__codelineno-0-2112" name="__codelineno-0-2112"></a><span class="sd">        │        ┆ V[4,0] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2113"><a id="__codelineno-0-2113" name="__codelineno-0-2113"></a><span class="sd">        │ 1      ┆ 2 V[0,1] * V[0,1] +2 V[1,1] * V[1,1] +2 V[2,1] * V[2,1] +2 V[3,1] * V[3,1] +2 V[4,1] *  │</span>
+</span><span id="__span-0-2114"><a id="__codelineno-0-2114" name="__codelineno-0-2114"></a><span class="sd">        │        ┆ V[4,1] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2115"><a id="__codelineno-0-2115" name="__codelineno-0-2115"></a><span class="sd">        │ 2      ┆ 2 V[0,2] * V[0,2] +2 V[1,2] * V[1,2] +2 V[2,2] * V[2,2] +2 V[3,2] * V[3,2] +2 V[4,2] *  │</span>
+</span><span id="__span-0-2116"><a id="__codelineno-0-2116" name="__codelineno-0-2116"></a><span class="sd">        │        ┆ V[4,2] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2117"><a id="__codelineno-0-2117" name="__codelineno-0-2117"></a><span class="sd">        │ 3      ┆ 2 V[0,3] * V[0,3] +2 V[1,3] * V[1,3] +2 V[2,3] * V[2,3] +2 V[3,3] * V[3,3] +2 V[4,3] *  │</span>
+</span><span id="__span-0-2118"><a id="__codelineno-0-2118" name="__codelineno-0-2118"></a><span class="sd">        │        ┆ V[4,3] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2119"><a id="__codelineno-0-2119" name="__codelineno-0-2119"></a><span class="sd">        │ 4      ┆ 2 V[0,4] * V[0,4] +2 V[1,4] * V[1,4] +2 V[2,4] * V[2,4] +2 V[3,4] * V[3,4] +2 V[4,4] *  │</span>
+</span><span id="__span-0-2120"><a id="__codelineno-0-2120" name="__codelineno-0-2120"></a><span class="sd">        │        ┆ V[4,4] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2121"><a id="__codelineno-0-2121" name="__codelineno-0-2121"></a><span class="sd">        │ …      ┆ …                                                                                       │</span>
+</span><span id="__span-0-2122"><a id="__codelineno-0-2122" name="__codelineno-0-2122"></a><span class="sd">        │ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │</span>
+</span><span id="__span-0-2123"><a id="__codelineno-0-2123" name="__codelineno-0-2123"></a><span class="sd">        │        ┆ V[3,995] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2124"><a id="__codelineno-0-2124" name="__codelineno-0-2124"></a><span class="sd">        │ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │</span>
+</span><span id="__span-0-2125"><a id="__codelineno-0-2125" name="__codelineno-0-2125"></a><span class="sd">        │        ┆ V[3,996] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2126"><a id="__codelineno-0-2126" name="__codelineno-0-2126"></a><span class="sd">        │ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │</span>
+</span><span id="__span-0-2127"><a id="__codelineno-0-2127" name="__codelineno-0-2127"></a><span class="sd">        │        ┆ V[3,997] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2128"><a id="__codelineno-0-2128" name="__codelineno-0-2128"></a><span class="sd">        │ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │</span>
+</span><span id="__span-0-2129"><a id="__codelineno-0-2129" name="__codelineno-0-2129"></a><span class="sd">        │        ┆ V[3,998] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2130"><a id="__codelineno-0-2130" name="__codelineno-0-2130"></a><span class="sd">        │ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │</span>
+</span><span id="__span-0-2131"><a id="__codelineno-0-2131" name="__codelineno-0-2131"></a><span class="sd">        │        ┆ V[3,999] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2132"><a id="__codelineno-0-2132" name="__codelineno-0-2132"></a><span class="sd">        └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘</span>
+</span><span id="__span-0-2133"><a id="__codelineno-0-2133" name="__codelineno-0-2133"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum(&quot;y&quot;)</span>
+</span><span id="__span-0-2134"><a id="__codelineno-0-2134" name="__codelineno-0-2134"></a><span class="sd">        &gt;&gt;&gt; print((expr == 3).to_str())</span>
+</span><span id="__span-0-2135"><a id="__codelineno-0-2135" name="__codelineno-0-2135"></a><span class="sd">        2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] +2 V[0,4] * V[0,4] … = 3</span>
+</span><span id="__span-0-2136"><a id="__codelineno-0-2136" name="__codelineno-0-2136"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-0-2137"><a id="__codelineno-0-2137" name="__codelineno-0-2137"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span>
+</span><span id="__span-0-2138"><a id="__codelineno-0-2138" name="__codelineno-0-2138"></a>    <span class="n">str_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">to_str</span><span class="p">(</span>
+</span><span id="__span-0-2139"><a id="__codelineno-0-2139" name="__codelineno-0-2139"></a>        <span class="n">include_const_term</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_df</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">str_col_name</span><span class="o">=</span><span class="s2">&quot;constraint&quot;</span>
+</span><span id="__span-0-2140"><a id="__codelineno-0-2140" name="__codelineno-0-2140"></a>    <span class="p">)</span>
+</span><span id="__span-0-2141"><a id="__codelineno-0-2141" name="__codelineno-0-2141"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">constant_terms</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-2142"><a id="__codelineno-0-2142" name="__codelineno-0-2142"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">cast_coef_to_string</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">drop_ones</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">always_show_sign</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-0-2143"><a id="__codelineno-0-2143" name="__codelineno-0-2143"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="s2">&quot;rhs&quot;</span><span class="p">})</span>
+</span><span id="__span-0-2144"><a id="__codelineno-0-2144" name="__codelineno-0-2144"></a>    <span class="k">if</span> <span class="n">dims</span><span class="p">:</span>
+</span><span id="__span-0-2145"><a id="__codelineno-0-2145" name="__codelineno-0-2145"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">str_table</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-2146"><a id="__codelineno-0-2146" name="__codelineno-0-2146"></a>            <span class="n">rhs</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">maintain_order</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">coalesce</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-0-2147"><a id="__codelineno-0-2147" name="__codelineno-0-2147"></a>        <span class="p">)</span>
+</span><span id="__span-0-2148"><a id="__codelineno-0-2148" name="__codelineno-0-2148"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2149"><a id="__codelineno-0-2149" name="__codelineno-0-2149"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">str_table</span><span class="p">,</span> <span class="n">rhs</span><span class="p">],</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">)</span>
+</span><span id="__span-0-2150"><a id="__codelineno-0-2150" name="__codelineno-0-2150"></a>    <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
+</span><span id="__span-0-2151"><a id="__codelineno-0-2151" name="__codelineno-0-2151"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">concat_str</span><span class="p">(</span><span class="s2">&quot;constraint&quot;</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> &quot;</span><span class="p">),</span> <span class="s2">&quot;rhs&quot;</span><span class="p">)</span>
+</span><span id="__span-0-2152"><a id="__codelineno-0-2152" name="__codelineno-0-2152"></a>    <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;rhs&quot;</span><span class="p">)</span>
+</span><span id="__span-0-2153"><a id="__codelineno-0-2153" name="__codelineno-0-2153"></a>
+</span><span id="__span-0-2154"><a id="__codelineno-0-2154" name="__codelineno-0-2154"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_df</span><span class="p">:</span>
+</span><span id="__span-0-2155"><a id="__codelineno-0-2155" name="__codelineno-0-2155"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2156"><a id="__codelineno-0-2156" name="__codelineno-0-2156"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span id="__span-0-2157"><a id="__codelineno-0-2157" name="__codelineno-0-2157"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2158"><a id="__codelineno-0-2158" name="__codelineno-0-2158"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_shape_to_columns</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
+</span><span id="__span-0-2159"><a id="__codelineno-0-2159" name="__codelineno-0-2159"></a>            <span class="k">with</span> <span class="n">Config</span><span class="o">.</span><span class="n">print_polars_config</span><span class="p">:</span>
+</span><span id="__span-0-2160"><a id="__codelineno-0-2160" name="__codelineno-0-2160"></a>                <span class="n">constr_str</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
+</span><span id="__span-0-2161"><a id="__codelineno-0-2161" name="__codelineno-0-2161"></a>
+</span><span id="__span-0-2162"><a id="__codelineno-0-2162" name="__codelineno-0-2162"></a>    <span class="k">return</span> <span class="n">constr_str</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3294,7 +3382,7 @@ make them negative for maximization problems.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 25, 2025 21:43:50 UTC">September 25, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2025 23:08:40 UTC">September 27, 2025</span>
   </span>
 
     
@@ -3304,7 +3392,7 @@ make them negative for maximization problems.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 25, 2025 21:43:50 UTC">September 25, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2025 23:08:40 UTC">September 27, 2025</span>
   </span>
 
     
