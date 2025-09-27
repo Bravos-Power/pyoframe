@@ -105,7 +105,7 @@ version_file = "src/pyoframe/_version.py"
 local_scheme = "no-local-version"
 
 [project.urls]
-Homepage = "https://bravos-power.github.io/pyoframe/"
-documentation = "https://bravos-power.github.io/pyoframe/"
+Homepage = "https://bravos-power.github.io/pyoframe/latest"
+documentation = "https://bravos-power.github.io/pyoframe/latest"
 repository = "https://github.com/Bravos-Power/pyoframe/"
 Issues = "https://github.com/Bravos-Power/pyoframe/issues"

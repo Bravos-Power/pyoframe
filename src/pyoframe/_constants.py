@@ -87,7 +87,7 @@ RESERVED_COL_KEYS = (
 @dataclass
 class ConfigDefaults:
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
-    disable_unmatched_checks: bool = False
+    disable_extras_checks: bool = False
     enable_is_duplicated_expression_safety_check: bool = False
     integer_tolerance: float = 1e-8
     float_to_str_precision: int | None = 5
@@ -130,16 +130,16 @@ class _Config:
         self._settings.default_solver = value
 
     @property
-    def disable_unmatched_checks(self) -> bool:
-        """When `True`, improves performance by skipping unmatched checks (not recommended).
+    def disable_extras_checks(self) -> bool:
+        """When `True`, improves performance by skipping checks for extra values (not recommended).
 
-        When `True`, unmatched checks are disabled which effectively means that all expressions
-        are treated as if they contained [`.keep_unmatched()`][pyoframe.Expression.keep_unmatched]
-        (unless [`.drop_unmatched()`][pyoframe.Expression.drop_unmatched] was applied).
+        When `True`, checks for extra values are disabled which effectively means that all expressions
+        are treated as if they contained [`.keep_extras()`][pyoframe.Expression.keep_extras]
+        (unless [`.drop_extras()`][pyoframe.Expression.drop_extras] was applied).
 
         !!! warning
-            This might improve performance, but it will suppress the "unmatched" errors that alert developers to unexpected
-            behaviors (see [here](../learn/concepts/special-functions.md#drop_unmatched-and-keep_unmatched)).
+            This might improve performance, but it will suppress the errors that alert you of unexpected
+            behaviors ([learn more](../learn/concepts/addition.md)).
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:
@@ -157,26 +157,24 @@ class _Config:
             ...     }
             ... ).to_expr()
 
-            Normally, an error warns users that the two expressions have conflicting indices:
+            Normally, an error warns users that the two expressions have conflicting labels:
             >>> population + population_influx
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values.
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
             Expression 1:   pop
             Expression 2:   influx
-            Unmatched values:
-            shape: (1, 2)
-            ┌──────────┬────────────┐
-            │ city     ┆ city_right │
-            │ ---      ┆ ---        │
-            │ str      ┆ str        │
-            ╞══════════╪════════════╡
-            │ Montreal ┆ null       │
-            └──────────┴────────────┘
-            If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            Extra labels in expression 1:
+            ┌──────────┐
+            │ city     │
+            ╞══════════╡
+            │ Montreal │
+            └──────────┘
+            Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
 
-            But if `Config.disable_unmatched_checks = True`, the error is suppressed and the sum is considered to be `population.keep_unmatched() + population_influx.keep_unmatched()`:
-            >>> pf.Config.disable_unmatched_checks = True
+            But if `Config.disable_extras_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
+            >>> pf.Config.disable_extras_checks = True
             >>> population + population_influx
             <Expression height=3 terms=3 type=constant>
             ┌───────────┬────────────┐
@@ -188,11 +186,11 @@ class _Config:
             │ Montreal  ┆ 1704694    │
             └───────────┴────────────┘
         """
-        return self._settings.disable_unmatched_checks
+        return self._settings.disable_extras_checks
 
-    @disable_unmatched_checks.setter
-    def disable_unmatched_checks(self, value: bool):
-        self._settings.disable_unmatched_checks = value
+    @disable_extras_checks.setter
+    def disable_extras_checks(self, value: bool):
+        self._settings.disable_extras_checks = value
 
     @property
     def enable_is_duplicated_expression_safety_check(self) -> bool:
@@ -328,13 +326,13 @@ class _Config:
         """Resets all configuration options to their default values.
 
         Examples:
-            >>> pf.Config.disable_unmatched_checks
+            >>> pf.Config.disable_extras_checks
             False
-            >>> pf.Config.disable_unmatched_checks = True
-            >>> pf.Config.disable_unmatched_checks
+            >>> pf.Config.disable_extras_checks = True
+            >>> pf.Config.disable_extras_checks
             True
             >>> pf.Config.reset_defaults()
-            >>> pf.Config.disable_unmatched_checks
+            >>> pf.Config.disable_extras_checks
             False
         """
         self._settings = ConfigDefaults()
@@ -405,8 +403,8 @@ class VType(Enum):
             raise ValueError(f"Invalid variable type: {self}")  # pragma: no cover
 
 
-class UnmatchedStrategy(Enum):
-    """An enum to specify how to handle unmatched values in expressions."""
+class ExtrasStrategy(Enum):
+    """An enum to specify how to handle extra values in expressions."""
 
     UNSET = "not_set"
     DROP = "drop"

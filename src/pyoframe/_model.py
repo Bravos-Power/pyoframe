@@ -573,7 +573,7 @@ class Model:
             self.poi.set_raw_parameter(name, value)
         except KeyError as e:
             raise KeyError(
-                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/latest/learn/getting-started/solver-access/ for a list of valid parameters."
             ) from e
 
     def _get_param(self, name):
@@ -581,7 +581,7 @@ class Model:
             return self.poi.get_raw_parameter(name)
         except KeyError as e:
             raise KeyError(
-                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/learn/getting-started/solver-access/ for a list of valid parameters."
+                f"Unknown parameter: '{name}'. See https://bravos-power.github.io/pyoframe/latest/learn/getting-started/solver-access/ for a list of valid parameters."
             ) from e
 
     def _set_attr(self, name, value):

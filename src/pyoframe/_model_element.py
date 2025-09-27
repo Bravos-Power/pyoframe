@@ -78,6 +78,26 @@ class ModelElement(ABC):
         return _get_dimensions(self.data)
 
     @property
+    def dimensionless(self) -> bool:
+        """Whether the object has no dimensions.
+
+        Examples:
+            A variable with no dimensions
+            >>> pf.Variable().dimensionless
+            True
+
+            A variable with dimensions of "hour" and "city"
+            >>> pf.Variable(
+            ...     [
+            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...         {"city": ["Toronto", "Berlin", "Paris"]},
+            ...     ]
+            ... ).dimensionless
+            False
+        """
+        return self.dimensions is None
+
+    @property
     def _dimensions_unsafe(self) -> list[str]:
         """Same as `dimensions` but returns an empty list if there are no dimensions instead of `None`.
 
@@ -90,7 +110,7 @@ class ModelElement(ABC):
 
     @property
     def shape(self) -> dict[str, int]:
-        """The number of indices in each dimension.
+        """The number of distinct labels in each dimension.
 
         Examples:
             A variable with no dimensions
