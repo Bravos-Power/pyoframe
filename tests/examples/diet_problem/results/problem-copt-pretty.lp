@@ -14,12 +14,12 @@ Subject To
  Buy_ub[salad]: Buy[salad] - 60 ONE <= 0
  Buy_ub[milk]: Buy[milk] - 6.8 ONE <= 0
  Buy_ub[ice_cream]: Buy[ice_cream] - 80 ONE <= 0
- min_nutrients[calories]: - 410 Buy[hamburger] - 420 Buy[chicken] 
+ min_nutrients[calories]: 1800 ONE - 410 Buy[hamburger] - 420 Buy[chicken] 
    - 560 Buy[hot_dog] - 380 Buy[fries] - 320 Buy[macaroni] - 320 Buy[pizza] 
-   - 320 Buy[salad] - 100 Buy[milk] - 330 Buy[ice_cream] + 1800 ONE <= 0
- min_nutrients[protein]: - 24 Buy[hamburger] - 32 Buy[chicken] 
+   - 320 Buy[salad] - 100 Buy[milk] - 330 Buy[ice_cream] <= 0
+ min_nutrients[protein]: 91 ONE - 24 Buy[hamburger] - 32 Buy[chicken] 
    - 20 Buy[hot_dog] - 4 Buy[fries] - 12 Buy[macaroni] - 15 Buy[pizza] 
-   - 31 Buy[salad] - 8 Buy[milk] - 8 Buy[ice_cream] + 91 ONE <= 0
+   - 31 Buy[salad] - 8 Buy[milk] - 8 Buy[ice_cream] <= 0
  max_nutrients[calories]: 410 Buy[hamburger] + 420 Buy[chicken] 
    + 560 Buy[hot_dog] + 380 Buy[fries] + 320 Buy[macaroni] + 320 Buy[pizza] 
    + 320 Buy[salad] + 100 Buy[milk] + 330 Buy[ice_cream] - 2200 ONE <= 0

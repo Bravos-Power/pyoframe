@@ -24,7 +24,7 @@ def solve_model(use_var_names=True):
     m = pf.Model(solver_uses_variable_names=use_var_names)
     m.Y = pf.Variable(grid.join(one_to_nine, how="cross"), vtype=pf.VType.BINARY)
 
-    m.given_values = m.Y.drop_unmatched() == pf.Set(init_values)
+    m.given_values = m.Y.drop_extras() == pf.Set(init_values)
 
     m.one_per_row = m.Y.sum_by("digit", "row") == 1
     m.one_per_column = m.Y.sum_by("digit", "column") == 1

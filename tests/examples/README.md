@@ -7,4 +7,4 @@ This directory contains three examples which also double as test cases.
 - `cutting_stock_problem` is a slightly more complex MILP example.
 
 We plan to have a dedicated Examples section in our documentation. 
-[Learn how to contribute](https://bravos-power.github.io/pyoframe/contribute) to help us out.
+[Learn how to contribute](https://bravos-power.github.io/pyoframe/latest/contribute) to help us out.

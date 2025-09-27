@@ -90,7 +90,7 @@ class ModelElement(ABC):
 
     @property
     def shape(self) -> dict[str, int]:
-        """The number of indices in each dimension.
+        """The number of distinct labels in each dimension.
 
         Examples:
             A variable with no dimensions
