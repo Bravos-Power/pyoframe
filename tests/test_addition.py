@@ -169,7 +169,7 @@ def test_add_expression_with_vars_and_over_many(default_solver):
     )
 
 
-def test_add_expression_with_missing(default_solver):
+def test_add_expression_with_extras(default_solver):
     dim2 = Set(y=["a", "b"])
     dim2_large = Set(y=["a", "b", "c"])
     m = Model(default_solver)
@@ -302,7 +302,7 @@ def test_add_expressions_with_keep_and_drop(default_solver):
     )
 
 
-def test_add_expressions_with_dims_and_missing(default_solver):
+def test_add_expressions_with_dims_and_extras(default_solver):
     m = Model(default_solver)
     dim = Set(x=[1, 2])
     dim2 = Set(y=["a", "b"])

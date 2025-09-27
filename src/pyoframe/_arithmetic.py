@@ -172,34 +172,33 @@ def add(*expressions: Expression) -> Expression:
     """Add multiple expressions together."""
     assert len(expressions) > 1, "Need at least two expressions to add together."
 
-    dims = expressions[0].dimensions
-
-    if dims is None:
-        # TODO do we need checks if there's broadcasting?
-        requires_extras_checks = False
-        dims = []
-    elif Config.disable_extras_checks:
-        requires_extras_checks = any(
-            expr._extras_strategy not in (ExtrasStrategy.KEEP, ExtrasStrategy.UNSET)
-            for expr in expressions
-        )
+    if Config.disable_extras_checks:
+        no_checks_strats = (ExtrasStrategy.KEEP, ExtrasStrategy.UNSET)
     else:
-        requires_extras_checks = any(
-            expr._extras_strategy != ExtrasStrategy.KEEP for expr in expressions
-        )
+        no_checks_strats = (ExtrasStrategy.KEEP,)
+
+    no_extras_checks_required = (
+        all(expr._extras_strategy in no_checks_strats for expr in expressions)
+        # if only one dimensioned, then there is no such thing as extra labels,
+        # labels will be set by the only dimensioned expression
+        or sum(not expr.dimensionless for expr in expressions) <= 1
+    )
 
     has_dim_conflict = any(
-        sorted(dims) != sorted(expr._dimensions_unsafe) for expr in expressions[1:]
+        sorted(expressions[0]._dimensions_unsafe) != sorted(expr._dimensions_unsafe)
+        for expr in expressions[1:]
     )
 
     # If we cannot use .concat compute the sum in a pairwise manner, so far nobody uses this code
     if len(expressions) > 2:  # pragma: no cover
-        if has_dim_conflict or requires_extras_checks:
+        assert False, "This code has not been tested."
+        if has_dim_conflict or not no_extras_checks_required:
             result = expressions[0]
             for expr in expressions[1:]:
                 result = add(result, expr)
             return result
         propagate_strat = expressions[0]._extras_strategy
+        dims = expressions[0]._dimensions_unsafe
         expr_data = [expr.data for expr in expressions]
     else:
         left, right = expressions[0], expressions[1]
@@ -231,8 +230,10 @@ def add(*expressions: Expression) -> Expression:
                 )
 
             assert sorted(left._dimensions_unsafe) == sorted(right._dimensions_unsafe)
-            dims = left._dimensions_unsafe
-        if requires_extras_checks:
+
+        dims = left._dimensions_unsafe
+
+        if not no_extras_checks_required:
             expr_data, propagate_strat = _handle_extra_labels(left, right, dims)
         else:
             propagate_strat = left._extras_strategy
