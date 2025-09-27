@@ -68,7 +68,7 @@ Previously, you created two variables: `m.tofu_blocks` and `m.chickpea_cans`. In
 m.Buy = pf.Variable(data["food"], lb=0, vtype="integer")
 ```
 
-Printing the variable shows that it contains a `food` dimension with indices `tofu` and `chickpeas`!
+Printing the variable shows that it contains a `food` dimension with labels `tofu` and `chickpeas`!
 
 ```pycon
 >>> m.Buy
@@ -179,7 +179,7 @@ So you should buy:
 
 ```
 
-Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of indices.
+Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of the labels.
 
 !!! info "Returning Pandas DataFrames"
 

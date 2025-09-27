@@ -6,9 +6,9 @@ Pyoframe is already one of the fastest and most memory-efficient libraries for f
 
 [Polars](https://pola.rs/) is much faster than Pandas. Moreover, if you use Pandas, there will be a (very small) overhead because Pyoframe converts all DataFrames to Polars prior to computations.
 
-## Use integer indices
+## Use integer labels
 
-Pyoframe will work with all types of indices, however integer indices are faster and more memory efficient than alternatives (e.g. string indices).
+Pyoframe works with any label data type (e.g. string labels, date labels, etc.), but integer labels are fastest and most memory efficient.
 
 ## Disable `maintain_order`
 

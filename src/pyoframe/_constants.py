@@ -157,23 +157,21 @@ class _Config:
             ...     }
             ... ).to_expr()
 
-            Normally, an error warns users that the two expressions have conflicting indices:
+            Normally, an error warns users that the two expressions have conflicting labels:
             >>> population + population_influx
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of extra values.
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
             Expression 1:   pop
             Expression 2:   influx
-            Extra values:
-            shape: (1, 2)
-            ┌──────────┬────────────┐
-            │ city     ┆ city_right │
-            │ ---      ┆ ---        │
-            │ str      ┆ str        │
-            ╞══════════╪════════════╡
-            │ Montreal ┆ null       │
-            └──────────┴────────────┘
-            If this is intentional, use .drop_extras() or .keep_extras().
+            Extra labels in expression 1:
+            ┌──────────┐
+            │ city     │
+            ╞══════════╡
+            │ Montreal │
+            └──────────┘
+            Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
 
             But if `Config.disable_extras_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
             >>> pf.Config.disable_extras_checks = True

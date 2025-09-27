@@ -244,7 +244,7 @@ def add(*expressions: Expression) -> Expression:
         left, right = expressions[0], expressions[1]
 
         # Order so that drop always comes before keep, and keep always comes before default
-        if swap := (
+        if swapped := (
             (left._extras_strategy, right._extras_strategy)
             in (
                 (ExtrasStrategy.UNSET, ExtrasStrategy.DROP),
@@ -254,7 +254,7 @@ def add(*expressions: Expression) -> Expression:
         ):
             left, right = right, left
 
-        def get_indices(expr):
+        def get_labels(expr):
             return expr.data.select(dims).unique(maintain_order=Config.maintain_order)
 
         left_data, right_data = left.data, right.data
@@ -265,12 +265,12 @@ def add(*expressions: Expression) -> Expression:
 
         if strat == (ExtrasStrategy.DROP, ExtrasStrategy.DROP):
             left_data = left.data.join(
-                get_indices(right),
+                get_labels(right),
                 on=dims,
                 maintain_order="left" if Config.maintain_order else None,
             )
             right_data = right.data.join(
-                get_indices(left),
+                get_labels(left),
                 on=dims,
                 maintain_order="left" if Config.maintain_order else None,
             )
@@ -278,30 +278,26 @@ def add(*expressions: Expression) -> Expression:
             assert not Config.disable_extras_checks, (
                 "This code should not be reached when checks for extra values are disabled."
             )
-            outer_join = get_indices(left).join(
-                get_indices(right),
-                how="full",
-                on=dims,
-                maintain_order="left_right" if Config.maintain_order else None,
-            )
-            if outer_join.get_column(dims[0]).null_count() > 0:
-                extra_vals = outer_join.filter(outer_join.get_column(dims[0]).is_null())
-                _raise_extras_error(left, right, extra_vals, swap)
-            if outer_join.get_column(dims[0] + "_right").null_count() > 0:
-                extra_vals = outer_join.filter(
-                    outer_join.get_column(dims[0] + "_right").is_null()
+            left_labels, right_labels = get_labels(left), get_labels(right)
+            left_extras = left_labels.join(right_labels, how="anti", on=dims)
+            right_extras = right_labels.join(left_labels, how="anti", on=dims)
+            if len(left_extras) > 0:
+                _raise_extras_error(
+                    left, right, left_extras, swapped, extras_on_right=False
                 )
-                _raise_extras_error(left, right, extra_vals, swap)
+            if len(right_extras) > 0:
+                _raise_extras_error(left, right, right_extras, swapped)
 
         elif strat == (ExtrasStrategy.DROP, ExtrasStrategy.KEEP):
-            left_data = get_indices(right).join(
+            left_data = get_labels(right).join(
                 left.data,
                 how="left",
                 on=dims,
                 maintain_order="left" if Config.maintain_order else None,
             )
         elif strat == (ExtrasStrategy.DROP, ExtrasStrategy.UNSET):
-            left_data = get_indices(right).join(
+            right_labels = get_labels(right)
+            left_data = right_labels.join(
                 left.data,
                 how="left",
                 on=dims,
@@ -311,17 +307,17 @@ def add(*expressions: Expression) -> Expression:
                 _raise_extras_error(
                     left,
                     right,
-                    left_data.filter(left_data.get_column(COEF_KEY).is_null()),
-                    swap,
+                    right_labels.join(get_labels(left), how="anti", on=dims),
+                    swapped,
                 )
 
         elif strat == (ExtrasStrategy.KEEP, ExtrasStrategy.UNSET):
             assert not Config.disable_extras_checks, (
                 "This code should not be reached when checks for extra values are disabled."
             )
-            extras = right.data.join(get_indices(left), how="anti", on=dims)
+            extras = right.data.join(get_labels(left), how="anti", on=dims)
             if len(extras) > 0:
-                _raise_extras_error(left, right, extras, swap)
+                _raise_extras_error(left, right, extras.select(dims), swapped)
         else:  # pragma: no cover
             assert False, "This code should've never been reached!"
 
@@ -361,17 +357,25 @@ def add(*expressions: Expression) -> Expression:
 
 
 def _raise_extras_error(
-    left: Expression, right: Expression, extra_values: pl.DataFrame, swapped: bool
+    left: Expression,
+    right: Expression,
+    extra_labels: pl.DataFrame,
+    swapped: bool,
+    extras_on_right: bool = True,
 ):
     if swapped:
         left, right = right, left
+        extras_on_right = not extras_on_right
 
-    _raise_addition_error(
-        left,
-        right,
-        "of extra values",
-        f"Extra values:\n{extra_values}\nIf this is intentional, use .drop_extras() or .keep_extras().",
-    )
+    expression_num = 2 if extras_on_right else 1
+
+    with Config.print_polars_config:
+        _raise_addition_error(
+            left,
+            right,
+            f"expression {expression_num} has extra labels",
+            f"Extra labels in expression {expression_num}:\n{extra_labels}\nUse .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at\n\thttps://bravos-power.github.io/pyoframe/latest/learn/concepts/addition",
+        )
 
 
 def _raise_addition_error(
@@ -427,12 +431,14 @@ def _broadcast(
         how="left",
         maintain_order="left" if Config.maintain_order else None,
     )
-    right_has_missing = result.get_column(missing_dims[0]).null_count() > 0
-    if right_has_missing:
+    if result.get_column(missing_dims[0]).null_count() > 0:
+        target_labels = target.data.select(target._dimensions_unsafe).unique(
+            maintain_order=Config.maintain_order
+        )
         _raise_extras_error(
             self,
             target,
-            result.filter(result.get_column(missing_dims[0]).is_null()),
+            target_labels.join(self.data, how="anti", on=common_dims),
             swapped,
         )
     res = self._new(result, self.name)

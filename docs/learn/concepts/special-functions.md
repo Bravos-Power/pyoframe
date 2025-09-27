@@ -74,7 +74,7 @@ But, if we simply change the order of the terms in our addition, we get an error
 ... )
 Traceback (most recent call last):
 ...
-ValueError: Cannot create an expression with duplicate indices:
+ValueError: Cannot create an expression with duplicate labels:
 ┌────────┬────────┬─────────┬───────────────┐
 │ births ┆ deaths ┆ __coeff ┆ __variable_id │
 │ ---    ┆ ---    ┆ ---     ┆ ---           │

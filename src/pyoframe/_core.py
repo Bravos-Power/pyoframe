@@ -79,17 +79,44 @@ class SupportsMath(ModelElement, SupportsToExpr):
         self._allowed_new_dims = other._allowed_new_dims.copy()
 
     def keep_extras(self):
-        """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
+        """Indicates that labels not present in the other expression should be kept during addition, subtraction, or constraint creation.
+
+        [Learn more](../learn/concepts/addition.md) about addition modifiers.
+
+        See Also:
+            [`drop_extras`][pyoframe.Expression.drop_extras].
+        """
         new = self._new(self.data, name=f"{self.name}.keep_extras()")
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.KEEP
         return new
 
     def drop_extras(self):
-        """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
+        """Indicates that labels not present in the other expression should be discarded during addition, subtraction, or constraint creation.
+
+        [Learn more](../learn/concepts/addition.md) about addition modifiers.
+
+        See Also:
+            [`keep_extras`][pyoframe.Expression.keep_extras].
+        """
         new = self._new(self.data, name=f"{self.name}.drop_extras()")
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.DROP
+        return new
+
+    def raise_extras(self):
+        """Indicates that labels not present in the other expression should raise an error during addition, subtraction, or constraint creation.
+
+        This is the default behavior and, as such, this addition modifier should only be used in the rare cases where you want to override a previous use of `keep_extras()` or `drop_extras()`.
+
+        [Learn more](../learn/concepts/addition.md) about addition modifiers.
+
+        See Also:
+            [`keep_extras`][pyoframe.Expression.keep_extras] and [`drop_extras`][pyoframe.Expression.drop_extras].
+        """
+        new = self._new(self.data, name=f"{self.name}.raise_extras()")
+        new._copy_flags(self)
+        new._extras_strategy = ExtrasStrategy.UNSET
         return new
 
     def over(self, *dims: str):
@@ -605,14 +632,14 @@ class Expression(SupportsMath):
         assert VAR_KEY in data.columns, "Missing variable column."
         assert COEF_KEY in data.columns, "Missing coefficient column."
 
-        # Sanity check no duplicates indices
+        # Sanity check no duplicates labels
         if Config.enable_is_duplicated_expression_safety_check:
             duplicated_mask = data.drop(COEF_KEY).is_duplicated()
             # In theory this should never happen unless there's a bug in the library
             if duplicated_mask.any():
                 duplicated_data = data.filter(duplicated_mask)
                 raise ValueError(
-                    f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
+                    f"Cannot create an expression with duplicate labels:\n{duplicated_data}."
                 )
 
         data = _simplify_expr_df(data)
@@ -1067,19 +1094,17 @@ class Expression(SupportsMath):
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of extra values.
-            Expression 1:   v
-            Expression 2:   add
-            Extra values:
-            shape: (1, 2)
-            ┌──────┬────────────┐
-            │ dim1 ┆ dim1_right │
-            │ ---  ┆ ---        │
-            │ i64  ┆ i64        │
-            ╞══════╪════════════╡
-            │ 3    ┆ null       │
-            └──────┴────────────┘
-            If this is intentional, use .drop_extras() or .keep_extras().
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
+            Expression 1:	v
+            Expression 2:	add
+            Extra labels in expression 1:
+            ┌──────┐
+            │ dim1 │
+            ╞══════╡
+            │ 3    │
+            └──────┘
+            Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression terms=2 type=linear>
@@ -2467,13 +2492,13 @@ class Variable(ModelElementWithId, SupportsMath):
 
     @return_new
     def next(self, dim: str, wrap_around: bool = False):
-        """Creates an expression where the variable at each index is the next variable in the specified dimension.
+        """Creates an expression where the variable at each label is the next variable in the specified dimension.
 
         Parameters:
             dim:
                 The dimension over which to shift the variable.
             wrap_around:
-                If `True`, the last index in the dimension is connected to the first index.
+                If `True`, the last label in the dimension is connected to the first label.
 
         Examples:
             >>> import pandas as pd
@@ -2486,20 +2511,18 @@ class Variable(ModelElementWithId, SupportsMath):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because of extra values.
-            Expression 1:   (bat_charge + bat_flow)
-            Expression 2:   bat_charge.next(…)
-            Extra values:
-            shape: (2, 4)
-            ┌───────┬─────────┬────────────┬────────────┐
-            │ time  ┆ city    ┆ time_right ┆ city_right │
-            │ ---   ┆ ---     ┆ ---        ┆ ---        │
-            │ str   ┆ str     ┆ str        ┆ str        │
-            ╞═══════╪═════════╪════════════╪════════════╡
-            │ 18:00 ┆ Toronto ┆ null       ┆ null       │
-            │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
-            └───────┴─────────┴────────────┴────────────┘
-            If this is intentional, use .drop_extras() or .keep_extras().
+            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because expression 1 has extra labels.
+            Expression 1:	(bat_charge + bat_flow)
+            Expression 2:	bat_charge.next(…)
+            Extra labels in expression 1:
+            ┌───────┬─────────┐
+            │ time  ┆ city    │
+            ╞═══════╪═════════╡
+            │ 18:00 ┆ Toronto │
+            │ 18:00 ┆ Berlin  │
+            └───────┴─────────┘
+            Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
 
             >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
             <Constraint 'unnamed' height=6 terms=18 type=linear>

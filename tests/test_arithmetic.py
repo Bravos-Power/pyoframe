@@ -299,7 +299,7 @@ def test_add_expression_with_missing(default_solver):
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         lhs + rhs
 
@@ -374,12 +374,12 @@ def test_add_expressions_with_dims_and_missing(default_solver):
     rhs = rhs.over("x")
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_extras()"),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         lhs + rhs
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_extras()"),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         lhs.drop_extras() + rhs
 
@@ -410,7 +410,7 @@ def test_three_way_add():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         df1 + df2 + df3
 
@@ -464,13 +464,13 @@ def test_propagation_extras():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         (expr1 + expr2).sum("dim1") + expr3
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("If this is intentional, use .drop_extras() or .keep_extras()"),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         (expr1 + expr2.keep_extras()).sum("dim1") + expr3
 
@@ -500,7 +500,7 @@ def test_propagation_over():
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape("because of extra values."),
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         expr1.over("y") + expr2
 
