@@ -221,18 +221,18 @@ Option 2 hardly seems reasonable this time considering that air emissions make u
 
 ## Order of operations for addition modifiers
 
-When an operation creates a new [Expression][pyoframe.Expression], any previously applied addition modifiers are forgotten. As such, **addition modifiers only work if they're applied _right before_ an addition**. For example, `a.drop_extras().sum("time") + b` won't work but `a.sum("time").drop_extras() + b` will.
+When an operation creates a new [Expression][pyoframe.Expression], any previously applied addition modifiers are discarded to prevent unexpected behaviors. As such, **addition modifiers only work if they're applied _right before_ an addition**. For example, `a.drop_extras().sum("time") + b` won't work but `a.sum("time").drop_extras() + b` will.
 
 There are two exceptions to this rule:
 
-1. _Negation_. As you might expect, `-my_obj.drop_extras()` works the same as `(-my_obj).drop_extras()` even though, in the former case, the negation operation is applied after the addition modifier!
+1. _Negation_. Negation preserves addition modifiers. If it weren't for this exception, `-my_obj.drop_extras()` wouldn't work as expected; you would have to write `(-my_obj).drop_extras()` which is unintuitive!
 
-2. _Sequential additions_. It would be particularly annoying if you had to write,
-    ```
-    (a.keep_extras() + b.keep_extras()).keep_extras() + c.keep_extras()
-    ```
-    just because the addition modifiers were forgotten after the first of the two additions. As such, the `.keep_extras()` and `.drop_extras()` addition modifiers are remembered after any additions, allowing you to write:
+2. _Addition/subtraction_. A `.keep_extras()` or `.drop_extras()` in the left and/or right side of an addition or subtraction is preserved in the result because this allows you to write
     ```
     a.keep_extras() + b.keep_extras() + c.keep_extras()
     ```
-    (If an addition has conflicting addition modifiers, e.g., `a.keep_extras() + b.drop_extras()`, no addition modifiers are remembered. Also, if you'd like to force an addition to forget its addition modifiers and revert to the default of raising errors whenever there are extra labels, you may use [`.raise_extras()`][pyoframe.Expression.raise_extras].)
+    instead of the annoyingly verbose,
+    ```
+    (a.keep_extras() + b.keep_extras()).keep_extras() + c.keep_extras()
+    ```
+    (If the left and right sides have conflicting addition modifiers, e.g., `a.keep_extras() + b.drop_extras()`, no addition modifiers are preserved. Also, if you'd like an addition or subtraction _not_ to preserve addition modifiers, you can force the result back to the default of raising errors whenever there are extra labels by using [`.raise_extras()`][pyoframe.Expression.raise_extras].)
