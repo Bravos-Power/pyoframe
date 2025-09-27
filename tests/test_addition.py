@@ -249,6 +249,16 @@ def test_add_expressions_with_keep_and_drop(default_solver):
         match=re.escape("Use .drop_extras() or .keep_extras()"),
     ):
         m.v1 + m.v2.keep_extras()
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
+    ):
+        m.v1.drop_extras() + m.v2
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape("Use .drop_extras() or .keep_extras()"),
+    ):
+        m.v1 + m.v2.drop_extras()
 
     result_kk = m.v1.keep_extras() + m.v2.keep_extras()
     result_kd = m.v1.keep_extras() + m.v2.drop_extras()

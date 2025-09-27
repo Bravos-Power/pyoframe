@@ -192,8 +192,8 @@ def add(*expressions: Expression) -> Expression:
         sorted(dims) != sorted(expr._dimensions_unsafe) for expr in expressions[1:]
     )
 
-    # If we cannot use .concat compute the sum in a pairwise manner
-    if len(expressions) > 2:
+    # If we cannot use .concat compute the sum in a pairwise manner, so far nobody uses this code
+    if len(expressions) > 2:  # pragma: no cover
         if has_dim_conflict or requires_extras_checks:
             result = expressions[0]
             for expr in expressions[1:]:
