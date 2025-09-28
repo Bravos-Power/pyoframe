@@ -381,39 +381,22 @@ class BaseOperableBlock(BaseBlock):
         return other + (-self.to_expr())
 
     def __le__(self, other):
-        """Equality constraint.
-
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v <= 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v <= 1
-        """
         return Constraint(self - other, ConstraintSense.LE)
 
-    def __ge__(self, other):
-        """Equality constraint.
+    def __lt__(self, _):
+        raise PyoframeError(
+            "Constraints cannot be created with the '<' or '>' operators. Did you mean to use '<=' or '>=' instead?"
+        )
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v >= 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v >= 1
-        """
+    def __ge__(self, other):
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, value: object):  # type: ignore
-        """Equality constraint.
+    def __gt__(self, _):
+        raise PyoframeError(
+            "Constraints cannot be created with the '<' or '>' operator. Did you mean to use '<=' or '>=' instead?"
+        )
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v == 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v = 1
-        """
+    def __eq__(self, value: object):  # type: ignore
         return Constraint(self - value, ConstraintSense.EQ)
 
 

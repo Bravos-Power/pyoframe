@@ -24,6 +24,8 @@ def _patch_class(cls):
     cls.__sub__ = _patch_method(cls.__sub__)
     cls.__le__ = _patch_method(cls.__le__)
     cls.__ge__ = _patch_method(cls.__ge__)
+    cls.__lt__ = _patch_method(cls.__lt__)
+    cls.__gt__ = _patch_method(cls.__gt__)
     cls.__contains__ = _patch_method(cls.__contains__)
 
 
