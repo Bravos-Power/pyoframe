@@ -1,7 +1,9 @@
-# Pyoframe's Public API
+# Pyoframe's Reference API
 
-::: pyoframe
-    options:
-        members: false
+The following classes are available via 
 
-## Classes and methods
+```python
+import pyoframe as pf
+```
+
+

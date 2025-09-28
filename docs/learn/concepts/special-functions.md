@@ -27,7 +27,11 @@ Additionally, users should use `.to_expr()` whenever they wish to use [over][pyo
 
     How is `.to_expr()` a valid Pandas and Polars method? `import pyoframe` causes Pyoframe to [monkey patch](https://stackoverflow.com/questions/5626193/what-is-monkey-patching) the Pandas and Polars libraries. One of the patches adds the `.to_expr()` method to both `pandas.DataFrame` and `polars.DataFrame` (see [`monkey_patch.py`](https://github.com/Bravos-Power/pyoframe/tree/main/src/pyoframe)).
 
-[^2]: After all, how could it? If a user decides to write code that adds two DataFrames together, Pyoframe shouldn't (and couldn't) interfere.
+!!! tip "Working with Pandas Series"
+
+    You can call `.to_expr()` on a Pandas Series to produce an expression where the labels will be determined from the Series' index.
+
+[^2]: After all, how could it? If a user decides to write code that adds two DataFrames together, Pyoframe shouldn't interfere.
 
 ### Example
 
