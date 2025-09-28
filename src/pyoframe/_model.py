@@ -20,8 +20,8 @@ from pyoframe._constants import (
     VType,
     _Solver,
 )
-from pyoframe._core import Constraint, SupportsToExpr, Variable
-from pyoframe._model_element import ModelElement, ModelElementWithId
+from pyoframe._core import Constraint, Operable, Variable
+from pyoframe._model_element import BaseBlock
 from pyoframe._objective import Objective
 from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
 
@@ -105,9 +105,7 @@ class Model:
         self._constraints: list[Constraint] = []
         self.sense: ObjSense | None = ObjSense(sense) if sense is not None else None
         self._objective: Objective | None = None
-        self._var_map = (
-            NamedVariableMapper(Variable) if print_uses_variable_names else None
-        )
+        self._var_map = NamedVariableMapper() if print_uses_variable_names else None
         self.name: str | None = name
 
         self._params = Container(self._set_param, self._get_param)
@@ -348,7 +346,7 @@ class Model:
         return self._objective
 
     @objective.setter
-    def objective(self, value: SupportsToExpr | float | int):
+    def objective(self, value: Operable):
         if self.has_objective and (
             not isinstance(value, Objective) or not value._constructive
         ):
@@ -366,7 +364,7 @@ class Model:
         return self._objective
 
     @minimize.setter
-    def minimize(self, value: SupportsToExpr | float | int):
+    def minimize(self, value: Operable):
         if self.sense is None:
             self.sense = ObjSense.MIN
         if self.sense != ObjSense.MIN:
@@ -381,7 +379,7 @@ class Model:
         return self._objective
 
     @maximize.setter
-    def maximize(self, value: SupportsToExpr | float | int):
+    def maximize(self, value: Operable):
         if self.sense is None:
             self.sense = ObjSense.MAX
         if self.sense != ObjSense.MAX:
@@ -390,17 +388,14 @@ class Model:
 
     def __setattr__(self, __name: str, __value: Any) -> None:
         if __name not in Model._reserved_attributes and not isinstance(
-            __value, (ModelElement, pl.DataFrame, pd.DataFrame)
+            __value, (BaseBlock, pl.DataFrame, pd.DataFrame)
         ):
             raise PyoframeError(
-                f"Cannot set attribute '{__name}' on the model because it isn't of type ModelElement (e.g. Variable, Constraint, ...)"
+                f"Cannot set attribute '{__name}' on the model because it isn't a subtype of BaseBlock (e.g. Variable, Constraint, ...)"
             )
 
-        if (
-            isinstance(__value, ModelElement)
-            and __name not in Model._reserved_attributes
-        ):
-            if isinstance(__value, ModelElementWithId):
+        if isinstance(__value, BaseBlock) and __name not in Model._reserved_attributes:
+            if __value._get_id_column_name() is not None:
                 assert not hasattr(self, __name), (
                     f"Cannot create {__name} since it was already created."
                 )

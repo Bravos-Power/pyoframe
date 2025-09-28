@@ -1,10 +1,10 @@
-# pyoframe.Config
+# Config
 
-[Default values](#defaults) listed at the end of the page.
+[Default values](#default-values) listed at the end of the page.
                      
 ::: pyoframe._constants._Config
 
-# Defaults
+# Default values
 
 ::: pyoframe._constants.ConfigDefaults
     options:

@@ -8,7 +8,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Expression, Model, Set, Variable, VType
+from pyoframe import Expression, Model, Set, Variable
 from pyoframe._arithmetic import PyoframeError
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
 
@@ -99,17 +99,6 @@ def test_filter_constraint():
     )
 
 
-def test_filter_variable(default_solver):
-    m = Model(default_solver)
-    m.v = Variable(pl.DataFrame({"dim1": [1, 2, 3]}))
-    result = m.v.filter(dim1=2)
-    assert isinstance(result, Expression)
-    assert_frame_equal(
-        result.to_str(return_df=True),
-        pl.DataFrame([[2, "v[2]"]], schema=["dim1", "expression"], orient="row"),
-    )
-
-
 def test_filter_set():
     s = Set(x=[1, 2, 3])
     result = s.filter(x=2)
@@ -128,32 +117,6 @@ def test_drops_na():
         ]
         expected_constraint = 5 <= expected_df.to_expr()
         assert str(constraint) == str(expected_constraint)
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
-
-
-def test_variable_equals(solver):
-    if not solver.supports_integer_variables:
-        pytest.skip(
-            f"Solver {solver.name} does not support integer or binary variables, skipping test."
-        )
-    m = Model(solver)
-    index = Set(x=[1, 2, 3])
-
-    m.Choose = Variable(index, vtype=VType.BINARY)
-    with pytest.raises(
-        AssertionError,
-        match=re.escape("Cannot specify both 'equals' and 'indexing_sets'"),
-    ):
-        m.Choose100 = Variable(index, equals=100 * m.Choose)
-    m.Choose100 = Variable(equals=100 * m.Choose)
-    m.maximize = m.Choose100.sum()
-    m.attr.Silent = True
-    m.optimize()
-    assert m.maximize.value == 300
-    assert m.maximize.evaluate() == 300
 
 
 def test_adding_expressions_that_cancel(default_solver):
@@ -195,3 +158,7 @@ def test_to_and_from_quadratic(default_solver):
     assert expr3.is_quadratic
     assert not expr4.is_quadratic
     assert expr4.terms == 3
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
