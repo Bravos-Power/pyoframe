@@ -381,39 +381,22 @@ class BaseOperableBlock(BaseBlock):
         return other + (-self.to_expr())
 
     def __le__(self, other):
-        """Equality constraint.
-
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v <= 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v <= 1
-        """
         return Constraint(self - other, ConstraintSense.LE)
 
-    def __ge__(self, other):
-        """Equality constraint.
+    def __lt__(self, _):
+        raise PyoframeError(
+            "Constraints cannot be created with the '<' or '>' operators. Did you mean to use '<=' or '>=' instead?"
+        )
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v >= 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v >= 1
-        """
+    def __ge__(self, other):
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, value: object):  # type: ignore
-        """Equality constraint.
+    def __gt__(self, _):
+        raise PyoframeError(
+            "Constraints cannot be created with the '<' or '>' operator. Did you mean to use '<=' or '>=' instead?"
+        )
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v == 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v = 1
-        """
+    def __eq__(self, value: object):  # type: ignore
         return Constraint(self - value, ConstraintSense.EQ)
 
 
@@ -517,6 +500,45 @@ class Set(BaseOperableBlock):
                 pl.lit(1).alias(COEF_KEY), pl.lit(CONST_TERM).alias(VAR_KEY)
             ),
             name=self.name,
+        )
+
+    def drop(self, *dims: str) -> Set:
+        """Returns a new Set with the given dimensions dropped.
+
+        Only unique rows are kept in the resulting Set.
+
+        Examples:
+            >>> xy = pf.Set(x=range(3), y=range(2))
+            >>> xy
+            <Set 'unnamed' height=6>
+            ┌─────┬─────┐
+            │ x   ┆ y   │
+            │ (3) ┆ (2) │
+            ╞═════╪═════╡
+            │ 0   ┆ 0   │
+            │ 0   ┆ 1   │
+            │ 1   ┆ 0   │
+            │ 1   ┆ 1   │
+            │ 2   ┆ 0   │
+            │ 2   ┆ 1   │
+            └─────┴─────┘
+            >>> x = xy.drop("y")
+            >>> x
+            <Set 'unnamed_set.drop(…)' height=3>
+            ┌─────┐
+            │ x   │
+            │ (3) │
+            ╞═════╡
+            │ 0   │
+            │ 1   │
+            │ 2   │
+            └─────┘
+        """
+        if not dims:
+            raise ValueError("At least one dimension must be provided to drop.")
+        return self._new(
+            self.data.drop(dims).unique(maintain_order=Config.maintain_order),
+            name=f"{self.name}.drop(…)",
         )
 
     def __mul__(self, other):
