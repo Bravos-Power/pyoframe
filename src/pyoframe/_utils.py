@@ -244,7 +244,7 @@ def cast_coef_to_string(
     return df
 
 
-def unwrap_single_values(func):
+def unwrap_single_values(func) -> pl.DataFrame | Any:
     """Returns the DataFrame unless it is a single value in which case return the value."""
 
     @wraps(func)

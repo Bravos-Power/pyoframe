@@ -52,6 +52,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
 Operable = Union["BaseOperableBlock", pl.DataFrame, pd.DataFrame, pd.Series, int, float]
+"""Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
 
 
 class BaseOperableBlock(BaseBlock):
@@ -2260,6 +2261,7 @@ class Variable(BaseOperableBlock):
                 assert len(indexing_sets) == 0, (
                     "Cannot specify both 'equals' and 'indexing_sets'"
                 )
+                equals = equals.to_expr()
                 indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -2267,7 +2269,7 @@ class Variable(BaseOperableBlock):
 
         self.vtype: VType = VType(vtype)
         self._attr = Container(self._set_attribute, self._get_attribute)
-        self._equals = equals
+        self._equals: Expression | None = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
             self._lb_expr, self.lb = lb, None
