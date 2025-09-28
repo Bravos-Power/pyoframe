@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -171,17 +171,11 @@ class BaseBlock(ABC):
             return 1
         return self.data.select(dims).n_unique()
 
-
-class BaseBlockWithId(BaseBlock):
-    """Extends BaseBlock with a method that assigns a unique ID to each row in a DataFrame.
-
-    IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
-    IDs are only unique for the subclass since different subclasses have different counters.
-    """
-
     @property
     def _has_ids(self) -> bool:
-        return self._get_id_column_name() in self.data.columns
+        id_col = self._get_id_column_name()
+        assert id_col is not None, "Cannot check for IDs if no ID column is defined."
+        return id_col in self.data.columns
 
     def _assert_has_ids(self):
         if not self._has_ids:
@@ -190,6 +184,6 @@ class BaseBlockWithId(BaseBlock):
             )
 
     @classmethod
-    @abstractmethod
-    def _get_id_column_name(cls) -> str:
-        """Returns the name of the column containing the IDs."""
+    def _get_id_column_name(cls) -> str | None:
+        """Subclasses should override to indicate that `data` contains an ID column."""
+        return None

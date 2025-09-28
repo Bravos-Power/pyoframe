@@ -35,7 +35,7 @@ from pyoframe._constants import (
     VType,
     VTypeValue,
 )
-from pyoframe._model_element import BaseBlock, BaseBlockWithId
+from pyoframe._model_element import BaseBlock
 from pyoframe._utils import (
     Container,
     FuncArgs,
@@ -1615,7 +1615,7 @@ def sum_by(by: str | Sequence[str], expr: Operable) -> Expression:  # pragma: no
     return expr.to_expr().sum_by(*by)
 
 
-class Constraint(BaseBlockWithId):
+class Constraint(BaseBlock):
     """An optimization constraint that can be added to a [Model][pyoframe.Model].
 
     Tip: Implementation Note
@@ -2164,7 +2164,7 @@ class Constraint(BaseBlockWithId):
         )
 
 
-class Variable(BaseBlockWithId, BaseOperableBlock):
+class Variable(BaseOperableBlock):
     """A decision variable for an optimization model.
 
     Parameters:

@@ -23,7 +23,6 @@ from pyoframe._constants import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._core import BaseOperableBlock
     from pyoframe._model import Variable
-    from pyoframe._model_element import BaseBlockWithId
 
 if sys.version_info >= (3, 10):
     pairwise = itertools.pairwise
@@ -310,7 +309,7 @@ class NamedVariableMapper:
     CONST_TERM_NAME = "_ONE"
     NAME_COL = "__name"
 
-    def __init__(self, cls: type[BaseBlockWithId]) -> None:
+    def __init__(self) -> None:
         self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},

@@ -21,7 +21,7 @@ from pyoframe._constants import (
     _Solver,
 )
 from pyoframe._core import Constraint, Operable, Variable
-from pyoframe._model_element import BaseBlock, BaseBlockWithId
+from pyoframe._model_element import BaseBlock
 from pyoframe._objective import Objective
 from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
 
@@ -105,9 +105,7 @@ class Model:
         self._constraints: list[Constraint] = []
         self.sense: ObjSense | None = ObjSense(sense) if sense is not None else None
         self._objective: Objective | None = None
-        self._var_map = (
-            NamedVariableMapper(Variable) if print_uses_variable_names else None
-        )
+        self._var_map = NamedVariableMapper() if print_uses_variable_names else None
         self.name: str | None = name
 
         self._params = Container(self._set_param, self._get_param)
@@ -397,7 +395,7 @@ class Model:
             )
 
         if isinstance(__value, BaseBlock) and __name not in Model._reserved_attributes:
-            if isinstance(__value, BaseBlockWithId):
+            if __value._get_id_column_name() is not None:
                 assert not hasattr(self, __name), (
                     f"Cannot create {__name} since it was already created."
                 )
