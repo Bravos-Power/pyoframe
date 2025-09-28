@@ -15,7 +15,7 @@ Pyoframe has a few special functions that make working with dataframes easy and 
 
 !!! abstract "Summary"
 
-    [`pandas.DataFrame.to_expr()`](../../reference/pandas.DataFrame.to_expr.md) and [`polars.DataFrame.to_expr()`](../../reference/polars.DataFrame.to_expr.md) allow users to manually convert their DataFrames to Pyoframe [Expressions][pyoframe.Expression] when Pyoframe is unable to perform an automatic conversation.
+    [`pandas.DataFrame.to_expr()`](../../reference/external/pandas.DataFrame.to_expr.md) and [`polars.DataFrame.to_expr()`](../../reference/external/polars.DataFrame.to_expr.md) allow users to manually convert their DataFrames to Pyoframe [Expressions][pyoframe.Expression] when Pyoframe is unable to perform an automatic conversation.
 
 Pyoframe conveniently allows users to use [Polars DataFrames](https://docs.pola.rs/api/python/stable/reference/dataframe/index.html) and [Pandas DataFrames](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) in their mathematical expressions. To do so, Pyoframe automatically detects these DataFrames and converts them to Pyoframe [Expressions][pyoframe.Expression] whenever there is a mathematical operation (e.g., `*`, `-`, `+`) involving at least one Pyoframe object (e.g. [Variable][pyoframe.Variable], [Set][pyoframe.Set], [Expression][pyoframe.Expression], etc.).
 

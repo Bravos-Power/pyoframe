@@ -30,7 +30,7 @@ def _patch_class(cls):
 def polars_df_to_expr(self: pl.DataFrame) -> Expression:
     """Converts a [polars](https://pola.rs/) `DataFrame` to a Pyoframe [Expression][pyoframe.Expression] by using the last column for values and the previous columns as dimensions.
 
-    See [Special Functions](../learn/concepts/special-functions.md#dataframeto_expr) for more details.
+    See [Special Functions](../../learn/concepts/special-functions.md#dataframeto_expr) for more details.
 
     Examples:
         >>> import polars as pl
@@ -63,7 +63,7 @@ def pandas_df_to_expr(self: pd.DataFrame) -> Expression:
 def pandas_series_to_expr(self: pd.Series) -> Expression:
     """Converts a [pandas](https://pandas.pydata.org/) `Series` to a Pyoframe [Expression][pyoframe.Expression], using the index for labels.
 
-    See [Special Functions](../learn/concepts/special-functions.md#dataframeto_expr) for more details.
+    See [Special Functions](../../learn/concepts/special-functions.md#dataframeto_expr) for more details.
 
     Note that no equivalent method exists for Polars Series, as Polars does not support indexes.
     """

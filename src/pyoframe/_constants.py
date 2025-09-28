@@ -139,7 +139,7 @@ class _Config:
 
         !!! warning
             This might improve performance, but it will suppress the errors that alert you of unexpected
-            behaviors ([learn more](../learn/concepts/addition.md)).
+            behaviors ([learn more](../../learn/concepts/addition.md)).
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:

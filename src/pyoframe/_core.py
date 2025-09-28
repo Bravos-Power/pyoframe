@@ -74,7 +74,7 @@ class BaseOperableBlock(BaseBlock):
     def keep_extras(self):
         """Indicates that labels not present in the other expression should be kept during addition, subtraction, or constraint creation.
 
-        [Learn more](../learn/concepts/addition.md) about addition modifiers.
+        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
 
         See Also:
             [`drop_extras`][pyoframe.Expression.drop_extras].
@@ -87,7 +87,7 @@ class BaseOperableBlock(BaseBlock):
     def drop_extras(self):
         """Indicates that labels not present in the other expression should be discarded during addition, subtraction, or constraint creation.
 
-        [Learn more](../learn/concepts/addition.md) about addition modifiers.
+        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
 
         See Also:
             [`keep_extras`][pyoframe.Expression.keep_extras].
@@ -118,7 +118,7 @@ class BaseOperableBlock(BaseBlock):
 
         This is the default behavior and, as such, this addition modifier should only be used in the rare cases where you want to override a previous use of `keep_extras()` or `drop_extras()`.
 
-        [Learn more](../learn/concepts/addition.md) about addition modifiers.
+        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
 
         See Also:
             [`keep_extras`][pyoframe.Expression.keep_extras] and [`drop_extras`][pyoframe.Expression.drop_extras].
@@ -141,7 +141,7 @@ class BaseOperableBlock(BaseBlock):
 
         Takes the same arguments as [`polars.DataFrame.rename`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.rename.html).
 
-        See the [portfolio optimization example](../examples/portfolio_optimization.md) for a usage example.
+        See the [portfolio optimization example](../../examples/portfolio_optimization.md) for a usage example.
 
         Examples:
             >>> m = pf.Model()
