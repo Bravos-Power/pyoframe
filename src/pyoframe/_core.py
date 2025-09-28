@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Literal, Protocol, Union, overload
+from typing import TYPE_CHECKING, Literal, Union, overload
 
 import pandas as pd
 import polars as pl
@@ -35,7 +35,7 @@ from pyoframe._constants import (
     VType,
     VTypeValue,
 )
-from pyoframe._model_element import ModelElement, ModelElementWithId
+from pyoframe._model_element import BaseBlock, BaseBlockWithId
 from pyoframe._utils import (
     Container,
     FuncArgs,
@@ -51,17 +51,10 @@ from pyoframe._utils import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
-
-# TODO consider changing this simply to a type and having a helper "Expression.from(object)"
-class SupportsToExpr(Protocol):
-    """Protocol for any object that can be converted to a Pyoframe [Expression][pyoframe.Expression]."""
-
-    def to_expr(self) -> Expression:
-        """Converts the object to a Pyoframe [Expression][pyoframe.Expression]."""
-        ...
+Operable = Union["BaseOperableBlock", pl.DataFrame, pd.DataFrame, pd.Series, int, float]
 
 
-class SupportsMath(ModelElement, SupportsToExpr):
+class BaseOperableBlock(BaseBlock):
     """Any object that can be converted into an expression."""
 
     def __init__(self, *args, **kwargs):
@@ -70,11 +63,11 @@ class SupportsMath(ModelElement, SupportsToExpr):
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def _new(self, data: pl.DataFrame, name: str) -> SupportsMath:
+    def _new(self, data: pl.DataFrame, name: str) -> BaseOperableBlock:
         """Helper method to create a new instance of the same (or for Variable derivative) class."""
 
-    def _copy_flags(self, other: SupportsMath):
-        """Copies the flags from another SupportsMath object."""
+    def _copy_flags(self, other: BaseOperableBlock):
+        """Copies the flags from another BaseOperableBlock object."""
         self._extras_strategy = other._extras_strategy
         self._allowed_new_dims = other._allowed_new_dims.copy()
 
@@ -427,14 +420,14 @@ SetTypes = Union[
     pl.DataFrame,
     pd.Index,
     pd.DataFrame,
-    SupportsMath,
+    BaseOperableBlock,
     Mapping[str, Sequence[object]],
     "Set",
     "Constraint",
 ]
 
 
-class Set(SupportsMath):
+class Set(BaseOperableBlock):
     """A set which can then be used to index variables.
 
     Examples:
@@ -572,7 +565,7 @@ class Set(SupportsMath):
             df = pl.DataFrame(set)
         elif isinstance(set, Constraint):
             df = set.data.select(set._dimensions_unsafe)
-        elif isinstance(set, SupportsMath):
+        elif isinstance(set, BaseOperableBlock):
             df = (
                 set.to_expr()
                 .data.drop(RESERVED_COL_KEYS, strict=False)
@@ -613,7 +606,7 @@ class Set(SupportsMath):
         return df
 
 
-class Expression(SupportsMath):
+class Expression(BaseOperableBlock):
     """Represents a linear or quadratic mathematical expression.
 
     Examples:
@@ -1132,7 +1125,7 @@ class Expression(SupportsMath):
         self._learn_from_other(other)
         return add(self, other)
 
-    def __mul__(self: Expression, other: int | float | SupportsToExpr) -> Expression:
+    def __mul__(self: Expression, other: Operable) -> Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
@@ -1575,16 +1568,16 @@ class Expression(SupportsMath):
 
 
 @overload
-def sum(over: str | Sequence[str], expr: SupportsToExpr) -> Expression: ...
+def sum(over: str | Sequence[str], expr: Operable) -> Expression: ...
 
 
 @overload
-def sum(over: SupportsToExpr) -> Expression: ...
+def sum(over: Operable) -> Expression: ...
 
 
 def sum(
-    over: str | Sequence[str] | SupportsToExpr,
-    expr: SupportsToExpr | None = None,
+    over: str | Sequence[str] | Operable,
+    expr: Operable | None = None,
 ) -> Expression:  # pragma: no cover
     """Deprecated: Use Expression.sum() or Variable.sum() instead.
 
@@ -1601,7 +1594,7 @@ def sum(
     )
 
     if expr is None:
-        assert isinstance(over, SupportsMath)
+        assert isinstance(over, BaseOperableBlock)
         return over.to_expr().sum()
     else:
         assert isinstance(over, (str, Sequence))
@@ -1610,9 +1603,7 @@ def sum(
         return expr.to_expr().sum(*over)
 
 
-def sum_by(
-    by: str | Sequence[str], expr: SupportsToExpr
-) -> Expression:  # pragma: no cover
+def sum_by(by: str | Sequence[str], expr: Operable) -> Expression:  # pragma: no cover
     """Deprecated: Use Expression.sum() or Variable.sum() instead."""
     warnings.warn(
         "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
@@ -1624,7 +1615,7 @@ def sum_by(
     return expr.to_expr().sum_by(*by)
 
 
-class Constraint(ModelElementWithId):
+class Constraint(BaseBlockWithId):
     """An optimization constraint that can be added to a [Model][pyoframe.Model].
 
     Tip: Implementation Note
@@ -1907,9 +1898,7 @@ class Constraint(ModelElementWithId):
         """Syntactic sugar on `Constraint.lhs.data.filter()`, to help debugging."""
         return self.lhs.data.filter(*args, **kwargs)
 
-    def relax(
-        self, cost: SupportsToExpr, max: SupportsToExpr | None = None
-    ) -> Constraint:
+    def relax(self, cost: Operable, max: Operable | None = None) -> Constraint:
         """Allows the constraint to be violated at a `cost` and, optionally, up to a maximum.
 
         Warning:
@@ -2175,7 +2164,7 @@ class Constraint(ModelElementWithId):
         )
 
 
-class Variable(ModelElementWithId, SupportsMath):
+class Variable(BaseBlockWithId, BaseOperableBlock):
     """A decision variable for an optimization model.
 
     Parameters:
@@ -2257,16 +2246,21 @@ class Variable(ModelElementWithId, SupportsMath):
     def __init__(
         self,
         *indexing_sets: SetTypes | Iterable[SetTypes],
-        lb: float | int | SupportsToExpr | None = None,
-        ub: float | int | SupportsToExpr | None = None,
+        lb: Operable | None = None,
+        ub: Operable | None = None,
         vtype: VType | VTypeValue = VType.CONTINUOUS,
-        equals: SupportsToExpr | None = None,
+        equals: Operable | None = None,
     ):
         if equals is not None:
-            assert len(indexing_sets) == 0, (
-                "Cannot specify both 'equals' and 'indexing_sets'"
-            )
-            indexing_sets = (equals,)
+            if isinstance(equals, (float, int)):
+                lb = equals
+                ub = equals
+                equals = None
+            else:
+                assert len(indexing_sets) == 0, (
+                    "Cannot specify both 'equals' and 'indexing_sets'"
+                )
+                indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
         super().__init__(data)

@@ -21,9 +21,9 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe._core import SupportsMath
+    from pyoframe._core import BaseOperableBlock
     from pyoframe._model import Variable
-    from pyoframe._model_element import ModelElementWithId
+    from pyoframe._model_element import BaseBlockWithId
 
 if sys.version_info >= (3, 10):
     pairwise = itertools.pairwise
@@ -310,7 +310,7 @@ class NamedVariableMapper:
     CONST_TERM_NAME = "_ONE"
     NAME_COL = "__name"
 
-    def __init__(self, cls: type[ModelElementWithId]) -> None:
+    def __init__(self, cls: type[BaseBlockWithId]) -> None:
         self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},
@@ -375,15 +375,15 @@ def for_solvers(*solvers: str):
     return decorator
 
 
-# TODO: rename and change to return_expr once Set is split away from SupportsMath
-def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., SupportsMath]:
+# TODO: rename and change to return_expr once Set is split away from BaseOperableBlock
+def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., BaseOperableBlock]:
     """Decorator that upcasts the returned DataFrame to an Expression.
 
     Requires the first argument (self) to support self._new().
     """
 
     @wraps(func)
-    def wrapper(self: SupportsMath, *args, **kwargs):
+    def wrapper(self: BaseOperableBlock, *args, **kwargs):
         result = func(self, *args, **kwargs)
         return self._new(result, name=f"{self.name}.{func.__name__}(…)")
 

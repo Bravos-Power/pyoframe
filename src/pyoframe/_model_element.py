@@ -20,7 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe import Model
 
 
-class ModelElement(ABC):
+class BaseBlock(ABC):
     """The base class for elements of a Model such as [][pyoframe.Variable] and [][pyoframe.Constraint]."""
 
     def __init__(self, data: pl.DataFrame, name="unnamed") -> None:
@@ -172,8 +172,8 @@ class ModelElement(ABC):
         return self.data.select(dims).n_unique()
 
 
-class ModelElementWithId(ModelElement):
-    """Extends ModelElement with a method that assigns a unique ID to each row in a DataFrame.
+class BaseBlockWithId(BaseBlock):
+    """Extends BaseBlock with a method that assigns a unique ID to each row in a DataFrame.
 
     IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
     IDs are only unique for the subclass since different subclasses have different counters.

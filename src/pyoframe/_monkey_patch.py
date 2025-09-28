@@ -6,14 +6,14 @@ import pandas as pd
 import polars as pl
 
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
-from pyoframe._core import Expression, SupportsMath
+from pyoframe._core import BaseOperableBlock, Expression
 
 
 def _patch_class(cls):
     def _patch_method(func):
         @wraps(func)
         def wrapper(self, other):
-            if isinstance(other, SupportsMath):
+            if isinstance(other, BaseOperableBlock):
                 return NotImplemented
             return func(self, other)
 
