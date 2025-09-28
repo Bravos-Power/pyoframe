@@ -2254,8 +2254,11 @@ class Variable(BaseOperableBlock):
     ):
         if equals is not None:
             if isinstance(equals, (float, int)):
-                lb = equals
-                ub = equals
+                if lb is not None:
+                    raise ValueError("Cannot specify 'lb' when 'equals' is a constant.")
+                if ub is not None:
+                    raise ValueError("Cannot specify 'ub' when 'equals' is a constant.")
+                lb = ub = equals
                 equals = None
             else:
                 assert len(indexing_sets) == 0, (
