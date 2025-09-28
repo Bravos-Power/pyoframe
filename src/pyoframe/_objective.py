@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import polars as pl
 import pyoptinterface as poi
 
-from pyoframe._constants import ObjSense
+from pyoframe._constants import COEF_KEY, CONST_TERM, QUAD_VAR_KEY, VAR_KEY, ObjSense
 from pyoframe._core import Expression, Operable
 
 
@@ -114,12 +115,53 @@ class Objective(Expression):
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX
         ):
-            poi_expr = (-self)._to_poi()
+            poi_expr = Objective._get_poi_expression(-self)
             kwargs["sense"] = poi.ObjectiveSense.Minimize
         else:
-            poi_expr = self._to_poi()
+            poi_expr = Objective._get_poi_expression(self)
             kwargs["sense"] = self._model.sense._to_poi()
         self._model.poi.set_objective(poi_expr, **kwargs)
+
+    @staticmethod
+    def _get_poi_expression(
+        expr: Expression,
+    ) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
+        assert expr.dimensionless, (
+            "._to_poi() only works for dimensionless expressions."
+        )
+        assert expr._model is not None
+
+        df = expr.data
+
+        if expr.is_quadratic:
+            if expr._model.solver.has_quadratic_presolve:
+                return poi.ScalarQuadraticFunction(
+                    coefficients=df[COEF_KEY].to_numpy(),
+                    var1s=df[VAR_KEY].to_numpy(),
+                    var2s=df[QUAD_VAR_KEY].to_numpy(),
+                )
+            else:
+                quadratic_data = df.filter(pl.col(QUAD_VAR_KEY) != CONST_TERM)
+                affine_part = df.filter(pl.col(QUAD_VAR_KEY) == CONST_TERM)
+                affine_var = affine_part.filter(pl.col(VAR_KEY) != CONST_TERM)
+                affine_const = affine_part.filter(pl.col(VAR_KEY) == CONST_TERM)
+                assert affine_const.height <= 1, "Something went wrong."
+                affine_const = 0 if affine_const.height == 0 else affine_const.item()
+
+                return poi.ScalarQuadraticFunction(
+                    coefficients=quadratic_data[COEF_KEY].to_numpy(),
+                    var1s=quadratic_data[VAR_KEY].to_numpy(),
+                    var2s=quadratic_data[QUAD_VAR_KEY].to_numpy(),
+                    affine_part=poi.ScalarAffineFunction(
+                        coefficients=affine_var[COEF_KEY].to_numpy(),
+                        variables=affine_var[VAR_KEY].to_numpy(),
+                        constant=affine_const,
+                    ),
+                )
+        else:
+            return poi.ScalarAffineFunction(
+                coefficients=df[COEF_KEY].to_numpy(), variables=df[VAR_KEY].to_numpy()
+            )
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)

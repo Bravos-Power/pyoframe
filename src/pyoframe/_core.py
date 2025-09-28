@@ -1366,23 +1366,6 @@ class Expression(BaseOperableBlock):
             df = df.group_by(dims, maintain_order=Config.maintain_order)
         return df.sum()
 
-    def _to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
-        assert self.dimensions is None, (
-            "._to_poi() only works for non-dimensioned expressions."
-        )
-
-        if self.is_quadratic:
-            return poi.ScalarQuadraticFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                var1s=self.data.get_column(VAR_KEY).to_numpy(),
-                var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),
-            )
-        else:
-            return poi.ScalarAffineFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                variables=self.data.get_column(VAR_KEY).to_numpy(),
-            )
-
     @overload
     def to_str(
         self,
