@@ -502,6 +502,45 @@ class Set(BaseOperableBlock):
             name=self.name,
         )
 
+    def drop(self, *dims: str) -> Set:
+        """Returns a new Set with the given dimensions dropped.
+
+        Only unique rows are kept in the resulting Set.
+
+        Examples:
+            >>> xy = pf.Set(x=range(3), y=range(2))
+            >>> xy
+            <Set 'unnamed' height=6>
+            ┌─────┬─────┐
+            │ x   ┆ y   │
+            │ (3) ┆ (2) │
+            ╞═════╪═════╡
+            │ 0   ┆ 0   │
+            │ 0   ┆ 1   │
+            │ 1   ┆ 0   │
+            │ 1   ┆ 1   │
+            │ 2   ┆ 0   │
+            │ 2   ┆ 1   │
+            └─────┴─────┘
+            >>> x = xy.drop("y")
+            >>> x
+            <Set 'unnamed_set.drop(…)' height=3>
+            ┌─────┐
+            │ x   │
+            │ (3) │
+            ╞═════╡
+            │ 0   │
+            │ 1   │
+            │ 2   │
+            └─────┘
+        """
+        if not dims:
+            raise ValueError("At least one dimension must be provided to drop.")
+        return self._new(
+            self.data.drop(dims).unique(maintain_order=Config.maintain_order),
+            name=f"{self.name}.drop(…)",
+        )
+
     def __mul__(self, other):
         if isinstance(other, Set):
             overlap_dims = set(self.data.columns) & set(other.data.columns)
