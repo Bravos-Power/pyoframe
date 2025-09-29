@@ -10,7 +10,7 @@ from polars.testing import assert_frame_equal
 
 from pyoframe import Expression, Model, Set, Variable
 from pyoframe._arithmetic import PyoframeError
-from pyoframe._constants import COEF_KEY, VAR_KEY, ZERO_VARIABLE
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
 
 
 def test_set_multiplication():
@@ -50,7 +50,7 @@ def test_multiplication_no_common_dimensions():
                 "dim1": [1, 1, 2, 2, 3, 3],
                 "dim2": ["a", "b", "a", "b", "a", "b"],
                 COEF_KEY: [1, 2, 2, 4, 3, 6],
-                VAR_KEY: [ZERO_VARIABLE] * 6,
+                VAR_KEY: [CONST_TERM] * 6,
             }
         ),
         check_dtypes=False,
@@ -84,7 +84,7 @@ def test_filter_expression():
     assert isinstance(result, Expression)
     assert_frame_equal(
         result.data,
-        pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [ZERO_VARIABLE]}),
+        pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
         check_dtypes=False,
     )
 
@@ -94,7 +94,7 @@ def test_filter_constraint():
     result = const.filter(dim1=2)
     assert_frame_equal(
         result,
-        pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [ZERO_VARIABLE]}),
+        pl.DataFrame({"dim1": [2], COEF_KEY: [2], VAR_KEY: [CONST_TERM]}),
         check_dtypes=False,
     )
 

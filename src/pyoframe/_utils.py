@@ -14,9 +14,9 @@ import polars as pl
 
 from pyoframe._constants import (
     COEF_KEY,
+    CONST_TERM,
     RESERVED_COL_KEYS,
     VAR_KEY,
-    ZERO_VARIABLE,
     Config,
 )
 
@@ -229,7 +229,7 @@ def cast_coef_to_string(
         assert always_show_sign, "drop_ones requires always_show_sign=True"
         condition = pl.col(column_name) == str(1)
         if VAR_KEY in df.columns:
-            condition = condition & (pl.col(VAR_KEY) != ZERO_VARIABLE)
+            condition = condition & (pl.col(VAR_KEY) != CONST_TERM)
         df = df.with_columns(
             pl.when(condition)
             .then(pl.lit(""))
@@ -317,7 +317,7 @@ class NamedVariableMapper:
         )
         self._extend_registry(
             pl.DataFrame(
-                {self._ID_COL: [ZERO_VARIABLE], self.NAME_COL: [self.CONST_TERM_NAME]},
+                {self._ID_COL: [CONST_TERM], self.NAME_COL: [self.CONST_TERM_NAME]},
                 schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
             )
         )

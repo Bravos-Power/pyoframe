@@ -30,7 +30,6 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
-    has_quadratic_presolve: bool = True
     accelerate_with_repeat_names: bool = False
     """
     If True, Pyoframe sets all the variable and constraint names to 'V'
@@ -49,10 +48,6 @@ class _Solver:
             assert self.supports_quadratic_constraints, (
                 "Non-convex solvers typically support quadratic constraints. Are you sure this is correct?"
             )
-        if not self.has_quadratic_presolve:
-            assert not self.supports_quadratic_constraints, (
-                "No implementation for removing Zero Variable in quadratic constraints."
-            )
 
     def __repr__(self):
         return self.name
@@ -65,7 +60,6 @@ SUPPORTED_SOLVERS = [
         supports_quadratic_constraints=False,
         supports_non_convex=False,
         supports_duals=False,
-        has_quadratic_presolve=False,
     ),
     _Solver(
         "ipopt",
@@ -78,7 +72,7 @@ SUPPORTED_SOLVERS = [
 
 
 # Variable ID for constant terms. This variable ID is reserved.
-ZERO_VARIABLE = 0
+CONST_TERM = 0
 
 RESERVED_COL_KEYS = (
     COEF_KEY,

@@ -8,11 +8,11 @@ import polars as pl
 
 from pyoframe._constants import (
     COEF_KEY,
+    CONST_TERM,
     KEY_TYPE,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
-    ZERO_VARIABLE,
     Config,
     ExtrasStrategy,
     PyoframeError,
@@ -243,9 +243,7 @@ def add(*expressions: Expression) -> Expression:
     if any(QUAD_VAR_KEY in df.columns for df in expr_data):
         expr_data = [
             (
-                df.with_columns(
-                    pl.lit(ZERO_VARIABLE).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
-                )
+                df.with_columns(pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE))
                 if QUAD_VAR_KEY not in df.columns
                 else df
             )
@@ -518,20 +516,17 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
                     maintain_order="left" if Config.maintain_order else None,
                 )
                 .with_columns(pl.col(COEF_KEY).fill_null(0))
-                .fill_null(ZERO_VARIABLE)
+                .fill_null(CONST_TERM)
             )
         else:
             df = df_filtered
             if df.is_empty():
                 df = pl.DataFrame(
-                    {VAR_KEY: [ZERO_VARIABLE], COEF_KEY: [0]},
+                    {VAR_KEY: [CONST_TERM], COEF_KEY: [0]},
                     schema={VAR_KEY: KEY_TYPE, COEF_KEY: pl.Float64},
                 )
 
-    if (
-        QUAD_VAR_KEY in df.columns
-        and (df.get_column(QUAD_VAR_KEY) == ZERO_VARIABLE).all()
-    ):
+    if QUAD_VAR_KEY in df.columns and (df.get_column(QUAD_VAR_KEY) == CONST_TERM).all():
         df = df.drop(QUAD_VAR_KEY)
 
     return df

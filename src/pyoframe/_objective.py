@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import polars as pl
 import pyoptinterface as poi
 
-from pyoframe._constants import COEF_KEY, QUAD_VAR_KEY, VAR_KEY, ZERO_VARIABLE, ObjSense
+from pyoframe._constants import COEF_KEY, QUAD_VAR_KEY, VAR_KEY, ObjSense
 from pyoframe._core import Expression, Operable
 
 
@@ -133,43 +132,20 @@ class Objective(Expression):
 
         df = expr.data
 
-        if not expr.is_quadratic:
-            return poi.ScalarAffineFunction(
-                coefficients=df[COEF_KEY].to_numpy(), variables=df[VAR_KEY].to_numpy()
-            )
-
-        solver = expr._model.solver
-        if solver.name == "highs":
+        if expr.is_quadratic:
             # Fix for bug https://github.com/metab0t/PyOptInterface/issues/59
-            df = df.sort(VAR_KEY, QUAD_VAR_KEY)
+            if expr._model.solver.name == "highs":
+                df = df.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
 
-        if solver.has_quadratic_presolve:  # we don't need to remove the Zero Variable
             return poi.ScalarQuadraticFunction(
                 coefficients=df[COEF_KEY].to_numpy(),
                 var1s=df[VAR_KEY].to_numpy(),
                 var2s=df[QUAD_VAR_KEY].to_numpy(),
             )
-
-        quadratic_data = df.filter(pl.col(QUAD_VAR_KEY) != ZERO_VARIABLE)
-        affine_data = df.filter(pl.col(QUAD_VAR_KEY) == ZERO_VARIABLE)
-        kwargs = {}
-        if affine_data.height != 0:
-            affine_var = affine_data.filter(pl.col(VAR_KEY) != ZERO_VARIABLE)
-            const = affine_data.filter(pl.col(VAR_KEY) == ZERO_VARIABLE)
-            assert const.height <= 1, "Something went wrong."
-            const = 0 if const.height == 0 else const[COEF_KEY].item()
-            kwargs["affine_part"] = poi.ScalarAffineFunction(
-                coefficients=affine_var[COEF_KEY].to_numpy(),
-                variables=affine_var[VAR_KEY].to_numpy(),
-                constant=const,
+        else:
+            return poi.ScalarAffineFunction(
+                coefficients=df[COEF_KEY].to_numpy(), variables=df[VAR_KEY].to_numpy()
             )
-
-        return poi.ScalarQuadraticFunction(
-            coefficients=quadratic_data[COEF_KEY].to_numpy(),
-            var1s=quadratic_data[VAR_KEY].to_numpy(),
-            var2s=quadratic_data[QUAD_VAR_KEY].to_numpy(),
-            **kwargs,
-        )
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)
