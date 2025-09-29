@@ -1374,7 +1374,7 @@ class Expression(BaseOperableBlock):
         data = self.data
 
         if self.is_quadratic:
-            # Fix for bug https://github.com/metab0t/PyOptInterface/issues/59
+            # Workaround for bug https://github.com/metab0t/PyOptInterface/issues/59
             if self._model is None or self._model.solver.name == "highs":
                 data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
 
