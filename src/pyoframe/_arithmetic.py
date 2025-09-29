@@ -9,7 +9,6 @@ import polars as pl
 from pyoframe._constants import (
     COEF_KEY,
     CONST_TERM,
-    KEY_TYPE,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
@@ -243,7 +242,9 @@ def add(*expressions: Expression) -> Expression:
     if any(QUAD_VAR_KEY in df.columns for df in expr_data):
         expr_data = [
             (
-                df.with_columns(pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE))
+                df.with_columns(
+                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(Config.id_dtype)
+                )
                 if QUAD_VAR_KEY not in df.columns
                 else df
             )
@@ -523,7 +524,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
             if df.is_empty():
                 df = pl.DataFrame(
                     {VAR_KEY: [CONST_TERM], COEF_KEY: [0]},
-                    schema={VAR_KEY: KEY_TYPE, COEF_KEY: pl.Float64},
+                    schema={VAR_KEY: Config.id_dtype, COEF_KEY: pl.Float64},
                 )
 
     if QUAD_VAR_KEY in df.columns and (df.get_column(QUAD_VAR_KEY) == CONST_TERM).all():
