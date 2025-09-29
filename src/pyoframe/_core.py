@@ -1371,16 +1371,22 @@ class Expression(BaseOperableBlock):
             "._to_poi() only works for non-dimensioned expressions."
         )
 
+        data = self.data
+
         if self.is_quadratic:
+            # Workaround for bug https://github.com/metab0t/PyOptInterface/issues/59
+            if self._model is None or self._model.solver.name == "highs":
+                data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
+
             return poi.ScalarQuadraticFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                var1s=self.data.get_column(VAR_KEY).to_numpy(),
-                var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),
+                coefficients=data.get_column(COEF_KEY).to_numpy(),
+                var1s=data.get_column(VAR_KEY).to_numpy(),
+                var2s=data.get_column(QUAD_VAR_KEY).to_numpy(),
             )
         else:
             return poi.ScalarAffineFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                variables=self.data.get_column(VAR_KEY).to_numpy(),
+                coefficients=data.get_column(COEF_KEY).to_numpy(),
+                variables=data.get_column(VAR_KEY).to_numpy(),
             )
 
     @overload

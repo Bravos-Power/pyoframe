@@ -29,9 +29,6 @@ class Example:
     is_non_convex: bool = False
 
     def supports_solver(self, solver: _Solver) -> bool:
-        if solver.name == "highs" and self.folder_name == "portfolio_optim":
-            # TODO: see bug #184
-            return False
         if self.is_mip and not solver.supports_integer_variables:
             return False
         if (

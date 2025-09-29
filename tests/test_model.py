@@ -61,8 +61,6 @@ def test_set_objective(solver):
 
 
 def test_quadratic_objective(solver):
-    if solver.name == "highs":
-        pytest.skip("Due to bug, see issue #184")
     m = pf.Model(solver)
     m.A = pf.Variable()
     m.B = pf.Variable()
