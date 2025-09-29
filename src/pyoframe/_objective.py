@@ -134,7 +134,12 @@ class Objective(Expression):
         df = expr.data
 
         if expr.is_quadratic:
-            if expr._model.solver.has_quadratic_presolve:
+            solver = expr._model.solver
+            if solver.name == "highs":
+                # Fix for bug https://github.com/metab0t/PyOptInterface/issues/59
+                df = df.sort(VAR_KEY, QUAD_VAR_KEY)
+
+            if solver.has_quadratic_presolve:
                 return poi.ScalarQuadraticFunction(
                     coefficients=df[COEF_KEY].to_numpy(),
                     var1s=df[VAR_KEY].to_numpy(),
@@ -143,20 +148,23 @@ class Objective(Expression):
             else:
                 quadratic_data = df.filter(pl.col(QUAD_VAR_KEY) != CONST_TERM)
                 affine_part = df.filter(pl.col(QUAD_VAR_KEY) == CONST_TERM)
-                affine_var = affine_part.filter(pl.col(VAR_KEY) != CONST_TERM)
-                affine_const = affine_part.filter(pl.col(VAR_KEY) == CONST_TERM)
-                assert affine_const.height <= 1, "Something went wrong."
-                affine_const = 0 if affine_const.height == 0 else affine_const.item()
+                kwargs = {}
+                if affine_part.height != 0:
+                    affine_var = affine_part.filter(pl.col(VAR_KEY) != CONST_TERM)
+                    const = affine_part.filter(pl.col(VAR_KEY) == CONST_TERM)
+                    assert const.height <= 1, "Something went wrong."
+                    const = 0 if const.height == 0 else const[COEF_KEY].item()
+                    kwargs["affine_part"] = poi.ScalarAffineFunction(
+                        coefficients=affine_var[COEF_KEY].to_numpy(),
+                        variables=affine_var[VAR_KEY].to_numpy(),
+                        constant=const,
+                    )
 
                 return poi.ScalarQuadraticFunction(
                     coefficients=quadratic_data[COEF_KEY].to_numpy(),
                     var1s=quadratic_data[VAR_KEY].to_numpy(),
                     var2s=quadratic_data[QUAD_VAR_KEY].to_numpy(),
-                    affine_part=poi.ScalarAffineFunction(
-                        coefficients=affine_var[COEF_KEY].to_numpy(),
-                        variables=affine_var[VAR_KEY].to_numpy(),
-                        constant=affine_const,
-                    ),
+                    **kwargs,
                 )
         else:
             return poi.ScalarAffineFunction(
