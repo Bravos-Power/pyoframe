@@ -313,12 +313,12 @@ class NamedVariableMapper:
         self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},
-            schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+            schema={self._ID_COL: Config.id_dtype, self.NAME_COL: pl.String},
         )
         self._extend_registry(
             pl.DataFrame(
                 {self._ID_COL: [CONST_TERM], self.NAME_COL: [self.CONST_TERM_NAME]},
-                schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+                schema={self._ID_COL: Config.id_dtype, self.NAME_COL: pl.String},
             )
         )
 

@@ -22,7 +22,6 @@ from pyoframe._constants import (
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
-    KEY_TYPE,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
@@ -701,7 +700,7 @@ class Expression(BaseOperableBlock):
                     COEF_KEY: [constant],
                     VAR_KEY: [CONST_TERM],
                 },
-                schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
             ),
             name=str(constant),
         )
@@ -1215,11 +1214,11 @@ class Expression(BaseOperableBlock):
             if CONST_TERM not in data[VAR_KEY]:
                 const_df = pl.DataFrame(
                     {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
                 )
                 if self.is_quadratic:
                     const_df = const_df.with_columns(
-                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(Config.id_dtype)
                     )
                 data = pl.concat(
                     [data, const_df],
@@ -1229,11 +1228,11 @@ class Expression(BaseOperableBlock):
             keys = (
                 data.select(dim)
                 .unique(maintain_order=Config.maintain_order)
-                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
+                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(Config.id_dtype))
             )
             if self.is_quadratic:
                 keys = keys.with_columns(
-                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(Config.id_dtype)
                 )
             data = data.join(
                 keys,
@@ -1276,7 +1275,7 @@ class Expression(BaseOperableBlock):
             if len(constant_terms) == 0:
                 return pl.DataFrame(
                     {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
                 )
             return constant_terms
 
@@ -1770,23 +1769,25 @@ class Constraint(BaseBlock):
                 if is_quadratic
                 else poi.ScalarAffineFunction.from_numpy  # when called only once from_numpy is faster
             )
-            df = self.data.with_columns(
-                pl.lit(
-                    add_constraint(
-                        create_expression(
-                            *(
-                                df.get_column(c).to_numpy()
-                                for c in ([COEF_KEY] + self.lhs._variable_columns)
-                            )
-                        ),
-                        sense,
-                        0,
-                        name,
-                    ).index
+            constr_id = add_constraint(
+                create_expression(
+                    *(
+                        df.get_column(c).to_numpy()
+                        for c in ([COEF_KEY] + self.lhs._variable_columns)
+                    )
+                ),
+                sense,
+                0,
+                name,
+            ).index
+            try:
+                df = self.data.with_columns(
+                    pl.lit(constr_id).alias(CONSTRAINT_KEY).cast(Config.id_dtype)
                 )
-                .alias(CONSTRAINT_KEY)
-                .cast(KEY_TYPE)
-            )
+            except TypeError as e:
+                raise TypeError(
+                    f"Number of constraints exceeds the current data type ({Config.id_dtype}). Consider increasing the data type by changing Config.id_dtype."
+                ) from e
         else:
             create_expression = (
                 poi.ScalarQuadraticFunction
@@ -1875,9 +1876,14 @@ class Constraint(BaseBlock):
                         ).index
                         for s0, s1 in pairwise(split)
                     ]
-            df = df_unique.with_columns(
-                pl.Series(ids, dtype=KEY_TYPE).alias(CONSTRAINT_KEY)
-            )
+            try:
+                df = df_unique.with_columns(
+                    pl.Series(ids, dtype=Config.id_dtype).alias(CONSTRAINT_KEY)
+                )
+            except TypeError as e:
+                raise TypeError(
+                    f"Number of constraints exceeds the current data type ({Config.id_dtype}). Consider increasing the data type by changing Config.id_dtype."
+                ) from e
 
         self._data = df
 
@@ -2399,7 +2405,14 @@ class Variable(BaseOperableBlock):
             else:
                 ids = [poi_add_var(lb, ub, name=name).index for _ in range(n)]
 
-        df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
+        try:
+            df = self.data.with_columns(
+                pl.Series(ids, dtype=Config.id_dtype).alias(VAR_KEY)
+            )
+        except TypeError as e:
+            raise TypeError(
+                f"Number of variables exceeds the current data type ({Config.id_dtype}). Consider increasing the data type by changing Config.id_dtype."
+            ) from e
 
         self._data = df
 

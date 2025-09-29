@@ -17,9 +17,6 @@ CONSTRAINT_KEY = "__constraint_id"
 SOLUTION_KEY = "solution"
 DUAL_KEY = "dual"
 
-# TODO: move as configuration since this could be too small... also add a test to make sure errors occur on overflow.
-KEY_TYPE = pl.UInt32
-
 
 @dataclass
 class _Solver:
@@ -101,6 +98,7 @@ class ConfigDefaults:
     )
     print_max_terms: int = 5
     maintain_order: bool = True
+    id_dtype = pl.UInt32
 
 
 class _Config:
@@ -321,6 +319,41 @@ class _Config:
     @maintain_order.setter
     def maintain_order(self, value: bool):
         self._settings.maintain_order = value
+
+    @property
+    def id_dtype(self):
+        """The Polars data type to use for variable and constraint IDs.
+
+        Defaults to `pl.UInt32` which should be ideal for most users.
+
+        Users with more than 4 billion variables or constraints can change this to `pl.UInt64`.
+
+        Users concerned with memory usage and with fewer than 65k variables or constraints can change this to `pl.UInt16`.
+
+        !!! warning
+            Changing this setting after creating a model will lead to errors.
+            You should only change this setting before creating any models.
+
+        Examples:
+            An error is automatically raised if the number of variables or constraints exceeds the chosen data type:
+            >>> pf.Config.id_dtype = pl.UInt8
+            >>> m = pf.Model()
+            >>> big_set = pf.Set(x=range(2**8 + 1))
+            >>> m.X = pf.Variable()
+            >>> m.constraint = m.X.over("x") <= big_set
+            Traceback (most recent call last):
+            ...
+            TypeError: Number of constraints exceeds the current data type (UInt8). Consider increasing the data type by changing Config.id_dtype.
+            >>> m.X_large = pf.Variable(big_set)
+            Traceback (most recent call last):
+            ...
+            TypeError: Number of variables exceeds the current data type (UInt8). Consider increasing the data type by changing Config.id_dtype.
+        """
+        return self._settings.id_dtype
+
+    @id_dtype.setter
+    def id_dtype(self, value):
+        self._settings.id_dtype = value
 
     def reset_defaults(self):
         """Resets all configuration options to their default values.

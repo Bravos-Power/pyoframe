@@ -10,10 +10,10 @@ import polars as pl
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe._constants import (
     COEF_KEY,
-    KEY_TYPE,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
+    Config,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -41,9 +41,9 @@ class BaseBlock(ABC):
         if COEF_KEY in data.columns:
             data = data.cast({COEF_KEY: pl.Float64})
         if VAR_KEY in data.columns:
-            data = data.cast({VAR_KEY: KEY_TYPE})
+            data = data.cast({VAR_KEY: Config.id_dtype})
         if QUAD_VAR_KEY in data.columns:
-            data = data.cast({QUAD_VAR_KEY: KEY_TYPE})
+            data = data.cast({QUAD_VAR_KEY: Config.id_dtype})
 
         self._data = data
         self._model: Model | None = None
