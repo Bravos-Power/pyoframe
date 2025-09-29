@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pyoptinterface as poi
 
-from pyoframe._constants import COEF_KEY, QUAD_VAR_KEY, VAR_KEY, ObjSense
+from pyoframe._constants import ObjSense
 from pyoframe._core import Expression, Operable
 
 
@@ -114,38 +114,12 @@ class Objective(Expression):
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX
         ):
-            poi_expr = Objective._get_poi_expression(-self)
+            poi_expr = (-self)._to_poi()
             kwargs["sense"] = poi.ObjectiveSense.Minimize
         else:
-            poi_expr = Objective._get_poi_expression(self)
+            poi_expr = self._to_poi()
             kwargs["sense"] = self._model.sense._to_poi()
         self._model.poi.set_objective(poi_expr, **kwargs)
-
-    @staticmethod
-    def _get_poi_expression(
-        expr: Expression,
-    ) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
-        assert expr.dimensionless, (
-            "._to_poi() only works for dimensionless expressions."
-        )
-        assert expr._model is not None
-
-        df = expr.data
-
-        if expr.is_quadratic:
-            # Fix for bug https://github.com/metab0t/PyOptInterface/issues/59
-            if expr._model.solver.name == "highs":
-                df = df.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
-
-            return poi.ScalarQuadraticFunction(
-                coefficients=df[COEF_KEY].to_numpy(),
-                var1s=df[VAR_KEY].to_numpy(),
-                var2s=df[QUAD_VAR_KEY].to_numpy(),
-            )
-        else:
-            return poi.ScalarAffineFunction(
-                coefficients=df[COEF_KEY].to_numpy(), variables=df[VAR_KEY].to_numpy()
-            )
 
     def __iadd__(self, other):
         return Objective(self + other, _constructive=True)

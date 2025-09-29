@@ -1366,6 +1366,29 @@ class Expression(BaseOperableBlock):
             df = df.group_by(dims, maintain_order=Config.maintain_order)
         return df.sum()
 
+    def _to_poi(self) -> poi.ScalarAffineFunction | poi.ScalarQuadraticFunction:
+        assert self.dimensions is None, (
+            "._to_poi() only works for non-dimensioned expressions."
+        )
+
+        data = self.data
+
+        if self.is_quadratic:
+            # Fix for bug https://github.com/metab0t/PyOptInterface/issues/59
+            if self._model is None or self._model.solver.name == "highs":
+                data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
+
+            return poi.ScalarQuadraticFunction(
+                coefficients=data.get_column(COEF_KEY).to_numpy(),
+                var1s=data.get_column(VAR_KEY).to_numpy(),
+                var2s=data.get_column(QUAD_VAR_KEY).to_numpy(),
+            )
+        else:
+            return poi.ScalarAffineFunction(
+                coefficients=data.get_column(COEF_KEY).to_numpy(),
+                variables=data.get_column(VAR_KEY).to_numpy(),
+            )
+
     @overload
     def to_str(
         self,
