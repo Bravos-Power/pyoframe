@@ -5,7 +5,7 @@ from functools import wraps
 import pandas as pd
 import polars as pl
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe._constants import COEF_KEY, VAR_KEY, ZERO_VARIABLE
 from pyoframe._core import BaseOperableBlock, Expression
 
 
@@ -52,7 +52,7 @@ def polars_df_to_expr(self: pl.DataFrame) -> Expression:
     return Expression(
         self.rename({name: COEF_KEY})
         .drop_nulls(COEF_KEY)
-        .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY)),
+        .with_columns(pl.lit(ZERO_VARIABLE).alias(VAR_KEY)),
         name=name,
     )
 

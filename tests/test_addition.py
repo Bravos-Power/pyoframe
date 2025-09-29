@@ -12,7 +12,7 @@ from polars.testing import assert_frame_equal
 
 from pyoframe import Config, Expression, Model, Set, Variable
 from pyoframe._arithmetic import PyoframeError
-from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, ExtrasStrategy
+from pyoframe._constants import COEF_KEY, VAR_KEY, ZERO_VARIABLE, ExtrasStrategy
 
 from .util import csvs_to_expr
 
@@ -28,7 +28,7 @@ def test_add_expressions():
     result = expr + expr
     assert_frame_equal(
         result.data,
-        pl.DataFrame({VAR_KEY: [CONST_TERM], COEF_KEY: [2]}),
+        pl.DataFrame({VAR_KEY: [ZERO_VARIABLE], COEF_KEY: [2]}),
         check_dtypes=False,
         check_column_order=False,
     )
@@ -104,7 +104,7 @@ def test_add_expression_with_vars_and_over(default_solver):
     expected_result = pl.DataFrame(
         {
             "dim1": [1, 2, 1, 2],
-            VAR_KEY: [CONST_TERM, CONST_TERM, 1, 1],
+            VAR_KEY: [ZERO_VARIABLE, ZERO_VARIABLE, 1, 1],
             COEF_KEY: [4, 5, 2, 2],
         }
     )
@@ -377,7 +377,7 @@ def test_three_way_add():
     assert_frame_equal(
         result.data,
         pl.DataFrame(
-            {"dim1": [1, 2], VAR_KEY: [CONST_TERM, CONST_TERM], COEF_KEY: [9, 4]}
+            {"dim1": [1, 2], VAR_KEY: [ZERO_VARIABLE, ZERO_VARIABLE], COEF_KEY: [9, 4]}
         ),
         check_dtypes=False,
         check_column_order=False,
@@ -389,7 +389,7 @@ def test_three_way_add():
     result = df1 + df2.drop_extras() + df3
     assert_frame_equal(
         result.data,
-        pl.DataFrame({"dim1": [1], VAR_KEY: [CONST_TERM], COEF_KEY: [9]}),
+        pl.DataFrame({"dim1": [1], VAR_KEY: [ZERO_VARIABLE], COEF_KEY: [9]}),
         check_dtypes=False,
         check_column_order=False,
     )

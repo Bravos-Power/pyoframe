@@ -5,7 +5,7 @@ from __future__ import annotations
 import polars as pl
 import pyoptinterface as poi
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, QUAD_VAR_KEY, VAR_KEY, ObjSense
+from pyoframe._constants import COEF_KEY, QUAD_VAR_KEY, VAR_KEY, ZERO_VARIABLE, ObjSense
 from pyoframe._core import Expression, Operable
 
 
@@ -143,19 +143,19 @@ class Objective(Expression):
             # Fix for bug https://github.com/metab0t/PyOptInterface/issues/59
             df = df.sort(VAR_KEY, QUAD_VAR_KEY)
 
-        if solver.has_quadratic_presolve:
+        if solver.has_quadratic_presolve:  # we don't need to remove the Zero Variable
             return poi.ScalarQuadraticFunction(
                 coefficients=df[COEF_KEY].to_numpy(),
                 var1s=df[VAR_KEY].to_numpy(),
                 var2s=df[QUAD_VAR_KEY].to_numpy(),
             )
 
-        quadratic_data = df.filter(pl.col(QUAD_VAR_KEY) != CONST_TERM)
-        affine_data = df.filter(pl.col(QUAD_VAR_KEY) == CONST_TERM)
+        quadratic_data = df.filter(pl.col(QUAD_VAR_KEY) != ZERO_VARIABLE)
+        affine_data = df.filter(pl.col(QUAD_VAR_KEY) == ZERO_VARIABLE)
         kwargs = {}
         if affine_data.height != 0:
-            affine_var = affine_data.filter(pl.col(VAR_KEY) != CONST_TERM)
-            const = affine_data.filter(pl.col(VAR_KEY) == CONST_TERM)
+            affine_var = affine_data.filter(pl.col(VAR_KEY) != ZERO_VARIABLE)
+            const = affine_data.filter(pl.col(VAR_KEY) == ZERO_VARIABLE)
             assert const.height <= 1, "Something went wrong."
             const = 0 if const.height == 0 else const[COEF_KEY].item()
             kwargs["affine_part"] = poi.ScalarAffineFunction(

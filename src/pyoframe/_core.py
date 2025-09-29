@@ -19,7 +19,6 @@ from pyoframe._arithmetic import (
 )
 from pyoframe._constants import (
     COEF_KEY,
-    CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
     KEY_TYPE,
@@ -27,6 +26,7 @@ from pyoframe._constants import (
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
     VAR_KEY,
+    ZERO_VARIABLE,
     Config,
     ConstraintSense,
     ExtrasStrategy,
@@ -497,7 +497,7 @@ class Set(BaseOperableBlock):
         """
         return Expression(
             self.data.with_columns(
-                pl.lit(1).alias(COEF_KEY), pl.lit(CONST_TERM).alias(VAR_KEY)
+                pl.lit(1).alias(COEF_KEY), pl.lit(ZERO_VARIABLE).alias(VAR_KEY)
             ),
             name=self.name,
         )
@@ -699,7 +699,7 @@ class Expression(BaseOperableBlock):
             pl.DataFrame(
                 {
                     COEF_KEY: [constant],
-                    VAR_KEY: [CONST_TERM],
+                    VAR_KEY: [ZERO_VARIABLE],
                 },
                 schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
             ),
@@ -1088,7 +1088,7 @@ class Expression(BaseOperableBlock):
         if self.is_quadratic:
             return "quadratic" if return_str else 2
         # TODO improve performance of .evaluate() by ensuring early exit if linear
-        elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
+        elif (self.data.get_column(VAR_KEY) != ZERO_VARIABLE).any():
             return "linear" if return_str else 1
         else:
             return "constant" if return_str else 0
@@ -1212,14 +1212,14 @@ class Expression(BaseOperableBlock):
         data = self.data
         # Fill in missing constant terms
         if not dim:
-            if CONST_TERM not in data[VAR_KEY]:
+            if ZERO_VARIABLE not in data[VAR_KEY]:
                 const_df = pl.DataFrame(
-                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
+                    {COEF_KEY: [0.0], VAR_KEY: [ZERO_VARIABLE]},
                     schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
                 )
                 if self.is_quadratic:
                     const_df = const_df.with_columns(
-                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                        pl.lit(ZERO_VARIABLE).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
                     )
                 data = pl.concat(
                     [data, const_df],
@@ -1229,11 +1229,11 @@ class Expression(BaseOperableBlock):
             keys = (
                 data.select(dim)
                 .unique(maintain_order=Config.maintain_order)
-                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
+                .with_columns(pl.lit(ZERO_VARIABLE).alias(VAR_KEY).cast(KEY_TYPE))
             )
             if self.is_quadratic:
                 keys = keys.with_columns(
-                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                    pl.lit(ZERO_VARIABLE).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
                 )
             data = data.join(
                 keys,
@@ -1245,7 +1245,7 @@ class Expression(BaseOperableBlock):
             ).with_columns(pl.col(COEF_KEY).fill_null(0.0))
 
         data = data.with_columns(
-            pl.when(pl.col(VAR_KEY) == CONST_TERM)
+            pl.when(pl.col(VAR_KEY) == ZERO_VARIABLE)
             .then(pl.col(COEF_KEY) + const)
             .otherwise(pl.col(COEF_KEY))
         )
@@ -1257,7 +1257,9 @@ class Expression(BaseOperableBlock):
     def constant_terms(self) -> pl.DataFrame:
         """Returns all the constant terms in the expression."""
         dims = self.dimensions
-        constant_terms = self.data.filter(pl.col(VAR_KEY) == CONST_TERM).drop(VAR_KEY)
+        constant_terms = self.data.filter(pl.col(VAR_KEY) == ZERO_VARIABLE).drop(
+            VAR_KEY
+        )
         if self.is_quadratic:
             constant_terms = constant_terms.drop(QUAD_VAR_KEY)
         if dims is not None:
@@ -1275,7 +1277,7 @@ class Expression(BaseOperableBlock):
         else:
             if len(constant_terms) == 0:
                 return pl.DataFrame(
-                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
+                    {COEF_KEY: [0.0], VAR_KEY: [ZERO_VARIABLE]},
                     schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
                 )
             return constant_terms
@@ -1283,7 +1285,7 @@ class Expression(BaseOperableBlock):
     @property
     def variable_terms(self) -> pl.DataFrame:
         """Returns all the non-constant terms in the expression."""
-        return self.data.filter(pl.col(VAR_KEY) != CONST_TERM)
+        return self.data.filter(pl.col(VAR_KEY) != ZERO_VARIABLE)
 
     @unwrap_single_values
     def evaluate(self) -> pl.DataFrame:
@@ -1469,7 +1471,7 @@ class Expression(BaseOperableBlock):
                     pl.concat_str(pl.lit("x"), var_col).alias(temp_var_column)
                 )
             data = data.with_columns(
-                pl.when(pl.col(var_col) == CONST_TERM)
+                pl.when(pl.col(var_col) == ZERO_VARIABLE)
                 .then(pl.lit(""))
                 .otherwise(temp_var_column)
                 .alias(var_col)

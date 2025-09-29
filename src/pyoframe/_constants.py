@@ -78,7 +78,7 @@ SUPPORTED_SOLVERS = [
 
 
 # Variable ID for constant terms. This variable ID is reserved.
-CONST_TERM = 0
+ZERO_VARIABLE = 0
 
 RESERVED_COL_KEYS = (
     COEF_KEY,

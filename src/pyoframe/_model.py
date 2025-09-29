@@ -10,9 +10,9 @@ import polars as pl
 import pyoptinterface as poi
 
 from pyoframe._constants import (
-    CONST_TERM,
     SUPPORTED_SOLVER_TYPES,
     SUPPORTED_SOLVERS,
+    ZERO_VARIABLE,
     Config,
     ObjSense,
     ObjSenseValue,
@@ -263,7 +263,7 @@ class Model:
             )  # pragma: no cover
 
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
-        assert constant_var.index == CONST_TERM, (
+        assert constant_var.index == ZERO_VARIABLE, (
             "The first variable should have index 0."
         )
         return model, solver
