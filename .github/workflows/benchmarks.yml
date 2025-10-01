@@ -18,7 +18,7 @@ jobs:
           python-version: "3.13"
           cache: "pip"
       - name: Setup optimizers
-        uses: ./.github/actions/setup-optimizers
+        uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
           COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
