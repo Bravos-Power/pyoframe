@@ -86,7 +86,7 @@ col_ekk_76 0
 col_ekk_77 0
 col_ekk_78 0
 col_ekk_79 0
-col_ekk_80 1
+col_ekk_80 0.9999999999999
 col_ekk_81 0
 col_ekk_82 0
 col_ekk_83 0
@@ -173,7 +173,7 @@ col_ekk_163 0
 col_ekk_164 0
 col_ekk_165 0
 col_ekk_166 0
-col_ekk_167 1
+col_ekk_167 0.9999999999999
 col_ekk_168 0
 col_ekk_169 0
 col_ekk_170 0
@@ -190,7 +190,7 @@ col_ekk_180 0
 col_ekk_181 0
 col_ekk_182 0
 col_ekk_183 0
-col_ekk_184 1
+col_ekk_184 0.9999999999999
 col_ekk_185 0
 col_ekk_186 0
 col_ekk_187 0
@@ -270,7 +270,7 @@ col_ekk_260 0
 col_ekk_261 0
 col_ekk_262 0
 col_ekk_263 0
-col_ekk_264 1
+col_ekk_264 0.9999999999999
 col_ekk_265 0
 col_ekk_266 0
 col_ekk_267 0
@@ -320,7 +320,7 @@ col_ekk_310 0
 col_ekk_311 0
 col_ekk_312 0
 col_ekk_313 0
-col_ekk_314 1
+col_ekk_314 0.9999999999999
 col_ekk_315 0
 col_ekk_316 0
 col_ekk_317 0
@@ -394,7 +394,7 @@ col_ekk_384 1
 col_ekk_385 0
 col_ekk_386 0
 col_ekk_387 0
-col_ekk_388 1
+col_ekk_388 0.9999999999999
 col_ekk_389 0
 col_ekk_390 0
 col_ekk_391 0
@@ -486,7 +486,7 @@ col_ekk_476 0
 col_ekk_477 0
 col_ekk_478 0
 col_ekk_479 0
-col_ekk_480 1
+col_ekk_480 0.9999999999999
 col_ekk_481 0
 col_ekk_482 0
 col_ekk_483 0
@@ -576,7 +576,7 @@ col_ekk_566 0
 col_ekk_567 0
 col_ekk_568 0
 col_ekk_569 0
-col_ekk_570 1
+col_ekk_570 0.9999999999999
 col_ekk_571 0
 col_ekk_572 0
 col_ekk_573 0
@@ -635,7 +635,7 @@ col_ekk_625 0
 col_ekk_626 0
 col_ekk_627 0
 col_ekk_628 0
-col_ekk_629 1
+col_ekk_629 0.9999999999999
 col_ekk_630 1
 col_ekk_631 0
 col_ekk_632 0
@@ -651,7 +651,7 @@ col_ekk_641 0
 col_ekk_642 0
 col_ekk_643 0
 col_ekk_644 0
-col_ekk_645 1
+col_ekk_645 0.9999999999999
 col_ekk_646 0
 col_ekk_647 0
 col_ekk_648 0
@@ -660,7 +660,7 @@ col_ekk_650 0
 col_ekk_651 0
 col_ekk_652 0
 col_ekk_653 0
-col_ekk_654 1
+col_ekk_654 0.9999999999999
 col_ekk_655 0
 col_ekk_656 0
 col_ekk_657 0
