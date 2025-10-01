@@ -1,0 +1,35 @@
+name: Benchmarks
+on:
+  # TODO remove pull_request once it's consistent.
+  pull_request:
+    branches: ["*"]
+  schedule:
+    - cron: "0 5 * * WED"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - name: Setup optimizers
+        uses: ./.github/actions/setup-optimizers
+        with:
+          GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
+          COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
+          COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
+          CHECK_LICENSE: true
+      - name: Install dependencies
+        run: |
+          pip install -e .
+          cd benchmarks
+          pip install -e .
+      - name: Run benchmarks
+        run: |
+          cp benchmarks/config.testing.yaml benchmarks/config.yaml
+          snakemake --cores all
