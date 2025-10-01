@@ -3,15 +3,12 @@
 Inspired from the original JuMP paper.
 """
 
-import os
-from pathlib import Path
-
 import polars as pl
 
 import pyoframe as pf
 
 
-def solve_model(use_var_names, G=4, F=3):
+def solve_model(use_var_names=False, G=4, F=3):
     model = pf.Model(solver_uses_variable_names=use_var_names, sense="min")
 
     g_range = range(G)
@@ -103,13 +100,5 @@ def draw_results(model, G, F):
 
 if __name__ == "__main__":
     G, F = 4, 3
-    working_dir = Path(os.path.dirname(os.path.realpath(__file__)))
-    model = solve_model(
-        G,
-        F,
-        solver="gurobi",
-        directory=working_dir / "results",
-        use_var_names=True,
-        solution_file=working_dir / "results" / "pyoframe-problem.sol",
-    )
+    model = solve_model(G=G, F=F)
     draw_results(model, G, F)
