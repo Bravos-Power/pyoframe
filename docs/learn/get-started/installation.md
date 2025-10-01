@@ -5,30 +5,33 @@
 Install Pyoframe using your preferred package manager:
 
 === "pip"
-`cmd
+
+    ```cmd
     pip install pyoframe
-    `
+    ```
+
 === "uv"
-`cmd
+
+    ```cmd
     uv add pyoframe
-    `
+    ```
 
 ## Step 2: Choose a solver
 
-Pyoframe makes it easy to **build** models, but a separate solver is needed to **solve** the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, choose HiGHS.
+Pyoframe makes it easy to _build_ models, but a separate solver is needed to _solve_ the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, choose HiGHS. Note that both Gurobi and COPT offer free licenses for academics.
 
-| Compatibility table                                           | HiGHS (free) | Gurobi (paid) | Ipopt (free) |
-| ------------------------------------------------------------- | ------------ | ------------- | ------------ |
-| Linear programs (LPs)                                         | ️✅          | ️✅           | ️✅          |
-| Mixed integer programs (MIPs)                                 | ️✅\*        | ️✅           | ❌           |
-| Quadratic objective (convex)                                  | ️✅          | ️✅           | ️✅          |
-| Quadratic objective (non-convex)                              | ❌           | ️✅           | ️✅          |
-| Quadratic constraints (convex and non-convex)                 | ❌           | ️✅           | ️✅          |
-| \*Integer variables cannot be used with quadratic objectives. |
+| Compatibility table                                           | HiGHS (free) | Gurobi (paid) | COPT (paid) | Ipopt (free) |
+| ------------------------------------------------------------- | ------------ | ------------- | ----------- | ------------ |
+| Linear programs (LPs)                                         | ✅           | ✅            | ✅          | ✅           |
+| Mixed integer programs (MIPs)                                 | ✅*          | ✅            | ✅          | ❌           |
+| Quadratic objective (convex)                                  | ✅           | ✅            | ✅          | ✅           |
+| Quadratic objective (non-convex)                              | ❌           | ✅            | ❌          | ✅           |
+| Quadratic constraints (convex)                                | ❌           | ✅            | ✅          | ✅           |
+| Quadratic constraints (non-convex)                            | ❌           | ✅            | ❌          | ✅           |
+| *Integer variables cannot be used with quadratic objectives.  |
 
 !!! tip "Don't see your preferred solver?"
-
-    Don't hesitate to [request another solver](https://github.com/Bravos-Power/pyoframe/issues/144). We can easily add support for other solvers, particularly COPT and Mosek, given sufficient interest.
+    Don't hesitate to [request another solver](https://github.com/Bravos-Power/pyoframe/issues/144). We would gladly consider adding support for other solvers, particularly Mosek which would be easy to support given sufficient interest.
 
 ## Step 3: Install the solver
 
@@ -47,11 +50,19 @@ Select your chosen solver and follow the installation instructions.
     To install Gurobi:
 
     1. [Download Gurobi](https://www.gurobi.com/downloads/gurobi-software/) from their website (login required) and follow the installation instructions.
-    2. Ensure you have a valid Gurobi license installed on your machine.
+    2. Ensure you have a valid Gurobi license installed on your machine. (If you're using Gurobi Compute Server or other atypical licensing setups, refer to [License configuration](../concepts/solver-access.md#license-configuration-copt-and-gurobi).)
 
     !!! warning "Do not install Gurobi using `pip`"
-    
+
         You should not install Gurobi using `pip` because Pyoframe uses Gurobi's C API, which the `pip` installation does not include.
+
+=== "COPT"
+
+    To install COPT:
+    
+    1. Download COPT from the e-mail you received after [requesting a license](https://www.cardopt.com/copt) and follow the installation instructions.
+    2. Ensure you have valid COPT license files on your machine. (If you're using floating, cluster, or web licenses refer to [License configuration](../concepts/solver-access.md#license-configuration-copt-and-gurobi).)
+    3. Set the `COPT_HOME` environment variable to point to your COPT installation directory.
 
 === "Ipopt"
 

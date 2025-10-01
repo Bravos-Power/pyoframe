@@ -22,4 +22,4 @@ class ReturnNew(griffe.Extension):
                 elif ".Variable." in func.path:
                     func.returns = "Expression"
                 else:
-                    func.returns = None  # for decorated functions of the parent class (SupportsMath)
+                    func.returns = None  # for decorated functions of the parent class (BaseOperableBlock)

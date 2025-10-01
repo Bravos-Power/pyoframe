@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Literal, Protocol, Union, overload
+from typing import TYPE_CHECKING, Literal, Union, overload
 
 import pandas as pd
 import polars as pl
@@ -22,20 +22,19 @@ from pyoframe._constants import (
     CONST_TERM,
     CONSTRAINT_KEY,
     DUAL_KEY,
-    KEY_TYPE,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     SOLUTION_KEY,
     VAR_KEY,
     Config,
     ConstraintSense,
+    ExtrasStrategy,
     ObjSense,
     PyoframeError,
-    UnmatchedStrategy,
     VType,
     VTypeValue,
 )
-from pyoframe._model_element import ModelElement, ModelElementWithId
+from pyoframe._model_element import BaseBlock
 from pyoframe._utils import (
     Container,
     FuncArgs,
@@ -51,45 +50,82 @@ from pyoframe._utils import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
-
-# TODO consider changing this simply to a type and having a helper "Expression.from(object)"
-class SupportsToExpr(Protocol):
-    """Protocol for any object that can be converted to a Pyoframe [Expression][pyoframe.Expression]."""
-
-    def to_expr(self) -> Expression:
-        """Converts the object to a Pyoframe [Expression][pyoframe.Expression]."""
-        ...
+Operable = Union["BaseOperableBlock", pl.DataFrame, pd.DataFrame, pd.Series, int, float]
+"""Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
 
 
-class SupportsMath(ModelElement, SupportsToExpr):
+class BaseOperableBlock(BaseBlock):
     """Any object that can be converted into an expression."""
 
     def __init__(self, *args, **kwargs):
-        self._unmatched_strategy = UnmatchedStrategy.UNSET
+        self._extras_strategy = ExtrasStrategy.UNSET
         self._allowed_new_dims: list[str] = []
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def _new(self, data: pl.DataFrame, name: str) -> SupportsMath:
+    def _new(self, data: pl.DataFrame, name: str) -> BaseOperableBlock:
         """Helper method to create a new instance of the same (or for Variable derivative) class."""
 
-    def _copy_flags(self, other: SupportsMath):
-        """Copies the flags from another SupportsMath object."""
-        self._unmatched_strategy = other._unmatched_strategy
+    def _copy_flags(self, other: BaseOperableBlock):
+        """Copies the flags from another BaseOperableBlock object."""
+        self._extras_strategy = other._extras_strategy
         self._allowed_new_dims = other._allowed_new_dims.copy()
 
-    def keep_unmatched(self):
-        """Indicates that all rows should be kept during addition or subtraction, even if they are not matched in the other expression."""
-        new = self._new(self.data, name=f"{self.name}.keep_unmatched()")
+    def keep_extras(self):
+        """Indicates that labels not present in the other expression should be kept during addition, subtraction, or constraint creation.
+
+        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
+
+        See Also:
+            [`drop_extras`][pyoframe.Expression.drop_extras].
+        """
+        new = self._new(self.data, name=f"{self.name}.keep_extras()")
         new._copy_flags(self)
-        new._unmatched_strategy = UnmatchedStrategy.KEEP
+        new._extras_strategy = ExtrasStrategy.KEEP
         return new
 
-    def drop_unmatched(self):
-        """Indicates that rows that are not matched in the other expression during addition or subtraction should be dropped."""
-        new = self._new(self.data, name=f"{self.name}.drop_unmatched()")
+    def drop_extras(self):
+        """Indicates that labels not present in the other expression should be discarded during addition, subtraction, or constraint creation.
+
+        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
+
+        See Also:
+            [`keep_extras`][pyoframe.Expression.keep_extras].
+        """
+        new = self._new(self.data, name=f"{self.name}.drop_extras()")
         new._copy_flags(self)
-        new._unmatched_strategy = UnmatchedStrategy.DROP
+        new._extras_strategy = ExtrasStrategy.DROP
+        return new
+
+    def keep_unmatched(self):  # pragma: no cover
+        """Deprecated, use [`keep_extras`][pyoframe.Expression.keep_extras] instead."""
+        warnings.warn(
+            "'keep_unmatched' has been renamed to 'keep_extras'. Please use 'keep_extras' instead.",
+            DeprecationWarning,
+        )
+        return self.keep_extras()
+
+    def drop_unmatched(self):  # pragma: no cover
+        """Deprecated, use [`drop_extras`][pyoframe.Expression.drop_extras] instead."""
+        warnings.warn(
+            "'drop_unmatched' has been renamed to 'drop_extras'. Please use 'drop_extras' instead.",
+            DeprecationWarning,
+        )
+        return self.drop_extras()
+
+    def raise_extras(self):
+        """Indicates that labels not present in the other expression should raise an error during addition, subtraction, or constraint creation.
+
+        This is the default behavior and, as such, this addition modifier should only be used in the rare cases where you want to override a previous use of `keep_extras()` or `drop_extras()`.
+
+        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
+
+        See Also:
+            [`keep_extras`][pyoframe.Expression.keep_extras] and [`drop_extras`][pyoframe.Expression.drop_extras].
+        """
+        new = self._new(self.data, name=f"{self.name}.raise_extras()")
+        new._copy_flags(self)
+        new._extras_strategy = ExtrasStrategy.UNSET
         return new
 
     def over(self, *dims: str):
@@ -105,7 +141,7 @@ class SupportsMath(ModelElement, SupportsToExpr):
 
         Takes the same arguments as [`polars.DataFrame.rename`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.rename.html).
 
-        See the [portfolio optimization example](../examples/portfolio_optimization.md) for a usage example.
+        See the [portfolio optimization example](../../examples/portfolio_optimization.md) for a usage example.
 
         Examples:
             >>> m = pf.Model()
@@ -344,39 +380,22 @@ class SupportsMath(ModelElement, SupportsToExpr):
         return other + (-self.to_expr())
 
     def __le__(self, other):
-        """Equality constraint.
-
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v <= 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v <= 1
-        """
         return Constraint(self - other, ConstraintSense.LE)
 
-    def __ge__(self, other):
-        """Equality constraint.
+    def __lt__(self, _):
+        raise PyoframeError(
+            "Constraints cannot be created with the '<' or '>' operators. Did you mean to use '<=' or '>=' instead?"
+        )
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v >= 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v >= 1
-        """
+    def __ge__(self, other):
         return Constraint(self - other, ConstraintSense.GE)
 
-    def __eq__(self, value: object):  # type: ignore
-        """Equality constraint.
+    def __gt__(self, _):
+        raise PyoframeError(
+            "Constraints cannot be created with the '<' or '>' operator. Did you mean to use '<=' or '>=' instead?"
+        )
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.v = pf.Variable()
-            >>> m.v == 1
-            <Constraint 'unnamed' terms=2 type=linear>
-            v = 1
-        """
+    def __eq__(self, value: object):  # type: ignore
         return Constraint(self - value, ConstraintSense.EQ)
 
 
@@ -384,14 +403,14 @@ SetTypes = Union[
     pl.DataFrame,
     pd.Index,
     pd.DataFrame,
-    SupportsMath,
+    BaseOperableBlock,
     Mapping[str, Sequence[object]],
     "Set",
     "Constraint",
 ]
 
 
-class Set(SupportsMath):
+class Set(BaseOperableBlock):
     """A set which can then be used to index variables.
 
     Examples:
@@ -482,6 +501,45 @@ class Set(SupportsMath):
             name=self.name,
         )
 
+    def drop(self, *dims: str) -> Set:
+        """Returns a new Set with the given dimensions dropped.
+
+        Only unique rows are kept in the resulting Set.
+
+        Examples:
+            >>> xy = pf.Set(x=range(3), y=range(2))
+            >>> xy
+            <Set 'unnamed' height=6>
+            ┌─────┬─────┐
+            │ x   ┆ y   │
+            │ (3) ┆ (2) │
+            ╞═════╪═════╡
+            │ 0   ┆ 0   │
+            │ 0   ┆ 1   │
+            │ 1   ┆ 0   │
+            │ 1   ┆ 1   │
+            │ 2   ┆ 0   │
+            │ 2   ┆ 1   │
+            └─────┴─────┘
+            >>> x = xy.drop("y")
+            >>> x
+            <Set 'unnamed_set.drop(…)' height=3>
+            ┌─────┐
+            │ x   │
+            │ (3) │
+            ╞═════╡
+            │ 0   │
+            │ 1   │
+            │ 2   │
+            └─────┘
+        """
+        if not dims:
+            raise ValueError("At least one dimension must be provided to drop.")
+        return self._new(
+            self.data.drop(dims).unique(maintain_order=Config.maintain_order),
+            name=f"{self.name}.drop(…)",
+        )
+
     def __mul__(self, other):
         if isinstance(other, Set):
             overlap_dims = set(self.data.columns) & set(other.data.columns)
@@ -529,7 +587,7 @@ class Set(SupportsMath):
             df = pl.DataFrame(set)
         elif isinstance(set, Constraint):
             df = set.data.select(set._dimensions_unsafe)
-        elif isinstance(set, SupportsMath):
+        elif isinstance(set, BaseOperableBlock):
             df = (
                 set.to_expr()
                 .data.drop(RESERVED_COL_KEYS, strict=False)
@@ -570,7 +628,7 @@ class Set(SupportsMath):
         return df
 
 
-class Expression(SupportsMath):
+class Expression(BaseOperableBlock):
     """Represents a linear or quadratic mathematical expression.
 
     Examples:
@@ -605,14 +663,14 @@ class Expression(SupportsMath):
         assert VAR_KEY in data.columns, "Missing variable column."
         assert COEF_KEY in data.columns, "Missing coefficient column."
 
-        # Sanity check no duplicates indices
+        # Sanity check no duplicates labels
         if Config.enable_is_duplicated_expression_safety_check:
             duplicated_mask = data.drop(COEF_KEY).is_duplicated()
             # In theory this should never happen unless there's a bug in the library
             if duplicated_mask.any():
                 duplicated_data = data.filter(duplicated_mask)
                 raise ValueError(
-                    f"Cannot create an expression with duplicate indices:\n{duplicated_data}."
+                    f"Cannot create an expression with duplicate labels:\n{duplicated_data}."
                 )
 
         data = _simplify_expr_df(data)
@@ -642,7 +700,7 @@ class Expression(SupportsMath):
                     COEF_KEY: [constant],
                     VAR_KEY: [CONST_TERM],
                 },
-                schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
             ),
             name=str(constant),
         )
@@ -885,10 +943,10 @@ class Expression(SupportsMath):
 
 
         Parameters:
-            over :
+            over:
                 The name of the dimension (column) over which the rolling sum is calculated.
                 This dimension must exist within the Expression's dimensions.
-            window_size :
+            window_size:
                 The size of the moving window in terms of number of records.
                 The rolling sum is calculated over this many consecutive elements.
 
@@ -1067,19 +1125,17 @@ class Expression(SupportsMath):
             >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot add the two expressions below because of unmatched values.
-            Expression 1:   v
-            Expression 2:   add
-            Unmatched values:
-            shape: (1, 2)
-            ┌──────┬────────────┐
-            │ dim1 ┆ dim1_right │
-            │ ---  ┆ ---        │
-            │ i64  ┆ i64        │
-            ╞══════╪════════════╡
-            │ 3    ┆ null       │
-            └──────┴────────────┘
-            If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
+            Expression 1:	v
+            Expression 2:	add
+            Extra labels in expression 1:
+            ┌──────┐
+            │ dim1 │
+            ╞══════╡
+            │ 3    │
+            └──────┘
+            Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression terms=2 type=linear>
@@ -1091,7 +1147,7 @@ class Expression(SupportsMath):
         self._learn_from_other(other)
         return add(self, other)
 
-    def __mul__(self: Expression, other: int | float | SupportsToExpr) -> Expression:
+    def __mul__(self: Expression, other: Operable) -> Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
@@ -1158,11 +1214,11 @@ class Expression(SupportsMath):
             if CONST_TERM not in data[VAR_KEY]:
                 const_df = pl.DataFrame(
                     {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
                 )
                 if self.is_quadratic:
                     const_df = const_df.with_columns(
-                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                        pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(Config.id_dtype)
                     )
                 data = pl.concat(
                     [data, const_df],
@@ -1172,11 +1228,11 @@ class Expression(SupportsMath):
             keys = (
                 data.select(dim)
                 .unique(maintain_order=Config.maintain_order)
-                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(KEY_TYPE))
+                .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY).cast(Config.id_dtype))
             )
             if self.is_quadratic:
                 keys = keys.with_columns(
-                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(KEY_TYPE)
+                    pl.lit(CONST_TERM).alias(QUAD_VAR_KEY).cast(Config.id_dtype)
                 )
             data = data.join(
                 keys,
@@ -1219,7 +1275,7 @@ class Expression(SupportsMath):
             if len(constant_terms) == 0:
                 return pl.DataFrame(
                     {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: KEY_TYPE},
+                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
                 )
             return constant_terms
 
@@ -1314,16 +1370,22 @@ class Expression(SupportsMath):
             "._to_poi() only works for non-dimensioned expressions."
         )
 
+        data = self.data
+
         if self.is_quadratic:
+            # Workaround for bug https://github.com/metab0t/PyOptInterface/issues/59
+            if self._model is None or self._model.solver.name == "highs":
+                data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
+
             return poi.ScalarQuadraticFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                var1s=self.data.get_column(VAR_KEY).to_numpy(),
-                var2s=self.data.get_column(QUAD_VAR_KEY).to_numpy(),
+                coefficients=data.get_column(COEF_KEY).to_numpy(),
+                var1s=data.get_column(VAR_KEY).to_numpy(),
+                var2s=data.get_column(QUAD_VAR_KEY).to_numpy(),
             )
         else:
             return poi.ScalarAffineFunction(
-                coefficients=self.data.get_column(COEF_KEY).to_numpy(),
-                variables=self.data.get_column(VAR_KEY).to_numpy(),
+                coefficients=data.get_column(COEF_KEY).to_numpy(),
+                variables=data.get_column(VAR_KEY).to_numpy(),
             )
 
     @overload
@@ -1534,16 +1596,16 @@ class Expression(SupportsMath):
 
 
 @overload
-def sum(over: str | Sequence[str], expr: SupportsToExpr) -> Expression: ...
+def sum(over: str | Sequence[str], expr: Operable) -> Expression: ...
 
 
 @overload
-def sum(over: SupportsToExpr) -> Expression: ...
+def sum(over: Operable) -> Expression: ...
 
 
 def sum(
-    over: str | Sequence[str] | SupportsToExpr,
-    expr: SupportsToExpr | None = None,
+    over: str | Sequence[str] | Operable,
+    expr: Operable | None = None,
 ) -> Expression:  # pragma: no cover
     """Deprecated: Use Expression.sum() or Variable.sum() instead.
 
@@ -1560,7 +1622,7 @@ def sum(
     )
 
     if expr is None:
-        assert isinstance(over, SupportsMath)
+        assert isinstance(over, BaseOperableBlock)
         return over.to_expr().sum()
     else:
         assert isinstance(over, (str, Sequence))
@@ -1569,9 +1631,7 @@ def sum(
         return expr.to_expr().sum(*over)
 
 
-def sum_by(
-    by: str | Sequence[str], expr: SupportsToExpr
-) -> Expression:  # pragma: no cover
+def sum_by(by: str | Sequence[str], expr: Operable) -> Expression:  # pragma: no cover
     """Deprecated: Use Expression.sum() or Variable.sum() instead."""
     warnings.warn(
         "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
@@ -1583,7 +1643,7 @@ def sum_by(
     return expr.to_expr().sum_by(*by)
 
 
-class Constraint(ModelElementWithId):
+class Constraint(BaseBlock):
     """An optimization constraint that can be added to a [Model][pyoframe.Model].
 
     Tip: Implementation Note
@@ -1699,7 +1759,7 @@ class Constraint(ModelElementWithId):
         # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
         # Specifying "" is the same as not specifying anything, see pyoptinterface:
         # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-        name = "C" if self._model.solver.block_auto_names else ""
+        name = "C" if self._model.solver.accelerate_with_repeat_names else ""
 
         if dims is None:
             if self._model.solver_uses_variable_names:
@@ -1709,23 +1769,25 @@ class Constraint(ModelElementWithId):
                 if is_quadratic
                 else poi.ScalarAffineFunction.from_numpy  # when called only once from_numpy is faster
             )
-            df = self.data.with_columns(
-                pl.lit(
-                    add_constraint(
-                        create_expression(
-                            *(
-                                df.get_column(c).to_numpy()
-                                for c in ([COEF_KEY] + self.lhs._variable_columns)
-                            )
-                        ),
-                        sense,
-                        0,
-                        name,
-                    ).index
+            constr_id = add_constraint(
+                create_expression(
+                    *(
+                        df.get_column(c).to_numpy()
+                        for c in ([COEF_KEY] + self.lhs._variable_columns)
+                    )
+                ),
+                sense,
+                0,
+                name,
+            ).index
+            try:
+                df = self.data.with_columns(
+                    pl.lit(constr_id).alias(CONSTRAINT_KEY).cast(Config.id_dtype)
                 )
-                .alias(CONSTRAINT_KEY)
-                .cast(KEY_TYPE)
-            )
+            except TypeError as e:
+                raise TypeError(
+                    f"Number of constraints exceeds the current data type ({Config.id_dtype}). Consider increasing the data type by changing Config.id_dtype."
+                ) from e
         else:
             create_expression = (
                 poi.ScalarQuadraticFunction
@@ -1814,9 +1876,14 @@ class Constraint(ModelElementWithId):
                         ).index
                         for s0, s1 in pairwise(split)
                     ]
-            df = df_unique.with_columns(
-                pl.Series(ids, dtype=KEY_TYPE).alias(CONSTRAINT_KEY)
-            )
+            try:
+                df = df_unique.with_columns(
+                    pl.Series(ids, dtype=Config.id_dtype).alias(CONSTRAINT_KEY)
+                )
+            except TypeError as e:
+                raise TypeError(
+                    f"Number of constraints exceeds the current data type ({Config.id_dtype}). Consider increasing the data type by changing Config.id_dtype."
+                ) from e
 
         self._data = df
 
@@ -1866,9 +1933,7 @@ class Constraint(ModelElementWithId):
         """Syntactic sugar on `Constraint.lhs.data.filter()`, to help debugging."""
         return self.lhs.data.filter(*args, **kwargs)
 
-    def relax(
-        self, cost: SupportsToExpr, max: SupportsToExpr | None = None
-    ) -> Constraint:
+    def relax(self, cost: Operable, max: Operable | None = None) -> Constraint:
         """Allows the constraint to be violated at a `cost` and, optionally, up to a maximum.
 
         Warning:
@@ -2134,7 +2199,7 @@ class Constraint(ModelElementWithId):
         )
 
 
-class Variable(ModelElementWithId, SupportsMath):
+class Variable(BaseOperableBlock):
     """A decision variable for an optimization model.
 
     Parameters:
@@ -2216,23 +2281,32 @@ class Variable(ModelElementWithId, SupportsMath):
     def __init__(
         self,
         *indexing_sets: SetTypes | Iterable[SetTypes],
-        lb: float | int | SupportsToExpr | None = None,
-        ub: float | int | SupportsToExpr | None = None,
+        lb: Operable | None = None,
+        ub: Operable | None = None,
         vtype: VType | VTypeValue = VType.CONTINUOUS,
-        equals: SupportsToExpr | None = None,
+        equals: Operable | None = None,
     ):
         if equals is not None:
-            assert len(indexing_sets) == 0, (
-                "Cannot specify both 'equals' and 'indexing_sets'"
-            )
-            indexing_sets = (equals,)
+            if isinstance(equals, (float, int)):
+                if lb is not None:
+                    raise ValueError("Cannot specify 'lb' when 'equals' is a constant.")
+                if ub is not None:
+                    raise ValueError("Cannot specify 'ub' when 'equals' is a constant.")
+                lb = ub = equals
+                equals = None
+            else:
+                assert len(indexing_sets) == 0, (
+                    "Cannot specify both 'equals' and 'indexing_sets'"
+                )
+                equals = equals.to_expr()
+                indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
         super().__init__(data)
 
         self.vtype: VType = VType(vtype)
         self._attr = Container(self._set_attribute, self._get_attribute)
-        self._equals = equals
+        self._equals: Expression | None = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
             self._lb_expr, self.lb = lb, None
@@ -2319,7 +2393,7 @@ class Variable(ModelElementWithId, SupportsMath):
         else:
             if self._model.solver_uses_variable_names:
                 name = self.name
-            elif solver.block_auto_names:
+            elif solver.accelerate_with_repeat_names:
                 name = "V"
             else:
                 name = ""
@@ -2331,7 +2405,14 @@ class Variable(ModelElementWithId, SupportsMath):
             else:
                 ids = [poi_add_var(lb, ub, name=name).index for _ in range(n)]
 
-        df = self.data.with_columns(pl.Series(ids, dtype=KEY_TYPE).alias(VAR_KEY))
+        try:
+            df = self.data.with_columns(
+                pl.Series(ids, dtype=Config.id_dtype).alias(VAR_KEY)
+            )
+        except TypeError as e:
+            raise TypeError(
+                f"Number of variables exceeds the current data type ({Config.id_dtype}). Consider increasing the data type by changing Config.id_dtype."
+            ) from e
 
         self._data = df
 
@@ -2467,13 +2548,13 @@ class Variable(ModelElementWithId, SupportsMath):
 
     @return_new
     def next(self, dim: str, wrap_around: bool = False):
-        """Creates an expression where the variable at each index is the next variable in the specified dimension.
+        """Creates an expression where the variable at each label is the next variable in the specified dimension.
 
         Parameters:
             dim:
                 The dimension over which to shift the variable.
             wrap_around:
-                If `True`, the last index in the dimension is connected to the first index.
+                If `True`, the last label in the dimension is connected to the first label.
 
         Examples:
             >>> import pandas as pd
@@ -2486,24 +2567,20 @@ class Variable(ModelElementWithId, SupportsMath):
             >>> m.bat_charge + m.bat_flow == m.bat_charge.next("time")
             Traceback (most recent call last):
             ...
-            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because of unmatched values.
-            Expression 1:   (bat_charge + bat_flow)
-            Expression 2:   bat_charge.next(…)
-            Unmatched values:
-            shape: (2, 4)
-            ┌───────┬─────────┬────────────┬────────────┐
-            │ time  ┆ city    ┆ time_right ┆ city_right │
-            │ ---   ┆ ---     ┆ ---        ┆ ---        │
-            │ str   ┆ str     ┆ str        ┆ str        │
-            ╞═══════╪═════════╪════════════╪════════════╡
-            │ 18:00 ┆ Toronto ┆ null       ┆ null       │
-            │ 18:00 ┆ Berlin  ┆ null       ┆ null       │
-            └───────┴─────────┴────────────┴────────────┘
-            If this is intentional, use .drop_unmatched() or .keep_unmatched().
+            pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because expression 1 has extra labels.
+            Expression 1:	(bat_charge + bat_flow)
+            Expression 2:	bat_charge.next(…)
+            Extra labels in expression 1:
+            ┌───────┬─────────┐
+            │ time  ┆ city    │
+            ╞═══════╪═════════╡
+            │ 18:00 ┆ Toronto │
+            │ 18:00 ┆ Berlin  │
+            └───────┴─────────┘
+            Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
 
-            >>> (m.bat_charge + m.bat_flow).drop_unmatched() == m.bat_charge.next(
-            ...     "time"
-            ... )
+            >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
             <Constraint 'unnamed' height=6 terms=18 type=linear>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │

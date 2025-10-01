@@ -23,7 +23,7 @@ pip install --editable .[dev,docs]
 pre-commit install
 ```
 
-4. Run `pytest` to make sure everything is working. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
+4. Run `pytest` to make sure everything is working. The only errors you should see are those related to a solver not being installed. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
 
 ## Writing documentation
 
@@ -38,13 +38,14 @@ We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documen
 - `ruff check`: Ensures all the linter tests pass
 - `ruff format`: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)
 - `doccmd --language=python --no-pad-file --command="ruff format" docs/`: to format the code in the documentation.
+- `mike serve` to see a local version of the documentation with the version selector.
 
 ## Additional tips
 
+For core developers:
+
 - If you use `.unique`, `.join`, `.sort`, or `.group_by` on a Polars dataframe, make sure to set the `maintain_order` parameter appropriately (typically, `maintain_order=Config.maintain_order`).
 
-## Details for repository maintainers
+For repository maintainers:
 
-### Expired Gurobi License
-
-We use a Gurobi license to run our tests. If the tests fail an give a license expired error, generate a new one and copy the contents of the `guorbi.lic` file into the `GUROBI_WLS` Github secret (Settings -> Secrets and variables -> actions).
+- Our CI pipeline on Github Actions requires a Gurobi and COPT license to run. If the Gurobi license expires, generate a new one and copy the contents of the `guorbi.lic` file into the `GUROBI_WLS` Github secret (Settings -> Secrets and variables -> actions). Similarly, if the COPT license expires, request a new academic license (or email COPT sales for a free one) and copy the contents of both license files to the matching Github secrets.

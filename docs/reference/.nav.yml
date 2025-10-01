@@ -1,2 +1,6 @@
-# This file is intentionally left blank as it will be filled by scripts/generate_api_reference.py
 nav:
+  - Overview: index.md
+  - Public API: public/
+  - Base Classes: bases/
+  - External methods: external/
+  - Types: types/

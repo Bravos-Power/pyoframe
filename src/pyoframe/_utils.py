@@ -21,9 +21,8 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe._core import SupportsMath
+    from pyoframe._core import BaseOperableBlock
     from pyoframe._model import Variable
-    from pyoframe._model_element import ModelElementWithId
 
 if sys.version_info >= (3, 10):
     pairwise = itertools.pairwise
@@ -245,7 +244,7 @@ def cast_coef_to_string(
     return df
 
 
-def unwrap_single_values(func):
+def unwrap_single_values(func) -> pl.DataFrame | Any:
     """Returns the DataFrame unless it is a single value in which case return the value."""
 
     @wraps(func)
@@ -310,16 +309,16 @@ class NamedVariableMapper:
     CONST_TERM_NAME = "_ONE"
     NAME_COL = "__name"
 
-    def __init__(self, cls: type[ModelElementWithId]) -> None:
+    def __init__(self) -> None:
         self._ID_COL = VAR_KEY
         self.mapping_registry = pl.DataFrame(
             {self._ID_COL: [], self.NAME_COL: []},
-            schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+            schema={self._ID_COL: Config.id_dtype, self.NAME_COL: pl.String},
         )
         self._extend_registry(
             pl.DataFrame(
                 {self._ID_COL: [CONST_TERM], self.NAME_COL: [self.CONST_TERM_NAME]},
-                schema={self._ID_COL: pl.UInt32, self.NAME_COL: pl.String},
+                schema={self._ID_COL: Config.id_dtype, self.NAME_COL: pl.String},
             )
         )
 
@@ -375,15 +374,15 @@ def for_solvers(*solvers: str):
     return decorator
 
 
-# TODO: rename and change to return_expr once Set is split away from SupportsMath
-def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., SupportsMath]:
+# TODO: rename and change to return_expr once Set is split away from BaseOperableBlock
+def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., BaseOperableBlock]:
     """Decorator that upcasts the returned DataFrame to an Expression.
 
     Requires the first argument (self) to support self._new().
     """
 
     @wraps(func)
-    def wrapper(self: SupportsMath, *args, **kwargs):
+    def wrapper(self: BaseOperableBlock, *args, **kwargs):
         result = func(self, *args, **kwargs)
         return self._new(result, name=f"{self.name}.{func.__name__}(…)")
 

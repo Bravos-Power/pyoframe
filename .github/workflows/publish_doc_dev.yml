@@ -1,0 +1,43 @@
+# This workflow runs on every commit to main and publishes a development version of the documentation to the website.
+name: Publish dev docs
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+env:
+  ENABLED_GIT_REVISION_DATE: true
+  ENABLED_GIT_COMMITTERS: true
+  DOCS_PRERELEASE: true
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: build-docs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for git-revision-date-localized plugin
+      - name: Configure Git Credentials
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          cache: "pip"
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+      - run: pip install .[docs]
+      # Some examples
+      # https://github.com/squidfunk/mkdocs-material/discussions/6546
+      # https://github.com/arduino/arduino-cli/blob/master/.github/workflows/deploy-cobra-mkdocs-versioned-poetry.yml
+      # https://blog.grosdouli.dev/blog/mkdocs-mike-integration#setup-github-workflows
+      - run: mike deploy --push dev
+        env:
+          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.MKDOCS_GIT_COMMITTERS_APIKEY }}

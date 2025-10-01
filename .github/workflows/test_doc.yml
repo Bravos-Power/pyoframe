@@ -1,0 +1,23 @@
+# This workflow runs on pull requests and tests that building the docs works
+name: Test documentation builds
+on:
+  pull_request:
+    branches: ["*"]
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          cache: "pip"
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+      - run: pip install .[docs]
+      - run: mkdocs build --strict

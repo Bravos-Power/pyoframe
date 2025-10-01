@@ -5,7 +5,6 @@ hide:
   - actions
   - footer
   - feedback
-template: home.html
 ---
 # Pyoframe: A loved alternative to GAMS, Pyomo, and Linopy
 
@@ -13,7 +12,7 @@ template: home.html
 - Seamlessly integrates with pandas thanks to its dataframe-centric design.
 - Extremely **fast and memory efficient** (even for sparse problems) thanks to Polars, Rust, and Pyoptinterface.
 - Clear Pythonic syntax for writing mathematical models.
-- Supports Gurobi, HiGHS, and Ipopt solvers.
+- Supports Gurobi, HiGHS, Ipopt and COPT solvers.
 - Continuously used in high-stakes production environments.
 - 100% open-source (MIT License).
 

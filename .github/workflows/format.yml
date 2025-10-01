@@ -1,3 +1,4 @@
+# This workflow ensures that `ruff check` passes on pull requests.
 name: Check formatting with Ruff
 
 on: [pull_request]

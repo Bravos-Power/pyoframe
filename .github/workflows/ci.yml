@@ -1,3 +1,8 @@
+# This workflow runs the tests.
+# It is triggered automatically on pull requests and is also run weekly on the main branch.
+# Tests are run in a matrix of different Python versions.
+# This test also uploads coverage results to Codecov.
+
 # Note: We use the insecure pull_request_target to allow running workflows from forks.
 # However, we've added checks (see below) for safety.
 # In short, the 'safe to test' label must exist AND the workflow must be run by someone with write access.
@@ -75,12 +80,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-      - name: Install dependencies
-        run: pip install -e .[dev]
-      - uses: ./.github/actions/setup_optimizers_linux
+      - name: Setup optimizers
+        uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
+          COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
+          COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
           CHECK_LICENSE: true
+      - name: Install dependencies
+        run: pip install -e .[dev]
       - name: Run tests and collect coverage
         run: pytest --cov
       - name: Upload coverage to Codecov

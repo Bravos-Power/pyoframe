@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import TYPE_CHECKING
 
 import polars as pl
@@ -10,17 +10,17 @@ import polars as pl
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe._constants import (
     COEF_KEY,
-    KEY_TYPE,
     QUAD_VAR_KEY,
     RESERVED_COL_KEYS,
     VAR_KEY,
+    Config,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe import Model
 
 
-class ModelElement(ABC):
+class BaseBlock(ABC):
     """The base class for elements of a Model such as [][pyoframe.Variable] and [][pyoframe.Constraint]."""
 
     def __init__(self, data: pl.DataFrame, name="unnamed") -> None:
@@ -41,9 +41,9 @@ class ModelElement(ABC):
         if COEF_KEY in data.columns:
             data = data.cast({COEF_KEY: pl.Float64})
         if VAR_KEY in data.columns:
-            data = data.cast({VAR_KEY: KEY_TYPE})
+            data = data.cast({VAR_KEY: Config.id_dtype})
         if QUAD_VAR_KEY in data.columns:
-            data = data.cast({QUAD_VAR_KEY: KEY_TYPE})
+            data = data.cast({QUAD_VAR_KEY: Config.id_dtype})
 
         self._data = data
         self._model: Model | None = None
@@ -78,6 +78,26 @@ class ModelElement(ABC):
         return _get_dimensions(self.data)
 
     @property
+    def dimensionless(self) -> bool:
+        """Whether the object has no dimensions.
+
+        Examples:
+            A variable with no dimensions
+            >>> pf.Variable().dimensionless
+            True
+
+            A variable with dimensions of "hour" and "city"
+            >>> pf.Variable(
+            ...     [
+            ...         {"hour": ["00:00", "06:00", "12:00", "18:00"]},
+            ...         {"city": ["Toronto", "Berlin", "Paris"]},
+            ...     ]
+            ... ).dimensionless
+            False
+        """
+        return self.dimensions is None
+
+    @property
     def _dimensions_unsafe(self) -> list[str]:
         """Same as `dimensions` but returns an empty list if there are no dimensions instead of `None`.
 
@@ -90,7 +110,7 @@ class ModelElement(ABC):
 
     @property
     def shape(self) -> dict[str, int]:
-        """The number of indices in each dimension.
+        """The number of distinct labels in each dimension.
 
         Examples:
             A variable with no dimensions
@@ -151,17 +171,11 @@ class ModelElement(ABC):
             return 1
         return self.data.select(dims).n_unique()
 
-
-class ModelElementWithId(ModelElement):
-    """Extends ModelElement with a method that assigns a unique ID to each row in a DataFrame.
-
-    IDs start at 1 and go up consecutively. No zero ID is assigned since it is reserved for the constant variable term.
-    IDs are only unique for the subclass since different subclasses have different counters.
-    """
-
     @property
     def _has_ids(self) -> bool:
-        return self._get_id_column_name() in self.data.columns
+        id_col = self._get_id_column_name()
+        assert id_col is not None, "Cannot check for IDs if no ID column is defined."
+        return id_col in self.data.columns
 
     def _assert_has_ids(self):
         if not self._has_ids:
@@ -170,6 +184,6 @@ class ModelElementWithId(ModelElement):
             )
 
     @classmethod
-    @abstractmethod
-    def _get_id_column_name(cls) -> str:
-        """Returns the name of the column containing the IDs."""
+    def _get_id_column_name(cls) -> str | None:
+        """Subclasses should override to indicate that `data` contains an ID column."""
+        return None

@@ -6,9 +6,9 @@ Pyoframe is already one of the fastest and most memory-efficient libraries for f
 
 [Polars](https://pola.rs/) is much faster than Pandas. Moreover, if you use Pandas, there will be a (very small) overhead because Pyoframe converts all DataFrames to Polars prior to computations.
 
-## Use integer indices
+## Use integer labels
 
-Pyoframe will work with all types of indices, however integer indices are faster and more memory efficient than alternatives (e.g. string indices).
+Pyoframe works with any label data type (e.g. string labels, date labels, etc.), but integer labels are fastest and most memory efficient.
 
 ## Disable `maintain_order`
 
@@ -18,14 +18,14 @@ By default, Pyoframe ensures that the order of variables, constraints, and mathe
 pf.Config.maintain_order = False
 ```
 
-## Disable unmatched checks
+## Disable checks for extra values
 
-Disabling unmatched checks means that, instead of raising [unmatched term exceptions](../concepts/special-functions.md#drop_unmatched-and-keep_unmatched), pyoframe will process sums with unmatched terms as if [`keep_unmatched`][pyoframe.Expression.keep_unmatched] had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable unmatched checks, we recommend you do so only after thoroughly testing your model and ensuring that all potential unmatched term exceptions have been handled.
+Disabling checks for extra values means that, instead of raising [extra value exceptions](../concepts/addition.md), pyoframe will process sums with extra values as if [`keep_extras`][pyoframe.Expression.keep_extras] had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable checks for extra values, we recommend you do so only after thoroughly testing your model and ensuring that all potential extra value exceptions have been handled.
 
-The following code disables unmatched checks:
+The following code disables checks for extra values:
 
 ```python
-pf.Config.disable_unmatched_checks = True
+pf.Config.disable_extras_checks = True
 ```
 
 <!-- TODO REVISIT

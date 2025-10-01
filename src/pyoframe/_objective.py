@@ -5,7 +5,7 @@ from __future__ import annotations
 import pyoptinterface as poi
 
 from pyoframe._constants import ObjSense
-from pyoframe._core import Expression, SupportsToExpr
+from pyoframe._core import Expression, Operable
 
 
 # TODO don't subclass Expression to avoid a bunch of unnecessary functions being available.
@@ -62,9 +62,7 @@ class Objective(Expression):
         ValueError: An objective already exists. Use += or -= to modify it.
     """
 
-    def __init__(
-        self, expr: SupportsToExpr | int | float, _constructive: bool = False
-    ) -> None:
+    def __init__(self, expr: Operable, _constructive: bool = False) -> None:
         self._constructive = _constructive
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)

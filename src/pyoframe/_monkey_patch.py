@@ -6,14 +6,14 @@ import pandas as pd
 import polars as pl
 
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
-from pyoframe._core import Expression, SupportsMath
+from pyoframe._core import BaseOperableBlock, Expression
 
 
 def _patch_class(cls):
     def _patch_method(func):
         @wraps(func)
         def wrapper(self, other):
-            if isinstance(other, SupportsMath):
+            if isinstance(other, BaseOperableBlock):
                 return NotImplemented
             return func(self, other)
 
@@ -24,13 +24,15 @@ def _patch_class(cls):
     cls.__sub__ = _patch_method(cls.__sub__)
     cls.__le__ = _patch_method(cls.__le__)
     cls.__ge__ = _patch_method(cls.__ge__)
+    cls.__lt__ = _patch_method(cls.__lt__)
+    cls.__gt__ = _patch_method(cls.__gt__)
     cls.__contains__ = _patch_method(cls.__contains__)
 
 
 def polars_df_to_expr(self: pl.DataFrame) -> Expression:
     """Converts a [polars](https://pola.rs/) `DataFrame` to a Pyoframe [Expression][pyoframe.Expression] by using the last column for values and the previous columns as dimensions.
 
-    See [Special Functions](../learn/concepts/special-functions.md#dataframeto_expr) for more details.
+    See [Special Functions](../../learn/concepts/special-functions.md#dataframeto_expr) for more details.
 
     Examples:
         >>> import polars as pl
@@ -60,21 +62,21 @@ def pandas_df_to_expr(self: pd.DataFrame) -> Expression:
     return polars_df_to_expr(pl.from_pandas(self))
 
 
-def patch_dataframe_libraries():
-    """Patches the DataFrame and Series classes of both pandas and polars.
+def pandas_series_to_expr(self: pd.Series) -> Expression:
+    """Converts a [pandas](https://pandas.pydata.org/) `Series` to a Pyoframe [Expression][pyoframe.Expression], using the index for labels.
 
-    1) Patches arithmetic operators (e.g. `__add__`) such that operations between DataFrames/Series and `Expressionable`s
-        are not supported (i.e. `return NotImplemented`). This leads Python to try the reverse operation (e.g. `__radd__`)
-        which is supported by the `Expressionable` class.
-    2) Adds a `to_expr` method to DataFrame/Series that allows them to be converted to an `Expression` object.
-        Series become DataFrames and DataFrames become expressions where everything but the last column are treated as dimensions.
+    See [Special Functions](../../learn/concepts/special-functions.md#dataframeto_expr) for more details.
+
+    Note that no equivalent method exists for Polars Series, as Polars does not support indexes.
     """
+    return pandas_df_to_expr(self.to_frame().reset_index())
+
+
+def patch_dataframe_libraries():
     _patch_class(pd.DataFrame)
     _patch_class(pd.Series)
     _patch_class(pl.DataFrame)
     _patch_class(pl.Series)
     pl.DataFrame.to_expr = polars_df_to_expr
     pd.DataFrame.to_expr = pandas_df_to_expr
-    # TODO make a set instead!
-    pl.Series.to_expr = lambda self: self.to_frame().to_expr()
-    pd.Series.to_expr = lambda self: self.to_frame().reset_index().to_expr()
+    pd.Series.to_expr = pandas_series_to_expr

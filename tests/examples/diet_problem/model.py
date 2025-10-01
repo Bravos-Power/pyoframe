@@ -20,12 +20,8 @@ def solve_model(use_var_names=False, solver=None):
     m = pf.Model(solver, solver_uses_variable_names=use_var_names)
     m.Buy = pf.Variable(food["food"], lb=0, ub=food[["food", "stock"]])
 
-    m.min_nutrients = (
-        min_nutrient <= (m.Buy * food_nutrients).sum("food").drop_unmatched()
-    )
-    m.max_nutrients = (m.Buy * food_nutrients).sum(
-        "food"
-    ).drop_unmatched() <= max_nutrient
+    m.min_nutrients = min_nutrient <= (m.Buy * food_nutrients).sum("food").drop_extras()
+    m.max_nutrients = (m.Buy * food_nutrients).sum("food").drop_extras() <= max_nutrient
 
     m.minimize = (m.Buy * food[["food", "cost"]]).sum()
 
