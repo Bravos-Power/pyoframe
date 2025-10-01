@@ -31,5 +31,6 @@ jobs:
           pip install -e .
       - name: Run benchmarks
         run: |
-          cp benchmarks/config.testing.yaml benchmarks/config.yaml
+          cd benchmarks
+          cp config.testing.yaml config.yaml
           snakemake --cores all
