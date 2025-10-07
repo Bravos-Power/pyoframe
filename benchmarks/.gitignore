@@ -1,7 +1,3 @@
 results/**
-src/*/data/**
-input_data/**/*.parquet
-input_data/**/*.csv
-input_data/**/*.json
-input_data/**/*.m
-!input_data/*/final_inputs/**
+src/*/input_data/**
+!src/*/input_data/final_inputs/**

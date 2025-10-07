@@ -1,39 +1,13 @@
-repeat: 1
+repeat: 1 # TODO repeat
+timeout: 0.5  # seconds, per run
 problems:
   facility_location:
-    size:
-      - 8
-    libraries:
-      pyomo: 64
-      gurobipy: 128
-      cvxpy: 32
-      jump: 256
-      pyoframe: true
-      pyoptinterface: true
+    size: [2, 4, 8, 16, 32, 64, 128, 256, 512]
   energy_planning:
     requires_inputs: true
-    libraries:
-      pyoframe: true
-    size:
-      - 2
-      - 4
-      - 24
-      - 168
-      # - 730
-      # - 8670
+    size: [2, 4, 24, 168, 730, 8670]
   dummy_model:
-    size:
-      - 100
-
-    libraries:
-      pyomo: 1000
-      gurobipy: 1000
-      cvxpy: 1000
-      jump: true
-      pyoframe: true
-      pyoptinterface: true
-      linopy: 1000
-
+    size: [2, 100, 200, 300, 400, 500, 1000, 2000]
 
 solvers:
   - gurobi
@@ -46,5 +20,5 @@ libraries:
   - cvxpy
   - gurobipy
   - jump
-  # - linopy
+  - linopy
   - pyoptinterface

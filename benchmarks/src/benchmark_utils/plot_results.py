@@ -14,19 +14,30 @@ def collect_benchmarks(input_files) -> pl.DataFrame:
     for input_file in input_files:
         input_file = Path(input_file)
         name = input_file.name.partition(".")[0].split("_")
-        library = name[0]
-        solver = name[1]
-        size = int(name[2])
-        dfs.append(
-            pl.read_csv(input_file, separator="\t")
-            .mean()  # TODO also compute std(). Maybe at the plotting stage.
+        library, solver, size, metric = name[0], name[1], int(name[2]), name[3]
+        if metric != "time":
+            continue
+
+        with open(input_file) as f:
+            ts = f.readlines()
+        if ts[0].strip().startswith("timeout"):
+            continue
+        t_avg = sum(float(t) for t in ts) / len(ts)
+
+        mem_file = input_file.parent / f"{library}_{solver}_{size}_mem.tsv"
+        mem_df = pl.read_csv(mem_file, separator="\t").mean()
+        mem_df = (
+            mem_df.with_columns(pl.lit(t_avg).alias("s"))
+            .drop("h:m:s", "cpu_time")
             .with_columns(
                 library=pl.lit(library),
                 size=pl.lit(size),
                 solver=pl.lit(solver),
-                # problem=pl.lit(problem),
             )
         )
+
+        dfs.append(mem_df)
+
     return pl.concat(dfs)
 
 

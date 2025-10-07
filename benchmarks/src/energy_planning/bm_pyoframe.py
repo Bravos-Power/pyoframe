@@ -25,7 +25,7 @@ class Bench(PyoframeBenchmark):
             lines["to_bus"].rename("bus").unique()
         )
 
-        m = pf.Model(solver=self.solver, use_var_names=True)
+        m = pf.Model(solver=self.solver, solver_uses_variable_names=True)
 
         hours = loads.get_column("datetime").unique().sort().head(self.size)
         active_load = loads[["bus", "datetime", "active_load"]].to_expr().within(hours)
@@ -53,29 +53,29 @@ class Bench(PyoframeBenchmark):
         )
 
         m.power_balance = 0 == (
-            m.dispatch.map(generators[["gen", "bus"]]).keep_unmatched()
-            - active_load.keep_unmatched()
+            m.dispatch.map(generators[["gen", "bus"]]).keep_extras()
+            - active_load.keep_extras()
             - m.power_flow.map(lines[["line_id", "from_bus"]])
             .rename({"from_bus": "bus"})
-            .keep_unmatched()
+            .keep_extras()
             + m.power_flow.map(lines[["line_id", "to_bus"]])
             .rename({"to_bus": "bus"})
-            .keep_unmatched()
+            .keep_extras()
         )
 
         m.con_yearly_limits = (
-            m.dispatch.map(generators[["gen", "type"]]).sum("datetime").drop_unmatched()
+            m.dispatch.map(generators[["gen", "type"]]).sum("datetime").drop_extras()
             <= yearly_limits[["type", "limit"]]
         )
 
         m.variable_dispatch_limit = (
-            m.dispatch.drop_unmatched()
+            m.dispatch.drop_extras()
             <= (
                 vcf[["type", "datetime", "capacity_factor"]]
                 .to_expr()
                 .map(generators[["gen", "type"]])
                 * generators[["gen", "Pmax"]]
-            ).drop_unmatched()
+            ).drop_extras()
         )
         m.dispatch_limit = m.dispatch <= generators[["gen", "Pmax"]].to_expr().add_dim(
             "datetime"

@@ -25,7 +25,7 @@ class Bench(PyoframeBenchmark):
 
         model = Model(
             solver=self.solver,
-            use_var_names=self.use_var_names,
+            solver_uses_variable_names=self.use_var_names,
             print_uses_variable_names=False,
         )
         model.facilities = Set(f=range(F))

@@ -21,7 +21,6 @@ dependencies = [
     "vl-convert-python==1.8.0", # For saving plots in altair
     "snakeviz==2.2.2",          # For viewing profiling results
     "memray==1.17.2",           # For memory profiling
-    "numpy==2.3.1",
     "pytest==8.4.1",
 ]
 
