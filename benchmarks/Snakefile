@@ -4,7 +4,6 @@ import itertools
 import os
 import subprocess
 from snakemake.utils import available_cpu_count
-from pyoframe._constants import SUPPORTED_SOLVERS
 
 configfile: "config.yaml"
 
@@ -16,79 +15,9 @@ wildcard_constraints:
     solver="[a-z]+",
     size="\d+"
 
-def generate_all_runs(problem): 
-    libraries = config["libraries"]
-    sizes = config["problems"][problem]["size"]
-    solvers = config["solvers"]
-    
-    runs = itertools.product(sizes, libraries, solvers)
-    runs = filter(lambda r: os.path.exists(f"src/{problem}/bm_{r[1]}.py"), runs)
-    return runs
-
-def previous_benchmark_file(problem, library, solver, size):
-    sizes = sorted(config["problems"][problem]["size"])
-    size_index = sizes.index(int(size))
-    if size_index == 0:
-        return []
-    smaller_size = sizes[size_index - 1]
-    return f"results/{problem}/raw/{library}_{solver}_{smaller_size}_time.txt"
-
-
 rule all:
     input:
         expand("results/{problem}/combined_results.png", problem=config["problems"])
-
-rule plot_results:
-    input:
-        lambda wildcards: sum(
-            ([f"results/{wildcards.problem}/raw/{library}_{solver}_{size}_mem.tsv",
-            f"results/{wildcards.problem}/raw/{library}_{solver}_{size}_time.txt"]
-            for size, library, solver in generate_all_runs(wildcards.problem)),
-            []
-        )
-    output:
-        "results/{problem}/combined_results.csv",
-        "results/{problem}/combined_results.png",
-        "results/{problem}/normalized_results.png"
-    script:
-        "src/benchmark_utils/plot_results.py"
-
-rule run_benchmark:
-    threads: available_cpu_count()  # Force to use all cores to avoid parallel execution
-    input:
-        input_dir=lambda wc: directory("src/{problem}/input_data/final_inputs") if config["problems"][wc.problem].get("requires_inputs", False) else [],
-        previous_result=lambda wc: previous_benchmark_file(wc.problem, wc.library, wc.solver, wc.size)
-    output:
-        time="results/{problem}/raw/{library}_{solver}_{size}_time.txt",
-    benchmark:
-        repeat("results/{problem}/raw/{library}_{solver}_{size}_mem.tsv", config["repeat"])
-    run:
-        def write_result(content, append=False):
-            with open(output.time, "a" if append else "w") as f:
-                f.write(content)
-        
-        if input.previous_result:
-            with open(input.previous_result, "r") as f:
-                if f.read().strip().startswith("timeout"):
-                    return write_result("timeout")
-        
-        if input.input_dir:
-            input_dir = f"'{input.input_dir}'"
-        else:
-            input_dir = None
-        if wildcards.library != "jump":
-            cmd = ["python", "-c", f"from {wildcards.problem}.bm_{wildcards.library.lower()} import Bench; Bench(solver='{wildcards.solver}', size={int(wildcards.size)}, input_dir={input_dir}).run()"]
-        else:
-            cmd = ["julia", "--project=.", "src/{wildcards.problem}/bm_jump.jl", wildcards.solver, wildcards.size]
-
-        try:
-            t1 = time.time()
-            subprocess.run(cmd, check=True, timeout=config["timeout"])
-            t2 = time.time()
-        except subprocess.TimeoutExpired:
-            return write_result("timeout")
-        return write_result(f"{t2 - t1}\n", append=True)
-        
         
 rule profile:
     threads: available_cpu_count()
