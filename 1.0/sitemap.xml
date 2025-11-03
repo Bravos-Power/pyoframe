@@ -2,154 +2,154 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/contribute/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/examples/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/examples/diet/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/examples/facility_location/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/examples/portfolio_optimization/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/examples/production/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/advanced-concepts/datastructure/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/advanced-concepts/internals/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/advanced-concepts/performance/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/advanced-concepts/quadratics/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/advanced-concepts/troubleshooting/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/concepts/addition/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/concepts/building-blocks/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/concepts/solver-access/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/concepts/special-functions/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/get-started/installation/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/get-started/basic-example/example-with-dimensions/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/get-started/basic-example/example/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/learn/migrate/v1.0/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/bases/BaseBlock/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/bases/BaseOperableBlock/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/external/pandas.DataFrame.to_expr/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/external/pandas.Series.to_expr/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/external/polars.DataFrame.to_expr/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Config/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Constraint/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Expression/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Model/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/ObjSense/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Objective/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/PyoframeError/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Set/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/VType/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/public/Variable/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/reference/types/Operable/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
     <url>
          <loc>https://Bravos-Power.github.io/pyoframe/1.0/why-pyoframe/</loc>
-         <lastmod>2025-10-06</lastmod>
+         <lastmod>2025-11-03</lastmod>
     </url>
 </urlset>
