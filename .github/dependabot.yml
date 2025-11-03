@@ -1,0 +1,16 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "17:00"
+  groups:
+    python-production-packages:
+      dependency-type: production
+      patterns:
+        - "*"
+    python-dev-packages:
+      dependency-type: development
+      patterns:
+        - "*"
