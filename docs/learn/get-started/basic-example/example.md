@@ -12,7 +12,7 @@ To start, you'll solve a simple optimization problem with Pyoframe.
 
     Imagine you're a vegetarian hesitating between tofu and chickpeas as
     a source of protein for tomorrow's dinner. You'd like to spend as little money as
-    possible while still consuming at least 50 grams of protein. How many blocks
+    possible while still consuming at least 50g of protein. How many blocks
     of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein) should you buy?
 
 Click on the :material-plus-circle: buttons below to understand the code, and then run it on your computer.
