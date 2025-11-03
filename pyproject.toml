@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
     "polars~=1.0",
     "pyarrow",
-    "pandas<=2",
+    "pandas<3",
     "pyoptinterface==0.5.1", # pinned to avoid broken versions
 ]
 
