@@ -27,24 +27,24 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-highs = ["highsbox<=1.11.0"]
+highs = ["highsbox<=1.12.0"]
 ipopt = [
     "pyoptinterface[nlp]",
     "llvmlite<=0.44.0",    # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
 ]
 dev = [
-    "ruff==0.12.11",        # code formatter
+    "ruff==0.14.3",        # code formatter
     "polars>=1.32.3",       # constrain since previous versions have changes that break testing
-    "pytest==8.4.1",
-    "pytest-cov==6.2.1",
+    "pytest==8.4.2",
+    "pytest-cov==7.0.0",
     "sybil[pytest]==9.2.0", # allows running tests on documentation code
     "pre-commit==4.3.0",    # pre-commit hooks
     "gurobipy==12.0.3",     # used for testing against the gurobi library
-    "coverage==7.10.6",     # code coverage
-    "ipykernel==6.30.1",    # add support for jupyter notebooks
+    "coverage==7.10.7",     # code coverage
+    "ipykernel==6.31.0",    # add support for jupyter notebooks
     # Automatically install as many solvers as possible
     # (we don't pin since we want to test against the latest)
-    "highsbox<=1.11.0",
+    "highsbox<=1.12.0",
     "pyoptinterface[nlp]",
     "numpy",               # for testing with np.nan, don't pin so that two versions of Python are possible
 ]
@@ -52,7 +52,7 @@ dev = [
 docs = [
     "mkdocs-material~=9.6.18",
     "mkdocstrings[python]~=0.30.0",                     # used to generate API documentation
-    "mkdocs-git-revision-date-localized-plugin~=1.4.7", # displays the update date in documentation
+    "mkdocs-git-revision-date-localized-plugin>=1.4.7,<1.6.0", # displays the update date in documentation
     "mkdocs-git-committers-plugin-2~=2.5.0",            # displays who contributed in documentation
     "mkdocs-gen-files~=0.5.0",                          # allows running custom scripts during doc generation
     "mkdocs-section-index~=0.3.10",                     # allows sections to be clickable pages
@@ -61,7 +61,7 @@ docs = [
     "mkdocs-table-reader-plugin~=3.1.0",                # allows displaying .csv files in documentation
     "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
     "mike==2.1.3",                                      # allows versioned documentation
-    "ruff==0.12.11",                                    # needed by mkdocstrings_handlers for formatting signatures
+    "ruff==0.14.3",                                    # needed by mkdocstrings_handlers for formatting signatures
 ]
 
 
