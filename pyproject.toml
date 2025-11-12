@@ -33,7 +33,7 @@ ipopt = [
     "llvmlite<=0.44.0",    # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
 ]
 dev = [
-    "ruff==0.12.11",        # code formatter
+    "ruff==0.14.4",        # code formatter
     "polars>=1.32.3",       # constrain since previous versions have changes that break testing
     "pytest==8.4.1",
     "pytest-cov==6.2.1",
@@ -61,7 +61,7 @@ docs = [
     "mkdocs-table-reader-plugin~=3.1.0",                # allows displaying .csv files in documentation
     "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
     "mike==2.1.3",                                      # allows versioned documentation
-    "ruff==0.12.11",                                    # needed by mkdocstrings_handlers for formatting signatures
+    "ruff==0.14.4",                                    # needed by mkdocstrings_handlers for formatting signatures
 ]
 
 
