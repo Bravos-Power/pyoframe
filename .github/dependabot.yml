@@ -6,11 +6,12 @@ updates:
     interval: daily
     time: "17:00"
   groups:
-    python-production-packages:
+    required-packages:
       dependency-type: production
       patterns:
         - "*"
-    python-dev-packages:
+    optional-packages:
       dependency-type: development
       patterns:
-        - "*"
+        - "highsbox"
+        - "llvmlite"
