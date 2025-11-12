@@ -40,7 +40,7 @@ dev = [
     "sybil[pytest]==9.2.0", # allows running tests on documentation code
     "pre-commit==4.3.0",    # pre-commit hooks
     "gurobipy==12.0.3",     # used for testing against the gurobi library
-    "coverage==7.10.6",     # code coverage
+    "coverage==7.10.7",     # code coverage
     "ipykernel==6.30.1",    # add support for jupyter notebooks
     # Automatically install as many solvers as possible
     # (we don't pin since we want to test against the latest)
