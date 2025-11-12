@@ -5,13 +5,7 @@ updates:
   schedule:
     interval: daily
     time: "17:00"
-  groups:
-    required-packages:
-      dependency-type: production
-      patterns:
-        - "*"
-    optional-packages:
-      dependency-type: development
-      patterns:
-        - "highsbox"
-        - "llvmlite"
+  allow:
+    - dependency-type: production
+    - dependency-name: highsbox
+    - dependency-name: llvmlite
