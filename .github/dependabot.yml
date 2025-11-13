@@ -9,5 +9,3 @@ updates:
     - dependency-type: production
     - dependency-name: highsbox
     - dependency-name: llvmlite
-  ignore:
-    - dependency-type: development
