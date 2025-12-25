@@ -234,7 +234,7 @@ class Model:
                 from pyoptinterface import ipopt
             except ModuleNotFoundError as e:  # pragma: no cover
                 raise ModuleNotFoundError(
-                    "Failed to import the Ipopt solver. Did you run `pip install pyoptinterface[ipopt]`?"
+                    "Failed to import the Ipopt solver. Did you run `pip install pyoptinterface[nlp]`?"
                 ) from e
 
             try:
