@@ -45,9 +45,9 @@ jobs:
           username: ${{ github.triggering_actor }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # If neither has permissions and no 'safe to test' label throw error
+      # If neither has permissions and no 'safe to test' label and not dependabot throw error
       - name: Check User Permission
-        if: steps.checkAccess.outputs.require-result == 'false' && steps.checkTriggeringAccess.outputs.require-result == 'false' && !contains(github.event.pull_request.labels.*.name, 'safe to test')
+        if: steps.checkAccess.outputs.require-result == 'false' && steps.checkTriggeringAccess.outputs.require-result == 'false' && !contains(github.event.pull_request.labels.*.name, 'safe to test') && (github.actor != 'dependabot[bot]')
         shell: bash
         run: |
           echo "${{ github.triggering_actor }} does not have permissions on this repo."
@@ -55,7 +55,8 @@ jobs:
           exit 1
   run:
     if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || 
+      (github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') || 
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository) || 
       (github.event_name != 'pull_request_target' && github.event_name != 'pull_request')
     runs-on: ubuntu-latest
