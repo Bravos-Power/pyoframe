@@ -3,6 +3,7 @@
 Saves results to results/benchmark_results.csv.
 """
 
+import argparse
 import itertools
 import os
 import queue
@@ -41,50 +42,62 @@ def run_all_benchmarks():
 
     problems = config["problems"]
 
-    for problem, solver, library in itertools.product(
-        problems, config["solvers"], config["libraries"]
-    ):
+    for problem in problems:
+        problem_dir = CWD / "src" / problem
         requires_inputs = config["problems"][problem].get("requires_inputs", False)
         if requires_inputs:
-            pass  # TODO run snakemake setup
-
-        ext = "jl" if library == "jump" else "py"
-        if not os.path.exists(CWD / f"src/{problem}/bm_{library}.{ext}"):
-            continue
-        for size in sorted(problems[problem]["size"]):
-            prior_results = df.filter(
-                (pl.col("problem") == problem)
-                & (pl.col("library") == library)
-                & (pl.col("solver") == solver)
-                & (pl.col("size") == size)
+            # Run snakemake in the directory using subprocess
+            subprocess.run(
+                ["snakemake", "--cores", "all"],
+                stdout=subprocess.DEVNULL,
+                cwd=problem_dir,
             )
-            if prior_results.height > 0:
-                if prior_results.filter(pl.col("error").is_null()).height > 0:
-                    continue
 
-                prior_timeouts = prior_results.filter(pl.col("error") == "TIMEOUT")
-                if (
-                    prior_timeouts.height > 0
-                    and prior_timeouts["time_s"].max() >= config["timeout"]
-                ):
-                    break
-
-            error = False
-            for _ in range(config["repeat"]):
-                error = run_benchmark(
-                    problem,
-                    library,
-                    solver,
-                    size,
-                    timeout=config["timeout"],
-                    input_dir=CWD / "src" / problem / "input_dir"
-                    if requires_inputs
-                    else None,
+        for solver, library in itertools.product(
+            config["solvers"], config["libraries"]
+        ):
+            ext = "jl" if library == "jump" else "py"
+            if not os.path.exists(problem_dir / f"bm_{library}.{ext}"):
+                print(f"{problem}: Skipping {library} as no benchmark found.")
+                continue
+            ran_one = False
+            for size in sorted(problems[problem]["size"]):
+                prior_results = df.filter(
+                    (pl.col("problem") == problem)
+                    & (pl.col("library") == library)
+                    & (pl.col("solver") == solver)
+                    & (pl.col("size") == size)
                 )
+                if prior_results.height > 0:
+                    if prior_results.filter(pl.col("error").is_null()).height > 0:
+                        continue
+
+                    prior_timeouts = prior_results.filter(pl.col("error") == "TIMEOUT")
+                    if (
+                        prior_timeouts.height > 0
+                        and prior_timeouts["time_s"].max() >= config["timeout"]
+                    ):
+                        break
+
+                error = False
+                for _ in range(config["repeat"]):
+                    ran_one = True
+                    error = run_benchmark(
+                        problem,
+                        library,
+                        solver,
+                        size,
+                        timeout=config["timeout"],
+                        input_dir=problem_dir / "model_data"
+                        if requires_inputs
+                        else None,
+                    )
+                    if error:
+                        break
                 if error:
                     break
-            if error:
-                break
+            if not ran_one:
+                print(f"{problem}: All sizes already benchmarked for {library}.")
 
 
 def run_benchmark(
@@ -121,9 +134,9 @@ def run_benchmark(
 
     max_memory_queue = queue.Queue()
 
-    print(f"Running {problem} (n={size}) via {library} using {solver}...")
+    print(f"{problem} (n={size}): Running with {library} and {solver}...")
 
-    with subprocess.Popen(cmd, preexec_fn=os.setsid) as proc:
+    with subprocess.Popen(cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE) as proc:
         memory_thread = threading.Thread(
             target=monitor_memory, args=(proc.pid, max_memory_queue)
         )
@@ -208,4 +221,13 @@ def kill_process(proc, using_julia, timeout=2):
 
 
 if __name__ == "__main__":
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--delete-cache", action="store_true", help="Reset benchmark results file."
+    )
+    args = argparser.parse_args()
+
+    if args.delete_cache and os.path.exists(BENCHMARK_RESULTS):
+        os.remove(BENCHMARK_RESULTS)
+
     run_all_benchmarks()

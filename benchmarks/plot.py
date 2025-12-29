@@ -53,7 +53,7 @@ def normalize_results(results: pl.DataFrame):
 def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
     assert results.height > 0, "No results to plot"
 
-    scale = "log" if log_y else "linear"
+    scale = "log" if not normalized else "linear"
     x_label = "Number of variables"
 
     results = results.with_columns(
@@ -68,11 +68,12 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
         solver_results = results.filter(pl.col("solver") == solver)
 
         tick_values = [
-            10**i for i in range(int(math.ceil(math.log10(results["size"].max()))) + 1)
+            10**i
+            for i in range(2, int(math.ceil(math.log10(results["size"].max()))) + 1)
         ]
         x_axis = alt.Axis(values=tick_values, format="e")
-        y_axis_time = y_axis_mem = alt.Undefined
-        if log_y:
+        y_axis_time = y_axis_mem = alt.Axis(labelExpr="datum.value + 'x'", grid=True)
+        if not normalized:
             max_time = solver_results["time_min"].max()
             max_mem = solver_results["memory_uss_mb"].max()
 
@@ -128,6 +129,14 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
             combined_plot = left_plot | right_plot
         else:
             combined_plot &= left_plot | right_plot
+
+    combined_plot = (
+        combined_plot.configure_axis(
+            labelFontSize=12, titleFontSize=14, labelFont="Arial", titleFont="Arial"
+        )
+        .configure_title(fontSize=18, font="Arial", anchor="middle")
+        .configure_legend(labelFontSize=14, titleFontSize=16)
+    )
     combined_plot.save(output)
 
 

@@ -7,9 +7,8 @@ from pyoframe import Model, Set, Variable
 
 class Bench(PyoframeBenchmark):
     def build(self):
-        N = self.size
         m = Model()
-        m.x = Variable(Set(i=range(N)))
+        m.x = Variable(Set(i=range(self.size)))  # type: ignore
         m.minimize = m.x.sum()
         return m
 

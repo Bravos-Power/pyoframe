@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import cvxpy as cp
@@ -21,10 +21,10 @@ class Benchmark(ABC):
         self.input_dir = Path(input_dir) if input_dir else None
 
     @abstractmethod
-    def build(self): ...
+    def build(self) -> Any: ...
 
     @abstractmethod
-    def solve(self, model): ...
+    def solve(self, model) -> Any: ...
 
     def get_objective(self) -> float:
         assert not self.block_solver, (
@@ -43,21 +43,21 @@ class Benchmark(ABC):
 
 class PyoframeBenchmark(Benchmark):
     def __init__(self, *args, use_var_names=False, **kwargs):
+        import pyoframe as pf
+
         super().__init__(*args, **kwargs)
         self.use_var_names = use_var_names
+        pf.Config.default_solver = self.solver
 
-        if self.block_solver:
-            # Slightly improves performance
-            # The bottleneck is still the underlying library
-            import pyoframe as pf
-
-            pf.Config.maintain_order = False
-            pf.Config.disable_unmatched_checks = True
+        # if self.block_solver:
+        # Slightly improves performance
+        # The bottleneck is still the underlying library
+        # pf.Config.maintain_order = False
+        # pf.Config.disable_unmatched_checks = True
 
     def solve(self, model):
         if self.block_solver:
             model.attr.TimeLimitSec = 0
-            model.attr.Silent = 0
         model.optimize()
         return model
 
@@ -110,7 +110,6 @@ class PyOptInterfaceBenchmark(Benchmark):
         import pyoptinterface as poi
 
         if self.block_solver:
-            model.set_model_attribute(poi.ModelAttribute.Silent, True)
             model.set_model_attribute(poi.ModelAttribute.TimeLimitSec, 0.0)
             solver_name = model.get_model_attribute(poi.ModelAttribute.SolverName)
             if solver_name.lower() == "gurobi":

@@ -8,20 +8,16 @@ from pyoframe import Model, Set, Variable
 
 class Bench(PyoframeBenchmark):
     def build(self):
-        if isinstance(self.size, int):
-            G = F = self.size
-        else:
-            G, F = self.size
-
+        G = F = self.size
         G = G + 1  # Add one to match Julia
 
         grid = range(G)
         customer_position_x = pl.DataFrame(
             {"x": grid, "x_pos": [step / (G - 1) for step in grid]}
-        )
+        ).to_expr()
         customer_position_y = pl.DataFrame(
             {"y": grid, "y_pos": [step / (G - 1) for step in grid]}
-        )
+        ).to_expr()
 
         model = Model(
             solver=self.solver,
@@ -43,20 +39,20 @@ class Bench(PyoframeBenchmark):
         model.con_only_one_closest = model.is_closest.sum("f") == 1
         model.dist_x = Variable(model.x_axis, model.facilities)
         model.dist_y = Variable(model.y_axis, model.facilities)
-        model.con_dist_x = model.dist_x == customer_position_x.to_expr().add_dim(
+        model.con_dist_x = model.dist_x == customer_position_x.over(
             "f"
-        ) - model.facility_position.pick(d=1).add_dim("x")
-        model.con_dist_y = model.dist_y == customer_position_y.to_expr().add_dim(
+        ) - model.facility_position.pick(d=1).over("x")
+        model.con_dist_y = model.dist_y == customer_position_y.over(
             "f"
-        ) - model.facility_position.pick(d=2).add_dim("y")
+        ) - model.facility_position.pick(d=2).over("y")
         model.dist = Variable(model.x_axis, model.y_axis, model.facilities, lb=0)
-        model.con_dist = model.dist**2 == (model.dist_x**2).add_dim("y") + (
+        model.con_dist = model.dist**2 == (model.dist_x**2).over("y") + (
             model.dist_y**2
-        ).add_dim("x")
+        ).over("x")
 
         # Twice the max distance which ensures that when is_closest is 0, the constraint is not binding.
         M = 2 * 1.414
-        model.con_max_distance = model.max_distance.add_dim(
+        model.con_max_distance = model.max_distance.over(
             "x", "y", "f"
         ) >= model.dist - M * (1 - model.is_closest)
 

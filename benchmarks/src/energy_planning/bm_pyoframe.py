@@ -27,21 +27,23 @@ class Bench(PyoframeBenchmark):
 
         m = pf.Model(solver=self.solver, solver_uses_variable_names=True)
 
+        m.gen_max = generators["gen", "Pmax"].to_expr()
+        m.line_rating = lines["line_id", "line_rating"].to_expr()
+
         hours = loads.get_column("datetime").unique().sort().head(self.size)
         active_load = loads[["bus", "datetime", "active_load"]].to_expr().within(hours)
 
-        # TODO allow broadcasting on add_dim() or improve error messages when using ub=
+        # TODO allow broadcasting on over() or improve error messages when using ub=
         m.dispatch = pf.Variable(generators["gen"], hours, lb=0)
         m.voltage_angle = pf.Variable(buses, hours)
         m.power_flow = pf.Variable(
             lines["line_id"],
             hours,
-            lb=-(lines[["line_id", "line_rating"]].to_expr()).add_dim("datetime"),
-            ub=lines[["line_id", "line_rating"]].to_expr().add_dim("datetime"),
+            lb=-m.line_rating.over("datetime"),
+            ub=m.line_rating.over("datetime"),
         )
 
         m.slack_bus_const = m.voltage_angle.pick(bus=buses.data["bus"].max()) == 0
-        # TODO allow rename with equality similar to pick
         # TODO support division of constant expressions
         m.constraint_power_flow = m.power_flow == lines.select(
             "line_id", 1 / pl.col("reactance")
@@ -74,24 +76,17 @@ class Bench(PyoframeBenchmark):
                 vcf[["type", "datetime", "capacity_factor"]]
                 .to_expr()
                 .map(generators[["gen", "type"]])
-                * generators[["gen", "Pmax"]]
+                * m.gen_max
             ).drop_extras()
         )
-        m.dispatch_limit = m.dispatch <= generators[["gen", "Pmax"]].to_expr().add_dim(
-            "datetime"
-        )
+        m.dispatch_limit = m.dispatch <= m.gen_max.over("datetime")
 
         return m
 
 
 if __name__ == "__main__":
-    input_dir = (
-        Path(__file__).parent.parent.parent
-        / "input_data"
-        / "energy_planning"
-        / "final_inputs"
-    )
-    m: pf.Model = Bench("gurobi", 2, input_dir=input_dir, block_solver=False).run()
+    input_dir = Path(__file__).parent / "model_data"
+    m: pf.Model = Bench("gurobi", 2, input_dir=input_dir, block_solver=True).run()
     m.compute_IIS()
     # todo autocompute iis
     m.write("inf.ilp")

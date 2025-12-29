@@ -1,3 +1,2 @@
 results/**
-src/*/input_data/**
-!src/*/input_data/final_inputs/**
+src/*/raw_data/**

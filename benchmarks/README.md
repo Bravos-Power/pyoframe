@@ -11,8 +11,9 @@ This folder contains the code and instructions needed to benchmark Pyoframe's pe
     a. Install Julia: `curl -fsSL https://install.julialang.org | sh`
     b. Install the Julia dependencies: `julia --project=. -e 'using Pkg; Pkg.instantiate()'`
 4. Edit `config.yaml` to your liking (e.g. specify the problems and libraries to benchmark).
-5. Run `snakemake --cores 'all'`. This will run all the benchmarks and take a while.
-6. View the plotted results in, for example, `facility_problem/results/benchmark_results.png`
+5. Run `python run.py`. This will run all the benchmarks and take a while.
+6. Run `python plot.py` to generate the plots.
+6. View the plotted results in, for example, `results/facility_location/`
 
 ### Running energy planning benchmark
 

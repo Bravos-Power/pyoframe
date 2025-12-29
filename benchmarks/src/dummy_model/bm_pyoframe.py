@@ -12,7 +12,7 @@ class Bench(PyoframeBenchmark):
         ibyj = Set(i=range(N), j=range(N))
         m.x = Variable(ibyj)
         m.y = Variable(ibyj)
-        m.con1 = m.x - m.y >= Set(i=range(N)).to_expr().add_dim("j")
+        m.con1 = m.x - m.y >= Set(i=range(N)).to_expr().over("j")
         m.con2 = m.x + m.y >= 0
         m.minimize = sum(2 * m.x) + sum(m.y)
         return m
