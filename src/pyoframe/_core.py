@@ -360,6 +360,13 @@ class BaseOperableBlock(BaseBlock):
         """
         return self.to_expr() * (1 / other)
 
+    def __rtruediv__(self, other):
+        # This just improves error messages when trying to divide by a Set or Variable.
+        # When dividing by an Expression, see the Expression.__rtruediv__ method.
+        raise PyoframeError(
+            f"Cannot divide by '{self.name}' because it is not a number or parameter."
+        )
+
     def __rsub__(self, other):
         """Supports right subtraction.
 
@@ -1159,6 +1166,21 @@ class Expression(BaseOperableBlock):
         other = other.to_expr()
         self._learn_from_other(other)
         return multiply(self, other)
+
+    def __rtruediv__(self, other):
+        """Support dividing by an expression when that expression is a constant."""
+        assert isinstance(other, (int, float)), (
+            f"Expected a number not a {type(other)} when dividing by an expression."
+        )
+        if self.degree() != 0:
+            raise PyoframeError(
+                f"Cannot divide by '{self.name}' because denominators cannot contain variables."
+            )
+
+        return self._new(
+            self.data.with_columns((pl.lit(other) / pl.col(COEF_KEY)).alias(COEF_KEY)),
+            name=f"({other} / {self.name})",
+        )
 
     def to_expr(self) -> Expression:
         """Returns the expression itself."""
