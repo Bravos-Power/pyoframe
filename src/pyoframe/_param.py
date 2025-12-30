@@ -14,14 +14,14 @@ def Param(
 ) -> Expression:
     """Creates a model parameter, i.e. an [Expression][pyoframe.Expression] that doesn't involve any variables.
 
-    Parameters can be created from DataFrames, CSV or Parquet files, dictionaries, or Pandas Series.
+    A Parameter can be created from a DataFrame, CSV file, Parquet file, data dictionary, or a Pandas Series.
 
-    !!! note
+    !!! info "`Param` is a function, not a class"
         Technically, `Param(data)` is a function that returns an [Expression][pyoframe.Expression], not a class.
         However, for consistency with other modeling frameworks, we provide it as a class-like function (i.e. an uppercase function).
 
     !!! tip "Smart naming"
-        If a Param is not given a name (i.e. it is not assigned to a model: `m.my_name = Param(...)`),
+        If a Param is not given a name (i.e. if it is not assigned to a model: `m.my_name = Param(...)`),
         then its [name][pyoframe._model_element.BaseBlock.name] is inferred from the name of the column in `data` that contains the parameter values.
         This makes debugging models with inline parameters easier.
 
@@ -30,7 +30,7 @@ def Param(
 
             If `data` is a polars or pandas `DataFrame`, the last column will be treated as the values of the parameter, and all other columns as labels.
 
-            If `data` is a string or `Path`, it will be interpreted as a path to a CSV or Parquet file that will be read and used as a `DataFrame`.
+            If `data` is a string or `Path`, it will be interpreted as a path to a CSV or Parquet file that will be read and used as a `DataFrame`. The file extension must be `.csv` or `.parquet`.
 
             If `data` is a `pandas.Series`, the index(es) will be treated as columns for labels and the series values as the parameter values.
 
@@ -41,7 +41,7 @@ def Param(
 
     Examples:
         >>> m = pf.Model()
-        >>> m.fixed_cost = Param({"plant": ["A", "B"], "cost": [1000, 1500]})
+        >>> m.fixed_cost = pf.Param({"plant": ["A", "B"], "cost": [1000, 1500]})
         >>> m.fixed_cost
         <Expression (parameter) height=2 terms=2>
         ┌───────┬────────────┐
@@ -52,9 +52,9 @@ def Param(
         │ B     ┆ 1500       │
         └───────┴────────────┘
 
-        Since `Param` simply returns an Expression, you can use it in operations as usual:
+        Since `Param` simply returns an Expression, you can use it in building larger expressions as usual:
 
-        >>> m.variable_cost = Param(
+        >>> m.variable_cost = pf.Param(
         ...     pl.DataFrame({"plant": ["A", "B"], "cost": [50, 60]})
         ... )
         >>> m.total_cost = m.fixed_cost + m.variable_cost
@@ -80,7 +80,9 @@ def Param(
         elif data.suffix.lower() in {".parquet"}:
             data = pl.read_parquet(data)
         else:
-            raise NotImplementedError(f"Unsupported file format: {data.suffix}")
+            raise NotImplementedError(
+                f"Could not create parameter. Unsupported file format: {data.suffix}"
+            )
 
     if not isinstance(data, pl.DataFrame):
         data = pl.DataFrame(data)
