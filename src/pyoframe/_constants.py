@@ -141,19 +141,18 @@ class _Config:
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:
-            >>> import polars as pl
-            >>> population = pl.DataFrame(
+            >>> population = pf.Param(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Montreal"],
             ...         "pop": [2_731_571, 631_486, 1_704_694],
             ...     }
-            ... ).to_expr()
-            >>> population_influx = pl.DataFrame(
+            ... )
+            >>> population_influx = pf.Param(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Montreal"],
             ...         "influx": [100_000, 50_000, None],
             ...     }
-            ... ).to_expr()
+            ... )
 
             Normally, an error warns users that the two expressions have conflicting labels:
             >>> population + population_influx

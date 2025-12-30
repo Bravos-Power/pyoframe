@@ -31,14 +31,13 @@ import pyoframe as pf
 import polars as pl
 
 air_data = pl.DataFrame({"flight_no": ["A4543", "K937"], "emissions": [1.4, 2.4]})
-ground_data = pl.DataFrame(
-    {"flight_number": ["A4543", "K937"], "emissions": [0.02, 0.05]}
-)
 
 model = pf.Model()
 model.Fly = pf.Variable(air_data["flight_no"], vtype="binary")
 model.air_emissions = model.Fly * air_data
-model.ground_emissions = ground_data.to_expr()
+model.ground_emissions = pf.Param(
+    {"flight_number": ["A4543", "K937"], "emissions": [0.02, 0.05]}
+)
 -->
 
 ```pycon
@@ -127,19 +126,16 @@ If one of the two expressions in an addition has extras labels not present in th
 import pyoframe as pf
 import polars as pl
 
-air_data = pl.DataFrame(
+model = pf.Model()
+model.air_emissions = pf.Param(
     {
         "flight_no": ["A4543", "K937", "D2082", "D8432", "D1206"],
         "emissions": [1.4, 2.4, 4, 7.6, 4],
     }
 )
-ground_data = pl.DataFrame(
+model.ground_emissions = pf.Param(
     {"flight_no": ["A4543", "K937", "B3420"], "emissions": [0.02, 0.05, 0.001]}
 )
-
-model = pf.Model()
-model.air_emissions = air_data.to_expr()
-model.ground_emissions = ground_data.to_expr()
 -->
 
 Consider again [example 1](#example-1-catching-a-mistake) where we added air emissions and ground emissions.

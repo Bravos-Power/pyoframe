@@ -10,7 +10,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Config, Expression, Model, Set, Variable
+from pyoframe import Config, Expression, Model, Param, Set, Variable
 from pyoframe._arithmetic import PyoframeError
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, ExtrasStrategy
 
@@ -24,7 +24,7 @@ from .util import csvs_to_expr
 
 
 def test_add_expressions():
-    expr = pl.DataFrame({"value": [1]}).to_expr()
+    expr = Param({"value": [1]})
     result = expr + expr
     assert_frame_equal(
         result.data,
@@ -64,11 +64,9 @@ def test_add_expressions_with_vars_and_dims():
 
 
 def test_add_expression_with_over():
-    expr = pl.DataFrame({"value": [1]}).to_expr()
-    expr_with_dim = pl.DataFrame({"dim1": [1], "value": [1]}).to_expr()
-    expr_with_two_dim = pl.DataFrame(
-        {"dim1": [1], "dim2": ["a"], "value": [1]}
-    ).to_expr()
+    expr = Param({"value": [1]})
+    expr_with_dim = Param({"dim1": [1], "value": [1]})
+    expr_with_two_dim = Param({"dim1": [1], "dim2": ["a"], "value": [1]})
 
     with pytest.raises(
         PyoframeError,
@@ -98,7 +96,7 @@ def test_add_expression_with_over():
 def test_add_expression_with_vars_and_over(default_solver):
     m = Model(default_solver)
     m.v = Variable()
-    expr_with_dim = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
+    expr_with_dim = Param({"dim1": [1, 2], "value": [3, 4]})
     lhs = (1 + 2 * m.v).over("dim1")
     result = lhs + expr_with_dim
     expected_result = pl.DataFrame(
@@ -360,9 +358,9 @@ def test_add_expressions_with_dims_and_extras(default_solver):
 
 
 def test_three_way_add():
-    df1 = pl.DataFrame({"dim1": [1], "value": [1]}).to_expr()
-    df2 = pl.DataFrame({"dim1": [1, 2], "value": [3, 4]}).to_expr()
-    df3 = pl.DataFrame({"dim1": [1], "value": [5]}).to_expr()
+    df1 = Param({"dim1": [1], "value": [1]})
+    df2 = Param({"dim1": [1, 2], "value": [3, 4]})
+    df3 = Param({"dim1": [1], "value": [5]})
 
     with pytest.raises(
         PyoframeError,

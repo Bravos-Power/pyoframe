@@ -67,7 +67,7 @@ class Objective(Expression):
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
-            expr = expr.to_expr()
+            expr = expr.to_expr()  # TODO don't rely on monkey patch
         super().__init__(expr.data, name="objective")
         self._model = expr._model
         if self.dimensions is not None:

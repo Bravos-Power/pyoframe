@@ -13,9 +13,9 @@ _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 def solve_model(use_var_names):
     food = pl.read_csv(_input_dir / "foods.csv")
     nutrients = pl.read_csv(_input_dir / "nutrients.csv")
-    min_nutrient = nutrients.select(["category", "min"]).to_expr()
-    max_nutrient = nutrients.select(["category", "max"]).to_expr()
-    food_nutrients = pl.read_csv(_input_dir / "foods_to_nutrients.csv").to_expr()
+    min_nutrient = pf.Param(nutrients.select(["category", "min"]))
+    max_nutrient = pf.Param(nutrients.select(["category", "max"]))
+    food_nutrients = pf.Param(pl.read_csv(_input_dir / "foods_to_nutrients.csv"))
 
     m = pf.Model(solver_uses_variable_names=use_var_names)
     m.Buy = pf.Variable(food["food"], lb=0, ub=food[["food", "stock"]])

@@ -331,7 +331,7 @@ class BaseOperableBlock(BaseBlock):
             └──────┴────────────┘
         """
         if not isinstance(other, (int, float)):
-            other = other.to_expr()
+            other = other.to_expr()  # TODO don't rely on monkey patch
         return self.to_expr() + (-other)
 
     def __rmul__(self, other):
@@ -719,7 +719,7 @@ class Expression(BaseOperableBlock):
         If no dimensions are specified, the sum is taken over all of the expression's dimensions.
 
         Examples:
-            >>> expr = pl.DataFrame(
+            >>> expr = pf.Param(
             ...     {
             ...         "time": ["mon", "tue", "wed", "mon", "tue"],
             ...         "place": [
@@ -731,7 +731,7 @@ class Expression(BaseOperableBlock):
             ...         ],
             ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
             ...     }
-            ... ).to_expr()
+            ... )
             >>> expr
             <Expression (parameter) height=5 terms=5>
             ┌──────┬───────────┬────────────┐
@@ -790,7 +790,7 @@ class Expression(BaseOperableBlock):
         """Like [`Expression.sum`][pyoframe.Expression.sum], but the sum is taken over all dimensions *except* those specified in `by` (just like a `group_by().sum()` operation).
 
         Examples:
-            >>> expr = pl.DataFrame(
+            >>> expr = pf.Param(
             ...     {
             ...         "time": ["mon", "tue", "wed", "mon", "tue"],
             ...         "place": [
@@ -802,7 +802,7 @@ class Expression(BaseOperableBlock):
             ...         ],
             ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
             ...     }
-            ... ).to_expr()
+            ... )
             >>> expr
             <Expression (parameter) height=5 terms=5>
             ┌──────┬───────────┬────────────┐
@@ -880,13 +880,13 @@ class Expression(BaseOperableBlock):
 
         Examples:
             >>> import polars as pl
-            >>> pop_data = pl.DataFrame(
+            >>> pop_data = pf.Param(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Boston"],
             ...         "year": [2024, 2024, 2024],
             ...         "population": [10, 2, 8],
             ...     }
-            ... ).to_expr()
+            ... )
             >>> cities_and_countries = pl.DataFrame(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Boston"],
@@ -1010,11 +1010,8 @@ class Expression(BaseOperableBlock):
         """Filters this expression to only include the dimensions within the provided set.
 
         Examples:
-            >>> import pandas as pd
-            >>> general_expr = pd.DataFrame(
-            ...     {"dim1": [1, 2, 3], "value": [1, 2, 3]}
-            ... ).to_expr()
-            >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
+            >>> general_expr = pf.Param({"dim1": [1, 2, 3], "value": [1, 2, 3]})
+            >>> filter_expr = pf.Param({"dim1": [1, 3], "value": [5, 6]})
             >>> general_expr.within(filter_expr).data
             shape: (2, 3)
             ┌──────┬─────────┬───────────────┐
@@ -1075,11 +1072,10 @@ class Expression(BaseOperableBlock):
                 If `False`, returns the degree as an integer (0, 1, or 2).
 
         Examples:
-            >>> import pandas as pd
             >>> m = pf.Model()
             >>> m.v1 = pf.Variable()
             >>> m.v2 = pf.Variable()
-            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+            >>> expr = pf.Param({"dim1": [1, 2, 3], "value": [1, 2, 3]})
             >>> expr.degree()
             0
             >>> expr *= m.v1
@@ -1103,9 +1099,8 @@ class Expression(BaseOperableBlock):
         """Adds another expression or a constant to this expression.
 
         Examples:
-            >>> import pandas as pd
             >>> m = pf.Model()
-            >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
+            >>> add = pf.Param({"dim1": [1, 2, 3], "add": [10, 20, 30]})
             >>> m.v = Variable(add)
             >>> m.v + add
             <Expression (linear) height=3 terms=6>
@@ -1150,7 +1145,7 @@ class Expression(BaseOperableBlock):
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
-        other = other.to_expr()
+        other = other.to_expr()  # TODO don't rely on monkey patch
         self._learn_from_other(other)
         return add(self, other)
 
@@ -1163,7 +1158,7 @@ class Expression(BaseOperableBlock):
                 name=f"({other} * {self.name})",
             )
 
-        other = other.to_expr()
+        other: Expression = other.to_expr()  # TODO don't rely on monkey patch
         self._learn_from_other(other)
         return multiply(self, other)
 
@@ -2324,7 +2319,7 @@ class Variable(BaseOperableBlock):
                 assert len(indexing_sets) == 0, (
                     "Cannot specify both 'equals' and 'indexing_sets'"
                 )
-                equals = equals.to_expr()
+                equals = equals.to_expr()  # TODO don't rely on monkey patch
                 indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -2335,14 +2330,14 @@ class Variable(BaseOperableBlock):
         self._equals: Expression | None = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
-            lb: Expression = lb.to_expr()
+            lb: Expression = lb.to_expr()  # TODO don't rely on monkey patch
             if not self.dimensionless:
                 lb = lb.over(*self.dimensions)
             self._lb_expr, self.lb = lb, None
         else:
             self._lb_expr, self.lb = None, lb
         if ub is not None and not isinstance(ub, (float, int)):
-            ub = ub.to_expr()
+            ub = ub.to_expr()  # TODO don't rely on monkey patch
             if not self.dimensionless:
                 ub = ub.over(*self.dimensions)  # pyright: ignore[reportOptionalIterable]
             self._ub_expr, self.ub = ub, None

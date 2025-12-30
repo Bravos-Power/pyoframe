@@ -26,12 +26,12 @@ model.customers = model.x_axis * model.y_axis  # (1)!
 
 
 model.facility_position = pf.Variable(model.facilities, model.axis, lb=0, ub=1)
-model.customer_position_x = pd.DataFrame(
+model.customer_position_x = pf.Param(
     {"x": range(G), "x_pos": [step / (G - 1) for step in range(G)]}
-).to_expr()
-model.customer_position_y = pd.DataFrame(
+)
+model.customer_position_y = pf.Param(
     {"y": range(G), "y_pos": [step / (G - 1) for step in range(G)]}
-).to_expr()
+)
 
 model.max_distance = pf.Variable(lb=0)
 
