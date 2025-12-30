@@ -20,7 +20,7 @@ class Objective(Expression):
         >>> m.con = m.A + m.B <= 10
         >>> m.maximize = 2 * m.B + 4
         >>> m.maximize
-        <Objective terms=2 type=linear>
+        <Objective (linear) terms=2>
         2 B +4
 
         The objective value can be retrieved with from the solver once the model is solved using `.value`.
@@ -67,7 +67,7 @@ class Objective(Expression):
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
-            expr = expr.to_expr()
+            expr = expr.to_expr()  # TODO don't rely on monkey patch
         super().__init__(expr.data, name="objective")
         self._model = expr._model
         if self.dimensions is not None:

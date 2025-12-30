@@ -25,8 +25,4 @@ All the above classes (except those marked with an asterisk) can be imported via
 import pyoframe as pf
 ```
 
-Additionally, importing Pyoframe patches Pandas and Polars such that the following methods are available.
-
-- [polars.DataFrame.to_expr](./external/polars.DataFrame.to_expr.md)
-- [pandas.DataFrame.to_expr](./external/pandas.DataFrame.to_expr.md)
-- [pandas.Series.to_expr](./external/pandas.Series.to_expr.md)
+Additionally, importing Pyoframe patches Pandas and Polars such that calling for `df.to_expr()` is equivalent to `pf.Param(df)`. This also works for pandas Series.

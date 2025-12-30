@@ -8,6 +8,6 @@ nav:
     - learn/advanced-concepts
     - learn/migrate
   - examples
-  - reference
+  - Reference API: reference
   - why-pyoframe/index.md
   - contribute

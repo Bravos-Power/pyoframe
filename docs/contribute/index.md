@@ -23,24 +23,38 @@ pip install --editable .[dev,docs]
 pre-commit install
 ```
 
-4. Run `pytest` to make sure everything is working. The only errors you should see are those related to a solver not being installed. If not, [open an issue](https://github.com/Bravos-Power/pyoframe/issues/new)!
+## Running the test suite
+
+Run `pytest` to execute the test suite. (If you'd like to view coverage information add the flag `--cov` and then run `coverage html`.)
+
+The only errors you should see when running the test suite are those related to a solver not being installed.
+
+Pyoframe has several types of tests.
+
+1. Your typical unit tests under the `tests/` folder.
+
+2. Integration tests in `tests/test_examples.py`. These tests will run all the models in `tests/examples` and make sure that your changes haven't altered the model results (stored under `tests/examples/<model>/results`). In the rare cases where you _want_ the model results to change (e.g. if you've changed the model), you can regenerate the results using `python -m tests.test_examples`.
+
+3. Doctests in the docstrings of the source code (`src/`).
+
+4. Documentation tests (in `docs/`). All Python code blocks in the documentation are run to ensure the documentation doesn't become outdated. This is done using Sybil. Refer to the [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks) to learn how to create setup code or skip code blocks you don't wish to test.
+
+!!! warning "Non-breaking spaces"
+    Be aware that Pyoframe uses non-breaking spaces to improve the formatting of expressions. If your Sybil tests are unexpectedly failing, make sure that the expected output contains all the needed non-breaking spaces.
 
 ## Writing documentation
 
-We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please follow the [Google docstring style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) and the [Google style guide](https://developers.google.com/style). Additionally, all Python code blocks in Markdown files are tested using Sybil. To properly setup the tests refer to this [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks).
+You can preview the documentation website by running `mkdocs serve` and navigating to [`http://127.0.0.1:8000/pyoframe/`](http://127.0.0.1:8000/pyoframe/).
 
-## Helpful commands
+We use [Material Docs](https://squidfunk.github.io/mkdocs-material/) for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please follow the [Google docstring style](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html) and the [Google style guide](https://developers.google.com/style). We use Mike to allow readers to view the documentation for previous releases (preview available via `mike serve`).
 
-- `pytest`: Runs all the tests. If you'd like to generate coverage information just add the flag `--cov`.
-- `mkdocs serve`: Generates the documentation locally. Navigate to [`http://127.0.0.1:8000/pyoframe/`](http://127.0.0.1:8000/pyoframe/) to check it out.
-- `coverage html`: Generate a webpage to view the coverage information generated after having run `pytest --cov`.
-- `python -m tests.test_examples`: Regenerate the files in the `results` folder of an example (e.g. `tests/examples/sudoku/results/**`). You should only run this if the result files need to be regenerated, for example, if model variable names have changed.
-- `ruff check`: Ensures all the linter tests pass
-- `ruff format`: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)
-- `doccmd --language=python --no-pad-file --command="ruff format" docs/`: to format the code in the documentation.
-- `mike serve` to see a local version of the documentation with the version selector.
+## Linting and formatting
+
+We use Ruff for linting and formatting. The pre-commit hooks will run `ruff format` on commit. You should also make sure `ruff check` returns no errors before submitting a PR. To format code blocks in the documentation run: `doccmd --language=python --no-pad-file --command="ruff format" docs/`.
 
 ## Additional tips
+
+I recommend skimming or reading the [Internal Details](../learn/advanced-concepts/internals.md) page for some background on how Pyoframe works.
 
 For core developers:
 

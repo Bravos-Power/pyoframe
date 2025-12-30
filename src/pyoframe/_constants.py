@@ -141,19 +141,18 @@ class _Config:
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:
-            >>> import polars as pl
-            >>> population = pl.DataFrame(
+            >>> population = pf.Param(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Montreal"],
             ...         "pop": [2_731_571, 631_486, 1_704_694],
             ...     }
-            ... ).to_expr()
-            >>> population_influx = pl.DataFrame(
+            ... )
+            >>> population_influx = pf.Param(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Montreal"],
             ...         "influx": [100_000, 50_000, None],
             ...     }
-            ... ).to_expr()
+            ... )
 
             Normally, an error warns users that the two expressions have conflicting labels:
             >>> population + population_influx
@@ -174,7 +173,7 @@ class _Config:
             But if `Config.disable_extras_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
             >>> pf.Config.disable_extras_checks = True
             >>> population + population_influx
-            <Expression height=3 terms=3 type=constant>
+            <Expression (parameter) height=3 terms=3>
             ┌───────────┬────────────┐
             │ city      ┆ expression │
             │ (3)       ┆            │
@@ -228,11 +227,11 @@ class _Config:
             >>> m.X = pf.Variable()
             >>> expr = 100.752038759 * m.X
             >>> expr
-            <Expression terms=1 type=linear>
+            <Expression (linear) terms=1>
             100.752 X
             >>> pf.Config.float_to_str_precision = None
             >>> expr
-            <Expression terms=1 type=linear>
+            <Expression (linear) terms=1>
             100.752038759 X
         """
         return self._settings.float_to_str_precision
@@ -280,7 +279,7 @@ class _Config:
             >>> m = pf.Model()
             >>> m.X = pf.Variable(pf.Set(x=range(100)), pf.Set(y=range(100)))
             >>> m.X.sum("y")
-            <Expression height=100 terms=10000 type=linear>
+            <Expression (linear) height=100 terms=10000>
             ┌───────┬───────────────────────────────┐
             │ x     ┆ expression                    │
             │ (100) ┆                               │
@@ -298,7 +297,7 @@ class _Config:
             │ 99    ┆ X[99,0] + X[99,1] + X[99,2] … │
             └───────┴───────────────────────────────┘
             >>> m.X.sum()
-            <Expression terms=10000 type=linear>
+            <Expression (linear) terms=10000>
             X[0,0] + X[0,1] + X[0,2] …
         """
         return self._settings.print_max_terms

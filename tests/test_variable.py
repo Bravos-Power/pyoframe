@@ -6,7 +6,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Expression, Model, Set, Variable, VType
+from pyoframe import Expression, Model, Param, Set, Variable, VType
 
 
 def test_equals_param(solver):
@@ -66,3 +66,13 @@ def test_filter_variable(default_solver):
         result.to_str(return_df=True),
         pl.DataFrame([[2, "v[2]"]], schema=["dim1", "expression"], orient="row"),
     )
+
+
+def test_auto_broadcast(default_solver):
+    m = Model(default_solver)
+
+    val = Param({"dim1": [1, 2, 3], "value": [10, 20, 30]})
+    altern_dim = Set(dim2=["a", "b"])
+
+    m.v1 = Variable(altern_dim, val, lb=val)
+    m.v2 = Variable(altern_dim, val, ub=val)

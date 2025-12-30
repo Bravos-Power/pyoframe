@@ -1,4 +1,4 @@
-# Build a simple model
+# Solve a simple problem
 
 <!-- invisible-code-block: python
 import os
@@ -6,13 +6,13 @@ import os
 os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
-To start, you'll solve a simple optimization problem with Pyoframe.
+To start, you will solve a simple optimization problem with Pyoframe.
 
 !!! quote "Problem statement"
 
     Imagine you're a vegetarian hesitating between tofu and chickpeas as
     a source of protein for tomorrow's dinner. You'd like to spend as little money as
-    possible while still consuming at least 50 grams of protein. How many blocks
+    possible while still consuming at least 50g of protein. How many blocks
     of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein) should you buy?
 
 Click on the :material-plus-circle: buttons below to understand the code, and then run it on your computer.
@@ -58,4 +58,4 @@ Tofu blocks: 2
 Chickpea cans: 1
 ```
 
-On the next page, you'll [integrate DataFrames](./example-with-dimensions.md) into your solution.
+On the [next page](./example-with-dimensions.md), you'll resolve this problem but instead of hard-coded values, you'll use DataFrames, Pyoframe's secret sauce!

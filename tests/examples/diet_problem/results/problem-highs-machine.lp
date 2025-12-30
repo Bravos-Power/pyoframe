@@ -1,21 +1,21 @@
 \ File written by HiGHS .lp file handler
 min
- obj: +2.49 col_ekk_0 +2.89 col_ekk_1 +1.5 col_ekk_2 +1.89 col_ekk_3 +2.09 col_ekk_4 +1.99 col_ekk_5 +2.49 col_ekk_6 +0.89 col_ekk_7 +1.59 col_ekk_8
+ obj: +2.49 c_ekk0 +2.89 c_ekk1 +1.5 c_ekk2 +1.89 c_ekk3 +2.09 c_ekk4 +1.99 c_ekk5 +2.49 c_ekk6 +0.89 c_ekk7 +1.59 c_ekk8
 st
- con1: -40 ONE +1 col_ekk_0 <= +0
- con2: -30 ONE +1 col_ekk_1 <= +0
- con3: -20 ONE +1 col_ekk_2 <= +0
- con4: -20 ONE +1 col_ekk_3 <= +0
- con5: -40 ONE +1 col_ekk_4 <= +0
- con6: -50 ONE +1 col_ekk_5 <= +0
- con7: -60 ONE +1 col_ekk_6 <= +0
- con8: -6.8 ONE +1 col_ekk_7 <= +0
- con9: -80 ONE +1 col_ekk_8 <= +0
- con10: +1800 ONE -410 col_ekk_0 -420 col_ekk_1 -560 col_ekk_2 -380 col_ekk_3 -320 col_ekk_4 -320 col_ekk_5 -320 col_ekk_6 -100 col_ekk_7 -330 col_ekk_8 <= +0
- con11: +91 ONE -24 col_ekk_0 -32 col_ekk_1 -20 col_ekk_2 -4 col_ekk_3 -12 col_ekk_4 -15 col_ekk_5 -31 col_ekk_6 -8 col_ekk_7 -8 col_ekk_8 <= +0
- con12: -2200 ONE +410 col_ekk_0 +420 col_ekk_1 +560 col_ekk_2 +380 col_ekk_3 +320 col_ekk_4 +320 col_ekk_5 +320 col_ekk_6 +100 col_ekk_7 +330 col_ekk_8 <= +0
- con13: -65 ONE +26 col_ekk_0 +10 col_ekk_1 +32 col_ekk_2 +19 col_ekk_3 +10 col_ekk_4 +12 col_ekk_5 +12 col_ekk_6 +2.5 col_ekk_7 +10 col_ekk_8 <= +0
- con14: -1779 ONE +730 col_ekk_0 +1190 col_ekk_1 +1800 col_ekk_2 +270 col_ekk_3 +930 col_ekk_4 +820 col_ekk_5 +1230 col_ekk_6 +125 col_ekk_7 +180 col_ekk_8 <= +0
+ r0: -40 ONE +1 c_ekk0 <= +0
+ r1: -30 ONE +1 c_ekk1 <= +0
+ r2: -20 ONE +1 c_ekk2 <= +0
+ r3: -20 ONE +1 c_ekk3 <= +0
+ r4: -40 ONE +1 c_ekk4 <= +0
+ r5: -50 ONE +1 c_ekk5 <= +0
+ r6: -60 ONE +1 c_ekk6 <= +0
+ r7: -6.8 ONE +1 c_ekk7 <= +0
+ r8: -80 ONE +1 c_ekk8 <= +0
+ r9: +1800 ONE -410 c_ekk0 -420 c_ekk1 -560 c_ekk2 -380 c_ekk3 -320 c_ekk4 -320 c_ekk5 -320 c_ekk6 -100 c_ekk7 -330 c_ekk8 <= +0
+ r10: +91 ONE -24 c_ekk0 -32 c_ekk1 -20 c_ekk2 -4 c_ekk3 -12 c_ekk4 -15 c_ekk5 -31 c_ekk6 -8 c_ekk7 -8 c_ekk8 <= +0
+ r11: -2200 ONE +410 c_ekk0 +420 c_ekk1 +560 c_ekk2 +380 c_ekk3 +320 c_ekk4 +320 c_ekk5 +320 c_ekk6 +100 c_ekk7 +330 c_ekk8 <= +0
+ r12: -65 ONE +26 c_ekk0 +10 c_ekk1 +32 c_ekk2 +19 c_ekk3 +10 c_ekk4 +12 c_ekk5 +12 c_ekk6 +2.5 c_ekk7 +10 c_ekk8 <= +0
+ r13: -1779 ONE +730 c_ekk0 +1190 c_ekk1 +1800 c_ekk2 +270 c_ekk3 +930 c_ekk4 +820 c_ekk5 +1230 c_ekk6 +125 c_ekk7 +180 c_ekk8 <= +0
 bounds
  ONE = 1
 end

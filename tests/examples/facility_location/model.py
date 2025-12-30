@@ -3,8 +3,6 @@
 Inspired from the original JuMP paper.
 """
 
-import polars as pl
-
 import pyoframe as pf
 
 
@@ -19,12 +17,12 @@ def solve_model(use_var_names=False, G=4, F=3):
     model.customers = model.x_axis * model.y_axis
 
     model.facility_position = pf.Variable(model.facilities, model.axis, lb=0, ub=1)
-    model.customer_position_x = pl.DataFrame(
+    model.customer_position_x = pf.Param(
         {"x": g_range, "x_pos": [step / (G - 1) for step in g_range]}
-    ).to_expr()
-    model.customer_position_y = pl.DataFrame(
+    )
+    model.customer_position_y = pf.Param(
         {"y": g_range, "y_pos": [step / (G - 1) for step in g_range]}
-    ).to_expr()
+    )
 
     model.max_distance = pf.Variable(lb=0)
 
