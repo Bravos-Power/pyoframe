@@ -578,7 +578,7 @@ class Set(BaseOperableBlock):
     def __repr__(self):
         header = get_obj_repr(
             self,
-            "unnamed" if self.name == "unnamed_set" else self.name,
+            "'unnamed'" if self.name == "'unnamed_set'" else self.name,
             height=self.data.height,
         )
         data = self._add_shape_to_columns(self.data)
@@ -1097,7 +1097,7 @@ class Expression(BaseOperableBlock):
         elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
             return "linear" if return_str else 1
         else:
-            return "constant" if return_str else 0
+            return "parameter" if return_str else 0
 
     def __add__(self, other):
         """Adds another expression or a constant to this expression.
@@ -1580,9 +1580,9 @@ class Expression(BaseOperableBlock):
         """Returns a string representation of the expression's header."""
         return get_obj_repr(
             self,
+            f"({self.degree(return_str=True)})",
             height=len(self) if self.dimensions else None,
             terms=self.terms,
-            type=self.degree(return_str=True),
         )
 
     def __repr__(self) -> str:
@@ -2211,7 +2211,7 @@ class Constraint(BaseBlock):
         return (
             get_obj_repr(
                 self,
-                self.name,
+                f"'{self.name}'",
                 height=len(self) if self.dimensions else None,
                 terms=len(self.lhs.data),
                 type=self.lhs.degree(return_str=True),
@@ -2550,7 +2550,7 @@ class Variable(BaseOperableBlock):
         result = (
             get_obj_repr(
                 self,
-                self.name,
+                f"'{self.name}'",
                 lb=self.lb,
                 ub=self.ub,
                 height=self.data.height if self.dimensions else None,

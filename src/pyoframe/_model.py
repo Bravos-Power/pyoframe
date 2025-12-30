@@ -417,7 +417,7 @@ class Model:
     def __repr__(self) -> str:
         return get_obj_repr(
             self,
-            self.name,
+            f"'{self.name}'",
             vars=len(self.variables),
             constrs=len(self.constraints),
             has_objective=self.has_objective,
