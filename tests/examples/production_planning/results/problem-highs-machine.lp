@@ -1,9 +1,9 @@
 \ File written by HiGHS .lp file handler
 max
- obj: +5 col_ekk_0 +3.5 col_ekk_1 +4.5 col_ekk_2
+ obj: +5 c_ekk0 +3.5 c_ekk1 +4.5 c_ekk2
 st
- con1: -540 ONE +3 col_ekk_0 +5 col_ekk_1 +4 col_ekk_2 <= +0
- con2: -480 ONE +6 col_ekk_0 +1 col_ekk_1 +3 col_ekk_2 <= +0
+ r1: -540 ONE +3 c_ekk0 +5 c_ekk1 +4 c_ekk2 <= +0
+ r2: -480 ONE +6 c_ekk0 +1 c_ekk1 +3 c_ekk2 <= +0
 bounds
  ONE = 1
 end
