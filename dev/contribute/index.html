@@ -2028,6 +2028,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#running-the-test-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running the test suite
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-documentation" class="md-nav__link">
     <span class="md-ellipsis">
       Writing documentation
@@ -2037,9 +2046,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#helpful-commands" class="md-nav__link">
+  <a href="#linting-and-formatting" class="md-nav__link">
     <span class="md-ellipsis">
-      Helpful commands
+      Linting and formatting
     </span>
   </a>
   
@@ -2109,24 +2118,32 @@
 <div class="language-console highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="go">pre-commit install</span>
 </span></code></pre></div></p>
 </li>
+</ol>
+<h2 id="running-the-test-suite">Running the test suite</h2>
+<p>Run <code>pytest</code> to execute the test suite. (If you'd like to view coverage information add the flag <code>--cov</code> and then run <code>coverage html</code>.)</p>
+<p>The only errors you should see when running the test suite are those related to a solver not being installed.</p>
+<p>Pyoframe has several types of tests.</p>
+<ol>
 <li>
-<p>Run <code>pytest</code> to make sure everything is working. The only errors you should see are those related to a solver not being installed. If not, <a href="https://github.com/Bravos-Power/pyoframe/issues/new">open an issue</a>!</p>
+<p>Your typical unit tests under the <code>tests/</code> folder.</p>
+</li>
+<li>
+<p>Integration tests in <code>tests/test_examples.py</code>. These tests will run all the models in <code>tests/examples</code> and make sure that your changes haven't altered the model results (stored under <code>tests/examples/&lt;model&gt;/results</code>). In the rare cases where you <em>want</em> the model results to change (e.g. if you've changed the model), you can regenerate the results using <code>python -m tests.test_examples</code>.</p>
+</li>
+<li>
+<p>Doctests in the docstrings of the source code (<code>src/</code>).</p>
+</li>
+<li>
+<p>Documentation tests (in <code>docs/</code>). All Python code blocks in the documentation are run to ensure the documentation doesn't become outdated. This is done using Sybil. Refer to the <a href="https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks">Sybil documentation</a> to learn how to create setup code or skip code blocks you don't wish to test.</p>
 </li>
 </ol>
 <h2 id="writing-documentation">Writing documentation</h2>
-<p>We use <a href="https://squidfunk.github.io/mkdocs-material/">Material Docs</a> for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please follow the <a href="https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google docstring style</a> and the <a href="https://developers.google.com/style">Google style guide</a>. Additionally, all Python code blocks in Markdown files are tested using Sybil. To properly setup the tests refer to this <a href="https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks">Sybil documentation</a>.</p>
-<h2 id="helpful-commands">Helpful commands</h2>
-<ul>
-<li><code>pytest</code>: Runs all the tests. If you'd like to generate coverage information just add the flag <code>--cov</code>.</li>
-<li><code>mkdocs serve</code>: Generates the documentation locally. Navigate to <a href="http://127.0.0.1:8000/pyoframe/"><code>http://127.0.0.1:8000/pyoframe/</code></a> to check it out.</li>
-<li><code>coverage html</code>: Generate a webpage to view the coverage information generated after having run <code>pytest --cov</code>.</li>
-<li><code>python -m tests.test_examples</code>: Regenerate the files in the <code>results</code> folder of an example (e.g. <code>tests/examples/sudoku/results/**</code>). You should only run this if the result files need to be regenerated, for example, if model variable names have changed.</li>
-<li><code>ruff check</code>: Ensures all the linter tests pass</li>
-<li><code>ruff format</code>: Ensures the code is properly formatted (this is run upon commit if you've installed the pre-commit hooks)</li>
-<li><code>doccmd --language=python --no-pad-file --command="ruff format" docs/</code>: to format the code in the documentation.</li>
-<li><code>mike serve</code> to see a local version of the documentation with the version selector.</li>
-</ul>
+<p>You can preview the documentation website by running <code>mkdocs serve</code> and navigating to <a href="http://127.0.0.1:8000/pyoframe/"><code>http://127.0.0.1:8000/pyoframe/</code></a>.</p>
+<p>We use <a href="https://squidfunk.github.io/mkdocs-material/">Material Docs</a> for documentation with several plugins to enable features like automatically compiling the docstrings into the reference API. Please follow the <a href="https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google docstring style</a> and the <a href="https://developers.google.com/style">Google style guide</a>. We use Mike to allow readers to view the documentation for previous releases (preview available via <code>mike serve</code>).</p>
+<h2 id="linting-and-formatting">Linting and formatting</h2>
+<p>We use Ruff for linting and formatting. The pre-commit hooks will run <code>ruff format</code> on commit. You should also make sure <code>ruff check</code> returns no errors before submitting a PR. To format code blocks in the documentation run: <code>doccmd --language=python --no-pad-file --command="ruff format" docs/</code>.</p>
 <h2 id="additional-tips">Additional tips</h2>
+<p>I recommend skimming or reading the <a href="../learn/advanced-concepts/internals/">Internal Details</a> page for some background on how Pyoframe works.</p>
 <p>For core developers:</p>
 <ul>
 <li>If you use <code>.unique</code>, <code>.join</code>, <code>.sort</code>, or <code>.group_by</code> on a Polars dataframe, make sure to set the <code>maintain_order</code> parameter appropriately (typically, <code>maintain_order=Config.maintain_order</code>).</li>
@@ -2157,7 +2174,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 24, 2025 21:35:57 UTC">September 24, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 03:56:39 UTC">December 30, 2025</span>
   </span>
 
     
