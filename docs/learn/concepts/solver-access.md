@@ -27,6 +27,7 @@ Pyoframe supports a set of [standard attributes](https://metab0t.github.io/PyOpt
 Every solver has a set of parameters that you can read or set using `model.params.<your-param>`.
 
 === "Gurobi"
+
     Refer to the list of [Gurobi parameters](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html).
     
     ```python
@@ -36,6 +37,7 @@ Every solver has a set of parameters that you can read or set using `model.param
     ```
 
 === "COPT"
+
     Refer to the list of [COPT parameters](https://guide.coap.online/copt/en-doc/parameter.html).
     
     ```python
@@ -45,6 +47,7 @@ Every solver has a set of parameters that you can read or set using `model.param
     ```
 
 === "HiGHS"
+
     Refer to the list of [HiGHS options](https://ergo-code.github.io/HiGHS/stable/options/definitions/).
     
     ```python
@@ -54,6 +57,7 @@ Every solver has a set of parameters that you can read or set using `model.param
     ```
 
 === "Ipopt"
+
     Refer to the list of [Ipopt options](https://coin-or.github.io/Ipopt/OPTIONS.html).
     
     ```python
