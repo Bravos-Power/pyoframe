@@ -262,7 +262,7 @@ And the resulting `m.pay` Expression correctly incorporates the holiday bonus on
 
 ```pycon
 >>> m.pay
- <Expression (linear) height=5 terms=5>
+<Expression (linear) height=5 terms=5>
 ┌─────┬──────────────────────┐
 │ day ┆ expression           │
 │ (5) ┆                      │
@@ -273,6 +273,7 @@ And the resulting `m.pay` Expression correctly incorporates the holiday bonus on
 │ Thu ┆ 20 Hours_Worked[Thu] │
 │ Fri ┆ 30 Hours_Worked[Fri] │
 └─────┴──────────────────────┘
+
 ```
 
 Note that often, you can skip defining parameters because whenever a Pyoframe object is combined with a DataFrame, Pyoframe will automatically convert the DataFrame to a parameter Expression. For example, the following works just fine:
@@ -280,6 +281,7 @@ Note that often, you can skip defining parameters because whenever a Pyoframe ob
 ```pycon
 >>> m.bonus_pay = m.Hours_Worked * holidays * holiday_bonus
 >>> m.bonus_pay
+<Expression (linear) height=5 terms=5>
 ┌─────┬──────────────────────┐
 │ day ┆ expression           │
 │ (5) ┆                      │

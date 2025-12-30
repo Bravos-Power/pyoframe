@@ -37,7 +37,7 @@ dev = [
     "polars>=1.32.3",       # constrain since previous versions have changes that break testing
     "pytest==8.4.1",
     "pytest-cov==6.2.1",
-    "sybil[pytest]==9.2.0", # allows running tests on documentation code
+    "sybil[pytest]==9.3.0", # allows running tests on documentation code
     "pre-commit==4.3.0",    # pre-commit hooks
     "gurobipy==12.0.3",     # used for testing against the gurobi library
     "coverage==7.10.6",     # code coverage
