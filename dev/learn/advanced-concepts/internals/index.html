@@ -1327,8 +1327,6 @@
       
         
       
-        
-      
     
     
     
@@ -1382,6 +1380,8 @@
   
     
     
+      
+        
       
         
       
@@ -1544,6 +1544,29 @@
   
   <span class="md-ellipsis">
     Objective
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/public/Param/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Param
     
   </span>
   
@@ -1791,10 +1814,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1816,7 +1835,7 @@
   
   
   <span class="md-ellipsis">
-    External methods
+    Types
     
   </span>
   
@@ -1826,130 +1845,6 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_4">
-            <span class="md-nav__icon md-icon"></span>
-            External methods
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/external/polars.DataFrame.to_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    polars.DataFrame.to_expr
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/external/pandas.DataFrame.to_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    pandas.DataFrame.to_expr
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/external/pandas.Series.to_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    pandas.Series.to_expr
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    Types
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
             <span class="md-nav__icon md-icon"></span>
             Types
           </label>
@@ -2163,8 +2058,7 @@
 
 
 <h1 id="internal-details">Internal details</h1>
-<p>Pyoframe's inner workings involve a few tricks that you should be aware of
-if you wish to modify Pyoframe's internal code.</p>
+<p>Pyoframe's inner workings involve a few tricks that you should be aware of if you wish to contribute to Pyoframe's code base.</p>
 <h2 id="the-zero-variable">The zero variable</h2>
 <p>Whenever a <a class="autorefs autorefs-internal" href="../../../reference/public/Model/#pyoframe.Model">Model</a> is instantiated, Pyoframe immediately
 creates a variable whose value is fixed to <code>1</code> and has a variable id of <code>0</code> — <em>the Zero Variable</em>.
@@ -2174,7 +2068,8 @@ This eliminates the need to separately track
 constant terms and also simplifies the <a href="#quadratics">handling of quadratics</a>.</p>
 <h2 id="quadratics">Quadratics</h2>
 <p>Internally, <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expression</a> is used to represent both linear and quadratic mathematical expressions. When a quadratic expression is formed, column <code>__quadratic_variable_id</code> is added to <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;DataFrame&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseBlock/#pyoframe._model_element.BaseBlock.data">Expression.data</a>. If an expression's quadratic terms happen to cancel out (e.g. <code>(ab + c) - ab</code>), this column is automatically removed.</p>
-<p>Column <code>__quadratic_variable_id</code> records the ID of the <em>second</em> variable in a quadratic term (the <code>b</code> in <code>3ab</code>). For linear terms, which have no second variable, this column contains the <a href="#the-zero-variable">Zero Variable</a>. Quadratic terms are always stored such that the first term's variable ID (in column <code>__variable_id</code>) is greater or equal to the second term's variable id (in column <code>__quadratic_variable_id</code>). For example, <code>var_7 * var_8</code> would be rearranged and stored as <code>var_8 * var_7</code>. This helps simplify expressions and provides a useful guarantee: If the variable in the first column (<code>__variable_id</code>) is the Zero Variable (<code>var_0</code>) we know the variable in the second column must also be the Zero Variable and, thus, the term must be a constant.</p>
+<p>Column <code>__quadratic_variable_id</code> records the ID of the <em>second</em> variable in a quadratic term (the <code>b</code> in <code>3ab</code>). For linear terms, which have no second variable, this column contains the <a href="#the-zero-variable">Zero Variable</a>.</p>
+<p>Quadratic terms are always stored such that the first term's variable ID (in column <code>__variable_id</code>) is greater or equal to the second term's variable id (in column <code>__quadratic_variable_id</code>). For example, <code>var_7 * var_8</code> would be rearranged and stored as <code>var_8 * var_7</code>. This helps simplify expressions and provides a useful guarantee: If the variable in the first column (<code>__variable_id</code>) is the Zero Variable (<code>var_0</code>) we know the variable in the second column must also be the Zero Variable and, thus, the term must be a constant.</p>
 <h2 id="division">Division</h2>
 <p>Divisions are rearranged into multiplications when possible. Specifically, <code>a / b</code> is computed as <code>a * (1 / b)</code> (see <code>BaseOperableBlock.__truediv__</code>) except for the special case where <code>a</code> is a <code>float</code> or <code>int</code>. In that case, a Polars operation is used to compute the division (see <code>Expression.__rtruediv__</code>).</p>
 
@@ -2199,7 +2094,7 @@ constant terms and also simplifies the <a href="#quadratics">handling of quadrat
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 29, 2025 04:09:57 UTC">December 29, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 22:20:54 UTC">December 30, 2025</span>
   </span>
 
     

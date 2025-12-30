@@ -825,30 +825,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#dataframeto_expr" class="md-nav__link">
-    <span class="md-ellipsis">
-      DataFrame.to_expr()
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DataFrame.to_expr()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1342,8 +1318,6 @@
       
         
       
-        
-      
     
     
     
@@ -1397,6 +1371,8 @@
   
     
     
+      
+        
       
         
       
@@ -1559,6 +1535,29 @@
   
   <span class="md-ellipsis">
     Objective
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/public/Param/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Param
     
   </span>
   
@@ -1806,10 +1805,6 @@
       
         
       
-        
-      
-        
-      
     
     
     
@@ -1831,7 +1826,7 @@
   
   
   <span class="md-ellipsis">
-    External methods
+    Types
     
   </span>
   
@@ -1841,130 +1836,6 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_4">
-            <span class="md-nav__icon md-icon"></span>
-            External methods
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/external/polars.DataFrame.to_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    polars.DataFrame.to_expr
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/external/pandas.DataFrame.to_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    pandas.DataFrame.to_expr
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../reference/external/pandas.Series.to_expr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    pandas.Series.to_expr
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    Types
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
             <span class="md-nav__icon md-icon"></span>
             Types
           </label>
@@ -2134,30 +2005,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#dataframeto_expr" class="md-nav__link">
-    <span class="md-ellipsis">
-      DataFrame.to_expr()
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="DataFrame.to_expr()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2200,91 +2047,6 @@
 <p>Pyoframe has a few special functions that make working with dataframes easy and intuitive. Here they are:</p>
 <h2 id="sum-and-sum_by"><code>sum</code> and <code>sum_by</code></h2>
 <h2 id="expressionmap"><code>Expression.map()</code></h2>
-<h2 id="dataframeto_expr"><code>DataFrame.to_expr()</code></h2>
-<div class="admonition abstract">
-<p class="admonition-title">Summary</p>
-<p><a href="../../../reference/external/pandas.DataFrame.to_expr/"><code>pandas.DataFrame.to_expr()</code></a> and <a href="../../../reference/external/polars.DataFrame.to_expr/"><code>polars.DataFrame.to_expr()</code></a> allow users to manually convert their DataFrames to Pyoframe <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expressions</a> when Pyoframe is unable to perform an automatic conversation.</p>
-</div>
-<p>Pyoframe conveniently allows users to use <a href="https://docs.pola.rs/api/python/stable/reference/dataframe/index.html">Polars DataFrames</a> and <a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html">Pandas DataFrames</a> in their mathematical expressions. To do so, Pyoframe automatically detects these DataFrames and converts them to Pyoframe <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expressions</a> whenever there is a mathematical operation (e.g., <code>*</code>, <code>-</code>, <code>+</code>) involving at least one Pyoframe object (e.g. <a class="autorefs autorefs-internal" href="../../../reference/public/Variable/#pyoframe.Variable">Variable</a>, <a class="autorefs autorefs-internal" href="../../../reference/public/Set/#pyoframe.Set">Set</a>, <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expression</a>, etc.).</p>
-<p>However, if <strong>neither</strong> the left or right terms of a mathematical operation is a Pyoframe object, Pyoframe will not automatically convert DataFrames<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">1</a></sup>. In these situations, users can manually convert their DataFrames to Pyoframe expressions using <code>.to_expr()</code>.</p>
-<p>Additionally, users should use <code>.to_expr()</code> whenever they wish to use <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over">over</a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras">drop_extras</a>, or <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras">keep_extras</a> on a DataFrame.</p>
-<div class="admonition info">
-<p class="admonition-title">Under the hood</p>
-<p>How is <code>.to_expr()</code> a valid Pandas and Polars method? <code>import pyoframe</code> causes Pyoframe to <a href="https://stackoverflow.com/questions/5626193/what-is-monkey-patching">monkey patch</a> the Pandas and Polars libraries. One of the patches adds the <code>.to_expr()</code> method to both <code>pandas.DataFrame</code> and <code>polars.DataFrame</code> (see <a href="https://github.com/Bravos-Power/pyoframe/tree/main/src/pyoframe"><code>monkey_patch.py</code></a>).</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Working with Pandas Series</p>
-<p>You can call <code>.to_expr()</code> on a Pandas Series to produce an expression where the labels will be determined from the Series' index.</p>
-</div>
-<h3 id="example">Example</h3>
-<p>Consider the following scenario where we have some population data on yearly births and deaths, as well as an immigration variable.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">population_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="nb">dict</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">],</span> <span class="n">births</span><span class="o">=</span><span class="p">[</span><span class="mf">1e6</span><span class="p">,</span> <span class="mf">1.1e6</span><span class="p">],</span> <span class="n">deaths</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">1.2e6</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.4e6</span><span class="p">])</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">model</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">model</span><span class="o">.</span><span class="n">immigration</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">]))</span>
-</span></code></pre></div>
-<p>Now, saw we wanted an expression representing the total yearly population change. The following works just fine:</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="gp">... </span>    <span class="n">model</span><span class="o">.</span><span class="n">immigration</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="gp">... </span>    <span class="o">+</span> <span class="n">population_data</span><span class="p">[[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;births&quot;</span><span class="p">]]</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="gp">... </span>    <span class="o">+</span> <span class="n">population_data</span><span class="p">[[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;deaths&quot;</span><span class="p">]]</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="gp">... </span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="go">&lt;Expression height=2 terms=4 type=linear&gt;</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="go">┌──────┬───────────────────────────┐</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="go">│ year ┆ expression                │</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="go">│ (2)  ┆                           │</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="go">╞══════╪═══════════════════════════╡</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="go">│ 2025 ┆ immigration[2025] -200000 │</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="go">│ 2026 ┆ immigration[2026] -300000 │</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="go">└──────┴───────────────────────────┘</span>
-</span></code></pre></div>
-<p>But, if we simply change the order of the terms in our addition, we get an error:</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="gp">... </span>    <span class="n">population_data</span><span class="p">[[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;births&quot;</span><span class="p">]]</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="gp">... </span>    <span class="o">+</span> <span class="n">population_data</span><span class="p">[[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;deaths&quot;</span><span class="p">]]</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="gp">... </span>    <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">immigration</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="gp">... </span><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="gt">Traceback (most recent call last):</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c">...</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="gr">ValueError</span>: <span class="n">Cannot create an expression with duplicate labels:</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="x">┌────────┬────────┬─────────┬───────────────┐</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="x">│ births ┆ deaths ┆ __coeff ┆ __variable_id │</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="x">│ ---    ┆ ---    ┆ ---     ┆ ---           │</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="x">│ f64    ┆ f64    ┆ i64     ┆ i32           │</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="x">╞════════╪════════╪═════════╪═══════════════╡</span>
-</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="x">│ null   ┆ null   ┆ 4050    ┆ 0             │</span>
-</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="x">│ null   ┆ null   ┆ 4052    ┆ 0             │</span>
-</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="x">└────────┴────────┴─────────┴───────────────┘.</span>
-</span></code></pre></div>
-<p>What happened? Since Python computes additions from left to right, the second re-arranged version failed because, in the first addition, neither operand is a Pyoframe object. As such, the addition is done by Pandas, not Pyoframe, which leads to unexpected results.</p>
-<p>How do we avoid these weird behaviors? Users can manually convert their DataFrames to Pyoframe expressions ahead of time with <code>.to_expr()</code>. For example:</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="gp">... </span>    <span class="n">population_data</span><span class="p">[[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;births&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="gp">... </span>    <span class="o">+</span> <span class="n">population_data</span><span class="p">[[</span><span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;deaths&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="gp">... </span>    <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">immigration</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="gp">... </span><span class="p">)</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="go">&lt;Expression height=2 terms=4 type=linear&gt;</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="go">┌──────┬─────────────────────────────┐</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="go">│ year ┆ expression                  │</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="go">│ (2)  ┆                             │</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="go">╞══════╪═════════════════════════════╡</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="go">│ 2025 ┆ -200000 + immigration[2025] │</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="go">│ 2026 ┆ -300000 + immigration[2026] │</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="go">└──────┴─────────────────────────────┘</span>
-</span></code></pre></div>
-<div class="footnote">
-<hr />
-<ol>
-<li id="fn:2">
-<p>After all, how could it? If a user decides to write code that adds two DataFrames together, Pyoframe shouldn't interfere.&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
-</ol>
-</div>
 
 
 
@@ -2307,7 +2069,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2025 20:08:19 UTC">September 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 22:20:54 UTC">December 30, 2025</span>
   </span>
 
     
