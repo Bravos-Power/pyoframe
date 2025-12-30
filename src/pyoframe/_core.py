@@ -169,7 +169,7 @@ class BaseOperableBlock(BaseBlock):
             └───────┴─────────┴──────────────────┘
 
             >>> m.v.rename({"city": "location"})
-            <Expression height=12 terms=12 type=linear>
+            <Expression (linear) height=12 terms=12>
             ┌───────┬──────────┬──────────────────┐
             │ hour  ┆ location ┆ expression       │
             │ (4)   ┆ (3)      ┆                  │
@@ -228,7 +228,7 @@ class BaseOperableBlock(BaseBlock):
             ...     ]
             ... )
             >>> m.v.pick(hour="06:00")
-            <Expression height=3 terms=3 type=linear>
+            <Expression (linear) height=3 terms=3>
             ┌─────────┬──────────────────┐
             │ city    ┆ expression       │
             │ (3)     ┆                  │
@@ -238,7 +238,7 @@ class BaseOperableBlock(BaseBlock):
             │ Paris   ┆ v[06:00,Paris]   │
             └─────────┴──────────────────┘
             >>> m.v.pick(hour="06:00", city="Toronto")
-            <Expression terms=1 type=linear>
+            <Expression (linear) terms=1>
             v[06:00,Toronto]
 
         See Also:
@@ -290,7 +290,7 @@ class BaseOperableBlock(BaseBlock):
             >>> m = pf.Model()
             >>> m.v = pf.Variable()
             >>> m.v**2
-            <Expression terms=1 type=quadratic>
+            <Expression (quadratic) terms=1>
             v * v
             >>> m.v**3
             Traceback (most recent call last):
@@ -320,7 +320,7 @@ class BaseOperableBlock(BaseBlock):
             >>> df = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]})
             >>> m.v = pf.Variable(df["dim1"])
             >>> m.v - df
-            <Expression height=3 terms=6 type=linear>
+            <Expression (linear) height=3 terms=6>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -331,7 +331,7 @@ class BaseOperableBlock(BaseBlock):
             └──────┴────────────┘
         """
         if not isinstance(other, (int, float)):
-            other = other.to_expr()
+            other = other.to_expr()  # TODO don't rely on monkey patch
         return self.to_expr() + (-other)
 
     def __rmul__(self, other):
@@ -348,7 +348,7 @@ class BaseOperableBlock(BaseBlock):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v / 2
-            <Expression height=3 terms=3 type=linear>
+            <Expression (linear) height=3 terms=3>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -374,7 +374,7 @@ class BaseOperableBlock(BaseBlock):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> 1 - m.v
-            <Expression height=3 terms=6 type=linear>
+            <Expression (linear) height=3 terms=6>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -578,7 +578,7 @@ class Set(BaseOperableBlock):
     def __repr__(self):
         header = get_obj_repr(
             self,
-            "unnamed" if self.name == "unnamed_set" else self.name,
+            "'unnamed'" if self.name == "unnamed_set" else f"'{self.name}'",
             height=self.data.height,
         )
         data = self._add_shape_to_columns(self.data)
@@ -652,7 +652,7 @@ class Expression(BaseOperableBlock):
         >>> m.Size = pf.Variable(df.index)
         >>> expr = df["cost"] * m.Time + df["cost"] * m.Size
         >>> expr
-        <Expression height=5 terms=10 type=linear>
+        <Expression (linear) height=5 terms=10>
         ┌──────┬──────┬──────────────────────────────┐
         │ item ┆ time ┆ expression                   │
         │ (2)  ┆ (3)  ┆                              │
@@ -698,7 +698,7 @@ class Expression(BaseOperableBlock):
 
         Examples:
             >>> pf.Expression.constant(5)
-            <Expression terms=1 type=constant>
+            <Expression (parameter) terms=1>
             5
         """
         return cls(
@@ -719,7 +719,7 @@ class Expression(BaseOperableBlock):
         If no dimensions are specified, the sum is taken over all of the expression's dimensions.
 
         Examples:
-            >>> expr = pl.DataFrame(
+            >>> expr = pf.Param(
             ...     {
             ...         "time": ["mon", "tue", "wed", "mon", "tue"],
             ...         "place": [
@@ -731,9 +731,9 @@ class Expression(BaseOperableBlock):
             ...         ],
             ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
             ...     }
-            ... ).to_expr()
+            ... )
             >>> expr
-            <Expression height=5 terms=5 type=constant>
+            <Expression (parameter) height=5 terms=5>
             ┌──────┬───────────┬────────────┐
             │ time ┆ place     ┆ expression │
             │ (3)  ┆ (2)       ┆            │
@@ -745,7 +745,7 @@ class Expression(BaseOperableBlock):
             │ tue  ┆ Vancouver ┆ 2000000    │
             └──────┴───────────┴────────────┘
             >>> expr.sum("time")
-            <Expression height=2 terms=2 type=constant>
+            <Expression (parameter) height=2 terms=2>
             ┌───────────┬────────────┐
             │ place     ┆ expression │
             │ (2)       ┆            │
@@ -754,7 +754,7 @@ class Expression(BaseOperableBlock):
             │ Vancouver ┆ 3000000    │
             └───────────┴────────────┘
             >>> expr.sum()
-            <Expression terms=1 type=constant>
+            <Expression (parameter) terms=1>
             9000000
 
             If the given dimensions don't exist, an error will be raised:
@@ -790,7 +790,7 @@ class Expression(BaseOperableBlock):
         """Like [`Expression.sum`][pyoframe.Expression.sum], but the sum is taken over all dimensions *except* those specified in `by` (just like a `group_by().sum()` operation).
 
         Examples:
-            >>> expr = pl.DataFrame(
+            >>> expr = pf.Param(
             ...     {
             ...         "time": ["mon", "tue", "wed", "mon", "tue"],
             ...         "place": [
@@ -802,9 +802,9 @@ class Expression(BaseOperableBlock):
             ...         ],
             ...         "tiktok_posts": [1e6, 3e6, 2e6, 1e6, 2e6],
             ...     }
-            ... ).to_expr()
+            ... )
             >>> expr
-            <Expression height=5 terms=5 type=constant>
+            <Expression (parameter) height=5 terms=5>
             ┌──────┬───────────┬────────────┐
             │ time ┆ place     ┆ expression │
             │ (3)  ┆ (2)       ┆            │
@@ -817,7 +817,7 @@ class Expression(BaseOperableBlock):
             └──────┴───────────┴────────────┘
 
             >>> expr.sum_by("place")
-            <Expression height=2 terms=2 type=constant>
+            <Expression (parameter) height=2 terms=2>
             ┌───────────┬────────────┐
             │ place     ┆ expression │
             │ (2)       ┆            │
@@ -880,13 +880,13 @@ class Expression(BaseOperableBlock):
 
         Examples:
             >>> import polars as pl
-            >>> pop_data = pl.DataFrame(
+            >>> pop_data = pf.Param(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Boston"],
             ...         "year": [2024, 2024, 2024],
             ...         "population": [10, 2, 8],
             ...     }
-            ... ).to_expr()
+            ... )
             >>> cities_and_countries = pl.DataFrame(
             ...     {
             ...         "city": ["Toronto", "Vancouver", "Boston"],
@@ -894,7 +894,7 @@ class Expression(BaseOperableBlock):
             ...     }
             ... )
             >>> pop_data.map(cities_and_countries)
-            <Expression height=2 terms=2 type=constant>
+            <Expression (parameter) height=2 terms=2>
             ┌──────┬─────────┬────────────┐
             │ year ┆ country ┆ expression │
             │ (1)  ┆ (2)     ┆            │
@@ -904,7 +904,7 @@ class Expression(BaseOperableBlock):
             └──────┴─────────┴────────────┘
 
             >>> pop_data.map(cities_and_countries, drop_shared_dims=False)
-            <Expression height=3 terms=3 type=constant>
+            <Expression (parameter) height=3 terms=3>
             ┌───────────┬──────┬─────────┬────────────┐
             │ city      ┆ year ┆ country ┆ expression │
             │ (3)       ┆ (1)  ┆ (2)     ┆            │
@@ -974,7 +974,7 @@ class Expression(BaseOperableBlock):
             >>> m = pf.Model()
             >>> m.quantity = pf.Variable(cost[["item", "time"]])
             >>> (m.quantity * cost).rolling_sum(over="time", window_size=2)
-            <Expression height=5 terms=8 type=linear>
+            <Expression (linear) height=5 terms=8>
             ┌──────┬──────┬──────────────────────────────────┐
             │ item ┆ time ┆ expression                       │
             │ (2)  ┆ (3)  ┆                                  │
@@ -1010,11 +1010,8 @@ class Expression(BaseOperableBlock):
         """Filters this expression to only include the dimensions within the provided set.
 
         Examples:
-            >>> import pandas as pd
-            >>> general_expr = pd.DataFrame(
-            ...     {"dim1": [1, 2, 3], "value": [1, 2, 3]}
-            ... ).to_expr()
-            >>> filter_expr = pd.DataFrame({"dim1": [1, 3], "value": [5, 6]}).to_expr()
+            >>> general_expr = pf.Param({"dim1": [1, 2, 3], "value": [1, 2, 3]})
+            >>> filter_expr = pf.Param({"dim1": [1, 3], "value": [5, 6]})
             >>> general_expr.within(filter_expr).data
             shape: (2, 3)
             ┌──────┬─────────┬───────────────┐
@@ -1075,11 +1072,10 @@ class Expression(BaseOperableBlock):
                 If `False`, returns the degree as an integer (0, 1, or 2).
 
         Examples:
-            >>> import pandas as pd
             >>> m = pf.Model()
             >>> m.v1 = pf.Variable()
             >>> m.v2 = pf.Variable()
-            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}).to_expr()
+            >>> expr = pf.Param({"dim1": [1, 2, 3], "value": [1, 2, 3]})
             >>> expr.degree()
             0
             >>> expr *= m.v1
@@ -1097,18 +1093,17 @@ class Expression(BaseOperableBlock):
         elif (self.data.get_column(VAR_KEY) != CONST_TERM).any():
             return "linear" if return_str else 1
         else:
-            return "constant" if return_str else 0
+            return "parameter" if return_str else 0
 
     def __add__(self, other):
         """Adds another expression or a constant to this expression.
 
         Examples:
-            >>> import pandas as pd
             >>> m = pf.Model()
-            >>> add = pd.DataFrame({"dim1": [1, 2, 3], "add": [10, 20, 30]}).to_expr()
+            >>> add = pf.Param({"dim1": [1, 2, 3], "add": [10, 20, 30]})
             >>> m.v = Variable(add)
             >>> m.v + add
-            <Expression height=3 terms=6 type=linear>
+            <Expression (linear) height=3 terms=6>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -1119,7 +1114,7 @@ class Expression(BaseOperableBlock):
             └──────┴────────────┘
 
             >>> m.v + add + 2
-            <Expression height=3 terms=6 type=linear>
+            <Expression (linear) height=3 terms=6>
             ┌──────┬────────────┐
             │ dim1 ┆ expression │
             │ (3)  ┆            │
@@ -1145,12 +1140,12 @@ class Expression(BaseOperableBlock):
                 https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
-            <Expression terms=2 type=linear>
+            <Expression (linear) terms=2>
             2 v2 +5
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
-        other = other.to_expr()
+        other = other.to_expr()  # TODO don't rely on monkey patch
         self._learn_from_other(other)
         return add(self, other)
 
@@ -1163,7 +1158,7 @@ class Expression(BaseOperableBlock):
                 name=f"({other} * {self.name})",
             )
 
-        other = other.to_expr()
+        other: Expression = other.to_expr()  # TODO don't rely on monkey patch
         self._learn_from_other(other)
         return multiply(self, other)
 
@@ -1203,13 +1198,13 @@ class Expression(BaseOperableBlock):
             >>> m.x1 = Variable()
             >>> m.x2 = Variable()
             >>> m.x1 + 5
-            <Expression terms=2 type=linear>
+            <Expression (linear) terms=2>
             x1 +5
             >>> m.x1**2 + 5
-            <Expression terms=2 type=quadratic>
+            <Expression (quadratic) terms=2>
             x1 * x1 +5
             >>> m.x1**2 + m.x2 + 5
-            <Expression terms=3 type=quadratic>
+            <Expression (quadratic) terms=3>
             x1 * x1 + x2 +5
 
             It also works with dimensions
@@ -1217,7 +1212,7 @@ class Expression(BaseOperableBlock):
             >>> m = pf.Model()
             >>> m.v = Variable({"dim1": [1, 2, 3]})
             >>> m.v * m.v + 5
-            <Expression height=3 terms=6 type=quadratic>
+            <Expression (quadratic) height=3 terms=6>
             ┌──────┬─────────────────┐
             │ dim1 ┆ expression      │
             │ (3)  ┆                 │
@@ -1580,9 +1575,9 @@ class Expression(BaseOperableBlock):
         """Returns a string representation of the expression's header."""
         return get_obj_repr(
             self,
+            f"({self.degree(return_str=True)})",
             height=len(self) if self.dimensions else None,
             terms=self.terms,
-            type=self.degree(return_str=True),
         )
 
     def __repr__(self) -> str:
@@ -1603,7 +1598,7 @@ class Expression(BaseOperableBlock):
             >>> m.v = pf.Variable({"t": [1, 2]})
             >>> coef = pl.DataFrame({"t": [1, 2], "coef": [0, 1]})
             >>> coef * (m.v + 4)
-            <Expression height=2 terms=3 type=linear>
+            <Expression (linear) height=2 terms=3>
             ┌─────┬────────────┐
             │ t   ┆ expression │
             │ (2) ┆            │
@@ -2211,10 +2206,10 @@ class Constraint(BaseBlock):
         return (
             get_obj_repr(
                 self,
-                self.name,
+                f"'{self.name}'",
+                f"({self.lhs.degree(return_str=True)})",
                 height=len(self) if self.dimensions else None,
                 terms=len(self.lhs.data),
-                type=self.lhs.degree(return_str=True),
             )
             + "\n"
             + self.to_str()
@@ -2324,7 +2319,7 @@ class Variable(BaseOperableBlock):
                 assert len(indexing_sets) == 0, (
                     "Cannot specify both 'equals' and 'indexing_sets'"
                 )
-                equals = equals.to_expr()
+                equals = equals.to_expr()  # TODO don't rely on monkey patch
                 indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -2335,14 +2330,14 @@ class Variable(BaseOperableBlock):
         self._equals: Expression | None = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
-            lb: Expression = lb.to_expr()
+            lb: Expression = lb.to_expr()  # TODO don't rely on monkey patch
             if not self.dimensionless:
                 lb = lb.over(*self.dimensions)
             self._lb_expr, self.lb = lb, None
         else:
             self._lb_expr, self.lb = None, lb
         if ub is not None and not isinstance(ub, (float, int)):
-            ub = ub.to_expr()
+            ub = ub.to_expr()  # TODO don't rely on monkey patch
             if not self.dimensionless:
                 ub = ub.over(*self.dimensions)  # pyright: ignore[reportOptionalIterable]
             self._ub_expr, self.ub = ub, None
@@ -2550,7 +2545,7 @@ class Variable(BaseOperableBlock):
         result = (
             get_obj_repr(
                 self,
-                self.name,
+                f"'{self.name}'",
                 lb=self.lb,
                 ub=self.ub,
                 height=self.data.height if self.dimensions else None,
@@ -2613,7 +2608,7 @@ class Variable(BaseOperableBlock):
                 https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
 
             >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
-            <Constraint 'unnamed' height=6 terms=18 type=linear>
+            <Constraint 'unnamed' (linear) height=6 terms=18>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (3)   ┆ (2)     ┆                                                                                │
@@ -2635,7 +2630,7 @@ class Variable(BaseOperableBlock):
             >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next(
             ...     "time", wrap_around=True
             ... )
-            <Constraint 'unnamed' height=8 terms=24 type=linear>
+            <Constraint 'unnamed' (linear) height=8 terms=24>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (4)   ┆ (2)     ┆                                                                                │

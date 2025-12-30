@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Literal, overload
 
 import polars as pl
 
+from pyoframe import Param
+
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._core import Expression
 
@@ -52,8 +54,8 @@ def csvs_to_expr(
     *csv_strings: str,
 ) -> tuple[Expression, ...] | Expression:
     if len(csv_strings) == 1:
-        return csvs_to_dataframe(*csv_strings).to_expr()
-    return tuple(df.to_expr() for df in csvs_to_dataframe(*csv_strings))
+        return Param(csvs_to_dataframe(*csv_strings))
+    return tuple(Param(df) for df in csvs_to_dataframe(*csv_strings))
 
 
 _tolerances = {

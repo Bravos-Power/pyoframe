@@ -50,7 +50,7 @@ Load `food_data.csv` using [Polars](https://pola.rs/) or [Pandas](https://pandas
 
     Pyoframe works the same whether you're using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/), two similar libraries for manipulating data with DataFrames. We prefer using Polars because it is much faster (and generally better), but you can use whichever library you're most comfortable with.
     
-    Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations. If needed, you can convert a Polars DataFrame back to Pandas using [`polars.DataFrame.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas).
+    Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations.
  
 ## Step 2: Create the model
 
@@ -101,7 +101,7 @@ First, multiply the variable by the protein amount.
 
 ```pycon
 >>> data[["food", "cost"]] * m.Buy
-<Expression height=2 terms=2 type=linear>
+<Expression (linear) height=2 terms=2>
 ┌──────────────┬─────────────────────┐
 │ food         ┆ expression          │
 │ (2)          ┆                     │
@@ -120,7 +120,7 @@ Second, notice that the `Expression` still has the `food` dimension—it really 
 
 ```pycon
 >>> (data[["food", "cost"]] * m.Buy).sum("food")
-<Expression terms=2 type=linear>
+<Expression (linear) terms=2>
 4 Buy[tofu_block] +3 Buy[chickpea_can]
 
 ```
@@ -146,6 +146,8 @@ assert m.Buy.solution["solution"].to_list() == [2, 1]
 
 ## Put it all together
 
+If you've followed the steps above your code should look like:
+
 <!-- clear-namespace -->
 
 ```python
@@ -162,7 +164,7 @@ m.protein_constraint = (data[["food", "protein"]] * m.Buy).sum() >= 50
 m.optimize()
 ```
 
-So you should buy:
+And you can retrieve the problem's solution as follows:
 
 ```pycon
 >>> m.Buy.solution
@@ -177,6 +179,6 @@ So you should buy:
 
 ```
 
-Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of the labels.
+Since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of the labels!
 
 <!--  -->

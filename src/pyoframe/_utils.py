@@ -42,7 +42,7 @@ def get_obj_repr(obj: object, *props: str | None, **kwargs):
 
     See usage for examples.
     """
-    props_str = " ".join(f"'{v}'" for v in props if v is not None)
+    props_str = " ".join(v for v in props if v is not None)
     if props_str:
         props_str += " "
     kwargs_str = " ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
@@ -302,7 +302,7 @@ class NamedVariableMapper:
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> m.foo.sum()
-        <Expression terms=4 type=linear>
+        <Expression (linear) terms=4>
         foo[0] + foo[1] + foo[2] + foo[3]
     """
 

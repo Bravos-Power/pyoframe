@@ -6,9 +6,9 @@ import pytest
 import pyoframe as pf
 
 
-def test_to_expr():
+def test_param_smart_naming():
     df = pl.DataFrame({"dim": [1, 2], "val": [2, 3]})
-    assert df.to_expr().name == "val"
+    assert pf.Param(df).name == "val"
 
 
 def test_variables(default_solver):

@@ -69,7 +69,7 @@ def test_constraint_to_str(solver: _Solver):
     m.constraint = m.x1**2 <= 5
     assert (
         repr(m.constraint)
-        == """<Constraint 'constraint' terms=2 type=quadratic>
+        == """<Constraint 'constraint' (quadratic) terms=2>
 x1 * x1 <= 5"""
     )
 

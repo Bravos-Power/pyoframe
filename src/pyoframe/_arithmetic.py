@@ -42,7 +42,7 @@ def multiply(self: Expression, other: Expression) -> Expression:
         >>> m.x3 = pf.Variable()
         >>> result = 5 * m.x1 * m.x2
         >>> result
-        <Expression terms=1 type=quadratic>
+        <Expression (quadratic) terms=1>
         5 x2 * x1
         >>> result * m.x3
         Traceback (most recent call last):
@@ -112,7 +112,7 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
         >>> expr1 = df * m.x1
         >>> expr2 = df * m.x2 * 2 + 4
         >>> expr1 * expr2
-        <Expression height=3 terms=6 type=quadratic>
+        <Expression (quadratic) height=3 terms=6>
         ┌─────┬───────────────────┐
         │ dim ┆ expression        │
         │ (3) ┆                   │
@@ -122,7 +122,7 @@ def _quadratic_multiplication(self: Expression, other: Expression) -> Expression
         │ 3   ┆ 12 x1 +18 x2 * x1 │
         └─────┴───────────────────┘
         >>> (expr1 * expr2) - df * m.x1 * df * m.x2 * 2
-        <Expression height=3 terms=3 type=linear>
+        <Expression (linear) height=3 terms=3>
         ┌─────┬────────────┐
         │ dim ┆ expression │
         │ (3) ┆            │
