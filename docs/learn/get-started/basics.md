@@ -200,7 +200,7 @@ Notice how the order of the days in `Hours_Sleep` is reversed. This is no proble
 
 ```pycon
 >>> m.hours_remaining
-<Expression height=5 terms=15 type=linear>
+<Expression (linear) height=5 terms=15>
 ┌─────┬───────────────────────────────────────────┐
 │ day ┆ expression                                │
 │ (5) ┆                                           │
@@ -235,7 +235,7 @@ Here the `holidays` DataFrame is converted into an Expression and then multiplie
 
 ```pycon
 >>> m.pay
-<Expression height=5 terms=5 type=linear>
+<Expression (linear) height=5 terms=5>
 ┌─────┬──────────────────────┐
 │ day ┆ expression           │
 │ (5) ┆                      │
@@ -267,7 +267,7 @@ The error occurs because you cannot simply multiply a DataFrame (`holidays`) by 
 
 ```pycon
 >>> m.Hours_Worked * (base_pay + holidays.to_expr() * holiday_bonus)
-<Expression height=5 terms=5 type=linear>
+<Expression (linear) height=5 terms=5>
 ┌─────┬──────────────────────┐
 │ day ┆ expression           │
 │ (5) ┆                      │
