@@ -104,7 +104,7 @@ Notice how applying `.over("flight_no")` added a dimension `flight_no` with valu
 ```pycon
 >>> model.emission_constraint = model.E_max.over("flight_no") >= model.flight_emissions
 >>> model.emission_constraint
-<Constraint 'emission_constraint' height=2 terms=6 type=linear>
+<Constraint 'emission_constraint' (linear) height=2 terms=6>
 ┌───────────┬───────────────────────────────┐
 │ flight_no ┆ constraint                    │
 │ (2)       ┆                               │

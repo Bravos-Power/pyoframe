@@ -2212,9 +2212,9 @@ class Constraint(BaseBlock):
             get_obj_repr(
                 self,
                 f"'{self.name}'",
+                f"({self.lhs.degree(return_str=True)})",
                 height=len(self) if self.dimensions else None,
                 terms=len(self.lhs.data),
-                type=self.lhs.degree(return_str=True),
             )
             + "\n"
             + self.to_str()
@@ -2613,7 +2613,7 @@ class Variable(BaseOperableBlock):
                 https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
 
             >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
-            <Constraint 'unnamed' height=6 terms=18 type=linear>
+            <Constraint 'unnamed' (linear) height=6 terms=18>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (3)   ┆ (2)     ┆                                                                                │
@@ -2635,7 +2635,7 @@ class Variable(BaseOperableBlock):
             >>> (m.bat_charge + m.bat_flow) == m.bat_charge.next(
             ...     "time", wrap_around=True
             ... )
-            <Constraint 'unnamed' height=8 terms=24 type=linear>
+            <Constraint 'unnamed' (linear) height=8 terms=24>
             ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐
             │ time  ┆ city    ┆ constraint                                                                     │
             │ (4)   ┆ (2)     ┆                                                                                │
