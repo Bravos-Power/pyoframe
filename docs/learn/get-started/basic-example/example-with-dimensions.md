@@ -83,10 +83,6 @@ Printing the variable shows that it contains a `food` dimension with labels `tof
 
 ```
 
-!!! tip "Capitalize model variables"
-
-    We suggest capitalizing model variables (i.e. `m.Buy`, not `m.buy`) to make distinguishing what is and isn't a variable easy.
-
 ### Step 3: Create the objective with `.sum()`
 
 Previously you had:
@@ -181,7 +177,4 @@ So you should buy:
 
 Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of the labels.
 
-!!! info "Returning Pandas DataFrames"
-
-    Pyoframe currently always returns Polars DataFrames but you can easily convert them to Pandas using [`.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas). In the future, we plan to add support for automatically returning Pandas DataFrames. [Upvote the issue](https://github.com/Bravos-Power/pyoframe/issues/47) if you'd like this feature.
 <!--  -->
