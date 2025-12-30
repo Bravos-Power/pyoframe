@@ -40,7 +40,7 @@ Pyoframe has several types of tests.
 4. Documentation tests (in `docs/`). All Python code blocks in the documentation are run to ensure the documentation doesn't become outdated. This is done using Sybil. Refer to the [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks) to learn how to create setup code or skip code blocks you don't wish to test.
 
 !!! warning "Non-breaking spaces"
-    Be aware that 
+    Be aware that Pyoframe uses non-breaking spaces to improve the formatting of expressions. If your Sybil tests are unexpectedly failing, make sure that the expected output contains all the needed non-breaking spaces.
 
 ## Writing documentation
 
