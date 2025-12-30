@@ -6,14 +6,18 @@ import os
 os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
+You are going to re-build the [previous example](./example.md) using a dataset, `food_data.csv`, instead of hard-coded values. This way, you can add as many vegetarian proteins as you like without needing to write more code. If you're impatient, [skip to the end](#put-it-all-together) to see the final result.
+
 !!! tip "Pyoframe is built on DataFrames"
 
     Most other optimization libraries require you to convert your data from its `DataFrame` format to another format.[^1] Not Pyoframe! DataFrames form the core of Pyoframe making it easy to seamlessly — and efficiently — integrate large datasets into your models.
 
 [^1]: For example, Pyomo converts your DataFrames to individual Python objects, Linopy uses multi-dimensional matrices via xarray, and gurobipy requires Python lists, dictionaries and tuples. While gurobipy-pandas uses dataframes, it only works with Gurobi!
 
-You are going to re-build the [previous example](./example.md) using a dataset, `food_data.csv`, instead of hard-coded values. This way, you can add as many vegetarian proteins as you like without needing to write more code. If you're impatient, [skip to the end](#put-it-all-together) to see the final result.
 
+## The data
+
+You can download the CSV file from [here](https://github.com/Bravos-Power/pyoframe/blob/7af213c52ad33b9c01c9a14baa4cffca1ded1046/docs/learn/get-started/basic-example/food_data.csv) or create it yourself with the following content:
 
 > `food_data.csv`
 >
@@ -22,9 +26,7 @@ You are going to re-build the [previous example](./example.md) using a dataset, 
 > | tofu_block   | 18      | 4    |
 > | chickpea_can | 15      | 3    |
 
-
-
-### Step 1: Load the data
+## Step 1: Load the data
 
 Load `food_data.csv` using [Polars](https://pola.rs/) or [Pandas](https://pandas.pydata.org/).
 
@@ -50,7 +52,7 @@ Load `food_data.csv` using [Polars](https://pola.rs/) or [Pandas](https://pandas
     
     Note that, internally, Pyoframe always uses Polars during computations to ensure the best performance. If you're using Pandas, your DataFrames will automatically be converted to Polars prior to computations. If needed, you can convert a Polars DataFrame back to Pandas using [`polars.DataFrame.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas).
  
-### Step 2: Create the model
+## Step 2: Create the model
 
 ```python
 import pyoframe as pf
@@ -60,7 +62,7 @@ m = pf.Model()
 
 A [`pyoframe.Model`][pyoframe.Model] instance sets the foundation of your optimization model onto which you can add optimization variables, constraints, and an objective.
 
-### Step 3: Create a dimensioned variable
+## Step 3: Create a dimensioned variable
 
 Previously, you created two variables: `m.tofu_blocks` and `m.chickpea_cans`. Instead, create a single variable **dimensioned over the column `food`**.
 
@@ -83,11 +85,7 @@ Printing the variable shows that it contains a `food` dimension with labels `tof
 
 ```
 
-!!! tip "Capitalize model variables"
-
-    We suggest capitalizing model variables (i.e. `m.Buy`, not `m.buy`) to make distinguishing what is and isn't a variable easy.
-
-### Step 3: Create the objective with `.sum()`
+## Step 3: Create the objective with `.sum()`
 
 Previously you had:
 
@@ -133,7 +131,7 @@ This works and since `food` is the only dimensions you don't even need to specif
 m.minimize = (data[["food", "cost"]] * m.Buy).sum()
 ```
 
-### Step 4: Add the constraint
+## Step 4: Add the constraint
 
 This is similar to how you created the objective, except now you're using `protein` and you turn the `Expression` into a `Constraint` with the `>=` operation.
 
@@ -146,7 +144,7 @@ m.optimize()
 assert m.Buy.solution["solution"].to_list() == [2, 1]
 -->
 
-### Put it all together
+## Put it all together
 
 <!-- clear-namespace -->
 
@@ -181,7 +179,4 @@ So you should buy:
 
 Notice that since `m.Buy` is dimensioned, `m.Buy.solution` returned a DataFrame with the solution for each of the labels.
 
-!!! info "Returning Pandas DataFrames"
-
-    Pyoframe currently always returns Polars DataFrames but you can easily convert them to Pandas using [`.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas). In the future, we plan to add support for automatically returning Pandas DataFrames. [Upvote the issue](https://github.com/Bravos-Power/pyoframe/issues/47) if you'd like this feature.
 <!--  -->
