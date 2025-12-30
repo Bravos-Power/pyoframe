@@ -139,7 +139,7 @@ def check_sol_equal(expected_sol_file, actual_sol_file):
             f"Variable names do not match: {expected_name} != {actual_name}\n{expected_result}\n\n{actual_result}"
         )
         assert expected_value - tol <= actual_value <= expected_value + tol, (
-            f"Variable {actual_name} in solution file does not match expected value {expected_value}"
+            f"Variable {actual_name} in solution file ({actual_value}) does not match expected value ({expected_value})"
         )
 
 
@@ -147,6 +147,9 @@ def parse_sol(sol_file_path) -> list[tuple[str, float]]:
     with open(sol_file_path) as f:
         sol = f.read()
     sol = sol.partition("\nHiGHS v1\n")[0]  # Cut out everything after this
+    sol = sol.partition("\n# Dual solution values\n")[
+        0
+    ]  # Cut out everything after this too
     sol = [line.strip() for line in sol.split("\n")]
     sol = [line for line in sol if not (line.startswith("#") or line == "")]
     sol = [line.partition(" ") for line in sol]
@@ -156,6 +159,9 @@ def parse_sol(sol_file_path) -> list[tuple[str, float]]:
         # So that comparisons with gurobipy work
         if name == "ONE":
             continue
+
+        if name in sol_numeric:
+            raise ValueError(f"Duplicate variable name {name} in solution file")
 
         try:
             sol_numeric[name] = float(value)
@@ -170,14 +176,14 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize(
             "test_examples_config",
             [
-                (False, True),
                 (True, True),
                 (True, False),
+                (False, True),
             ],
             ids=[
                 "",
-                "named",
-                "named-unordered",
+                "unordered",
+                "unnamed",
             ],
         )
 
