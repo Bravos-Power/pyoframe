@@ -267,11 +267,11 @@ And the resulting `m.pay` Expression correctly incorporates the holiday bonus on
 │ day ┆ expression           │
 │ (5) ┆                      │
 ╞═════╪══════════════════════╡
-│ Mon ┆ 20 Hours_Worked[Mon] │
-│ Tue ┆ 20 Hours_Worked[Tue] │
-│ Wed ┆ 20 Hours_Worked[Wed] │
-│ Thu ┆ 20 Hours_Worked[Thu] │
-│ Fri ┆ 30 Hours_Worked[Fri] │
+│ Mon ┆ 20 Hours_Worked[Mon] │
+│ Tue ┆ 20 Hours_Worked[Tue] │
+│ Wed ┆ 20 Hours_Worked[Wed] │
+│ Thu ┆ 20 Hours_Worked[Thu] │
+│ Fri ┆ 30 Hours_Worked[Fri] │
 └─────┴──────────────────────┘
 
 ```
@@ -290,7 +290,7 @@ Note that often, you can skip defining parameters because whenever a Pyoframe ob
 │ Tue ┆ 0                    │
 │ Wed ┆ 0                    │
 │ Thu ┆ 0                    │
-│ Fri ┆ 10 Hours_Worked[Fri] │
+│ Fri ┆ 10 Hours_Worked[Fri] │
 └─────┴──────────────────────┘
 
 ```

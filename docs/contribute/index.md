@@ -39,6 +39,9 @@ Pyoframe has several types of tests.
 
 4. Documentation tests (in `docs/`). All Python code blocks in the documentation are run to ensure the documentation doesn't become outdated. This is done using Sybil. Refer to the [Sybil documentation](https://sybil.readthedocs.io/en/latest/markdown.html#code-blocks) to learn how to create setup code or skip code blocks you don't wish to test.
 
+!!! warning "Non-breaking spaces"
+    Be aware that 
+
 ## Writing documentation
 
 You can preview the documentation website by running `mkdocs serve` and navigating to [`http://127.0.0.1:8000/pyoframe/`](http://127.0.0.1:8000/pyoframe/).
