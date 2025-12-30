@@ -103,7 +103,7 @@ First, multiply the variable by the protein amount.
 
 ```pycon
 >>> data[["food", "cost"]] * m.Buy
-<Expression height=2 terms=2 type=linear>
+<Expression (linear) height=2 terms=2>
 ┌──────────────┬─────────────────────┐
 │ food         ┆ expression          │
 │ (2)          ┆                     │
@@ -122,7 +122,7 @@ Second, notice that the `Expression` still has the `food` dimension—it really 
 
 ```pycon
 >>> (data[["food", "cost"]] * m.Buy).sum("food")
-<Expression terms=2 type=linear>
+<Expression (linear) terms=2>
 4 Buy[tofu_block] +3 Buy[chickpea_can]
 
 ```

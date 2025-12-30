@@ -90,7 +90,7 @@ What we'd like to do is effectively 'copy' (aka. 'broadcast') `E_max` _over_ eve
 
 ```pycon
 >>> model.E_max.over("flight_no")
-<Expression terms=1 type=linear>
+<Expression (linear) terms=1>
 ┌───────────┬────────────┐
 │ flight_no ┆ expression │
 ╞═══════════╪════════════╡
@@ -205,7 +205,7 @@ Option 2 hardly seems reasonable this time considering that air emissions make u
 
 ```pycon
 >>> model.air_emissions.keep_extras() + model.ground_emissions.drop_extras()
-<Expression height=5 terms=5 type=constant>
+<Expression (parameter) height=5 terms=5>
 ┌───────────┬────────────┐
 │ flight_no ┆ expression │
 │ (5)       ┆            │

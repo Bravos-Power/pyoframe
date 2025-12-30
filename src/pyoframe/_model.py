@@ -335,7 +335,7 @@ class Model:
             ValueError: Objective is not defined.
             >>> m.maximize = m.X
             >>> m.objective
-            <Objective terms=1 type=linear>
+            <Objective (linear) terms=1>
             X
 
         See Also:
@@ -417,7 +417,7 @@ class Model:
     def __repr__(self) -> str:
         return get_obj_repr(
             self,
-            f"'{self.name}'",
+            f"'{self.name}'" if self.name is not None else None,
             vars=len(self.variables),
             constrs=len(self.constraints),
             has_objective=self.has_objective,

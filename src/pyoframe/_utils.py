@@ -302,7 +302,7 @@ class NamedVariableMapper:
         >>> m = pf.Model()
         >>> m.foo = pf.Variable(pl.DataFrame({"t": range(4)}))
         >>> m.foo.sum()
-        <Expression terms=4 type=linear>
+        <Expression (linear) terms=4>
         foo[0] + foo[1] + foo[2] + foo[3]
     """
 
