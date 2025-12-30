@@ -1,4 +1,4 @@
-# Build a simple model
+# Solve a simple problem
 
 <!-- invisible-code-block: python
 import os
@@ -6,7 +6,7 @@ import os
 os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
 -->
 
-To start, you'll solve a simple optimization problem with Pyoframe.
+To start, you will solve a simple optimization problem with Pyoframe.
 
 !!! quote "Problem statement"
 
@@ -58,4 +58,4 @@ Tofu blocks: 2
 Chickpea cans: 1
 ```
 
-On the next page, you'll [integrate DataFrames](./example-with-dimensions.md) into your solution.
+On the [next page](./example-with-dimensions.md), you'll resolve this problem but instead of hard-coded values, you'll use DataFrames, Pyoframe's secret sauce!

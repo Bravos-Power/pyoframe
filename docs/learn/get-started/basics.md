@@ -249,7 +249,7 @@ Here the `holidays` DataFrame is converted into an Expression and then multiplie
 
 ```
 
-The page on [Transforms](./special-functions.md) describes additional ways to manipulate Expressions (e.g. `.sum(…)`, `.map(…)`, `.next(…)`).
+The page on [Transforms](../concepts/special-functions.md) describes additional ways to manipulate Expressions (e.g. `.sum(…)`, `.map(…)`, `.next(…)`).
 
 ### Using `.to_expr()`
 
@@ -314,7 +314,7 @@ Optimizing your model is as simple as calling the `.optimize()` method:
 m.optimize()
 ```
 
-Read the [Solver interface](./solver-access.md) page for more information on configuring and using solvers.
+Read the [Solver interface](../concepts/solver-access.md) page for more information on configuring and using solvers.
 
 ## Retrieve results
 
