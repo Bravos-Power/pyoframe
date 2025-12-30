@@ -160,5 +160,100 @@ def test_to_and_from_quadratic(default_solver):
     assert expr4.terms == 3
 
 
+def test_division(default_solver):
+    df = pl.DataFrame({"dim": ["A", "B", "C"], "value": [1, 2, 3]}).to_expr()
+
+    # Parameter / Constant
+    divided = df / 2
+    assert_frame_equal(
+        divided.data,
+        pl.DataFrame(
+            {
+                "dim": ["A", "B", "C"],
+                COEF_KEY: [1 / 2, 2 / 2, 3 / 2],
+                VAR_KEY: [CONST_TERM] * 3,
+            }
+        ),
+        check_dtypes=False,
+    )
+
+    # Constant / Parameter
+    inverse = 1 / df
+    assert_frame_equal(
+        inverse.data,
+        pl.DataFrame(
+            {
+                "dim": ["A", "B", "C"],
+                COEF_KEY: [1 / 1, 1 / 2, 1 / 3],
+                VAR_KEY: [CONST_TERM] * 3,
+            }
+        ),
+        check_dtypes=False,
+    )
+
+    # Parameter / Parameter
+    result = df / df
+    assert_frame_equal(
+        result.data,
+        pl.DataFrame(
+            {
+                "dim": ["A", "B", "C"],
+                COEF_KEY: [1.0, 1.0, 1.0],
+                VAR_KEY: [CONST_TERM] * 3,
+            }
+        ),
+        check_dtypes=False,
+    )
+
+    # Variable / Parameter
+    m = Model(default_solver)
+    m.v = Variable(pl.DataFrame({"dim": ["A", "B", "C"]}))
+    m.v_expr = m.v.to_expr()
+    result = m.v_expr / df
+    assert_frame_equal(
+        result.data,
+        pl.DataFrame(
+            {
+                "dim": ["A", "B", "C"],
+                COEF_KEY: [1 / 1, 1 / 2, 1 / 3],
+                VAR_KEY: [1, 2, 3],
+            }
+        ),
+        check_dtypes=False,
+    )
+
+    # Variable / Constant
+    result = m.v_expr / 2
+    assert_frame_equal(
+        result.data,
+        pl.DataFrame(
+            {
+                "dim": ["A", "B", "C"],
+                COEF_KEY: [1 / 2, 1 / 2, 1 / 2],
+                VAR_KEY: [1, 2, 3],
+            }
+        ),
+        check_dtypes=False,
+    )
+
+    # Parameter / Variable
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape(
+            "Cannot divide by 'v' because it is not a number or parameter."
+        ),
+    ):
+        _ = df / m.v
+
+    # Parameter / Expression
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape(
+            "Cannot divide by 'v_expr' because denominators cannot contain variables."
+        ),
+    ):
+        _ = df / m.v_expr
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

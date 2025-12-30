@@ -30,7 +30,7 @@ dependencies = [
 highs = ["highsbox<=1.12.0"]
 ipopt = [
     "pyoptinterface[nlp]",
-    "llvmlite<=0.44.0",    # Remove once issue is fixed: https://github.com/metab0t/PyOptInterface/issues/56
+    "llvmlite<=0.46.0",    # Capped to prevent breaking changes in pyoptinterface. See https://github.com/metab0t/PyOptInterface/issues/56
 ]
 dev = [
     "ruff==0.12.11",        # code formatter

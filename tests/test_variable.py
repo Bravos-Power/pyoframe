@@ -66,3 +66,13 @@ def test_filter_variable(default_solver):
         result.to_str(return_df=True),
         pl.DataFrame([[2, "v[2]"]], schema=["dim1", "expression"], orient="row"),
     )
+
+
+def test_auto_broadcast(default_solver):
+    m = Model(default_solver)
+
+    val = pl.DataFrame({"dim1": [1, 2, 3], "value": [10, 20, 30]}).to_expr()
+    altern_dim = Set(dim2=["a", "b"])
+
+    m.v1 = Variable(altern_dim, val, lb=val)
+    m.v2 = Variable(altern_dim, val, ub=val)
