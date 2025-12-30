@@ -11,8 +11,6 @@ from pyoframe._core import Expression
 
 def Param(
     data: pl.DataFrame | pd.DataFrame | pd.Series | dict | str | Path,
-    label_cols: list[str] | None = None,
-    value_col: str | None = None,
 ) -> Expression:
     """Creates a model parameter, i.e. an [Expression][pyoframe.Expression] that doesn't involve any variables.
 
@@ -28,11 +26,15 @@ def Param(
         This makes debugging models with inline parameters easier.
 
     Args:
-        data: The dataframe containing the parameter labels and values. If `data` is a string or `Path`, it will be interpreted as a path to a CSV or Parquet file and loaded accordingly.
-            If `data` is a `pandas.Series`, the index(es) will be treated as columns for labels. If `data` is of any other type (e.g. a dictionary), it will be used as if you had called `Param(pl.DataFrame(data))`.
+        data: The data to use for the parameter.
 
-        label_cols: By default, all columns except the last one are used as labels (i.e. dimensions) for the parameter. You can override this by specifying a list of column names to use as labels.
-        value_col: By default, the last column is used as the values for the parameter. You can override this by specifying the name of the column to use as values.
+            If `data` is a polars or pandas `DataFrame`, the last column will be treated as the values of the parameter, and all other columns as labels.
+
+            If `data` is a string or `Path`, it will be interpreted as a path to a CSV or Parquet file that will be read and used as a `DataFrame`.
+
+            If `data` is a `pandas.Series`, the index(es) will be treated as columns for labels and the series values as the parameter values.
+
+            If `data` is of any other type (e.g. a dictionary), it will be used as if you had called `Param(pl.DataFrame(data))`.
 
     Returns:
         An Expression representing the parameter.
@@ -72,27 +74,18 @@ def Param(
         data = pl.from_pandas(data)
 
     if isinstance(data, (str, Path)):
-        columns = None
-        if value_col is not None and label_cols is not None:
-            columns = label_cols + [value_col]
-
         data = Path(data)
         if data.suffix.lower() == ".csv":
-            data = pl.read_csv(data, columns=columns)
+            data = pl.read_csv(data)
         elif data.suffix.lower() in {".parquet"}:
-            data = pl.read_parquet(data, columns=columns)
+            data = pl.read_parquet(data)
         else:
             raise NotImplementedError(f"Unsupported file format: {data.suffix}")
 
     if not isinstance(data, pl.DataFrame):
         data = pl.DataFrame(data)
 
-    if value_col is None:
-        value_col = data.columns[-1]
-    if label_cols is None:
-        label_cols = [col for col in data.columns if col != value_col]
-    assert isinstance(label_cols, list), "labels must be a list of column names"
-    data = data.select(label_cols + [value_col])
+    value_col = data.columns[-1]
 
     return Expression(
         data.rename({value_col: COEF_KEY})

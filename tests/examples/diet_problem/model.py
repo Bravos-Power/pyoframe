@@ -12,12 +12,9 @@ _input_dir = Path(os.path.dirname(os.path.realpath(__file__))) / "input_data"
 
 def solve_model(use_var_names):
     food = pl.read_csv(_input_dir / "foods.csv")
-    min_nutrient = pf.Param(
-        _input_dir / "nutrients.csv", label_cols=["category"], value_col="min"
-    )
-    max_nutrient = pf.Param(
-        _input_dir / "nutrients.csv", label_cols=["category"], value_col="max"
-    )
+    nutrients = pl.read_csv(_input_dir / "nutrients.csv")
+    min_nutrient = pf.Param(nutrients[["category", "min"]])
+    max_nutrient = pf.Param(nutrients[["category", "max"]])
     food_nutrients = pf.Param(_input_dir / "foods_to_nutrients.csv")
 
     m = pf.Model(solver_uses_variable_names=use_var_names)
