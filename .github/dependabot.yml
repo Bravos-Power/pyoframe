@@ -1,0 +1,11 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "17:00"
+  allow:
+    - dependency-type: production
+    - dependency-name: highsbox
+    - dependency-name: llvmlite

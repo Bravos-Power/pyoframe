@@ -360,6 +360,13 @@ class BaseOperableBlock(BaseBlock):
         """
         return self.to_expr() * (1 / other)
 
+    def __rtruediv__(self, other):
+        # This just improves error messages when trying to divide by a Set or Variable.
+        # When dividing by an Expression, see the Expression.__rtruediv__ method.
+        raise PyoframeError(
+            f"Cannot divide by '{self.name}' because it is not a number or parameter."
+        )
+
     def __rsub__(self, other):
         """Supports right subtraction.
 
@@ -1159,6 +1166,21 @@ class Expression(BaseOperableBlock):
         other = other.to_expr()
         self._learn_from_other(other)
         return multiply(self, other)
+
+    def __rtruediv__(self, other):
+        """Support dividing by an expression when that expression is a constant."""
+        assert isinstance(other, (int, float)), (
+            f"Expected a number not a {type(other)} when dividing by an expression."
+        )
+        if self.degree() != 0:
+            raise PyoframeError(
+                f"Cannot divide by '{self.name}' because denominators cannot contain variables."
+            )
+
+        return self._new(
+            self.data.with_columns((pl.lit(other) / pl.col(COEF_KEY)).alias(COEF_KEY)),
+            name=f"({other} / {self.name})",
+        )
 
     def to_expr(self) -> Expression:
         """Returns the expression itself."""
@@ -2202,18 +2224,22 @@ class Constraint(BaseBlock):
 class Variable(BaseOperableBlock):
     """A decision variable for an optimization model.
 
+    !!! tip
+        If `lb` or `ub` are a dimensioned object (e.g. an [Expression][pyoframe.Expression]), they will automatically be [broadcasted](../../learn/concepts/addition.md#adding-expressions-with-differing-dimensions-using-over) to match the variable's dimensions.
+
     Parameters:
         *indexing_sets:
             If no indexing_sets are provided, a single variable with no dimensions is created.
             Otherwise, a variable is created for each element in the Cartesian product of the indexing_sets (see Set for details on behaviour).
-        lb:
-            The lower bound for all variables.
-        ub:
-            The upper bound for all variables.
         vtype:
             The type of the variable. Can be either a VType enum or a string. Default is VType.CONTINUOUS.
+        lb:
+            The lower bound for the variables.
+        ub:
+            The upper bound for the variables.
         equals:
-            When specified, a variable is created and a constraint is added to make the variable equal to the provided expression.
+            When specified, a variable is created for every label in `equals` and a constraint is added to make the variable equal to the provided expression.
+            `indexing_sets` cannot be provided when using `equals`.
 
     Examples:
         >>> import pandas as pd
@@ -2309,10 +2335,16 @@ class Variable(BaseOperableBlock):
         self._equals: Expression | None = equals
 
         if lb is not None and not isinstance(lb, (float, int)):
+            lb: Expression = lb.to_expr()
+            if not self.dimensionless:
+                lb = lb.over(*self.dimensions)
             self._lb_expr, self.lb = lb, None
         else:
             self._lb_expr, self.lb = None, lb
         if ub is not None and not isinstance(ub, (float, int)):
+            ub = ub.to_expr()
+            if not self.dimensionless:
+                ub = ub.over(*self.dimensions)  # pyright: ignore[reportOptionalIterable]
             self._ub_expr, self.ub = ub, None
         else:
             self._ub_expr, self.ub = None, ub
