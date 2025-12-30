@@ -214,7 +214,15 @@ Notice how the order of the days in `Hours_Sleep` is reversed. This is no proble
 
 ```
 
-Expressions can also be formed by combining variables with DataFrames. For example:
+### Using parameters
+
+Often, our models need to incorporate external data. To do this, we need to use **parameters**.
+
+In Pyoframe, a parameter is actually just an [Expression][pyoframe.Expression] that does not contain any Variables (aka. a constant).
+
+You can convert your data to a parameter by passing it to [`pf.Param(data)`][pyoframe.Param]. The last column of the data is always treated as the parameter value, and all other columns are treated as labels. (See [Param][pyoframe.Param] for other ways to create parameters.)
+
+For example, consider the following code that integrates the `holidays` DataFrame into a pay calculation:
 
 ```python
 import pandas as pd
@@ -227,59 +235,67 @@ base_pay = 20
 holiday_bonus = 10
 
 m = pf.Model()
+m.is_holiday = pf.Param(holidays)
 m.Hours_Worked = pf.Variable(holidays["day"], lb=0)
-m.pay = m.Hours_Worked * base_pay + m.Hours_Worked * holidays * holiday_bonus
+m.pay = m.Hours_Worked * (base_pay + m.is_holiday * holiday_bonus)
 ```
 
-Here the `holidays` DataFrame is converted into an Expression and then multiplied by the `Hours_Worked` variable. When DataFrames are converted to Expressions, the last column is always treated as the value column and all previous columns are treated as dimension columns. The result is:
+Here, `m.is_holiday` is a parameter Expression:
+
+```pycon
+>>> m.is_holiday
+<Expression (parameter) height=5 terms=5>
+┌─────┬────────────┐
+│ day ┆ expression │
+│ (5) ┆            │
+╞═════╪════════════╡
+│ Mon ┆ 0          │
+│ Tue ┆ 0          │
+│ Wed ┆ 0          │
+│ Thu ┆ 0          │
+│ Fri ┆ 1          │
+└─────┴────────────┘
+
+```
+
+And the resulting `m.pay` Expression correctly incorporates the holiday bonus only on Fridays:
 
 ```pycon
 >>> m.pay
-<Expression (linear) height=5 terms=5>
+ <Expression (linear) height=5 terms=5>
 ┌─────┬──────────────────────┐
 │ day ┆ expression           │
 │ (5) ┆                      │
 ╞═════╪══════════════════════╡
-│ Mon ┆ 20 Hours_Worked[Mon] │
-│ Tue ┆ 20 Hours_Worked[Tue] │
-│ Wed ┆ 20 Hours_Worked[Wed] │
-│ Thu ┆ 20 Hours_Worked[Thu] │
-│ Fri ┆ 30 Hours_Worked[Fri] │
+│ Mon ┆ 20 Hours_Worked[Mon] │
+│ Tue ┆ 20 Hours_Worked[Tue] │
+│ Wed ┆ 20 Hours_Worked[Wed] │
+│ Thu ┆ 20 Hours_Worked[Thu] │
+│ Fri ┆ 30 Hours_Worked[Fri] │
 └─────┴──────────────────────┘
-
 ```
 
-The page on [Transforms](../concepts/special-functions.md) describes additional ways to manipulate Expressions (e.g. `.sum(…)`, `.map(…)`, `.next(…)`).
-
-### Using `.to_expr()`
-
-Note that previous example would not have worked if we had instead written:
+Note that often, you can skip defining parameters because whenever a Pyoframe object is combined with a DataFrame, Pyoframe will automatically convert the DataFrame to a parameter Expression. For example, the following works just fine:
 
 ```pycon
->>> m.pay = m.Hours_Worked * (base_pay + holidays * holiday_bonus)
-Traceback (most recent call last):
-...
-TypeError: unsupported operand type(s) for +: 'int' and 'str'
-
-```
-
-The error occurs because you cannot simply multiply a DataFrame (`holidays`) by a number (`holiday_bonus`). In these cases, you need to explicitly convert the DataFrame to an Expression using `.to_expr()`:
-
-```pycon
->>> m.Hours_Worked * (base_pay + holidays.to_expr() * holiday_bonus)
-<Expression (linear) height=5 terms=5>
+>>> m.bonus_pay = m.Hours_Worked * holidays * holiday_bonus
+>>> m.bonus_pay
 ┌─────┬──────────────────────┐
 │ day ┆ expression           │
 │ (5) ┆                      │
 ╞═════╪══════════════════════╡
-│ Mon ┆ 20 Hours_Worked[Mon] │
-│ Tue ┆ 20 Hours_Worked[Tue] │
-│ Wed ┆ 20 Hours_Worked[Wed] │
-│ Thu ┆ 20 Hours_Worked[Thu] │
-│ Fri ┆ 30 Hours_Worked[Fri] │
+│ Mon ┆ 0                    │
+│ Tue ┆ 0                    │
+│ Wed ┆ 0                    │
+│ Thu ┆ 0                    │
+│ Fri ┆ 10 Hours_Worked[Fri] │
 └─────┴──────────────────────┘
 
 ```
+
+### Transforms
+
+The page on [Transforms](../concepts/special-functions.md) describes additional ways to formulate Expressions (e.g. using `.sum(…)`, `.map(…)`, `.next(…)`).
 
 ## Add constraints
 
