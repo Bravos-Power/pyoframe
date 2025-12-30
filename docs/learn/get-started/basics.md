@@ -4,13 +4,13 @@ Now that you've gotten a sense of what Pyoframe can do, it's time to learn how t
 
 Building a Pyoframe model involves only a few steps. Each of the following sections describes one of those steps.
 
-1. [Create the `Model`](#creating-a-model)
-2. [Add decision variables](#defining-variables)
-3. [Formulate key mathematical expressions](#formulating-expressions)
-4. [Add constraints](#adding-constraints)
-5. [Set the objective](#setting-the-objective)
-6. [Optimize!](#optimizing-your-model)
-7. [Read results](#reading-results)
+1. [Create the `Model`](#create-a-model)
+2. [Add decision variables](#define-variables)
+3. [Formulate key mathematical expressions](#formulate-expressions)
+4. [Add constraints](#add-constraints)
+5. [Set the objective](#set-the-objective)
+6. [Optimize!](#optimize)
+7. [Retrieve results](#retrieve-results)
 
 ## Create a model
 
