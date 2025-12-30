@@ -48,6 +48,8 @@ class BaseBlock(ABC):
         self._data = data
         self._model: Model | None = None
         self.name: str = name  # gets overwritten if object is added to model
+        """A user-friendly name that is displayed when printing the object or in error messages.
+        When an object is added to a model, this name is updated to the name used in the model."""
 
     def _on_add_to_model(self, model: Model, name: str):
         self.name = name
