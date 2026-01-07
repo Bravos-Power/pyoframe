@@ -212,7 +212,7 @@ def mock_snakemake(rulename, **wildcards):
     )
 
     script_dir = Path(__file__).parent.resolve()
-    root_dir = script_dir.parent.parent
+    root_dir = script_dir.parent / "energy_planning"
     current_dir = os.getcwd()
     os.chdir(root_dir)
 

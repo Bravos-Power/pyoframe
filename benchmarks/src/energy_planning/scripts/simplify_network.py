@@ -56,7 +56,7 @@ def combine_parallel_lines(lines: pl.DataFrame):
         .agg(
             pl.col("reactance").sum(),
             pl.col("line_id").min(),
-            pl.col("line_rating").sum(),
+            pl.col("line_rating_MW").sum(),
         )
         .with_columns((1 / pl.col("reactance")).alias("reactance"))
     )
@@ -105,7 +105,7 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
             line_id=pl.col("line_id").min(),
             from_bus=f_bus.first(),
             to_bus=f_bus.last(),
-            line_rating=pl.col("line_rating").min(),
+            line_rating_MW=pl.col("line_rating_MW").min(),
             reactance=pl.col("reactance").sum(),
         )
         .drop("mid_bus")
@@ -123,12 +123,14 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
         "line_id",
         f_bus,
         pl.col("from_bus_right").alias("to_bus"),
-        pl.min_horizontal("line_rating", "line_rating_right").alias("line_rating"),
+        pl.min_horizontal("line_rating_MW", "line_rating_MW_right").alias(
+            "line_rating_MW"
+        ),
         pl.sum_horizontal("reactance", "reactance_right").alias("reactance"),
     )
 
     initial = lines.height
-    cols = ["line_id", "from_bus", "to_bus", "reactance", "line_rating"]
+    cols = ["line_id", "from_bus", "to_bus", "reactance", "line_rating_MW"]
     lines = pl.concat(
         [
             l_keep.select(cols),
@@ -181,10 +183,8 @@ def identify_leafs(lines, buses_to_keep):
 
 def main(lines, buses_to_keep):
     """Simplify the network until there is no more simplification possible."""
-    expected_cols = {"line_id", "from_bus", "to_bus", "reactance", "line_rating"}
-    assert set(lines.columns) == expected_cols, (
-        f"Unexpected columns in lines DataFrame ({set(lines.columns) - expected_cols})"
-    )
+    expected_cols = ["line_id", "from_bus", "to_bus", "reactance", "line_rating_MW"]
+    lines = lines.select(*expected_cols)
 
     num_lines_initial = lines.height
     lines_removed = 0
@@ -246,5 +246,16 @@ if __name__ == "__main__":
 
     lines = pl.read_parquet(snakemake.input.lines)
 
+    num_buses = len(lines["from_bus"].append(lines["to_bus"]).unique())
+
+    print(f"Network has {lines.height} lines and {num_buses} buses.")
+
     lines = main(lines, buses_to_keep)
+
+    num_buses_simplified = len(lines["from_bus"].append(lines["to_bus"]).unique())
+
+    print(
+        f"Simplified network has {lines.height} lines and {num_buses_simplified} buses."
+    )
+
     lines.write_parquet(snakemake.output[0])

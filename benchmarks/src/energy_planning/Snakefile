@@ -10,6 +10,7 @@ CWD = Path(".")
 INPUT_DIR = CWD / "raw_data"
 RAW_INPUT_DIR = INPUT_DIR / "downloads"
 PROCESSED_INPUT_DIR = INPUT_DIR / "preprocessed"
+ANALYSIS_DIR = INPUT_DIR / "analysis"
 SCRIPTS_DIR = Path("./scripts")
 
 rule generate_all_inputs:
@@ -20,6 +21,7 @@ rule generate_all_inputs:
         yearly_limit=PROCESSED_INPUT_DIR / "yearly_limits.parquet",
         vcf=PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
         bodf=PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
+        capex_costs=PROCESSED_INPUT_DIR / "capex_costs.csv",
     output:
         directory(CWD / "model_data"),
     run:
@@ -65,17 +67,27 @@ rule fetch_matpower_data:
     run:
         urlretrieve(CATS_GITHUB_URL + "MATPOWER/CaliforniaTestSystem.m", output[0])
 
+rule fetch_nrel_atb_data:
+    output:
+        RAW_INPUT_DIR / "NREL_ATB_data.parquet",
+    run:
+        urlretrieve("https://oedi-data-lake.s3.amazonaws.com/ATB/electricity/parquet/2024/v3.0.0/ATBe.parquet", output[0])
 
-rule process_matpower_case:
+rule parse_matpower_case:
     input:
         RAW_INPUT_DIR / "CaliforniaTestSystem.m",
     output:
         bus=PROCESSED_INPUT_DIR / "matpower_bus.parquet",
         branch=PROCESSED_INPUT_DIR / "matpower_branch.parquet",
         gen=PROCESSED_INPUT_DIR / "matpower_gen.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_matpower_case.py.ipynb")
-
+    run:
+        from energy_planning.scripts.A_parse_matpower_case import app as parse_matpower_case
+        parse_matpower_case.run(defs={
+            "MATPOWER_CASE": input[0],
+            "BUS_OUTPUT_PATH": output[0],
+            "BRANCH_OUTPUT_PATH": output[1],
+            "GEN_OUTPUT_PATH": output[2],
+        })
 
 rule process_load_data:
     """Convert the load data to narrow format and keep only the active loads."""
@@ -87,26 +99,46 @@ rule process_load_data:
         str(SCRIPTS_DIR / "process_load_data.py.ipynb")
 
 
-rule process_line_data:
-    """Convert from .json to .parquet and keep only relevant columns."""
+rule extract_line_data:
     input:
         RAW_INPUT_DIR / "CATS_lines.json",
+        PROCESSED_INPUT_DIR / "matpower_branch.parquet", 
     output:
         PROCESSED_INPUT_DIR / "lines.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_lines_json.py.ipynb")
+    run:
+        from energy_planning.scripts.C_extract_line_data import app as extract_line_data
+        extract_line_data.run(defs={
+            "CATS_DATA": input[0],
+            "MATPOWER_DATA": input[1],
+            "LINE_DATA_OUT": output[0],
+        })
 
-
-rule process_generator_data:
+rule extract_generator_data:
     """Group the generators by type and bus."""
     input:
         RAW_INPUT_DIR / "CATS_generators.csv",
         PROCESSED_INPUT_DIR / "matpower_gen.parquet"
     output:
         PROCESSED_INPUT_DIR / "generators.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_generator_data.py.ipynb")
+    run:
+        from energy_planning.scripts.B_extract_generator_data import app as process_generator_data
+        process_generator_data.run(defs={
+            "CATS_DATA": input[0],
+            "MATPOWER_DATA": input[1],
+            "OUTPUT_PATH": output[0],
+        })
 
+rule extract_capex_data:
+    input:
+        RAW_INPUT_DIR / "NREL_ATB_data.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "capex_costs.csv",
+    run:
+        from energy_planning.scripts.D_extract_capex_data import app as extract_capex_data
+        extract_capex_data.run(defs={
+            "NREL_DATA": input[0],
+            "OUTPUT_PATH": output[0],
+        })
 
 rule compute_capacity_factors:
     """Use the hourly generation data to create capacity factors by fuel type."""
@@ -148,3 +180,13 @@ rule compute_bodf:
         PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
     notebook:
         str(SCRIPTS_DIR / "compute_branch_outage_dist_facts.py.ipynb")
+
+rule analyze_supply_demand:
+    input:
+        gen=PROCESSED_INPUT_DIR / "generators.parquet",
+        vcf=PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
+        loads=PROCESSED_INPUT_DIR / "loads.parquet",
+    output:
+        ANALYSIS_DIR / "supply_demand_analysis.parquet",
+    notebook:
+        str(SCRIPTS_DIR / "analyze_supply_demand.ipynb")

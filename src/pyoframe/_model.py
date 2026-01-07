@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -83,6 +84,7 @@ class Model:
         "attr",
         "sense",
         "_solver_uses_variable_names",
+        "_last_update",
         "ONE",
         "solver_name",
         "minimize",
@@ -97,6 +99,7 @@ class Model:
         name: str | None = None,
         solver_uses_variable_names: bool = False,
         print_uses_variable_names: bool = True,
+        debug: bool = False,
         sense: ObjSense | ObjSenseValue | None = None,
     ):
         self._poi, self.solver = Model._create_poi_model(solver, solver_env)
@@ -111,6 +114,9 @@ class Model:
         self._params = Container(self._set_param, self._get_param)
         self._attr = Container(self._set_attr, self._get_attr)
         self._solver_uses_variable_names = solver_uses_variable_names
+        self._last_update = None
+        if debug:
+            self._last_update = time.time()
 
     @property
     def poi(self):
@@ -408,6 +414,10 @@ class Model:
                     self._var_map.add(__value)
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
+            if self._last_update is not None:
+                print(
+                    f"Added attribute '{__name}' to model (+{time.time() - self._last_update:.1f}s)"
+                )
         return super().__setattr__(__name, __value)
 
     # Defining a custom __getattribute__ prevents type checkers from complaining about attribute access

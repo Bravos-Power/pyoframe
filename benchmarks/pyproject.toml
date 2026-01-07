@@ -9,13 +9,14 @@ dependencies = [
     # solvers
     "pyomo==6.9.2",
     "linopy==0.5.5",
-    "pyoptinterface==0.5.0",
+    "pyoptinterface==0.5.1",
     "cvxpy[GUROBI,MOSEK]==1.7.1",
     # tools
     "snakemake==9.6.0",
     "gdown==5.2.0",             # To download data from Google Drive
     "papermill==2.6.0",         #  To run notebooks
     "altair==5.5.0",            # For plotting in notebooks
+    "vegafusion==2.0.3",               # For altair with large data
     "xarray==2025.7.1",
     "numpy==2.3.1",
     "vl-convert-python==1.8.0", # For saving plots in altair
@@ -30,4 +31,5 @@ energy-planning = [
     "scipy==1.16.0",
     "nbformat==5.10.4",
     "nbconvert==7.16.6",
+    "marimo==0.18.4"
 ]
