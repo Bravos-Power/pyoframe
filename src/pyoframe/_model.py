@@ -562,6 +562,134 @@ class Model:
         """
         self.poi.computeIIS()
 
+    def variables_size_info(self, memory_unit: pl.SizeUnit = "b") -> pl.DataFrame:
+        """Returns a DataFrame with information about the memory usage of each variable in the model.
+
+        !!! warning "Experimental"
+            This method is experimental and may change or be removed in future versions. We're interested in your [feedback]([feedback](https://github.com/Bravos-Power/pyoframe/issues).
+
+        Parameters:
+            memory_unit:
+                The size of the memory unit to use for the memory usage information.
+                See [`polars.DataFrame.estimated_size`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.estimated_size.html).
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.Y = pf.Variable(pf.Set(dim_x=range(100)))
+            >>> m.variables_size_info()
+            shape: (3, 5)
+            ┌───────┬───────────────┬────────────────────┬───────────────────────┬────────────────────────────┐
+            │ name  ┆ num_variables ┆ num_variables_perc ┆ pyoframe_memory_usage ┆ pyoframe_memory_usage_perc │
+            │ ---   ┆ ---           ┆ ---                ┆ ---                   ┆ ---                        │
+            │ str   ┆ i64           ┆ str                ┆ i64                   ┆ str                        │
+            ╞═══════╪═══════════════╪════════════════════╪═══════════════════════╪════════════════════════════╡
+            │ Y     ┆ 100           ┆ 99.0%              ┆ 1200                  ┆ 99.7%                      │
+            │ X     ┆ 1             ┆ 1.0%               ┆ 4                     ┆ 0.3%                       │
+            │ TOTAL ┆ 101           ┆ 100.0%             ┆ 1204                  ┆ 100.0%                     │
+            └───────┴───────────────┴────────────────────┴───────────────────────┴────────────────────────────┘
+        """
+        data = pl.DataFrame(
+            [
+                dict(name=v.name, n=len(v), mem=v.estimated_size(memory_unit))
+                for v in self.variables
+            ]
+        ).sort("n", descending=True)
+
+        total = data.sum().with_columns(name=pl.lit("TOTAL"))
+        data = pl.concat([data, total])
+
+        def format(expr: pl.Expr) -> pl.Expr:
+            return (100 * expr).round(1).cast(pl.String) + pl.lit("%")
+
+        data = data.with_columns(
+            n_per=format(pl.col("n") / total["n"].item()),
+            mem_per=format(pl.col("mem") / total["mem"].item()),
+        )
+
+        data = data.select("name", "n", "n_per", "mem", "mem_per")
+        data = data.rename(
+            {
+                "n": "num_variables",
+                "n_per": "num_variables_perc",
+                "mem": "pyoframe_memory_usage",
+                "mem_per": "pyoframe_memory_usage_perc",
+            }
+        )
+
+        return pl.DataFrame(data)
+
+    def constraints_size_info(self, memory_unit: pl.SizeUnit = "b") -> pl.DataFrame:
+        """Returns a DataFrame with information about the memory usage of each constraint in the model.
+
+        !!! warning "Experimental"
+            This method is experimental and may change or be removed in future versions. We're interested in your [feedback](https://github.com/Bravos-Power/pyoframe/issues).
+
+        Parameters:
+            memory_unit:
+                The size of the memory unit to use for the memory usage information.
+                See [`polars.DataFrame.estimated_size`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.estimated_size.html).
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.Y = pf.Variable(pf.Set(dim_x=range(100)))
+            >>> m.c1 = m.X.over("dim_x") + m.Y <= 10
+            >>> m.c2 = m.X + m.Y.sum() <= 20
+            >>> m.constraints_size_info()
+            shape: (3, 7)
+            ┌───────┬───────────────┬──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+            │ name  ┆ num_constrain ┆ num_constrai ┆ num_non_zero ┆ num_non_zero ┆ pyoframe_mem ┆ pyoframe_mem │
+            │ ---   ┆ ts            ┆ nts_perc     ┆ s            ┆ s_perc       ┆ ory_usage    ┆ ory_usage_pe │
+            │ str   ┆ ---           ┆ ---          ┆ ---          ┆ ---          ┆ ---          ┆ rc           │
+            │       ┆ i64           ┆ str          ┆ i64          ┆ str          ┆ i64          ┆ ---          │
+            │       ┆               ┆              ┆              ┆              ┆              ┆ str          │
+            ╞═══════╪═══════════════╪══════════════╪══════════════╪══════════════╪══════════════╪══════════════╡
+            │ c1    ┆ 100           ┆ 99.0%        ┆ 300          ┆ 74.6%        ┆ 7314         ┆ 85.6%        │
+            │ c2    ┆ 1             ┆ 1.0%         ┆ 102          ┆ 25.4%        ┆ 1228         ┆ 14.4%        │
+            │ TOTAL ┆ 101           ┆ 100.0%       ┆ 402          ┆ 100.0%       ┆ 8542         ┆ 100.0%       │
+            └───────┴───────────────┴──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+        """
+        data = pl.DataFrame(
+            [
+                dict(
+                    name=c.name,
+                    n=len(c),
+                    non_zeros=c.lhs.data.height,
+                    mem=c.estimated_size(memory_unit),
+                )
+                for c in self.constraints
+            ]
+        ).sort("n", descending=True)
+
+        total = data.sum().with_columns(name=pl.lit("TOTAL"))
+        data = pl.concat([data, total])
+
+        def format(col: pl.Expr) -> pl.Expr:
+            return (100 * col).round(1).cast(pl.String) + pl.lit("%")
+
+        data = data.with_columns(
+            n_per=format(pl.col("n") / total["n"].item()),
+            non_zeros_per=format(pl.col("non_zeros") / total["non_zeros"].item()),
+            mem_per=format(pl.col("mem") / total["mem"].item()),
+        )
+
+        data = data.select(
+            "name", "n", "n_per", "non_zeros", "non_zeros_per", "mem", "mem_per"
+        )
+        data = data.rename(
+            {
+                "n": "num_constraints",
+                "n_per": "num_constraints_perc",
+                "non_zeros": "num_non_zeros",
+                "non_zeros_per": "num_non_zeros_perc",
+                "mem": "pyoframe_memory_usage",
+                "mem_per": "pyoframe_memory_usage_perc",
+            }
+        )
+
+        return pl.DataFrame(data)
+
     def dispose(self):
         """Disposes of the model and cleans up the solver environment.
 
