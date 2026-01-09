@@ -51,6 +51,10 @@ class Model:
             Either "min" or "max". Indicates whether it's a minimization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
             set when the objective is set using `.minimize` or `.maximize`.
+        verbose:
+            If `True`, logging messages will be printed every time a Variable or Constraint is added to the model.
+            This is useful to discover performance bottlenecks.
+            Logging can be further configured via the [`logging` module](https://docs.python.org/3/howto/logging.html) by modifying the `pyoframe` logger.
 
     Examples:
         >>> m = pf.Model()
@@ -89,6 +93,7 @@ class Model:
         "solver_name",
         "minimize",
         "maximize",
+        "_logger",
     ]
 
     def __init__(
@@ -101,6 +106,7 @@ class Model:
         print_uses_variable_names: bool = True,
         debug: bool = False,
         sense: ObjSense | ObjSenseValue | None = None,
+        verbose: bool = False,
     ):
         self._poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name: str = self.solver.name
@@ -117,6 +123,14 @@ class Model:
         self._last_update = None
         if debug:
             self._last_update = time.time()
+
+        self._logger = None
+        if verbose:
+            import logging
+
+            self._logger = logging.getLogger("pyoframe")
+            self._logger.addHandler(logging.NullHandler())
+            self._logger.setLevel(logging.DEBUG)
 
     @property
     def poi(self):
@@ -406,18 +420,30 @@ class Model:
                     f"Cannot create {__name} since it was already created."
                 )
 
+            log = self._logger is not None
+
+            if log:
+                import time
+
+                start_time = time.time()
+
             __value._on_add_to_model(self, __name)
 
             if isinstance(__value, Variable):
                 self._variables.append(__value)
                 if self._var_map is not None:
                     self._var_map.add(__value)
+
+                if log:
+                    self._logger.debug(
+                        f"Added Variable '{__name}' (n={len(__value)}) to {self.solver.name} in {time.time() - start_time:.3g} seconds"
+                    )
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
-            if self._last_update is not None:
-                print(
-                    f"Added attribute '{__name}' to model (+{time.time() - self._last_update:.1f}s)"
-                )
+                if log:
+                    self._logger.debug(
+                        f"Added Constraint '{__name}' (n={len(__value)}) to {self.solver.name} in {time.time() - start_time:.3g} seconds"
+                    )
         return super().__setattr__(__name, __value)
 
     # Defining a custom __getattribute__ prevents type checkers from complaining about attribute access
@@ -541,6 +567,134 @@ class Model:
             True
         """
         self.poi.computeIIS()
+
+    def variables_size_info(self, memory_unit: pl.SizeUnit = "b") -> pl.DataFrame:
+        """Returns a DataFrame with information about the memory usage of each variable in the model.
+
+        !!! warning "Experimental"
+            This method is experimental and may change or be removed in future versions. We're interested in your [feedback]([feedback](https://github.com/Bravos-Power/pyoframe/issues).
+
+        Parameters:
+            memory_unit:
+                The size of the memory unit to use for the memory usage information.
+                See [`polars.DataFrame.estimated_size`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.estimated_size.html).
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.Y = pf.Variable(pf.Set(dim_x=range(100)))
+            >>> m.variables_size_info()
+            shape: (3, 5)
+            ┌───────┬───────────────┬────────────────────┬───────────────────────┬────────────────────────────┐
+            │ name  ┆ num_variables ┆ num_variables_perc ┆ pyoframe_memory_usage ┆ pyoframe_memory_usage_perc │
+            │ ---   ┆ ---           ┆ ---                ┆ ---                   ┆ ---                        │
+            │ str   ┆ i64           ┆ str                ┆ i64                   ┆ str                        │
+            ╞═══════╪═══════════════╪════════════════════╪═══════════════════════╪════════════════════════════╡
+            │ Y     ┆ 100           ┆ 99.0%              ┆ 1200                  ┆ 99.7%                      │
+            │ X     ┆ 1             ┆ 1.0%               ┆ 4                     ┆ 0.3%                       │
+            │ TOTAL ┆ 101           ┆ 100.0%             ┆ 1204                  ┆ 100.0%                     │
+            └───────┴───────────────┴────────────────────┴───────────────────────┴────────────────────────────┘
+        """
+        data = pl.DataFrame(
+            [
+                dict(name=v.name, n=len(v), mem=v.estimated_size(memory_unit))
+                for v in self.variables
+            ]
+        ).sort("n", descending=True)
+
+        total = data.sum().with_columns(name=pl.lit("TOTAL"))
+        data = pl.concat([data, total])
+
+        def format(expr: pl.Expr) -> pl.Expr:
+            return (100 * expr).round(1).cast(pl.String) + pl.lit("%")
+
+        data = data.with_columns(
+            n_per=format(pl.col("n") / total["n"].item()),
+            mem_per=format(pl.col("mem") / total["mem"].item()),
+        )
+
+        data = data.select("name", "n", "n_per", "mem", "mem_per")
+        data = data.rename(
+            {
+                "n": "num_variables",
+                "n_per": "num_variables_perc",
+                "mem": "pyoframe_memory_usage",
+                "mem_per": "pyoframe_memory_usage_perc",
+            }
+        )
+
+        return pl.DataFrame(data)
+
+    def constraints_size_info(self, memory_unit: pl.SizeUnit = "b") -> pl.DataFrame:
+        """Returns a DataFrame with information about the memory usage of each constraint in the model.
+
+        !!! warning "Experimental"
+            This method is experimental and may change or be removed in future versions. We're interested in your [feedback](https://github.com/Bravos-Power/pyoframe/issues).
+
+        Parameters:
+            memory_unit:
+                The size of the memory unit to use for the memory usage information.
+                See [`polars.DataFrame.estimated_size`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.estimated_size.html).
+
+        Examples:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable()
+            >>> m.Y = pf.Variable(pf.Set(dim_x=range(100)))
+            >>> m.c1 = m.X.over("dim_x") + m.Y <= 10
+            >>> m.c2 = m.X + m.Y.sum() <= 20
+            >>> m.constraints_size_info()
+            shape: (3, 7)
+            ┌───────┬───────────────┬──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+            │ name  ┆ num_constrain ┆ num_constrai ┆ num_non_zero ┆ num_non_zero ┆ pyoframe_mem ┆ pyoframe_mem │
+            │ ---   ┆ ts            ┆ nts_perc     ┆ s            ┆ s_perc       ┆ ory_usage    ┆ ory_usage_pe │
+            │ str   ┆ ---           ┆ ---          ┆ ---          ┆ ---          ┆ ---          ┆ rc           │
+            │       ┆ i64           ┆ str          ┆ i64          ┆ str          ┆ i64          ┆ ---          │
+            │       ┆               ┆              ┆              ┆              ┆              ┆ str          │
+            ╞═══════╪═══════════════╪══════════════╪══════════════╪══════════════╪══════════════╪══════════════╡
+            │ c1    ┆ 100           ┆ 99.0%        ┆ 300          ┆ 74.6%        ┆ 7314         ┆ 85.6%        │
+            │ c2    ┆ 1             ┆ 1.0%         ┆ 102          ┆ 25.4%        ┆ 1228         ┆ 14.4%        │
+            │ TOTAL ┆ 101           ┆ 100.0%       ┆ 402          ┆ 100.0%       ┆ 8542         ┆ 100.0%       │
+            └───────┴───────────────┴──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+        """
+        data = pl.DataFrame(
+            [
+                dict(
+                    name=c.name,
+                    n=len(c),
+                    non_zeros=c.lhs.data.height,
+                    mem=c.estimated_size(memory_unit),
+                )
+                for c in self.constraints
+            ]
+        ).sort("n", descending=True)
+
+        total = data.sum().with_columns(name=pl.lit("TOTAL"))
+        data = pl.concat([data, total])
+
+        def format(col: pl.Expr) -> pl.Expr:
+            return (100 * col).round(1).cast(pl.String) + pl.lit("%")
+
+        data = data.with_columns(
+            n_per=format(pl.col("n") / total["n"].item()),
+            non_zeros_per=format(pl.col("non_zeros") / total["non_zeros"].item()),
+            mem_per=format(pl.col("mem") / total["mem"].item()),
+        )
+
+        data = data.select(
+            "name", "n", "n_per", "non_zeros", "non_zeros_per", "mem", "mem_per"
+        )
+        data = data.rename(
+            {
+                "n": "num_constraints",
+                "n_per": "num_constraints_perc",
+                "non_zeros": "num_non_zeros",
+                "non_zeros_per": "num_non_zeros_perc",
+                "mem": "pyoframe_memory_usage",
+                "mem_per": "pyoframe_memory_usage_perc",
+            }
+        )
+
+        return pl.DataFrame(data)
 
     def dispose(self):
         """Disposes of the model and cleans up the solver environment.

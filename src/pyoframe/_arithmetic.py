@@ -431,14 +431,15 @@ def _broadcast(
         maintain_order="left" if Config.maintain_order else None,
     )
     if result.get_column(missing_dims[0]).null_count() > 0:
-        target_labels = target.data.select(target._dimensions_unsafe).unique(
+        self_labels = self.data.select(self._dimensions_unsafe).unique(
             maintain_order=Config.maintain_order
         )
         _raise_extras_error(
             self,
             target,
-            target_labels.join(self.data, how="anti", on=common_dims),
+            self_labels.join(target.data, how="anti", on=common_dims),
             swapped,
+            extras_on_right=False,
         )
     res = self._new(result, self.name)
     res._copy_flags(self)
