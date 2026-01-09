@@ -328,15 +328,21 @@ def test_add_expressions_with_dims_and_extras(default_solver):
     rhs = rhs.over("x")
     with pytest.raises(
         PyoframeError,
-        match=re.escape("Use .drop_extras() or .keep_extras()"),
+        match=re.escape("Extra labels in expression 2:"),
     ):
         lhs + rhs
     with pytest.raises(
         PyoframeError,
-        match=re.escape("Use .drop_extras() or .keep_extras()"),
+        match=re.escape("Extra labels in expression 1:"),
+    ):
+        rhs + lhs
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape("Extra labels in expression 2:"),
     ):
         lhs.drop_extras() + rhs
 
+    result = rhs.drop_extras() + lhs
     result = lhs + rhs.drop_extras()
     assert_frame_equal(
         result.to_str(return_df=True),
