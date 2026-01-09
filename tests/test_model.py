@@ -91,3 +91,13 @@ def test_params():
         m.params.lkjdgfsg
     with pytest.raises(KeyError, match="Unknown parameter: 'lkjdgfsg'"):
         m.params.lkjdgfsg = 4
+
+
+def test_verbose(default_solver, caplog):
+    m = pf.Model(default_solver, verbose=True)
+
+    m.X = pf.Variable(lb=0)
+    assert "Added Variable 'X'" in caplog.text
+
+    m.constr = m.X >= 5
+    assert "Added Constraint 'constr'" in caplog.text

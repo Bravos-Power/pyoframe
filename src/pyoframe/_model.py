@@ -50,6 +50,10 @@ class Model:
             Either "min" or "max". Indicates whether it's a minimization or maximization problem.
             Typically, this parameter can be omitted (`None`) as it will automatically be
             set when the objective is set using `.minimize` or `.maximize`.
+        verbose:
+            If `True`, logging messages will be printed every time a Variable or Constraint is added to the model.
+            This is useful to discover performance bottlenecks.
+            Logging can be further configured via the [`logging` module](https://docs.python.org/3/howto/logging.html) by modifying the `pyoframe` logger.
 
     Examples:
         >>> m = pf.Model()
@@ -87,6 +91,7 @@ class Model:
         "solver_name",
         "minimize",
         "maximize",
+        "_logger",
     ]
 
     def __init__(
@@ -98,6 +103,7 @@ class Model:
         solver_uses_variable_names: bool = False,
         print_uses_variable_names: bool = True,
         sense: ObjSense | ObjSenseValue | None = None,
+        verbose: bool = False,
     ):
         self._poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name: str = self.solver.name
@@ -111,6 +117,14 @@ class Model:
         self._params = Container(self._set_param, self._get_param)
         self._attr = Container(self._set_attr, self._get_attr)
         self._solver_uses_variable_names = solver_uses_variable_names
+
+        self._logger = None
+        if verbose:
+            import logging
+
+            self._logger = logging.getLogger("pyoframe")
+            self._logger.addHandler(logging.NullHandler())
+            self._logger.setLevel(logging.DEBUG)
 
     @property
     def poi(self):
@@ -400,14 +414,30 @@ class Model:
                     f"Cannot create {__name} since it was already created."
                 )
 
+            log = self._logger is not None
+
+            if log:
+                import time
+
+                start_time = time.time()
+
             __value._on_add_to_model(self, __name)
 
             if isinstance(__value, Variable):
                 self._variables.append(__value)
                 if self._var_map is not None:
                     self._var_map.add(__value)
+
+                if log:
+                    self._logger.debug(
+                        f"Added Variable '{__name}' (n={len(__value)}) to {self.solver.name} in {time.time() - start_time:.3g} seconds"
+                    )
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
+                if log:
+                    self._logger.debug(
+                        f"Added Constraint '{__name}' (n={len(__value)}) to {self.solver.name} in {time.time() - start_time:.3g} seconds"
+                    )
         return super().__setattr__(__name, __value)
 
     # Defining a custom __getattribute__ prevents type checkers from complaining about attribute access
