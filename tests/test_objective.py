@@ -32,6 +32,12 @@ def test_creation(default_solver, obj):
     with pytest.raises(ValueError, match=re.escape("Objective is not defined.")):
         m.objective
 
+    with pytest.raises(ValueError, match=re.escape("Objective is not defined.")):
+        m.minimize
+
+    with pytest.raises(ValueError, match=re.escape("Objective is not defined.")):
+        m.maximize
+
     # Should throw error because missing sense
     with pytest.raises(
         ValueError,
@@ -70,7 +76,7 @@ def test_creation(default_solver, obj):
     ):
         m.minimize = obj
 
-    # Modifying an unset objective should still be helpful.
+    # Modifying an unset objective should produce a helpful error.
     m = pf.Model(solver=default_solver)
     with pytest.raises(
         ValueError,
