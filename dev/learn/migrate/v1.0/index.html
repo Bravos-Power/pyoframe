@@ -2130,7 +2130,7 @@
 <li><strong>Bug fixes:</strong> notably with <code>Variable(equals=…)</code> not properly parsing DataFrames.</li>
 <li><strong>Improved performance</strong> after rewriting internal functions based on extensive benchmarking.</li>
 <li><strong>Smoother developer experience</strong>, notably error messages explain the mathematical operations that led to an error and Pyoframe objects now print as legible tables.</li>
-<li><strong>Improved documentation</strong> including a revamped <a href="../../../reference/">API page</a>, an <a href="../../../examples/">examples page</a>, new explanations of functions like <a href="../../concepts/addition/#adding-expressions-with-differing-dimensions-using-over"><code>.over(…)</code></a>, and the ability to view previous versions of the documentation.</li>
+<li><strong>Improved documentation</strong> including a revamped <a href="../../../reference/">API page</a>, an <a href="../../../examples/">examples page</a>, new explanations of functions like <a href="../../concepts/addition/#over"><code>.over(…)</code></a>, and the ability to view previous versions of the documentation.</li>
 <li><strong>More readable syntax</strong> like our decision to rename <code>add_dim</code> to <code>over</code> and the changes to <code>.sum()</code> (see below).</li>
 </ul>
 <p>Unfortunately, these improvements involve some breaking changes. This page will guide you in migrating your code to v1.0.</p>
@@ -2184,7 +2184,7 @@
 </span></code></pre></div>
 <p>Please update all uses of <code>pf.sum</code> and <code>pf.sum_by</code> accordingly.</p>
 <h3 id="3-rename-add_dim-to-over">3. Rename <code>.add_dim(…)</code> to <code>.over(…)</code></h3>
-<p>For clarity, <code>.add_dim(…)</code> was renamed to <a href="../../concepts/addition/#adding-expressions-with-differing-dimensions-using-over"><code>.over(…)</code></a>. Please update your code accordingly.</p>
+<p>For clarity, <code>.add_dim(…)</code> was renamed to <a href="../../concepts/addition/#over"><code>.over(…)</code></a>. Please update your code accordingly.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">add_dim</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>  <span class="c1"># before</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>  <span class="c1"># after</span>
 </span></code></pre></div>
@@ -2261,7 +2261,7 @@ some additional breaking changes that you are less likely to encounter.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 28, 2025 20:08:19 UTC">September 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 12, 2026 22:44:29 UTC">January 12, 2026</span>
   </span>
 
     

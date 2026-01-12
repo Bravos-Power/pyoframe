@@ -785,13 +785,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#adding-expressions-with-differing-dimensions-using-over" class="md-nav__link">
+  <a href="#over" class="md-nav__link">
     <span class="md-ellipsis">
-      Adding expressions with differing dimensions using .over(…)
+      .over(…)
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Adding expressions with differing dimensions using .over(…)">
+    <nav class="md-nav" aria-label=".over(…)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -804,9 +804,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-2-broadcasting-with-over" class="md-nav__link">
+  <a href="#example-2-broadcasting" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Broadcasting with .over(…)
+      Example 2: Broadcasting
     </span>
   </a>
   
@@ -818,13 +818,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#handling-extra-labels-with-keep_extras-and-drop_extras" class="md-nav__link">
+  <a href="#keep_extras-drop_extras" class="md-nav__link">
     <span class="md-ellipsis">
-      Handling 'extra' labels with .keep_extras() and .drop_extras()
+      .keep_extras() / .drop_extras()
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Handling &#39;extra&#39; labels with .keep_extras() and .drop_extras()">
+    <nav class="md-nav" aria-label=".keep_extras() / .drop_extras()">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -842,9 +842,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#order-of-operations-for-addition-modifiers" class="md-nav__link">
+  <a href="#the-bitwise-or-operator" class="md-nav__link">
     <span class="md-ellipsis">
-      Order of operations for addition modifiers
+      The bitwise OR operator
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-on-order-of-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Note on order of operations
     </span>
   </a>
   
@@ -2036,13 +2045,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#adding-expressions-with-differing-dimensions-using-over" class="md-nav__link">
+  <a href="#over" class="md-nav__link">
     <span class="md-ellipsis">
-      Adding expressions with differing dimensions using .over(…)
+      .over(…)
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Adding expressions with differing dimensions using .over(…)">
+    <nav class="md-nav" aria-label=".over(…)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2055,9 +2064,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-2-broadcasting-with-over" class="md-nav__link">
+  <a href="#example-2-broadcasting" class="md-nav__link">
     <span class="md-ellipsis">
-      Example 2: Broadcasting with .over(…)
+      Example 2: Broadcasting
     </span>
   </a>
   
@@ -2069,13 +2078,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#handling-extra-labels-with-keep_extras-and-drop_extras" class="md-nav__link">
+  <a href="#keep_extras-drop_extras" class="md-nav__link">
     <span class="md-ellipsis">
-      Handling 'extra' labels with .keep_extras() and .drop_extras()
+      .keep_extras() / .drop_extras()
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Handling &#39;extra&#39; labels with .keep_extras() and .drop_extras()">
+    <nav class="md-nav" aria-label=".keep_extras() / .drop_extras()">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2093,9 +2102,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#order-of-operations-for-addition-modifiers" class="md-nav__link">
+  <a href="#the-bitwise-or-operator" class="md-nav__link">
     <span class="md-ellipsis">
-      Order of operations for addition modifiers
+      The bitwise OR operator
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#note-on-order-of-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Note on order of operations
     </span>
   </a>
   
@@ -2138,21 +2156,12 @@
 <h1 id="addition-and-its-quirks">Addition and its quirks</h1>
 <p>In Pyoframe, <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression"><code>Expression</code></a> objects can be added using the <code>+</code> operator, as you might expect.</p>
 <p>However, sometimes an addition is ambiguous or indicative of a potential mistake in your model. In these situations, Pyoframe forces you to use <em>addition modifiers</em> to specify exactly how you'd like the addition to be performed. This safety feature helps prevent and quickly fix mistakes in your model.</p>
-<p>There are three common addition modifiers in Pyoframe: <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a>, and <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a>.</p>
-<p>Before delving into these addition modifiers, please note that <strong>these addition rules also apply to subtraction as well as the <code>&lt;=</code> and <code>&gt;=</code> operators used to create constraints</strong>. This is because subtraction is actually computed as an addition (<code>a - b</code> is computed as <code>a + (-b)</code>). Similarly, creating a constraint with the <code>&lt;=</code> or <code>&gt;=</code> operators involves combining the left and right hand sides using addition (<code>a &lt;= b</code> becomes <code>a + (-b) &lt;= 0</code>). So, although I may only mention addition from now on, please remember that this page also applies to subtraction and to constraint creation.</p>
-<p>The rest of the page is organized as follows:</p>
-<ol>
-<li>
-<p><a href="#adding-expressions-with-differing-dimensions-using-over">The <code>.over(…)</code> addition modifier</a></p>
-</li>
-<li>
-<p><a href="#handling-extra-labels-with-keep_extras-and-drop_extras">The <code>.keep_extras()</code> and <code>.drop_extras()</code> addition modifiers</a></p>
-</li>
-<li>
-<p><a href="#order-of-operations-for-addition-modifiers">Important note on the order of operations of addition modifiers</a></p>
-</li>
-</ol>
-<h2 id="adding-expressions-with-differing-dimensions-using-over">Adding expressions with differing dimensions using <code>.over(…)</code></h2>
+<p>There are three common addition modifiers in Pyoframe: <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a>, and <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a>. We'll discuss each of these as well as how the bitwise OR operator (<code>|</code>) can be used as a shortcut.</p>
+<div class="admonition warning">
+<p class="admonition-title">Addition modifiers also apply to subtraction and constraint creation</p>
+<p>Please note that <strong>the addition rules described here also apply to subtraction as well as the <code>&lt;=</code> and <code>&gt;=</code> operators used to create constraints</strong>. This is because subtraction is actually computed as an addition (<code>a - b</code> is computed as <code>a + (-b)</code>). Similarly, creating a constraint with the <code>&lt;=</code> or <code>&gt;=</code> operators involves combining the left and right hand sides using addition (<code>a &lt;= b</code> becomes <code>a + (-b) &lt;= 0</code>). So, although I may only mention addition from now on, please remember that this page also applies to subtraction and to constraint creation.</p>
+</div>
+<h2 id="over"><code>.over(…)</code></h2>
 <p>To help catch mistakes, adding expressions with differing dimensions is disallowed by default. <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a> overrides this default and <strong>indicates that an addition should be performed by "broadcasting" the differing dimensions.</strong></p>
 <p>The following examples help illustrate when <code>.over(…)</code> should and shouldn't be used.</p>
 <h3 id="example-1-catching-a-mistake">Example 1: Catching a mistake</h3>
@@ -2185,7 +2194,7 @@ model.ground_emissions = pf.Param(
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">flight_emissions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">air_emissions</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ground_emissions</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">&quot;flight_number&quot;</span><span class="p">:</span> <span class="s2">&quot;flight_no&quot;</span><span class="p">})</span>
 </span></code></pre></div>
 <p>Benign mistakes like these are relatively common and Pyoframe's error messages help you detect them early. Now, let's examine a case where <code>.over(…)</code> is needed.</p>
-<h3 id="example-2-broadcasting-with-over">Example 2: Broadcasting with <code>.over(…)</code></h3>
+<h3 id="example-2-broadcasting">Example 2: Broadcasting</h3>
 <p>Say, you'd like to see what happens if, instead of minimizing total emissions, you were to minimize the emissions of the <em>most emitting flight</em>. Mathematically, this is equivalent to minimizing variable <code>E_max</code> where <code>E_max</code> is constrained to be greater or equal to the emissions of every flight.</p>
 <p>You try to express this constraint in Pyoframe, but get an error:</p>
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">E_max</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">()</span>
@@ -2222,7 +2231,7 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="go">│ K937      ┆ E_max -2.4 Fly[K937] &gt;= 0.05  │</span>
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="go">└───────────┴───────────────────────────────┘</span>
 </span></code></pre></div>
-<h2 id="handling-extra-labels-with-keep_extras-and-drop_extras">Handling 'extra' labels with <code>.keep_extras()</code> and <code>.drop_extras()</code></h2>
+<h2 id="keep_extras-drop_extras"><code>.keep_extras()</code> / <code>.drop_extras()</code></h2>
 <p>Addition is performed by pairing the labels in the left <code>Expression</code> with those in the right <code>Expression</code>. But, what happens when the left and right labels differ?</p>
 <p>If one of the two expressions in an addition has extras labels not present in the other, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a> or <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a> must be used to indicate how the extra labels should be handled.</p>
 <h3 id="example-3-deciding-how-to-handle-extra-labels">Example 3: Deciding how to handle extra labels</h3>
@@ -2305,7 +2314,23 @@ Let's say that you fixed the error in example 1, but when you try the addition a
 </span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="go">│ D1206     ┆ 4          │</span>
 </span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="go">└───────────┴────────────┘</span>
 </span></code></pre></div>
-<h2 id="order-of-operations-for-addition-modifiers">Order of operations for addition modifiers</h2>
+<h2 id="the-bitwise-or-operator">The bitwise OR operator</h2>
+<p>In practice, you'll find that it is common to want to keep extra labels on both sides of an addition or subtraction. As such, Pyoframe offers the bitwise OR operator (<code>|</code>) as a convenient shortcut. Instead of</p>
+<!-- invisible-code-block: python
+a = model.air_emissions
+b = model.ground_emissions
+-->
+
+<p><div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">a</span><span class="o">.</span><span class="n">keep_extras</span><span class="p">()</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">keep_extras</span><span class="p">()</span>
+</span></code></pre></div>
+you can simply write</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">a</span> <span class="o">|</span> <span class="n">b</span>
+</span></code></pre></div>
+<p>For subtraction, the following lines are equivalent:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">a</span><span class="o">.</span><span class="n">keep_extras</span><span class="p">()</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">keep_extras</span><span class="p">()</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">a</span> <span class="o">|</span> <span class="o">-</span><span class="n">b</span>
+</span></code></pre></div>
+<h2 id="note-on-order-of-operations">Note on order of operations</h2>
 <p>When an operation creates a new <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expression</a>, any previously applied addition modifiers are discarded to prevent unexpected behaviors. As such, <strong>addition modifiers only work if they're applied <em>right before</em> an addition</strong>. For example, <code>a.drop_extras().sum("time") + b</code> won't work but <code>a.sum("time").drop_extras() + b</code> will.</p>
 <p>There are two exceptions to this rule:</p>
 <ol>
@@ -2314,10 +2339,10 @@ Let's say that you fixed the error in example 1, but when you try the addition a
 </li>
 <li>
 <p><em>Addition/subtraction</em>. A <code>.keep_extras()</code> or <code>.drop_extras()</code> in the left and/or right side of an addition or subtraction is preserved in the result because this allows you to write
-    <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>a.keep_extras() + b.keep_extras() + c.keep_extras()
+    <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>a.keep_extras() + b.keep_extras() + c.keep_extras()
 </span></code></pre></div>
     instead of the annoyingly verbose,
-    <div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>(a.keep_extras() + b.keep_extras()).keep_extras() + c.keep_extras()
+    <div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>(a.keep_extras() + b.keep_extras()).keep_extras() + c.keep_extras()
 </span></code></pre></div>
     (If the left and right sides have conflicting addition modifiers, e.g., <code>a.keep_extras() + b.drop_extras()</code>, no addition modifiers are preserved. Also, if you'd like an addition or subtraction <em>not</em> to preserve addition modifiers, you can force the result back to the default of raising errors whenever there are extra labels by using <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;raise_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.raise_extras"><code>.raise_extras()</code></a>.)</p>
 </li>
@@ -2344,7 +2369,7 @@ Let's say that you fixed the error in example 1, but when you try the addition a
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 22:20:54 UTC">December 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 12, 2026 22:44:29 UTC">January 12, 2026</span>
   </span>
 
     
