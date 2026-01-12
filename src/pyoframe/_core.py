@@ -79,6 +79,8 @@ class BaseOperableBlock(BaseBlock):
         See Also:
             [`drop_extras`][pyoframe.Expression.drop_extras].
         """
+        if self._extras_strategy == ExtrasStrategy.KEEP:
+            return self
         new = self._new(self.data, name=f"{self.name}.keep_extras()")
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.KEEP
@@ -92,6 +94,8 @@ class BaseOperableBlock(BaseBlock):
         See Also:
             [`keep_extras`][pyoframe.Expression.keep_extras].
         """
+        if self._extras_strategy == ExtrasStrategy.DROP:
+            return self
         new = self._new(self.data, name=f"{self.name}.drop_extras()")
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.DROP
@@ -123,6 +127,8 @@ class BaseOperableBlock(BaseBlock):
         See Also:
             [`keep_extras`][pyoframe.Expression.keep_extras] and [`drop_extras`][pyoframe.Expression.drop_extras].
         """
+        if self._extras_strategy == ExtrasStrategy.UNSET:
+            return self
         new = self._new(self.data, name=f"{self.name}.raise_extras()")
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.UNSET
@@ -385,6 +391,20 @@ class BaseOperableBlock(BaseBlock):
             └──────┴────────────┘
         """
         return other + (-self.to_expr())
+
+    def __or__(self, other: Operable) -> Expression:
+        if isinstance(other, (int, float)):
+            raise PyoframeError(
+                "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
+            )
+        return self.to_expr().keep_extras() + other.to_expr().keep_extras()  # type: ignore
+
+    def __ror__(self, other: Operable) -> Expression:
+        if isinstance(other, (int, float)):
+            raise PyoframeError(
+                "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
+            )
+        return self.to_expr().keep_extras() + other.to_expr().keep_extras()  # type: ignore
 
     def __le__(self, other):
         return Constraint(self - other, ConstraintSense.LE)

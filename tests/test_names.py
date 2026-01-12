@@ -75,3 +75,15 @@ def test_warning_without_name():
     data = pf.Set(x=[1, 2]).to_expr().data
     with pytest.warns(UserWarning):
         pf.Expression(data)
+
+
+def test_addition_modifiers():
+    expr = pf.Param({"dim": [1, 2], "val": [2, 3]})
+    assert expr.name == "val"
+
+    assert expr.keep_extras().name == "val.keep_extras()"
+    assert expr.keep_extras().keep_extras().name == "val.keep_extras()"
+    assert (expr | expr).name == "(val.keep_extras() + val.keep_extras())"
+    assert (
+        expr | expr | expr
+    ).name == "((val.keep_extras() + val.keep_extras()) + val.keep_extras())"

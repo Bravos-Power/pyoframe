@@ -4,19 +4,13 @@ In Pyoframe, [`Expression`][pyoframe.Expression] objects can be added using the 
 
 However, sometimes an addition is ambiguous or indicative of a potential mistake in your model. In these situations, Pyoframe forces you to use _addition modifiers_ to specify exactly how you'd like the addition to be performed. This safety feature helps prevent and quickly fix mistakes in your model.
 
-There are three common addition modifiers in Pyoframe: [`.over(…)`][pyoframe.Expression.over], [`.keep_extras()`][pyoframe.Expression.keep_extras], and [`.drop_extras()`][pyoframe.Expression.drop_extras].
+There are three common addition modifiers in Pyoframe: [`.over(…)`][pyoframe.Expression.over], [`.keep_extras()`][pyoframe.Expression.keep_extras], and [`.drop_extras()`][pyoframe.Expression.drop_extras]. We'll discuss each of these as well as how the bitwise OR operator (`|`) can be used as a shortcut.
 
-Before delving into these addition modifiers, please note that **these addition rules also apply to subtraction as well as the `<=` and `>=` operators used to create constraints**. This is because subtraction is actually computed as an addition (`a - b` is computed as `a + (-b)`). Similarly, creating a constraint with the `<=` or `>=` operators involves combining the left and right hand sides using addition (`a <= b` becomes `a + (-b) <= 0`). So, although I may only mention addition from now on, please remember that this page also applies to subtraction and to constraint creation.
+!!! warning "Addition modifiers also apply to subtraction and constraint creation"
 
-The rest of the page is organized as follows:
+    Please note that **the addition rules described here also apply to subtraction as well as the `<=` and `>=` operators used to create constraints**. This is because subtraction is actually computed as an addition (`a - b` is computed as `a + (-b)`). Similarly, creating a constraint with the `<=` or `>=` operators involves combining the left and right hand sides using addition (`a <= b` becomes `a + (-b) <= 0`). So, although I may only mention addition from now on, please remember that this page also applies to subtraction and to constraint creation.
 
-1. [The `.over(…)` addition modifier](#adding-expressions-with-differing-dimensions-using-over)
-
-2. [The `.keep_extras()` and `.drop_extras()` addition modifiers](#handling-extra-labels-with-keep_extras-and-drop_extras)
-
-3. [Important note on the order of operations of addition modifiers](#order-of-operations-for-addition-modifiers)
-
-## Adding expressions with differing dimensions using `.over(…)`
+## `.over(…)`
 
 To help catch mistakes, adding expressions with differing dimensions is disallowed by default. [`.over(…)`][pyoframe.Expression.over] overrides this default and **indicates that an addition should be performed by "broadcasting" the differing dimensions.**
 
@@ -62,7 +56,7 @@ Do you understand what happened? The error informs us that `model.air_emissions`
 
 Benign mistakes like these are relatively common and Pyoframe's error messages help you detect them early. Now, let's examine a case where `.over(…)` is needed.
 
-### Example 2: Broadcasting with `.over(…)`
+### Example 2: Broadcasting
 
 Say, you'd like to see what happens if, instead of minimizing total emissions, you were to minimize the emissions of the _most emitting flight_. Mathematically, this is equivalent to minimizing variable `E_max` where `E_max` is constrained to be greater or equal to the emissions of every flight.
 
@@ -114,7 +108,7 @@ Notice how applying `.over("flight_no")` added a dimension `flight_no` with valu
 
 ```
 
-## Handling 'extra' labels with `.keep_extras()` and `.drop_extras()`
+## `.keep_extras()` / `.drop_extras()`
 
 Addition is performed by pairing the labels in the left `Expression` with those in the right `Expression`. But, what happens when the left and right labels differ?
 
@@ -215,7 +209,27 @@ Option 2 hardly seems reasonable this time considering that air emissions make u
 
 ```
 
-## Order of operations for addition modifiers
+## The bitwise OR operator
+
+In practice, you'll find that it is common to want to keep extra labels on both sides of an addition or subtraction. As such, Pyoframe offers the bitwise OR operator (`|`) as a convenient shortcut. Instead of
+
+```python
+a.keep_extras() + b.keep_extras()
+```
+you can simply write
+
+```python
+a | b
+```
+
+For subtraction, the following lines are equivalent:
+
+```python
+a.keep_extras() - b.keep_extras()
+a | -b
+```
+
+## Note on order of operations
 
 When an operation creates a new [Expression][pyoframe.Expression], any previously applied addition modifiers are discarded to prevent unexpected behaviors. As such, **addition modifiers only work if they're applied _right before_ an addition**. For example, `a.drop_extras().sum("time") + b` won't work but `a.sum("time").drop_extras() + b` will.
 

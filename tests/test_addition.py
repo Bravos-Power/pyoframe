@@ -472,3 +472,40 @@ def test_propagation_over():
     res1 = -expr1.over("y").drop_extras() + expr2
     res2 = -expr1.drop_extras().over("y") + expr2
     assert_frame_equal(res1.data, res2.data)
+
+
+def test_keep_extras_shortcut():
+    expr1, expr2 = csvs_to_expr(
+        """
+    dim1,dim2,value
+    1,1,1
+    """,
+        """
+    dim1,dim2,value
+    1,1,2
+    2,1,3
+    """,
+    )
+
+    result1 = expr1 | expr2
+    result2 = expr1.keep_extras() + expr2.keep_extras()
+    assert_frame_equal(
+        result1.data,
+        result2.data,
+        check_dtypes=False,
+        check_column_order=False,
+    )
+
+    # should also work with dataframes
+    df1 = pl.DataFrame({"dim1": [1, 2], "dim2": ["a", "b"], "value": [1, 2]})
+    expr1 | df1
+    df1 | expr1
+
+    # should fail nicely in other cases
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape(
+            "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
+        ),
+    ):
+        expr1 | 1
