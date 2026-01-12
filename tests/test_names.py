@@ -82,7 +82,11 @@ def test_addition_modifiers():
     assert expr.name == "val"
 
     assert expr.keep_extras().name == "val.keep_extras()"
+
     assert expr.keep_extras().keep_extras().name == "val.keep_extras()"
+    assert expr.drop_extras().drop_extras().name == "val.drop_extras()"
+    assert expr.raise_extras().raise_extras().name == "val"
+
     assert (expr | expr).name == "(val.keep_extras() + val.keep_extras())"
     assert (
         expr | expr | expr

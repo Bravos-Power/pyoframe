@@ -509,3 +509,11 @@ def test_keep_extras_shortcut():
         ),
     ):
         expr1 | 1
+
+    with pytest.raises(
+        PyoframeError,
+        match=re.escape(
+            "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
+        ),
+    ):
+        1 | expr1
