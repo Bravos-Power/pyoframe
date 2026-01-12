@@ -213,6 +213,11 @@ Option 2 hardly seems reasonable this time considering that air emissions make u
 
 In practice, you'll find that it is common to want to keep extra labels on both sides of an addition or subtraction. As such, Pyoframe offers the bitwise OR operator (`|`) as a convenient shortcut. Instead of
 
+<!-- invisible-code-block: python
+a = model.air_emissions
+b = model.ground_emissions
+-->
+
 ```python
 a.keep_extras() + b.keep_extras()
 ```

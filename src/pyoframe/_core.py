@@ -2240,7 +2240,7 @@ class Variable(BaseOperableBlock):
     """A decision variable for an optimization model.
 
     !!! tip
-        If `lb` or `ub` are a dimensioned object (e.g. an [Expression][pyoframe.Expression]), they will automatically be [broadcasted](../../learn/concepts/addition.md#adding-expressions-with-differing-dimensions-using-over) to match the variable's dimensions.
+        If `lb` or `ub` are a dimensioned object (e.g. an [Expression][pyoframe.Expression]), they will automatically be [broadcasted](../../learn/concepts/addition.md#over) to match the variable's dimensions.
 
     Parameters:
         *indexing_sets:
