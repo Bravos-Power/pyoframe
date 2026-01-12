@@ -94,6 +94,7 @@ class Model:
         "minimize",
         "maximize",
         "_logger",
+        "_last_log",
     ]
 
     def __init__(
@@ -125,12 +126,15 @@ class Model:
             self._last_update = time.time()
 
         self._logger = None
+        self._last_log = None
         if verbose:
             import logging
 
             self._logger = logging.getLogger("pyoframe")
             self._logger.addHandler(logging.NullHandler())
             self._logger.setLevel(logging.DEBUG)
+
+            self._last_log = time.time()
 
     @property
     def poi(self):
@@ -346,18 +350,6 @@ class Model:
         Raises:
             ValueError: If the objective has not been defined.
 
-        Examples:
-            >>> m = pf.Model()
-            >>> m.X = pf.Variable()
-            >>> m.objective
-            Traceback (most recent call last):
-            ...
-            ValueError: Objective is not defined.
-            >>> m.maximize = m.X
-            >>> m.objective
-            <Objective (linear) terms=1>
-            X
-
         See Also:
             [`Model.has_objective`][pyoframe.Model.has_objective]
         """
@@ -377,9 +369,11 @@ class Model:
         value._on_add_to_model(self, "objective")
 
     @property
-    def minimize(self) -> Objective | None:
+    def minimize(self) -> Objective:
         """Sets or gets the model's objective for minimization problems."""
-        if self.sense != ObjSense.MIN:
+        if self._objective is None:
+            raise ValueError("Objective is not defined.")
+        if self.sense == ObjSense.MAX:
             raise ValueError("Can't get .minimize in a maximization problem.")
         return self._objective
 
@@ -392,9 +386,11 @@ class Model:
         self.objective = value
 
     @property
-    def maximize(self) -> Objective | None:
+    def maximize(self) -> Objective:
         """Sets or gets the model's objective for maximization problems."""
-        if self.sense != ObjSense.MAX:
+        if self._objective is None:
+            raise ValueError("Objective is not defined.")
+        if self.sense == ObjSense.MIN:
             raise ValueError("Can't get .maximize in a minimization problem.")
         return self._objective
 
@@ -420,30 +416,37 @@ class Model:
                     f"Cannot create {__name} since it was already created."
                 )
 
-            log = self._logger is not None
+            log = self._logger is not None and isinstance(
+                __value, (Constraint, Variable)
+            )
 
             if log:
-                import time
-
                 start_time = time.time()
 
             __value._on_add_to_model(self, __name)
+
+            if log:
+                solver_time = time.time() - start_time  # type: ignore
 
             if isinstance(__value, Variable):
                 self._variables.append(__value)
                 if self._var_map is not None:
                     self._var_map.add(__value)
-
                 if log:
-                    self._logger.debug(
-                        f"Added Variable '{__name}' (n={len(__value)}) to {self.solver.name} in {time.time() - start_time:.3g} seconds"
-                    )
+                    type_name = "variable"
             elif isinstance(__value, Constraint):
                 self._constraints.append(__value)
                 if log:
-                    self._logger.debug(
-                        f"Added Constraint '{__name}' (n={len(__value)}) to {self.solver.name} in {time.time() - start_time:.3g} seconds"
-                    )
+                    type_name = "constraint"
+
+            if log:
+                elapsed_time = time.time() - self._last_log  # type: ignore
+                self._last_log += elapsed_time  # type: ignore
+
+                self._logger.debug(  # type: ignore
+                    f"Added {type_name} '{__name}' to model ({elapsed_time:.1f}s elapsed, {solver_time:.1f}s for solver, n={len(__value)})"  # type: ignore
+                )
+
         return super().__setattr__(__name, __value)
 
     # Defining a custom __getattribute__ prevents type checkers from complaining about attribute access
