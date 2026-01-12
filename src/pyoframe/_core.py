@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Literal, Union, overload
+from typing import TYPE_CHECKING, Literal, Self, Union, overload
 
 import pandas as pd
 import polars as pl
@@ -693,7 +693,7 @@ class Expression(BaseOperableBlock):
             super().__init__(data, name=name)
 
     @classmethod
-    def constant(cls, constant: int | float) -> Expression:
+    def constant(cls, constant: int | float) -> Self:
         """Creates a new expression equal to the given constant.
 
         Examples:
