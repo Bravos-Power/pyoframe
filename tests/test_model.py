@@ -97,7 +97,7 @@ def test_verbose(default_solver, caplog):
     m = pf.Model(default_solver, verbose=True)
 
     m.X = pf.Variable(lb=0)
-    assert "Added Variable 'X'" in caplog.text
+    assert "Added variable 'X'" in caplog.text
 
     m.constr = m.X >= 5
-    assert "Added Constraint 'constr'" in caplog.text
+    assert "Added constraint 'constr'" in caplog.text
