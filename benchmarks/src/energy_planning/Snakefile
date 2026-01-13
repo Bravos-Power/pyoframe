@@ -8,20 +8,23 @@ CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTe
 
 CWD = Path(".")
 INPUT_DIR = CWD / "raw_data"
-RAW_INPUT_DIR = INPUT_DIR / "downloads"
+DOWNLOADS = INPUT_DIR / "downloads"
+CONSTANTS = INPUT_DIR / "constants"
 PROCESSED_INPUT_DIR = INPUT_DIR / "preprocessed"
 ANALYSIS_DIR = INPUT_DIR / "analysis"
 SCRIPTS_DIR = Path("./scripts")
 
 rule generate_all_inputs:
     input:
-        loads=PROCESSED_INPUT_DIR / "loads.parquet",
-        lines=PROCESSED_INPUT_DIR / "lines_simplified.parquet",
-        generators=PROCESSED_INPUT_DIR / "generators.parquet",
-        yearly_limit=PROCESSED_INPUT_DIR / "yearly_limits.parquet",
-        vcf=PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
-        bodf=PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
-        capex_costs=PROCESSED_INPUT_DIR / "capex_costs.csv",
+        PROCESSED_INPUT_DIR / "loads.parquet",
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+        PROCESSED_INPUT_DIR / "generators.parquet",
+        PROCESSED_INPUT_DIR / "yearly_limits.parquet",
+        PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
+        PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
+        PROCESSED_INPUT_DIR / "capex_costs.csv",
+        CONSTANTS / "map_type_to_vcf_type.csv",
+        CONSTANTS / "cost_parameters.csv",
     output:
         directory(CWD / "model_data"),
     run:
@@ -34,7 +37,7 @@ rule generate_all_inputs:
 rule fetch_load_data:
     """Downloads the load data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
     output:
-        RAW_INPUT_DIR / "CATS_loads.csv",
+        DOWNLOADS / "CATS_loads.csv",
     run:
         gdown.download(id="1Sz8st7g4Us6oijy1UYMPUvkA1XeZlIr8", output=output[0])
 
@@ -42,40 +45,40 @@ rule fetch_load_data:
 rule fetch_generation_data:
     """Downloads the generation data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
     output:
-        RAW_INPUT_DIR / "CATS_generation.csv",
+        DOWNLOADS / "CATS_generation.csv",
     run:
         gdown.download(id="1CxLlcwAEUy-JvJQdAfVydJ1p9Ecot-4d", output=output[0])
 
 
 rule fetch_line_data:
     output:
-        RAW_INPUT_DIR / "CATS_lines.json",
+        DOWNLOADS / "CATS_lines.json",
     run:
         urlretrieve(CATS_GITHUB_URL + "GIS/CATS_lines.json", output[0])
 
 
 rule fetch_generator_data:
     output:
-        RAW_INPUT_DIR / "CATS_generators.csv",
+        DOWNLOADS / "CATS_generators.csv",
     run:
         urlretrieve(CATS_GITHUB_URL + "GIS/CATS_gens.csv", output[0])
 
 
 rule fetch_matpower_data:
     output:
-        RAW_INPUT_DIR / "CaliforniaTestSystem.m",
+        DOWNLOADS / "CaliforniaTestSystem.m",
     run:
         urlretrieve(CATS_GITHUB_URL + "MATPOWER/CaliforniaTestSystem.m", output[0])
 
 rule fetch_nrel_atb_data:
     output:
-        RAW_INPUT_DIR / "NREL_ATB_data.parquet",
+        DOWNLOADS / "NREL_ATB_data.parquet",
     run:
         urlretrieve("https://oedi-data-lake.s3.amazonaws.com/ATB/electricity/parquet/2024/v3.0.0/ATBe.parquet", output[0])
 
 rule parse_matpower_case:
     input:
-        RAW_INPUT_DIR / "CaliforniaTestSystem.m",
+        DOWNLOADS / "CaliforniaTestSystem.m",
     output:
         bus=PROCESSED_INPUT_DIR / "matpower_bus.parquet",
         branch=PROCESSED_INPUT_DIR / "matpower_branch.parquet",
@@ -89,19 +92,22 @@ rule parse_matpower_case:
             "GEN_OUTPUT_PATH": output[2],
         })
 
-rule process_load_data:
+rule extract_load_data:
     """Convert the load data to narrow format and keep only the active loads."""
     input:
-        RAW_INPUT_DIR / "CATS_loads.csv",
+        DOWNLOADS / "CATS_loads.csv",
     output:
         PROCESSED_INPUT_DIR / "loads.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "process_load_data.py.ipynb")
-
+    run:
+        from energy_planning.scripts.E_extract_load_data import app as extract_load_data
+        extract_load_data.run(defs={
+            "CATS_DATA": input[0],
+            "LOAD_DATA_OUT": output[0],
+        })
 
 rule extract_line_data:
     input:
-        RAW_INPUT_DIR / "CATS_lines.json",
+        DOWNLOADS / "CATS_lines.json",
         PROCESSED_INPUT_DIR / "matpower_branch.parquet", 
     output:
         PROCESSED_INPUT_DIR / "lines.parquet",
@@ -116,7 +122,7 @@ rule extract_line_data:
 rule extract_generator_data:
     """Group the generators by type and bus."""
     input:
-        RAW_INPUT_DIR / "CATS_generators.csv",
+        DOWNLOADS / "CATS_generators.csv",
         PROCESSED_INPUT_DIR / "matpower_gen.parquet"
     output:
         PROCESSED_INPUT_DIR / "generators.parquet",
@@ -130,7 +136,7 @@ rule extract_generator_data:
 
 rule extract_capex_data:
     input:
-        RAW_INPUT_DIR / "NREL_ATB_data.parquet",
+        DOWNLOADS / "NREL_ATB_data.parquet",
     output:
         PROCESSED_INPUT_DIR / "capex_costs.csv",
     run:
@@ -143,14 +149,21 @@ rule extract_capex_data:
 rule compute_capacity_factors:
     """Use the hourly generation data to create capacity factors by fuel type."""
     input:
-        gen_capacity=PROCESSED_INPUT_DIR / "generators.parquet",
-        gen_dispatch=RAW_INPUT_DIR / "CATS_generation.csv",
+        PROCESSED_INPUT_DIR / "generators.parquet",
+        DOWNLOADS / "CATS_generation.csv",
+        CONSTANTS / "map_type_to_vcf_type.csv",
     output:
-        yearly_limit=PROCESSED_INPUT_DIR / "yearly_limits.parquet",
-        vcf=PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "compute_capacity_factors.py.ipynb")
-
+        PROCESSED_INPUT_DIR / "yearly_limits.parquet",
+        PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
+    run:
+        from energy_planning.scripts.F_compute_capacity_factors import app as compute_capacity_factors
+        compute_capacity_factors.run(defs={
+            "GENERATOR_DATA": input[0],
+            "HOURLY_GENERATION_DATA": input[1],
+            "TYPE_MAPPING": input[2],
+            "YEARLY_LIMIT_OUTPUT": output[0],
+            "VCF_OUTPUT": output[1],
+        })
 
 rule simplify_network:
     input:
@@ -165,21 +178,29 @@ rule simplify_network:
 
 rule compute_ptdf:
     input:
-        lines=PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
     output:
         PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "compute_power_transfer_dist_facts.py.ipynb")
-
+    run:
+        from energy_planning.scripts.C2_compute_power_transfer_dist_facts import app as compute_ptdf
+        compute_ptdf.run(defs={
+            "LINES_DATA": input[0],
+            "OUTPUT_PATH": output[0],
+        })
 
 rule compute_bodf:
     input:
-        lines=PROCESSED_INPUT_DIR / "lines_simplified.parquet",
-        ptdf=PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+        PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
     output:
         PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
-    notebook:
-        str(SCRIPTS_DIR / "compute_branch_outage_dist_facts.py.ipynb")
+    run:
+        from energy_planning.scripts.C3_compute_branch_outage_dist_facts import app as compute_bodf
+        compute_bodf.run(defs={
+            "LINES_DATA": input[0],
+            "PTDF_DATA": input[1],
+            "OUTPUT_PATH": output[0],
+        })
 
 rule analyze_supply_demand:
     input:

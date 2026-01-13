@@ -1,2 +1,3 @@
 results/**
-src/*/raw_data/**
+src/*/raw_data/downloads/**
+src/*/raw_data/preprocessed/**

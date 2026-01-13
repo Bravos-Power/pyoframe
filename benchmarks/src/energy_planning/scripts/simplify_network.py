@@ -20,6 +20,8 @@ from benchmark_utils import mock_snakemake
 
 f_bus = pl.col("from_bus")
 t_bus = pl.col("to_bus")
+voltage = pl.col("voltage_kv")
+EXPECTED_COLS = ["line_id", f_bus, t_bus, "reactance", "line_rating_MW", voltage]
 
 
 def get_buses_degree(
@@ -29,7 +31,7 @@ def get_buses_degree(
     lines = (
         pl.concat([lines["from_bus"], lines["to_bus"]])
         .value_counts(name="degree")
-        .filter(pl.col("degree") == degree)
+        .filter(degree=degree)
     )
     if exclude is not None:
         lines = lines.filter(~f_bus.is_in(exclude.implode()))
@@ -52,7 +54,7 @@ def combine_parallel_lines(lines: pl.DataFrame):
     lines = swap_direction(lines, condition=f_bus > t_bus)
     lines = (
         lines.with_columns((1 / pl.col("reactance")).alias("reactance"))
-        .group_by([f_bus, t_bus])
+        .group_by([f_bus, t_bus, voltage])
         .agg(
             pl.col("reactance").sum(),
             pl.col("line_id").min(),
@@ -102,11 +104,13 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
         l_edge_short.rename({"to_bus": "mid_bus"})
         .group_by("mid_bus")
         .agg(
-            line_id=pl.col("line_id").min(),
-            from_bus=f_bus.first(),
+            pl.col("line_id").min(),
+            f_bus.first(),
             to_bus=f_bus.last(),
             line_rating_MW=pl.col("line_rating_MW").min(),
             reactance=pl.col("reactance").sum(),
+            # voltage should be identical so we could just use .first(), but if voltage has issue .mean() will reveal the problem
+            voltage_kv=voltage.mean(),
         )
         .drop("mid_bus")
     )
@@ -127,17 +131,17 @@ def combine_sequential_line(lines: pl.DataFrame, buses_to_keep: pl.Series):
             "line_rating_MW"
         ),
         pl.sum_horizontal("reactance", "reactance_right").alias("reactance"),
+        voltage,
     )
 
     initial = lines.height
-    cols = ["line_id", "from_bus", "to_bus", "reactance", "line_rating_MW"]
     lines = pl.concat(
         [
-            l_keep.select(cols),
-            l_edge_short.select(cols),
-            l_edge_long.select(cols),
-            l_edge_long_uncombined.select(cols),
-            l_middle_uncombined.select(cols),
+            l_keep.select(EXPECTED_COLS),
+            l_edge_short.select(EXPECTED_COLS),
+            l_edge_long.select(EXPECTED_COLS),
+            l_edge_long_uncombined.select(EXPECTED_COLS),
+            l_middle_uncombined.select(EXPECTED_COLS),
         ]
     )
     return lines, initial - lines.height
@@ -183,8 +187,7 @@ def identify_leafs(lines, buses_to_keep):
 
 def main(lines, buses_to_keep):
     """Simplify the network until there is no more simplification possible."""
-    expected_cols = ["line_id", "from_bus", "to_bus", "reactance", "line_rating_MW"]
-    lines = lines.select(*expected_cols)
+    lines = lines.select(*EXPECTED_COLS)
 
     num_lines_initial = lines.height
     lines_removed = 0
@@ -231,10 +234,23 @@ if __name__ == "__main__":
     if "snakemake" not in globals() or hasattr(snakemake, "mock"):  # noqa: F821
         snakemake = mock_snakemake("simplify_network")
 
+    lines = pl.read_parquet(snakemake.input.lines)
+    num_buses = len(lines["from_bus"].append(lines["to_bus"]).unique())
+    print(f"Network has {lines.height} lines and {num_buses} buses.")
+
     gens = pl.scan_parquet(snakemake.input.generators)
     loads = pl.scan_parquet(snakemake.input.loads)
+    transformers = lines.filter(pl.col("transformer")).lazy()
     buses_to_keep = (
-        pl.concat([gens.select("bus"), loads.select("bus")], how="vertical_relaxed")
+        pl.concat(
+            [
+                gens.select("bus"),
+                loads.select("bus"),
+                transformers.select(bus=f_bus),
+                transformers.select(bus=t_bus),
+            ],
+            how="vertical_relaxed",
+        )
         .unique()
         .collect()
         .to_series()
@@ -243,12 +259,6 @@ if __name__ == "__main__":
     print(
         f"{len(buses_to_keep)} buses with loads or generators that should not be removed."
     )
-
-    lines = pl.read_parquet(snakemake.input.lines)
-
-    num_buses = len(lines["from_bus"].append(lines["to_bus"]).unique())
-
-    print(f"Network has {lines.height} lines and {num_buses} buses.")
 
     lines = main(lines, buses_to_keep)
 

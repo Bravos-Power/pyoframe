@@ -219,5 +219,38 @@ def _(LINE_DATA_OUT, df_final):
     return
 
 
+@app.cell
+def _(mo):
+    mo.md(r"""
+    # Plot some more
+    """)
+    return
+
+
+@app.cell
+def _(df_final):
+    df_final.plot.bar(x="voltage_kv:O", y="count()")
+    return
+
+
+@app.cell
+def _(alt, df_final, pl):
+    buses_analysis = pl.concat(
+        [
+            df_final.select("voltage_kv", bus=pl.col("from_bus")),
+            df_final.select("voltage_kv", bus=pl.col("to_bus")),
+        ]
+    )
+    buses_analysis = buses_analysis.group_by("bus").agg(
+        pl.col("voltage_kv").mean(), degree=pl.len()
+    )
+    buses_analysis.plot.bar(
+        x="voltage_kv:O",
+        y=alt.Y("count()", stack="normalize", title="Distribution of bus degree"),
+        color="degree:N",
+    )
+    return
+
+
 if __name__ == "__main__":
     app.run()
