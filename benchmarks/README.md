@@ -10,6 +10,9 @@ This folder contains the code and instructions needed to benchmark Pyoframe's pe
 3. If running the JuMP benchmark:
     a. Install Julia: `curl -fsSL https://install.julialang.org | sh`
     b. Install the Julia dependencies: `julia --project=. -e 'using Pkg; Pkg.instantiate()'`
+4. If running the AMPL benchmark:
+    a. Install the AMPL dependencies: `python -m amplpy.modules install highs gurobi`
+    b. Active your AMPL license: `python -m amplpy.modules activate <your_license_id>`
 4. Edit `config.yaml` to your liking (e.g. specify the problems and libraries to benchmark).
 5. Run `python run.py`. This will run all the benchmarks and take a while.
 6. Run `python plot.py` to generate the plots.

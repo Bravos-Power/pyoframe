@@ -44,8 +44,14 @@ def _(INPUT_DIR, RESULTS_DIR, pl):
 def _(gen_data, pl):
     _plot_data = gen_data.group_by("type").agg(pl.col("build_mw", "Pmax").sum())
 
-    _plot_data.plot.bar(x="type", y="build_mw", color="type") + _plot_data.plot.scatter(
-        x="type", y="Pmax", color="type"
+    _plt = _plot_data.plot.bar(
+        x="type", y="build_mw", color="type"
+    ) + _plot_data.plot.scatter(x="type", y="Pmax", color="type")
+    # add title to atlas plot
+    _plt.properties(
+        title="Built Capacity Relative to Total Potential Capacity by Generator Type",
+        # xlabel="Generator Type",
+        # ylabel="Capacity (MW)",
     )
     return
 

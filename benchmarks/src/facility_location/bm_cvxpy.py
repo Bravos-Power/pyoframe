@@ -6,7 +6,7 @@ See: https://www.cvxpy.org/tutorial/dcp/index.html#dcp-problems
 
 import cvxpy as cp
 import numpy as np
-from benchmark_utils import CvxpyBenchmark
+from benchmark_utils.cvxpy import CvxpyBenchmark
 
 
 class Bench(CvxpyBenchmark):

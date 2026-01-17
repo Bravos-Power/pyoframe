@@ -14,6 +14,7 @@ PROCESSED_INPUT_DIR = INPUT_DIR / "preprocessed"
 ANALYSIS_DIR = INPUT_DIR / "analysis"
 SCRIPTS_DIR = Path("./scripts")
 
+
 rule generate_all_inputs:
     input:
         PROCESSED_INPUT_DIR / "loads.parquet",
@@ -70,11 +71,16 @@ rule fetch_matpower_data:
     run:
         urlretrieve(CATS_GITHUB_URL + "MATPOWER/CaliforniaTestSystem.m", output[0])
 
+
 rule fetch_nrel_atb_data:
     output:
         DOWNLOADS / "NREL_ATB_data.parquet",
     run:
-        urlretrieve("https://oedi-data-lake.s3.amazonaws.com/ATB/electricity/parquet/2024/v3.0.0/ATBe.parquet", output[0])
+        urlretrieve(
+            "https://oedi-data-lake.s3.amazonaws.com/ATB/electricity/parquet/2024/v3.0.0/ATBe.parquet",
+            output[0],
+        )
+
 
 rule parse_matpower_case:
     input:
@@ -84,13 +90,19 @@ rule parse_matpower_case:
         branch=PROCESSED_INPUT_DIR / "matpower_branch.parquet",
         gen=PROCESSED_INPUT_DIR / "matpower_gen.parquet",
     run:
-        from energy_planning.scripts.A_parse_matpower_case import app as parse_matpower_case
-        parse_matpower_case.run(defs={
-            "MATPOWER_CASE": input[0],
-            "BUS_OUTPUT_PATH": output[0],
-            "BRANCH_OUTPUT_PATH": output[1],
-            "GEN_OUTPUT_PATH": output[2],
-        })
+        from energy_planning.scripts.A_parse_matpower_case import (
+            app as parse_matpower_case,
+        )
+
+        parse_matpower_case.run(
+            defs={
+                "MATPOWER_CASE": input[0],
+                "BUS_OUTPUT_PATH": output[0],
+                "BRANCH_OUTPUT_PATH": output[1],
+                "GEN_OUTPUT_PATH": output[2],
+            }
+        )
+
 
 rule extract_load_data:
     """Convert the load data to narrow format and keep only the active loads."""
@@ -99,40 +111,56 @@ rule extract_load_data:
     output:
         PROCESSED_INPUT_DIR / "loads.parquet",
     run:
-        from energy_planning.scripts.E_extract_load_data import app as extract_load_data
-        extract_load_data.run(defs={
-            "CATS_DATA": input[0],
-            "LOAD_DATA_OUT": output[0],
-        })
+        from energy_planning.scripts.B2_extract_load_data import (
+            app as extract_load_data,
+        )
+
+        extract_load_data.run(
+            defs={
+                "CATS_DATA": input[0],
+                "LOAD_DATA_OUT": output[0],
+            }
+        )
+
 
 rule extract_line_data:
     input:
         DOWNLOADS / "CATS_lines.json",
-        PROCESSED_INPUT_DIR / "matpower_branch.parquet", 
+        PROCESSED_INPUT_DIR / "matpower_branch.parquet",
     output:
         PROCESSED_INPUT_DIR / "lines.parquet",
     run:
         from energy_planning.scripts.C_extract_line_data import app as extract_line_data
-        extract_line_data.run(defs={
-            "CATS_DATA": input[0],
-            "MATPOWER_DATA": input[1],
-            "LINE_DATA_OUT": output[0],
-        })
+
+        extract_line_data.run(
+            defs={
+                "CATS_DATA": input[0],
+                "MATPOWER_DATA": input[1],
+                "LINE_DATA_OUT": output[0],
+            }
+        )
+
 
 rule extract_generator_data:
     """Group the generators by type and bus."""
     input:
         DOWNLOADS / "CATS_generators.csv",
-        PROCESSED_INPUT_DIR / "matpower_gen.parquet"
+        PROCESSED_INPUT_DIR / "matpower_gen.parquet",
     output:
         PROCESSED_INPUT_DIR / "generators.parquet",
     run:
-        from energy_planning.scripts.B_extract_generator_data import app as process_generator_data
-        process_generator_data.run(defs={
-            "CATS_DATA": input[0],
-            "MATPOWER_DATA": input[1],
-            "OUTPUT_PATH": output[0],
-        })
+        from energy_planning.scripts.B_extract_generator_data import (
+            app as process_generator_data,
+        )
+
+        process_generator_data.run(
+            defs={
+                "CATS_DATA": input[0],
+                "MATPOWER_DATA": input[1],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
 
 rule extract_capex_data:
     input:
@@ -140,11 +168,17 @@ rule extract_capex_data:
     output:
         PROCESSED_INPUT_DIR / "capex_costs.csv",
     run:
-        from energy_planning.scripts.D_extract_capex_data import app as extract_capex_data
-        extract_capex_data.run(defs={
-            "NREL_DATA": input[0],
-            "OUTPUT_PATH": output[0],
-        })
+        from energy_planning.scripts.D_extract_capex_data import (
+            app as extract_capex_data,
+        )
+
+        extract_capex_data.run(
+            defs={
+                "NREL_DATA": input[0],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
 
 rule compute_capacity_factors:
     """Use the hourly generation data to create capacity factors by fuel type."""
@@ -156,14 +190,20 @@ rule compute_capacity_factors:
         PROCESSED_INPUT_DIR / "yearly_limits.parquet",
         PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
     run:
-        from energy_planning.scripts.F_compute_capacity_factors import app as compute_capacity_factors
-        compute_capacity_factors.run(defs={
-            "GENERATOR_DATA": input[0],
-            "HOURLY_GENERATION_DATA": input[1],
-            "TYPE_MAPPING": input[2],
-            "YEARLY_LIMIT_OUTPUT": output[0],
-            "VCF_OUTPUT": output[1],
-        })
+        from energy_planning.scripts.E_compute_capacity_factors import (
+            app as compute_capacity_factors,
+        )
+
+        compute_capacity_factors.run(
+            defs={
+                "GENERATOR_DATA": input[0],
+                "HOURLY_GENERATION_DATA": input[1],
+                "TYPE_MAPPING": input[2],
+                "YEARLY_LIMIT_OUTPUT": output[0],
+                "VCF_OUTPUT": output[1],
+            }
+        )
+
 
 rule simplify_network:
     input:
@@ -172,8 +212,15 @@ rule simplify_network:
         loads=PROCESSED_INPUT_DIR / "loads.parquet",
     output:
         PROCESSED_INPUT_DIR / "lines_simplified.parquet",
-    script:
-        SCRIPTS_DIR / "simplify_network.py"
+    run:
+        from energy_planning.scripts.C1_simplify_network import main
+
+        main(
+            lines_path=input.lines,
+            gens_path=input.generators,
+            loads_path=input.loads,
+            output_path=output[0],
+        )
 
 
 rule compute_ptdf:
@@ -182,11 +229,17 @@ rule compute_ptdf:
     output:
         PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
     run:
-        from energy_planning.scripts.C2_compute_power_transfer_dist_facts import app as compute_ptdf
-        compute_ptdf.run(defs={
-            "LINES_DATA": input[0],
-            "OUTPUT_PATH": output[0],
-        })
+        from energy_planning.scripts.C2_compute_power_transfer_dist_facts import (
+            app as compute_ptdf,
+        )
+
+        compute_ptdf.run(
+            defs={
+                "LINES_DATA": input[0],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
 
 rule compute_bodf:
     input:
@@ -195,12 +248,18 @@ rule compute_bodf:
     output:
         PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
     run:
-        from energy_planning.scripts.C3_compute_branch_outage_dist_facts import app as compute_bodf
-        compute_bodf.run(defs={
-            "LINES_DATA": input[0],
-            "PTDF_DATA": input[1],
-            "OUTPUT_PATH": output[0],
-        })
+        from energy_planning.scripts.C3_compute_branch_outage_dist_facts import (
+            app as compute_bodf,
+        )
+
+        compute_bodf.run(
+            defs={
+                "LINES_DATA": input[0],
+                "PTDF_DATA": input[1],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
 
 rule analyze_supply_demand:
     input:

@@ -11,6 +11,8 @@ dependencies = [
     "linopy==0.5.5",
     "pyoptinterface==0.5.1",
     "cvxpy[GUROBI,MOSEK]==1.7.1",
+    "amplpy==0.16.0",
+    "pulp[gurobi,highs,copt]==3.2.1",
     # tools
     "snakemake==9.6.0",
     "gdown==5.2.0",             # To download data from Google Drive

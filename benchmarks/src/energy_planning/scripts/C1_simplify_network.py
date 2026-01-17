@@ -15,8 +15,9 @@ Leaf nodes are nodes containing either loads or generators that can be wholly di
 grid by a single contingency. They are flagged so such contingencies are not considered.
 """
 
+from pathlib import Path
+
 import polars as pl
-from benchmark_utils import mock_snakemake
 
 f_bus = pl.col("from_bus")
 t_bus = pl.col("to_bus")
@@ -185,7 +186,7 @@ def identify_leafs(lines, buses_to_keep):
     return lines
 
 
-def main(lines, buses_to_keep):
+def main_loop(lines, buses_to_keep):
     """Simplify the network until there is no more simplification possible."""
     lines = lines.select(*EXPECTED_COLS)
 
@@ -230,16 +231,18 @@ def main(lines, buses_to_keep):
     return lines
 
 
-if __name__ == "__main__":
-    if "snakemake" not in globals() or hasattr(snakemake, "mock"):  # noqa: F821
-        snakemake = mock_snakemake("simplify_network")
-
-    lines = pl.read_parquet(snakemake.input.lines)
+def main(
+    lines_path: Path | str,
+    gens_path: Path | str,
+    loads_path: Path | str,
+    output_path: Path | str,
+):
+    lines = pl.read_parquet(lines_path)
     num_buses = len(lines["from_bus"].append(lines["to_bus"]).unique())
     print(f"Network has {lines.height} lines and {num_buses} buses.")
 
-    gens = pl.scan_parquet(snakemake.input.generators)
-    loads = pl.scan_parquet(snakemake.input.loads)
+    gens = pl.scan_parquet(gens_path)
+    loads = pl.scan_parquet(loads_path)
     transformers = lines.filter(pl.col("transformer")).lazy()
     buses_to_keep = (
         pl.concat(
@@ -260,7 +263,7 @@ if __name__ == "__main__":
         f"{len(buses_to_keep)} buses with loads or generators that should not be removed."
     )
 
-    lines = main(lines, buses_to_keep)
+    lines = main_loop(lines, buses_to_keep)
 
     num_buses_simplified = len(lines["from_bus"].append(lines["to_bus"]).unique())
 
@@ -268,4 +271,14 @@ if __name__ == "__main__":
         f"Simplified network has {lines.height} lines and {num_buses_simplified} buses."
     )
 
-    lines.write_parquet(snakemake.output[0])
+    lines.write_parquet(output_path)
+
+
+if __name__ == "__main__":
+    input_dir = Path("../raw_data/")
+    main(
+        lines_path=input_dir / "lines.parquet",
+        gens_path=input_dir / "generators.parquet",
+        loads_path=input_dir / "loads.parquet",
+        output_path=input_dir / "simplified_lines.parquet",
+    )

@@ -53,7 +53,7 @@ def normalize_results(results: pl.DataFrame):
 def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
     assert results.height > 0, "No results to plot"
 
-    scale = "log" if not normalized else "linear"
+    scale = "linear" if not normalized else "linear"
     x_label = "Number of variables"
 
     results = results.with_columns(
@@ -62,6 +62,9 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
         .otherwise(pl.col("library"))
         .alias("library")
     )
+
+    if not normalized:
+        results = results.with_columns(pl.col("memory_uss_mb") / 1e3)
 
     combined_plot = None
     for solver in results.get_column("solver").unique():
@@ -117,7 +120,7 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
                     scale=alt.Scale(type=scale),
                     title="Memory / Pyoframe memory"
                     if normalized
-                    else "Peak memory usage (USS, MB)",
+                    else "Peak memory usage (USS, GB)",
                     axis=y_axis_mem,
                 ),
                 color="library",
@@ -140,10 +143,10 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
     combined_plot.save(output)
 
 
-if __name__ == "__main__":
+def plot_all_summary():
     df = get_latest_data()
     for problem in config["problems"]:
-        problem_df = df.filter(pl.col("problem") == problem)
+        problem_df = df.filter(problem=problem)
         if problem_df.height == 0:
             continue
 
@@ -171,3 +174,88 @@ if __name__ == "__main__":
             log_y=False,
             normalized=True,
         )
+
+
+def plot_memory_usage_over_time():
+    for problem in config["problems"]:
+        problem_mem_log_dir = CWD / "results" / problem / "mem_log"
+        if not problem_mem_log_dir.exists():
+            continue
+
+        all_data = []
+
+        for file in problem_mem_log_dir.glob("*.parquet"):
+            file_terms = file.stem.split("_")
+            day, time, library, solver, size = (
+                file_terms[0],
+                file_terms[1],
+                file_terms[2],
+                file_terms[3],
+                file_terms[4],
+            )
+            df = pl.read_parquet(file)
+            df = df.with_columns(
+                timestamp=pl.lit(f"{day} {time}"),
+                size=pl.lit(int(size)),
+                library=pl.lit(library),
+                solver=pl.lit(solver),
+            )
+            all_data.append(df)
+        all_data_df = pl.concat(all_data)
+        most_recent = all_data_df.group_by(["library", "solver", "size"]).agg(
+            pl.col("timestamp").max()
+        )
+        only_most_recent = all_data_df.join(
+            most_recent,
+            on=["library", "solver", "size", "timestamp"],
+            how="inner",
+        )
+
+        plt = None
+        only_most_recent = only_most_recent.sort("size")
+
+        only_most_recent = only_most_recent.with_columns(
+            pl.col("uss_MiB", "vms_MiB", "rss_MiB") / 1024
+        )
+
+        for (size, solver), group in only_most_recent.group_by(
+            ["size", "solver"], maintain_order=True
+        ):
+            if group.height == 0:
+                continue
+            panel = (
+                alt.Chart(group)
+                .mark_line(strokeWidth=1)
+                .encode(
+                    x=alt.X("time_s", title="Elapsed time (s)"),
+                    y=alt.Y("uss_MiB", title="Memory usage (GiB, USS)"),
+                    color="library:N",
+                )
+                .properties(title=f"Memory usage over time (N={size}, {solver})")
+            )
+            # add rss as dashed lines
+            panel += (
+                alt.Chart(group)
+                .mark_line(strokeWidth=1, strokeDash=[2, 2])
+                .encode(x=alt.X("time_s"), y=alt.Y("rss_MiB"), color="library:N")
+            )
+            keypoints = group.filter(pl.col("marker").is_not_null())
+            if keypoints.height > 0:
+                panel += keypoints.plot.scatter(
+                    x="time_s",
+                    y="uss_MiB",
+                    color="library:N",
+                    shape="marker:N",
+                )
+
+            if plt is None:
+                plt = panel
+            else:
+                plt |= panel
+        if plt is not None:
+            plt.save(CWD / "results" / problem / "memory_usage_over_time.svg")
+
+
+if __name__ == "__main__":
+    plot_all_summary()
+    plot_memory_usage_over_time()

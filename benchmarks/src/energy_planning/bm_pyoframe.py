@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import polars as pl
-from benchmark_utils import PyoframeBenchmark
+from benchmark_utils.pyoframe import PyoframeBenchmark
 
 from pyoframe import Model, Param, Set, Variable
 

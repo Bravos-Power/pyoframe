@@ -8,7 +8,7 @@ See https://github.com/jump-dev/JuMPPaperBenchmarks
 """
 
 import pyomo.environ as pyo
-from benchmark_utils import PyomoBenchmark
+from benchmark_utils.pyomo import PyomoBenchmark
 
 
 class Bench(PyomoBenchmark):
