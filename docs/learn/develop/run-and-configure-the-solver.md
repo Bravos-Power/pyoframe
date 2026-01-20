@@ -1,28 +1,14 @@
-# Solver interface
+# Run and configure the solver
 
-Pyoframe provides a friendly API that allows you to read and set the various attributes and parameters your solver has to offer.
-
-## Model attributes
-
-Pyoframe lets you read and set solver attributes using `model.attr.<your-attribute>`. For example, if you'd like to prevent the solver from printing to the console you can do:
+To run your optimization model call,
 
 ```python
-m = pf.Model()
-m.attr.Silent = True
+m.optimize()
 ```
 
-Pyoframe supports a set of [standard attributes](https://metab0t.github.io/PyOptInterface/model.html#id1) as well as additional [Gurobi attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes/model.html) and [COPT attributes](https://guide.coap.online/copt/en-doc/attribute.html).
+Recall that you chose your solver upon [creating your model](./create-a-model.md#specify-a-solver).
 
-```pycon
->>> m.optimize()
->>> m.attr.TerminationStatus  # PyOptInterface attribute (always available)
-<TerminationStatusCode.OPTIMAL: 2>
->>> m.attr.Status  # Gurobi attribute (only available with Gurobi)
-2
-
-```
-
-## Model parameters
+## Configure solver parameters
 
 Every solver has a set of parameters that you can read or set using `model.params.<your-param>`.
 
@@ -70,7 +56,29 @@ Every solver has a set of parameters that you can read or set using `model.param
         Ipopt does not support reading parameters (only setting them).
 
 
-## Variable and constraint attributes
+## Configure solver attributes
+
+Pyoframe lets you read and set solver attributes using `model.attr.<your-attribute>`. For example, if you'd like to prevent the solver from printing to the console you can do:
+
+```python
+m = pf.Model()
+m.attr.Silent = True
+```
+
+Pyoframe supports a set of [standard attributes](https://metab0t.github.io/PyOptInterface/model.html#id1) as well as additional [Gurobi attributes](https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes/model.html) and [COPT attributes](https://guide.coap.online/copt/en-doc/attribute.html).
+
+```pycon
+>>> m.optimize()
+>>> m.attr.TerminationStatus  # PyOptInterface attribute (always available)
+<TerminationStatusCode.OPTIMAL: 2>
+>>> m.attr.Status  # Gurobi attribute (only available with Gurobi)
+2
+
+```
+
+
+
+### Variable and constraint attributes
 
 Similar to above, Pyoframe allows directly accessing the PyOptInterface or the solver's variable and constraint attributes.
 
@@ -82,7 +90,7 @@ m.X.attr.PrimalStart = 5  # Set initial value for warm start
 
 If the variable or constraint is dimensioned, the attribute can accept/return a DataFrame instead of a constant.
 
-## License configuration (COPT and Gurobi)
+## Configure an advanced license
 
 Both COPT and Gurobi support advanced license configurations through the `solver_env` parameter:
 

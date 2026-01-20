@@ -54,7 +54,7 @@ We use Ruff for linting and formatting. The pre-commit hooks will run `ruff form
 
 ## Additional tips
 
-I recommend skimming or reading the [Internal Details](../learn/advanced-concepts/internals.md) page for some background on how Pyoframe works.
+I recommend skimming or reading the [Internal Details](../learn/concepts/internals.md) page for some background on how Pyoframe works.
 
 For core developers:
 

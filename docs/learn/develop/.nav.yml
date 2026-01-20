@@ -1,0 +1,8 @@
+nav:
+  - create-a-model.md
+  - create-variables.md
+  - create-expressions.md
+  - create-constraints.md
+  - define-objective.md
+  - run-and-configure-the-solver.md
+  - read-results.md

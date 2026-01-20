@@ -4,8 +4,8 @@ nav:
   - Home: index.md
   - Learn:
     - learn/get-started
+    - learn/develop
     - learn/concepts
-    - learn/advanced-concepts
     - learn/migrate
   - examples
   - Reference API: reference
