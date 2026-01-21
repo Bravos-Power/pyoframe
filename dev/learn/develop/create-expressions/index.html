@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/get-started/basic-example/example/">
+        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/develop/create-expressions/">
       
       
-        <link rel="prev" href="../../installation/">
+        <link rel="prev" href="../create-variables/">
       
       
-        <link rel="next" href="../example-with-dimensions/">
+        <link rel="next" href="../create-constraints/">
       
       
-      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
-        <title>Solve a simple problem - Pyoframe</title>
+        <title>Create expressions - Pyoframe</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.84d31ad4.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.84d31ad4.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -48,11 +48,11 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#solve-a-simple-problem" class="md-skip">
+        <a href="#create-expressions" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +95,7 @@
         <aside class="md-banner">
           <div class="md-banner__inner md-grid md-typeset">
             
-            You are currently viewing <strong>pre-release</strong> documentation.  This may contain features that have not yet been packaged. For the most accurate information, please <strong><a href="../../../../..">access the release version</a></strong>.
+            You are currently viewing <strong>pre-release</strong> documentation.  This may contain features that have not yet been packaged. For the most accurate information, please <strong><a href="../../../..">access the release version</a></strong>.
           </div>
           
         </aside>
@@ -107,10 +107,10 @@
           <aside class="md-banner md-banner--warning">
             <div class="md-banner__inner md-grid md-typeset">
               
-  You are currently viewing <strong>outdated</strong> documentation.  For the most up-to-date information, please <strong><a href="../../../../..">refer to the latest release</a></strong>.
+  You are currently viewing <strong>outdated</strong> documentation.  For the most up-to-date information, please <strong><a href="../../../..">refer to the latest release</a></strong>.
 
             </div>
-            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
           </aside>
         
       </div>
@@ -120,7 +120,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../.." title="Pyoframe" class="md-header__button md-logo" aria-label="Pyoframe" data-md-component="logo">
+    <a href="../../.." title="Pyoframe" class="md-header__button md-logo" aria-label="Pyoframe" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -140,7 +140,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Solve a simple problem
+              Create expressions
             
           </span>
         </div>
@@ -257,7 +257,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../.." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link">
         
   
   
@@ -289,7 +289,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../installation/" class="md-tabs__link">
+        <a href="../../get-started/installation/" class="md-tabs__link">
           
   
   
@@ -314,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../examples/" class="md-tabs__link">
+        <a href="../../../examples/" class="md-tabs__link">
           
   
   
@@ -336,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../reference/" class="md-tabs__link">
+        <a href="../../../reference/" class="md-tabs__link">
           
   
   
@@ -356,7 +356,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../why-pyoframe/" class="md-tabs__link">
+      <a href="../../../why-pyoframe/" class="md-tabs__link">
         
   
   
@@ -377,7 +377,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../contribute/" class="md-tabs__link">
+        <a href="../../../contribute/" class="md-tabs__link">
           
   
   
@@ -413,7 +413,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="Pyoframe" class="md-nav__button md-logo" aria-label="Pyoframe" data-md-component="logo">
+    <a href="../../.." title="Pyoframe" class="md-nav__button md-logo" aria-label="Pyoframe" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -443,7 +443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -520,8 +520,6 @@
                 
   
   
-    
-  
   
   
     
@@ -545,11 +543,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
@@ -565,7 +563,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_1">
             <span class="md-nav__icon md-icon"></span>
             Get started
@@ -579,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../installation/" class="md-nav__link">
+      <a href="../../get-started/installation/" class="md-nav__link">
         
   
   
@@ -599,19 +597,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../get-started/basic-example/example/" class="md-nav__link">
         
   
   
@@ -622,7 +611,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -635,7 +623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../example-with-dimensions/" class="md-nav__link">
+      <a href="../../get-started/basic-example/example-with-dimensions/" class="md-nav__link">
         
   
   
@@ -663,6 +651,8 @@
                 
   
   
+    
+  
   
   
     
@@ -694,11 +684,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
@@ -714,7 +704,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
             Develop
@@ -728,7 +718,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-a-model/" class="md-nav__link">
+      <a href="../create-a-model/" class="md-nav__link">
         
   
   
@@ -751,7 +741,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-variables/" class="md-nav__link">
+      <a href="../create-variables/" class="md-nav__link">
         
   
   
@@ -771,10 +761,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../develop/create-expressions/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Create expressions
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -785,6 +797,53 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-arithmetic-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using arithmetic operators
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using transforms
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -797,7 +856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-constraints/" class="md-nav__link">
+      <a href="../create-constraints/" class="md-nav__link">
         
   
   
@@ -820,7 +879,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/define-objective/" class="md-nav__link">
+      <a href="../define-objective/" class="md-nav__link">
         
   
   
@@ -843,7 +902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/run-and-configure-the-solver/" class="md-nav__link">
+      <a href="../run-and-configure-the-solver/" class="md-nav__link">
         
   
   
@@ -866,7 +925,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/read-results/" class="md-nav__link">
+      <a href="../read-results/" class="md-nav__link">
         
   
   
@@ -955,7 +1014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/addition/" class="md-nav__link">
+      <a href="../../concepts/addition/" class="md-nav__link">
         
   
   
@@ -978,7 +1037,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/performance/" class="md-nav__link">
+      <a href="../../concepts/performance/" class="md-nav__link">
         
   
   
@@ -1001,7 +1060,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/quadratics/" class="md-nav__link">
+      <a href="../../concepts/quadratics/" class="md-nav__link">
         
   
   
@@ -1024,7 +1083,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/troubleshooting/" class="md-nav__link">
+      <a href="../../concepts/troubleshooting/" class="md-nav__link">
         
   
   
@@ -1047,7 +1106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/internals/" class="md-nav__link">
+      <a href="../../concepts/internals/" class="md-nav__link">
         
   
   
@@ -1128,7 +1187,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../migrate/v1.0/" class="md-nav__link">
+      <a href="../../migrate/v1.0/" class="md-nav__link">
         
   
   
@@ -1197,7 +1256,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../examples/" class="md-nav__link ">
+            <a href="../../../examples/" class="md-nav__link ">
               
   
   
@@ -1232,7 +1291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/diet/" class="md-nav__link">
+      <a href="../../../examples/diet/" class="md-nav__link">
         
   
   
@@ -1255,7 +1314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/production/" class="md-nav__link">
+      <a href="../../../examples/production/" class="md-nav__link">
         
   
   
@@ -1278,7 +1337,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/facility_location/" class="md-nav__link">
+      <a href="../../../examples/facility_location/" class="md-nav__link">
         
   
   
@@ -1301,7 +1360,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/portfolio_optimization/" class="md-nav__link">
+      <a href="../../../examples/portfolio_optimization/" class="md-nav__link">
         
   
   
@@ -1360,7 +1419,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../reference/" class="md-nav__link ">
+            <a href="../../../reference/" class="md-nav__link ">
               
   
   
@@ -1462,7 +1521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Model/" class="md-nav__link">
+      <a href="../../../reference/public/Model/" class="md-nav__link">
         
   
   
@@ -1485,7 +1544,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Variable/" class="md-nav__link">
+      <a href="../../../reference/public/Variable/" class="md-nav__link">
         
   
   
@@ -1508,7 +1567,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Expression/" class="md-nav__link">
+      <a href="../../../reference/public/Expression/" class="md-nav__link">
         
   
   
@@ -1531,7 +1590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Constraint/" class="md-nav__link">
+      <a href="../../../reference/public/Constraint/" class="md-nav__link">
         
   
   
@@ -1554,7 +1613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Objective/" class="md-nav__link">
+      <a href="../../../reference/public/Objective/" class="md-nav__link">
         
   
   
@@ -1577,7 +1636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Param/" class="md-nav__link">
+      <a href="../../../reference/public/Param/" class="md-nav__link">
         
   
   
@@ -1600,7 +1659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Set/" class="md-nav__link">
+      <a href="../../../reference/public/Set/" class="md-nav__link">
         
   
   
@@ -1623,7 +1682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Config/" class="md-nav__link">
+      <a href="../../../reference/public/Config/" class="md-nav__link">
         
   
   
@@ -1646,7 +1705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/VType/" class="md-nav__link">
+      <a href="../../../reference/public/VType/" class="md-nav__link">
         
   
   
@@ -1669,7 +1728,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/ObjSense/" class="md-nav__link">
+      <a href="../../../reference/public/ObjSense/" class="md-nav__link">
         
   
   
@@ -1692,7 +1751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/PyoframeError/" class="md-nav__link">
+      <a href="../../../reference/public/PyoframeError/" class="md-nav__link">
         
   
   
@@ -1772,7 +1831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/bases/BaseBlock/" class="md-nav__link">
+      <a href="../../../reference/bases/BaseBlock/" class="md-nav__link">
         
   
   
@@ -1795,7 +1854,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/bases/BaseOperableBlock/" class="md-nav__link">
+      <a href="../../../reference/bases/BaseOperableBlock/" class="md-nav__link">
         
   
   
@@ -1873,7 +1932,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/types/Operable/" class="md-nav__link">
+      <a href="../../../reference/types/Operable/" class="md-nav__link">
         
   
   
@@ -1911,7 +1970,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../why-pyoframe/" class="md-nav__link">
+      <a href="../../../why-pyoframe/" class="md-nav__link">
         
   
   
@@ -1956,7 +2015,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../contribute/" class="md-nav__link ">
+            <a href="../../../contribute/" class="md-nav__link ">
               
   
   
@@ -2006,6 +2065,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-arithmetic-operators" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using arithmetic operators
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-transforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using transforms
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2021,7 +2115,7 @@
 
   
       
-        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/get-started/basic-example/example.md" title="Edit this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/develop/create-expressions.md" title="Edit this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
         </a>
@@ -2030,7 +2124,7 @@
         
           
         
-        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/get-started/basic-example/example.md" title="View source of this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/develop/create-expressions.md" title="View source of this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
         </a>
@@ -2038,62 +2132,72 @@
   
 
 
-<h1 id="solve-a-simple-problem">Solve a simple problem</h1>
-<!-- invisible-code-block: python
-import os
-
-os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
--->
-
-<p>To start, you will solve a simple optimization problem with Pyoframe.</p>
-<div class="admonition quote">
-<p class="admonition-title">Problem statement</p>
-<p>Imagine you're a vegetarian hesitating between tofu and chickpeas as
-a source of protein for tomorrow's dinner. You'd like to spend as little money as
-possible while still consuming at least 50g of protein. How many blocks
-of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein) should you buy?</p>
-</div>
-<p>Click on the <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg></span> buttons below to understand the code, and then run it on your computer.</p>
+<h1 id="create-expressions">Create expressions</h1>
+<p>Mathematical expressions in Pyoframe are represented by the <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression"><code>Expression</code></a> class and can be created in a few ways.</p>
+<h2 id="using-arithmetic-operators">Using arithmetic operators</h2>
+<p>Expressions are automatically created whenever standard arithmetic operators (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>**</code>) are used between Pyoframe objects. For example, the following code creates the expression <code>m.hours_remaining</code>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># You can buy tofu or chickpeas</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>  <span class="c1"># (1)!</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># You want to minimize your cost</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span>  <span class="c1"># (2)!</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># But still consume enough protein</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">m</span><span class="o">.</span><span class="n">protein_constraint</span> <span class="o">=</span> <span class="mi">18</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">+</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span> <span class="o">&gt;=</span> <span class="mi">50</span>  <span class="c1"># (3)!</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>  <span class="c1"># (4)!</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tofu blocks:&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Chickpea cans:&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">m</span><span class="o">.</span><span class="n">Hours_Worked</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">({</span><span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Mon&quot;</span><span class="p">,</span> <span class="s2">&quot;Tue&quot;</span><span class="p">,</span> <span class="s2">&quot;Wed&quot;</span><span class="p">,</span> <span class="s2">&quot;Thu&quot;</span><span class="p">,</span> <span class="s2">&quot;Fri&quot;</span><span class="p">]},</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">m</span><span class="o">.</span><span class="n">Hours_Sleep</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">({</span><span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Fri&quot;</span><span class="p">,</span> <span class="s2">&quot;Thu&quot;</span><span class="p">,</span> <span class="s2">&quot;Wed&quot;</span><span class="p">,</span> <span class="s2">&quot;Tue&quot;</span><span class="p">,</span> <span class="s2">&quot;Mon&quot;</span><span class="p">]},</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">hours_remaining</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">-</span> <span class="n">m</span><span class="o">.</span><span class="n">Hours_Worked</span> <span class="o">-</span> <span class="n">m</span><span class="o">.</span><span class="n">Hours_Sleep</span>
 </span></code></pre></div>
-<!-- invisible-code-block: python
-assert m.tofu_blocks.solution == 2
-assert m.chickpea_cans.solution == 1
--->
-
-<ol>
-<li>
-<p><code>lb=0</code> set a lower bound so that you can't buy negative amounts of tofu. </p>
-<p><code>vtype="integer"</code> ensures that you can't buy a fraction of a block.</p>
-</li>
-<li>
-<p><code>minimize</code> and <code>maximize</code> are reserved variable names that can be used to set the objective.</p>
-</li>
-<li>Pyoframe constraints are easily created with the <code>&lt;=</code>, <code>&gt;=</code>, or <code>==</code> operators.</li>
-<li>Pyoframe automatically detects the solver you have installed; no need to specify it!</li>
-</ol>
-<p>After running the code you should get:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="go">Tofu blocks: 2</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="go">Chickpea cans: 1</span>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">hours_remaining</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="go">&lt;Expression (linear) height=5 terms=15&gt;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="go">┌─────┬───────────────────────────────────────────┐</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="go">│ day ┆ expression                                │</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="go">│ (5) ┆                                           │</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="go">╞═════╪═══════════════════════════════════════════╡</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="go">│ Mon ┆ 24 - Hours_Worked[Mon] - Hours_Sleep[Mon] │</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="go">│ Tue ┆ 24 - Hours_Worked[Tue] - Hours_Sleep[Tue] │</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="go">│ Wed ┆ 24 - Hours_Worked[Wed] - Hours_Sleep[Wed] │</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="go">│ Thu ┆ 24 - Hours_Worked[Thu] - Hours_Sleep[Thu] │</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="go">│ Fri ┆ 24 - Hours_Worked[Fri] - Hours_Sleep[Fri] │</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="go">└─────┴───────────────────────────────────────────┘</span>
 </span></code></pre></div>
-<p>On the <a href="../example-with-dimensions/">next page</a>, you'll resolve this problem but instead of hard-coded values, you'll use DataFrames, Pyoframe's secret sauce!</p>
+<div class="admonition warning">
+<p class="admonition-title">Pyoframe always aligns labels and dimensions</p>
+<p>Pyoframe always performs operations label-by-label. For example, Pyoframe subtracted <code>m.Hours_Sleep</code> from <code>m.Hours_Worked</code> using the labels; the fact that the days were listed in reverse order in <code>m.Hours_Sleep</code> (see above) does not matter.</p>
+<p>When the left- and/or right-hand side expressions have labels not present in the other, it may be necessary to use <code>.keep_extras()</code> or <code>.drop_extras()</code> to specify how these extra labels should be handled. Similarly, if one of the two operands is missing a dimension, it may be necessary to use <code>.over</code> to force broadcasting. Read <a href="../../concepts/addition/">Addition and its quirks</a> to learn more.</p>
+</div>
+<h2 id="using-parameters">Using parameters</h2>
+<p>External data can be incorporated into an optimization problem by using <a class="autorefs autorefs-internal" href="../../../reference/public/Param/#pyoframe.Param"><code>pf.Param(data)</code></a> which converts a DataFrame into a Pyoframe expression. The last column of the DataFrame will be treated as the expression value, and all other columns will be treated as labels. For example, the following code creates a Pyoframe expression equal to <code>1</code> on Friday and <code>0</code> otherwise.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">is_holiday</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="p">{</span><span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Mon&quot;</span><span class="p">,</span> <span class="s2">&quot;Tue&quot;</span><span class="p">,</span> <span class="s2">&quot;Wed&quot;</span><span class="p">,</span> <span class="s2">&quot;Thu&quot;</span><span class="p">,</span> <span class="s2">&quot;Fri&quot;</span><span class="p">],</span> <span class="s2">&quot;is_holiday&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]}</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">)</span>
+</span></code></pre></div>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">is_holiday</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="go">&lt;Expression (parameter) height=5 terms=5&gt;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="go">┌─────┬────────────┐</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="go">│ day ┆ expression │</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="go">│ (5) ┆            │</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="go">╞═════╪════════════╡</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="go">│ Mon ┆ 0          │</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="go">│ Tue ┆ 0          │</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="go">│ Wed ┆ 0          │</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="go">│ Thu ┆ 0          │</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="go">│ Fri ┆ 1          │</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="go">└─────┴────────────┘</span>
+</span></code></pre></div>
+<p>The expression can then be used like any other Pyoframe object:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">holiday_hours_worked</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">Hours_Worked</span> <span class="o">*</span> <span class="n">pf</span><span class="o">.</span><span class="n">Param</span><span class="p">(</span><span class="n">is_holiday</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Note that <code>pf.Param</code> is automatically applied when a Pyoframe object is operated with a DataFrame so the previous line can be simplified to</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">m</span><span class="o">.</span><span class="n">holiday_hours_worked</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">Hours_Worked</span> <span class="o">*</span> <span class="n">is_holiday</span>
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title"><code>pf.Param</code> also accepts file paths</p>
+<p><code>pf.Param</code> also accepts a file path to a <code>.csv</code> or <code>.parquet</code> file, see the <a class="autorefs autorefs-internal" href="../../../reference/public/Param/#pyoframe.Param"><code>Param</code></a> API documentation to learn more.</p>
+</div>
+<h2 id="using-transforms">Using transforms</h2>
+<p>The functions <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expression&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Expression/#pyoframe.Expression.sum"><code>sum</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;sum_by&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;by&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Expression/#pyoframe.Expression.sum_by"><code>sum_by</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;nb&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mapping_set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SetTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;drop_shared_dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expression&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Expression/#pyoframe.Expression.map"><code>map</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;nb&quot;&gt;next&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dim&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wrap_around&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expression&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Variable/#pyoframe.Variable.next"><code>next</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;rolling_sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;window_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expression&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Expression/#pyoframe.Expression.rolling_sum"><code>rolling_sum</code></a>, and <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;within&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SetTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Expression&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Expression/#pyoframe.Expression.within"><code>within</code></a> are <em>transforms</em> that make it easy to convert an expression or variable from one shape to another. For example, <code>sum</code> can be used to collapse a dimensioned expression into a dimensionless one:</p>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Hours_Worked</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="go">&lt;Expression (linear) terms=5&gt;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="go">Hours_Worked[Mon] + Hours_Worked[Tue] + Hours_Worked[Wed] + Hours_Worked[Thu] + Hours_Worked[Fri]</span>
+</span></code></pre></div>
 
 
 
@@ -2116,7 +2220,7 @@ assert m.chickpea_cans.solution == 1
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 20:18:49 UTC">December 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2126,7 +2230,7 @@ assert m.chickpea_cans.solution == 1
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 30, 2025 20:17:35 UTC">July 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2286,7 +2390,7 @@ assert m.chickpea_cans.solution == 1
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../installation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Install">
+          <a href="../create-variables/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Create variables">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2296,20 +2400,20 @@ assert m.chickpea_cans.solution == 1
                 Previous
               </span>
               <div class="md-ellipsis">
-                Install
+                Create variables
               </div>
             </div>
           </a>
         
         
           
-          <a href="../example-with-dimensions/" class="md-footer__link md-footer__link--next" aria-label="Next: Integrate DataFrames">
+          <a href="../create-constraints/" class="md-footer__link md-footer__link--next" aria-label="Next: Create constraints">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Integrate DataFrames
+                Create constraints
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2351,12 +2455,12 @@ assert m.chickpea_cans.solution == 1
     
     
       
-      <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "navigation.indexes", "content.action.edit", "content.action.view", "content.code.copy", "content.code.annotate", "content.tooltips"], "search": "../../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": ["latest", "dev"], "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "navigation.indexes", "content.action.edit", "content.action.view", "content.code.copy", "content.code.annotate", "content.tooltips"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": ["latest", "dev"], "provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
-        <script src="../../../../javascripts/feedback.js"></script>
+        <script src="../../../javascripts/feedback.js"></script>
       
     
   </body>

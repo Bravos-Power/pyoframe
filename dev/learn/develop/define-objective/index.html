@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/concepts/solver-access/">
+        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/develop/define-objective/">
       
       
-        <link rel="prev" href="../special-functions/">
+        <link rel="prev" href="../create-constraints/">
       
       
-        <link rel="next" href="../../advanced-concepts/datastructure/">
+        <link rel="next" href="../run-and-configure-the-solver/">
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Solver interface - Pyoframe</title>
+        <title>Define an objective - Pyoframe</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#solver-interface" class="md-skip">
+        <a href="#define-an-objective" class="md-skip">
           Skip to content
         </a>
       
@@ -140,7 +140,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Solver interface
+              Define an objective
             
           </span>
         </div>
@@ -531,8 +531,6 @@
       
         
       
-        
-      
     
     
     
@@ -641,29 +639,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../get-started/basics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Learn the basics
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -682,6 +657,14 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -713,7 +696,7 @@
   
   
   <span class="md-ellipsis">
-    Concepts
+    Develop
     
   </span>
   
@@ -724,7 +707,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
-            Concepts
+            Develop
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -735,12 +718,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../addition/" class="md-nav__link">
+      <a href="../create-a-model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Create a model
     
   </span>
   
@@ -758,12 +741,58 @@
   
   
     <li class="md-nav__item">
-      <a href="../special-functions/" class="md-nav__link">
+      <a href="../create-variables/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Transforms
+    Create variables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create-expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create expressions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create-constraints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create constraints
     
   </span>
   
@@ -795,7 +824,7 @@
   
   
   <span class="md-ellipsis">
-    Solver interface
+    Define an objective
     
   </span>
   
@@ -808,7 +837,7 @@
   
   
   <span class="md-ellipsis">
-    Solver interface
+    Define an objective
     
   </span>
   
@@ -831,36 +860,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#model-attributes" class="md-nav__link">
+  <a href="#define-an-objective-incrementally" class="md-nav__link">
     <span class="md-ellipsis">
-      Model attributes
+      Define an objective incrementally
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#model-parameters" class="md-nav__link">
+  <a href="#alternative-approach" class="md-nav__link">
     <span class="md-ellipsis">
-      Model parameters
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variable-and-constraint-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Variable and constraint attributes
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license-configuration-copt-and-gurobi" class="md-nav__link">
-    <span class="md-ellipsis">
-      License configuration (COPT and Gurobi)
+      Alternative approach
     </span>
   </a>
   
@@ -870,6 +881,52 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run-and-configure-the-solver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Run and configure the solver
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../read-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Read results
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -926,7 +983,7 @@
   
   
   <span class="md-ellipsis">
-    Advanced concepts
+    Concepts
     
   </span>
   
@@ -937,7 +994,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
-            Advanced concepts
+            Concepts
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -948,12 +1005,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced-concepts/datastructure/" class="md-nav__link">
+      <a href="../../concepts/addition/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Pyoframe's datastructure
+    Addition and its quirks
     
   </span>
   
@@ -971,7 +1028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced-concepts/performance/" class="md-nav__link">
+      <a href="../../concepts/performance/" class="md-nav__link">
         
   
   
@@ -994,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced-concepts/quadratics/" class="md-nav__link">
+      <a href="../../concepts/quadratics/" class="md-nav__link">
         
   
   
@@ -1017,7 +1074,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced-concepts/troubleshooting/" class="md-nav__link">
+      <a href="../../concepts/troubleshooting/" class="md-nav__link">
         
   
   
@@ -1040,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced-concepts/internals/" class="md-nav__link">
+      <a href="../../concepts/internals/" class="md-nav__link">
         
   
   
@@ -2006,36 +2063,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#model-attributes" class="md-nav__link">
+  <a href="#define-an-objective-incrementally" class="md-nav__link">
     <span class="md-ellipsis">
-      Model attributes
+      Define an objective incrementally
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#model-parameters" class="md-nav__link">
+  <a href="#alternative-approach" class="md-nav__link">
     <span class="md-ellipsis">
-      Model parameters
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variable-and-constraint-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Variable and constraint attributes
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license-configuration-copt-and-gurobi" class="md-nav__link">
-    <span class="md-ellipsis">
-      License configuration (COPT and Gurobi)
+      Alternative approach
     </span>
   </a>
   
@@ -2058,7 +2097,7 @@
 
   
       
-        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/concepts/solver-access.md" title="Edit this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/develop/define-objective.md" title="Edit this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
         </a>
@@ -2067,7 +2106,7 @@
         
           
         
-        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/concepts/solver-access.md" title="View source of this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/develop/define-objective.md" title="View source of this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
         </a>
@@ -2075,87 +2114,36 @@
   
 
 
-<h1 id="solver-interface">Solver interface</h1>
-<p>Pyoframe provides a friendly API that allows you to read and set the various attributes and parameters your solver has to offer.</p>
-<h2 id="model-attributes">Model attributes</h2>
-<p>Pyoframe lets you read and set solver attributes using <code>model.attr.&lt;your-attribute&gt;</code>. For example, if you'd like to prevent the solver from printing to the console you can do:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">m</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">Silent</span> <span class="o">=</span> <span class="kc">True</span>
-</span></code></pre></div>
-<p>Pyoframe supports a set of <a href="https://metab0t.github.io/PyOptInterface/model.html#id1">standard attributes</a> as well as additional <a href="https://docs.gurobi.com/projects/optimizer/en/current/reference/attributes/model.html">Gurobi attributes</a> and <a href="https://guide.coap.online/copt/en-doc/attribute.html">COPT attributes</a>.</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">TerminationStatus</span>  <span class="c1"># PyOptInterface attribute (always available)</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="go">&lt;TerminationStatusCode.OPTIMAL: 2&gt;</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">Status</span>  <span class="c1"># Gurobi attribute (only available with Gurobi)</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="go">2</span>
-</span></code></pre></div>
-<h2 id="model-parameters">Model parameters</h2>
-<p>Every solver has a set of parameters that you can read or set using <code>model.params.&lt;your-param&gt;</code>.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Gurobi</label><label for="__tabbed_1_2">COPT</label><label for="__tabbed_1_3">HiGHS</label><label for="__tabbed_1_4">Ipopt</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<p>Refer to the list of <a href="https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html">Gurobi parameters</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;gurobi&quot;</span><span class="p">)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">Method</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Use barrier method</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">TimeLimit</span> <span class="o">=</span> <span class="mi">100</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Refer to the list of <a href="https://guide.coap.online/copt/en-doc/parameter.html">COPT parameters</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;copt&quot;</span><span class="p">)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">RelGap</span> <span class="o">=</span> <span class="mf">0.01</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">TimeLimit</span> <span class="o">=</span> <span class="mi">100</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Refer to the list of <a href="https://ergo-code.github.io/HiGHS/stable/options/definitions/">HiGHS options</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;highs&quot;</span><span class="p">)</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">=</span> <span class="mf">100.0</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">mip_rel_gap</span> <span class="o">=</span> <span class="mf">0.01</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<p>Refer to the list of <a href="https://coin-or.github.io/Ipopt/OPTIONS.html">Ipopt options</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;ipopt&quot;</span><span class="p">)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-6</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">m</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">max_iter</span> <span class="o">=</span> <span class="mi">1000</span>
-</span></code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Ipopt does not support reading parameters (only setting them).</p>
-</div>
-</div>
-</div>
-</div>
-<h2 id="variable-and-constraint-attributes">Variable and constraint attributes</h2>
-<p>Similar to above, Pyoframe allows directly accessing the PyOptInterface or the solver's variable and constraint attributes.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">()</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">PrimalStart</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># Set initial value for warm start</span>
-</span></code></pre></div>
-<p>If the variable or constraint is dimensioned, the attribute can accept/return a DataFrame instead of a constant.</p>
-<h2 id="license-configuration-copt-and-gurobi">License configuration (COPT and Gurobi)</h2>
-<p>Both COPT and Gurobi support advanced license configurations through the <code>solver_env</code> parameter:</p>
-<!-- skip: start "Example servers don't actually work" -->
+<h1 id="define-an-objective">Define an objective</h1>
+<p>To set an objective for your optimization problem, assign an expression to either the <code>.minimize</code> or <code>.maximize</code> attribute of the Model. For example:</p>
+<!-- invisible-code-block: python
+import pyoframe as pf
 
-<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">COPT</label><label for="__tabbed_2_2">Gurobi</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Cluster configuration</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;copt&quot;</span><span class="p">,</span> <span class="n">solver_env</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;CLIENT_CLUSTER&quot;</span><span class="p">:</span> <span class="s2">&quot;cluster.example.com&quot;</span><span class="p">})</span>
+m = pf.Model()
+capital_costs = pf.Expression.constant(3)
+operating_costs = pf.Expression.constant(3)
+
+-->
+
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="n">capital_costs</span> <span class="o">+</span> <span class="n">operating_costs</span>
 </span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Compute server</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="s2">&quot;gurobi&quot;</span><span class="p">,</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">solver_env</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ComputeServer&quot;</span><span class="p">:</span> <span class="s2">&quot;server.example.com&quot;</span><span class="p">,</span> <span class="s2">&quot;ServerPassword&quot;</span><span class="p">:</span> <span class="s2">&quot;password&quot;</span><span class="p">},</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="p">)</span>
+<p>Note that the objective expression must be dimensionless (it makes no sense to have multiple objectives with different labels). You can use <a href="../create-expressions/"><code>.sum()</code></a> to collapse a dimensioned expression into a dimensionless one.</p>
+<h2 id="define-an-objective-incrementally">Define an objective incrementally</h2>
+<p>For larger models, it is often convenient to define the objective function incrementally. To do so, use the <code>+=</code> operator:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Later in your code</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">+=</span> <span class="n">capital_costs</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Somewhere else in your code</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">+=</span> <span class="n">operating_costs</span>
 </span></code></pre></div>
-</div>
-</div>
-</div>
-<!-- skip: end -->
+<h2 id="alternative-approach">Alternative approach</h2>
+<p>Alternatively, rather than use <code>.minimize</code> or <code>.maximize</code>, you can use <code>.objective</code> and define the direction using the <code>sense</code> argument during model creation:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">sense</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">capital_costs</span> <span class="o">+</span> <span class="n">operating_costs</span>
+</span></code></pre></div>
 
 
 
@@ -2178,7 +2166,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 20:18:49 UTC">December 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2188,7 +2176,7 @@
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 15, 2024 22:42:46 UTC">December 15, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2214,11 +2202,6 @@
         <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
           
           <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
-        </a>
-      
-        <a href="https://github.com/eduardosalaz" class="md-author" title="@eduardosalaz">
-          
-          <img src="https://avatars.githubusercontent.com/u/56232104?v=4&size=72" alt="eduardosalaz">
         </a>
       
       
@@ -2353,7 +2336,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../special-functions/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Transforms">
+          <a href="../create-constraints/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Create constraints">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2363,20 +2346,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Transforms
+                Create constraints
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../advanced-concepts/datastructure/" class="md-footer__link md-footer__link--next" aria-label="Next: Pyoframe&#39;s datastructure">
+          <a href="../run-and-configure-the-solver/" class="md-footer__link md-footer__link--next" aria-label="Next: Run and configure the solver">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Pyoframe's datastructure
+                Run and configure the solver
               </div>
             </div>
             <div class="md-footer__button md-icon">

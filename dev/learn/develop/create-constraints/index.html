@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/advanced-concepts/performance/">
+        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/develop/create-constraints/">
       
       
-        <link rel="prev" href="../datastructure/">
+        <link rel="prev" href="../create-expressions/">
       
       
-        <link rel="next" href="../quadratics/">
+        <link rel="next" href="../define-objective/">
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Performance tips - Pyoframe</title>
+        <title>Create constraints - Pyoframe</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#performance-tips" class="md-skip">
+        <a href="#create-constraints" class="md-skip">
           Skip to content
         </a>
       
@@ -140,7 +140,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Performance tips
+              Create constraints
             
           </span>
         </div>
@@ -531,8 +531,6 @@
       
         
       
-        
-      
     
     
     
@@ -641,6 +639,78 @@
 
               
             
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Develop
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Develop
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
               
                 
   
@@ -648,12 +718,210 @@
   
   
     <li class="md-nav__item">
-      <a href="../../get-started/basics/" class="md-nav__link">
+      <a href="../create-a-model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Learn the basics
+    Create a model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create-variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create variables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../create-expressions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create expressions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Create constraints
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create constraints
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#handle-extra-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Handle extra labels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relax-a-constraint" class="md-nav__link">
+    <span class="md-ellipsis">
+      Relax a constraint
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../define-objective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Define an objective
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run-and-configure-the-solver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Run and configure the solver
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../read-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Read results
     
   </span>
   
@@ -687,6 +955,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -703,10 +975,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
         
           
-          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
             
   
   
@@ -719,8 +991,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_2">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
             Concepts
           </label>
@@ -756,166 +1028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/special-functions/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Transforms
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../concepts/solver-access/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Solver interface
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    Advanced concepts
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_3">
-            <span class="md-nav__icon md-icon"></span>
-            Advanced concepts
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../datastructure/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Pyoframe's datastructure
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Performance tips
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+      <a href="../../concepts/performance/" class="md-nav__link">
         
   
   
@@ -926,62 +1039,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#use-polars-instead-of-pandas" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use polars instead of pandas
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-integer-labels" class="md-nav__link">
-    <span class="md-ellipsis">
-      Use integer labels
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#disable-maintain_order" class="md-nav__link">
-    <span class="md-ellipsis">
-      Disable maintain_order
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#disable-checks-for-extra-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      Disable checks for extra values
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -994,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../quadratics/" class="md-nav__link">
+      <a href="../../concepts/quadratics/" class="md-nav__link">
         
   
   
@@ -1017,7 +1074,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../troubleshooting/" class="md-nav__link">
+      <a href="../../concepts/troubleshooting/" class="md-nav__link">
         
   
   
@@ -1040,7 +1097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../internals/" class="md-nav__link">
+      <a href="../../concepts/internals/" class="md-nav__link">
         
   
   
@@ -2006,36 +2063,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#use-polars-instead-of-pandas" class="md-nav__link">
+  <a href="#handle-extra-labels" class="md-nav__link">
     <span class="md-ellipsis">
-      Use polars instead of pandas
+      Handle extra labels
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#use-integer-labels" class="md-nav__link">
+  <a href="#relax-a-constraint" class="md-nav__link">
     <span class="md-ellipsis">
-      Use integer labels
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#disable-maintain_order" class="md-nav__link">
-    <span class="md-ellipsis">
-      Disable maintain_order
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#disable-checks-for-extra-values" class="md-nav__link">
-    <span class="md-ellipsis">
-      Disable checks for extra values
+      Relax a constraint
     </span>
   </a>
   
@@ -2058,7 +2097,7 @@
 
   
       
-        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/advanced-concepts/performance.md" title="Edit this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/develop/create-constraints.md" title="Edit this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
         </a>
@@ -2067,7 +2106,7 @@
         
           
         
-        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/advanced-concepts/performance.md" title="View source of this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/develop/create-constraints.md" title="View source of this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
         </a>
@@ -2075,27 +2114,26 @@
   
 
 
-<h1 id="performance-tips">Performance tips</h1>
-<p>Pyoframe is already one of the fastest and most memory-efficient libraries for formulating optimization models. However, if you'd like to squeeze out every bit of performance, here are some additional tips.</p>
-<h2 id="use-polars-instead-of-pandas">Use polars instead of pandas</h2>
-<p><a href="https://pola.rs/">Polars</a> is much faster than Pandas. Moreover, if you use Pandas, there will be a (very small) overhead because Pyoframe converts all DataFrames to Polars prior to computations.</p>
-<h2 id="use-integer-labels">Use integer labels</h2>
-<p>Pyoframe works with any label data type (e.g. string labels, date labels, etc.), but integer labels are fastest and most memory efficient.</p>
-<h2 id="disable-maintain_order">Disable <code>maintain_order</code></h2>
-<p>By default, Pyoframe ensures that the order of variables, constraints, and mathematical terms is maintained across runs to ensure that your results are reproducible down to the very last decimal place. However, if you're not bothered by miniscule variations in your results due to numerical errors accumulating differently for different orderings, you should disable <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;maintain_order&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Config/#pyoframe._constants._Config.maintain_order"><code>maintain_order</code></a>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">pf</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="o">=</span> <span class="kc">False</span>
-</span></code></pre></div>
-<h2 id="disable-checks-for-extra-values">Disable checks for extra values</h2>
-<p>Disabling checks for extra values means that, instead of raising <a href="../../concepts/addition/">extra value exceptions</a>, pyoframe will process sums with extra values as if <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>keep_extras</code></a> had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable checks for extra values, we recommend you do so only after thoroughly testing your model and ensuring that all potential extra value exceptions have been handled.</p>
-<p>The following code disables checks for extra values:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">pf</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">disable_extras_checks</span> <span class="o">=</span> <span class="kc">True</span>
-</span></code></pre></div>
-<!-- TODO REVISIT
+<h1 id="create-constraints">Create constraints</h1>
+<p>Create constraints by using the <code>&lt;=</code>, <code>&gt;=</code>, and <code>==</code> operators between two expressions. For example,</p>
+<!-- invisible-code-block: python
+import pyoframe as pf
 
-## `Expression` or `Variable` ?
+m = pf.Model()
+m.Hours_Worked = pf.Variable({"day": ["Mon", "Tue", "Wed", "Thu", "Fri"]})
 
-One common question when building large models is, if you have a very long linear expression, should you assign it to a variable or simply use the expression directly? In some cases, it is best to assign it to a variable since Pyoframe will then only need to pass around the variable rather than all the terms in the linear expression. If you're concerned that you'll be adding more variables to your model, know that most solvers will rapidly and easily get rid of these variables during the presolve stage without any noticeable performance cost.
 -->
+
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Con_Max_Weekly_Hours</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">Hours_Worked</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">40</span>
+</span></code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Naming constraints</p>
+<p>I like prefixing constraint names with <code>Con_</code> to easily distinguish them from other module attributes.</p>
+</div>
+<h2 id="handle-extra-labels">Handle extra labels</h2>
+<p>When creating constraints, Pyoframe always merges the left- and right-hand side expressions into a single expression (e.g. <code>a &lt;= b</code> becomes <code>(a - b) &lt;= 0</code>). Thus, if the left- and/or right-hand sides have labels not present in the other side, you will need to handle these extra labels using <code>drop_extras()</code> or <code>keep_extras()</code>. Read <a href="../../concepts/addition/">Addition and its quirks</a> to learn more or see the <a href="../../../examples/diet/">diet problem</a> for an example.</p>
+<h2 id="relax-a-constraint">Relax a constraint</h2>
+<p>Refer to the API documentation for <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;relax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Operable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Operable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Constraint&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Constraint/#pyoframe.Constraint.relax"><code>.relax()</code></a>.</p>
 
 
 
@@ -2118,7 +2156,7 @@ One common question when building large models is, if you have a very long linea
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 27, 2025 23:07:32 UTC">September 27, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2128,7 +2166,7 @@ One common question when building large models is, if you have a very long linea
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 1, 2024 05:26:45 UTC">December 1, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2288,7 +2326,7 @@ One common question when building large models is, if you have a very long linea
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../datastructure/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Pyoframe&#39;s datastructure">
+          <a href="../create-expressions/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Create expressions">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2298,20 +2336,20 @@ One common question when building large models is, if you have a very long linea
                 Previous
               </span>
               <div class="md-ellipsis">
-                Pyoframe's datastructure
+                Create expressions
               </div>
             </div>
           </a>
         
         
           
-          <a href="../quadratics/" class="md-footer__link md-footer__link--next" aria-label="Next: Quadratic expressions">
+          <a href="../define-objective/" class="md-footer__link md-footer__link--next" aria-label="Next: Define an objective">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Quadratic expressions
+                Define an objective
               </div>
             </div>
             <div class="md-footer__button md-icon">

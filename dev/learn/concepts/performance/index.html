@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/get-started/basic-example/example/">
+        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/concepts/performance/">
       
       
-        <link rel="prev" href="../../installation/">
+        <link rel="prev" href="../addition/">
       
       
-        <link rel="next" href="../example-with-dimensions/">
+        <link rel="next" href="../quadratics/">
       
       
-      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
     
     
       
-        <title>Solve a simple problem - Pyoframe</title>
+        <title>Performance tips - Pyoframe</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.84d31ad4.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.84d31ad4.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -48,11 +48,11 @@
       
     
     
-      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#solve-a-simple-problem" class="md-skip">
+        <a href="#performance-tips" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +95,7 @@
         <aside class="md-banner">
           <div class="md-banner__inner md-grid md-typeset">
             
-            You are currently viewing <strong>pre-release</strong> documentation.  This may contain features that have not yet been packaged. For the most accurate information, please <strong><a href="../../../../..">access the release version</a></strong>.
+            You are currently viewing <strong>pre-release</strong> documentation.  This may contain features that have not yet been packaged. For the most accurate information, please <strong><a href="../../../..">access the release version</a></strong>.
           </div>
           
         </aside>
@@ -107,10 +107,10 @@
           <aside class="md-banner md-banner--warning">
             <div class="md-banner__inner md-grid md-typeset">
               
-  You are currently viewing <strong>outdated</strong> documentation.  For the most up-to-date information, please <strong><a href="../../../../..">refer to the latest release</a></strong>.
+  You are currently viewing <strong>outdated</strong> documentation.  For the most up-to-date information, please <strong><a href="../../../..">refer to the latest release</a></strong>.
 
             </div>
-            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),base=new URL("../../.."),outdated=__md_get("__outdated",sessionStorage,base);!0===outdated&&el&&(el.hidden=!1)</script>
           </aside>
         
       </div>
@@ -120,7 +120,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../../.." title="Pyoframe" class="md-header__button md-logo" aria-label="Pyoframe" data-md-component="logo">
+    <a href="../../.." title="Pyoframe" class="md-header__button md-logo" aria-label="Pyoframe" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -140,7 +140,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Solve a simple problem
+              Performance tips
             
           </span>
         </div>
@@ -257,7 +257,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../.." class="md-tabs__link">
+      <a href="../../.." class="md-tabs__link">
         
   
   
@@ -289,7 +289,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../installation/" class="md-tabs__link">
+        <a href="../../get-started/installation/" class="md-tabs__link">
           
   
   
@@ -314,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../examples/" class="md-tabs__link">
+        <a href="../../../examples/" class="md-tabs__link">
           
   
   
@@ -336,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../reference/" class="md-tabs__link">
+        <a href="../../../reference/" class="md-tabs__link">
           
   
   
@@ -356,7 +356,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../why-pyoframe/" class="md-tabs__link">
+      <a href="../../../why-pyoframe/" class="md-tabs__link">
         
   
   
@@ -377,7 +377,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../../../contribute/" class="md-tabs__link">
+        <a href="../../../contribute/" class="md-tabs__link">
           
   
   
@@ -413,7 +413,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="Pyoframe" class="md-nav__button md-logo" aria-label="Pyoframe" data-md-component="logo">
+    <a href="../../.." title="Pyoframe" class="md-nav__button md-logo" aria-label="Pyoframe" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -443,7 +443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -520,8 +520,6 @@
                 
   
   
-    
-  
   
   
     
@@ -545,11 +543,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
@@ -565,7 +563,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_1">
             <span class="md-nav__icon md-icon"></span>
             Get started
@@ -579,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../installation/" class="md-nav__link">
+      <a href="../../get-started/installation/" class="md-nav__link">
         
   
   
@@ -599,19 +597,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../get-started/basic-example/example/" class="md-nav__link">
         
   
   
@@ -622,7 +611,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -635,7 +623,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../example-with-dimensions/" class="md-nav__link">
+      <a href="../../get-started/basic-example/example-with-dimensions/" class="md-nav__link">
         
   
   
@@ -728,7 +716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-a-model/" class="md-nav__link">
+      <a href="../../develop/create-a-model/" class="md-nav__link">
         
   
   
@@ -751,7 +739,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-variables/" class="md-nav__link">
+      <a href="../../develop/create-variables/" class="md-nav__link">
         
   
   
@@ -774,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-expressions/" class="md-nav__link">
+      <a href="../../develop/create-expressions/" class="md-nav__link">
         
   
   
@@ -797,7 +785,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/create-constraints/" class="md-nav__link">
+      <a href="../../develop/create-constraints/" class="md-nav__link">
         
   
   
@@ -820,7 +808,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/define-objective/" class="md-nav__link">
+      <a href="../../develop/define-objective/" class="md-nav__link">
         
   
   
@@ -843,7 +831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/run-and-configure-the-solver/" class="md-nav__link">
+      <a href="../../develop/run-and-configure-the-solver/" class="md-nav__link">
         
   
   
@@ -866,7 +854,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../develop/read-results/" class="md-nav__link">
+      <a href="../../develop/read-results/" class="md-nav__link">
         
   
   
@@ -894,6 +882,8 @@
                 
   
   
+    
+  
   
   
     
@@ -921,11 +911,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
         
           
           <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
@@ -941,7 +931,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
             Concepts
@@ -955,7 +945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/addition/" class="md-nav__link">
+      <a href="../addition/" class="md-nav__link">
         
   
   
@@ -975,10 +965,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../concepts/performance/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Performance tips
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -989,6 +1001,62 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#use-polars-instead-of-pandas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use polars instead of pandas
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-integer-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use integer labels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disable-maintain_order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disable maintain_order
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disable-checks-for-extra-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disable checks for extra values
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1001,7 +1069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/quadratics/" class="md-nav__link">
+      <a href="../quadratics/" class="md-nav__link">
         
   
   
@@ -1024,7 +1092,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/troubleshooting/" class="md-nav__link">
+      <a href="../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1047,7 +1115,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/internals/" class="md-nav__link">
+      <a href="../internals/" class="md-nav__link">
         
   
   
@@ -1128,7 +1196,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../migrate/v1.0/" class="md-nav__link">
+      <a href="../../migrate/v1.0/" class="md-nav__link">
         
   
   
@@ -1197,7 +1265,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../examples/" class="md-nav__link ">
+            <a href="../../../examples/" class="md-nav__link ">
               
   
   
@@ -1232,7 +1300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/diet/" class="md-nav__link">
+      <a href="../../../examples/diet/" class="md-nav__link">
         
   
   
@@ -1255,7 +1323,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/production/" class="md-nav__link">
+      <a href="../../../examples/production/" class="md-nav__link">
         
   
   
@@ -1278,7 +1346,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/facility_location/" class="md-nav__link">
+      <a href="../../../examples/facility_location/" class="md-nav__link">
         
   
   
@@ -1301,7 +1369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../examples/portfolio_optimization/" class="md-nav__link">
+      <a href="../../../examples/portfolio_optimization/" class="md-nav__link">
         
   
   
@@ -1360,7 +1428,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../reference/" class="md-nav__link ">
+            <a href="../../../reference/" class="md-nav__link ">
               
   
   
@@ -1462,7 +1530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Model/" class="md-nav__link">
+      <a href="../../../reference/public/Model/" class="md-nav__link">
         
   
   
@@ -1485,7 +1553,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Variable/" class="md-nav__link">
+      <a href="../../../reference/public/Variable/" class="md-nav__link">
         
   
   
@@ -1508,7 +1576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Expression/" class="md-nav__link">
+      <a href="../../../reference/public/Expression/" class="md-nav__link">
         
   
   
@@ -1531,7 +1599,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Constraint/" class="md-nav__link">
+      <a href="../../../reference/public/Constraint/" class="md-nav__link">
         
   
   
@@ -1554,7 +1622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Objective/" class="md-nav__link">
+      <a href="../../../reference/public/Objective/" class="md-nav__link">
         
   
   
@@ -1577,7 +1645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Param/" class="md-nav__link">
+      <a href="../../../reference/public/Param/" class="md-nav__link">
         
   
   
@@ -1600,7 +1668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Set/" class="md-nav__link">
+      <a href="../../../reference/public/Set/" class="md-nav__link">
         
   
   
@@ -1623,7 +1691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/Config/" class="md-nav__link">
+      <a href="../../../reference/public/Config/" class="md-nav__link">
         
   
   
@@ -1646,7 +1714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/VType/" class="md-nav__link">
+      <a href="../../../reference/public/VType/" class="md-nav__link">
         
   
   
@@ -1669,7 +1737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/ObjSense/" class="md-nav__link">
+      <a href="../../../reference/public/ObjSense/" class="md-nav__link">
         
   
   
@@ -1692,7 +1760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/public/PyoframeError/" class="md-nav__link">
+      <a href="../../../reference/public/PyoframeError/" class="md-nav__link">
         
   
   
@@ -1772,7 +1840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/bases/BaseBlock/" class="md-nav__link">
+      <a href="../../../reference/bases/BaseBlock/" class="md-nav__link">
         
   
   
@@ -1795,7 +1863,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/bases/BaseOperableBlock/" class="md-nav__link">
+      <a href="../../../reference/bases/BaseOperableBlock/" class="md-nav__link">
         
   
   
@@ -1873,7 +1941,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../reference/types/Operable/" class="md-nav__link">
+      <a href="../../../reference/types/Operable/" class="md-nav__link">
         
   
   
@@ -1911,7 +1979,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../why-pyoframe/" class="md-nav__link">
+      <a href="../../../why-pyoframe/" class="md-nav__link">
         
   
   
@@ -1956,7 +2024,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../../../contribute/" class="md-nav__link ">
+            <a href="../../../contribute/" class="md-nav__link ">
               
   
   
@@ -2006,6 +2074,50 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#use-polars-instead-of-pandas" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use polars instead of pandas
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-integer-labels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use integer labels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disable-maintain_order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disable maintain_order
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disable-checks-for-extra-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disable checks for extra values
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2021,7 +2133,7 @@
 
   
       
-        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/get-started/basic-example/example.md" title="Edit this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/concepts/performance.md" title="Edit this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
         </a>
@@ -2030,7 +2142,7 @@
         
           
         
-        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/get-started/basic-example/example.md" title="View source of this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/concepts/performance.md" title="View source of this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
         </a>
@@ -2038,62 +2150,27 @@
   
 
 
-<h1 id="solve-a-simple-problem">Solve a simple problem</h1>
-<!-- invisible-code-block: python
-import os
-
-os.chdir(os.path.join(os.getcwd(), "docs/learn/get-started/basic-example"))
--->
-
-<p>To start, you will solve a simple optimization problem with Pyoframe.</p>
-<div class="admonition quote">
-<p class="admonition-title">Problem statement</p>
-<p>Imagine you're a vegetarian hesitating between tofu and chickpeas as
-a source of protein for tomorrow's dinner. You'd like to spend as little money as
-possible while still consuming at least 50g of protein. How many blocks
-of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein) should you buy?</p>
-</div>
-<p>Click on the <span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2"/></svg></span> buttons below to understand the code, and then run it on your computer.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># You can buy tofu or chickpeas</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>  <span class="c1"># (1)!</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># You want to minimize your cost</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span>  <span class="c1"># (2)!</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># But still consume enough protein</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">m</span><span class="o">.</span><span class="n">protein_constraint</span> <span class="o">=</span> <span class="mi">18</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">+</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span> <span class="o">&gt;=</span> <span class="mi">50</span>  <span class="c1"># (3)!</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>  <span class="c1"># (4)!</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tofu blocks:&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Chickpea cans:&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
+<h1 id="performance-tips">Performance tips</h1>
+<p>Pyoframe is already one of the fastest and most memory-efficient libraries for formulating optimization models. However, if you'd like to squeeze out every bit of performance, here are some additional tips.</p>
+<h2 id="use-polars-instead-of-pandas">Use polars instead of pandas</h2>
+<p><a href="https://pola.rs/">Polars</a> is much faster than Pandas. Moreover, if you use Pandas, there will be a (very small) overhead because Pyoframe converts all DataFrames to Polars prior to computations.</p>
+<h2 id="use-integer-labels">Use integer labels</h2>
+<p>Pyoframe works with any label data type (e.g. string labels, date labels, etc.), but integer labels are fastest and most memory efficient.</p>
+<h2 id="disable-maintain_order">Disable <code>maintain_order</code></h2>
+<p>By default, Pyoframe ensures that the order of variables, constraints, and mathematical terms is maintained across runs to ensure that your results are reproducible down to the very last decimal place. However, if you're not bothered by miniscule variations in your results due to numerical errors accumulating differently for different orderings, you should disable <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;maintain_order&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;bool&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Config/#pyoframe._constants._Config.maintain_order"><code>maintain_order</code></a>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">pf</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="o">=</span> <span class="kc">False</span>
 </span></code></pre></div>
-<!-- invisible-code-block: python
-assert m.tofu_blocks.solution == 2
-assert m.chickpea_cans.solution == 1
--->
-
-<ol>
-<li>
-<p><code>lb=0</code> set a lower bound so that you can't buy negative amounts of tofu. </p>
-<p><code>vtype="integer"</code> ensures that you can't buy a fraction of a block.</p>
-</li>
-<li>
-<p><code>minimize</code> and <code>maximize</code> are reserved variable names that can be used to set the objective.</p>
-</li>
-<li>Pyoframe constraints are easily created with the <code>&lt;=</code>, <code>&gt;=</code>, or <code>==</code> operators.</li>
-<li>Pyoframe automatically detects the solver you have installed; no need to specify it!</li>
-</ol>
-<p>After running the code you should get:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="go">Tofu blocks: 2</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="go">Chickpea cans: 1</span>
+<h2 id="disable-checks-for-extra-values">Disable checks for extra values</h2>
+<p>Disabling checks for extra values means that, instead of raising <a href="../addition/">extra value exceptions</a>, pyoframe will process sums with extra values as if <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>keep_extras</code></a> had been applied. While this may improve performance, it will silence potentially important errors meant to help you build your model. If you'd like to disable checks for extra values, we recommend you do so only after thoroughly testing your model and ensuring that all potential extra value exceptions have been handled.</p>
+<p>The following code disables checks for extra values:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">pf</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">disable_extras_checks</span> <span class="o">=</span> <span class="kc">True</span>
 </span></code></pre></div>
-<p>On the <a href="../example-with-dimensions/">next page</a>, you'll resolve this problem but instead of hard-coded values, you'll use DataFrames, Pyoframe's secret sauce!</p>
+<!-- TODO REVISIT
+
+## `Expression` or `Variable` ?
+
+One common question when building large models is, if you have a very long linear expression, should you assign it to a variable or simply use the expression directly? In some cases, it is best to assign it to a variable since Pyoframe will then only need to pass around the variable rather than all the terms in the linear expression. If you're concerned that you'll be adding more variables to your model, know that most solvers will rapidly and easily get rid of these variables during the presolve stage without any noticeable performance cost.
+-->
 
 
 
@@ -2116,7 +2193,7 @@ assert m.chickpea_cans.solution == 1
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 20:18:49 UTC">December 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
@@ -2126,7 +2203,7 @@ assert m.chickpea_cans.solution == 1
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 30, 2025 20:17:35 UTC">July 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 1, 2024 05:26:45 UTC">December 1, 2024</span>
   </span>
 
     
@@ -2286,7 +2363,7 @@ assert m.chickpea_cans.solution == 1
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../installation/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Install">
+          <a href="../addition/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Addition and its quirks">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -2296,20 +2373,20 @@ assert m.chickpea_cans.solution == 1
                 Previous
               </span>
               <div class="md-ellipsis">
-                Install
+                Addition and its quirks
               </div>
             </div>
           </a>
         
         
           
-          <a href="../example-with-dimensions/" class="md-footer__link md-footer__link--next" aria-label="Next: Integrate DataFrames">
+          <a href="../quadratics/" class="md-footer__link md-footer__link--next" aria-label="Next: Quadratic expressions">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Integrate DataFrames
+                Quadratic expressions
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2351,12 +2428,12 @@ assert m.chickpea_cans.solution == 1
     
     
       
-      <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "navigation.indexes", "content.action.edit", "content.action.view", "content.code.copy", "content.code.annotate", "content.tooltips"], "search": "../../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": ["latest", "dev"], "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "toc.follow", "navigation.indexes", "content.action.edit", "content.action.view", "content.code.copy", "content.code.annotate", "content.tooltips"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": ["latest", "dev"], "provider": "mike"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
-        <script src="../../../../javascripts/feedback.js"></script>
+        <script src="../../../javascripts/feedback.js"></script>
       
     
   </body>

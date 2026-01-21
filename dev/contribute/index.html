@@ -524,8 +524,6 @@
       
         
       
-        
-      
     
     
     
@@ -631,29 +629,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../learn/get-started/basics/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Learn the basics
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -670,6 +645,14 @@
   
     
     
+      
+        
+      
+        
+      
+        
+      
+        
       
         
       
@@ -698,7 +681,7 @@
   
   
   <span class="md-ellipsis">
-    Concepts
+    Develop
     
   </span>
   
@@ -709,7 +692,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
-            Concepts
+            Develop
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -720,12 +703,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/concepts/addition/" class="md-nav__link">
+      <a href="../learn/develop/create-a-model/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Create a model
     
   </span>
   
@@ -743,12 +726,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/concepts/special-functions/" class="md-nav__link">
+      <a href="../learn/develop/create-variables/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Transforms
+    Create variables
     
   </span>
   
@@ -766,12 +749,104 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/concepts/solver-access/" class="md-nav__link">
+      <a href="../learn/develop/create-expressions/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Solver interface
+    Create expressions
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learn/develop/create-constraints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Create constraints
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learn/develop/define-objective/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Define an objective
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learn/develop/run-and-configure-the-solver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Run and configure the solver
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../learn/develop/read-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Read results
     
   </span>
   
@@ -830,7 +905,7 @@
   
   
   <span class="md-ellipsis">
-    Advanced concepts
+    Concepts
     
   </span>
   
@@ -841,7 +916,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
-            Advanced concepts
+            Concepts
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -852,12 +927,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/advanced-concepts/datastructure/" class="md-nav__link">
+      <a href="../learn/concepts/addition/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Pyoframe's datastructure
+    Addition and its quirks
     
   </span>
   
@@ -875,7 +950,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/advanced-concepts/performance/" class="md-nav__link">
+      <a href="../learn/concepts/performance/" class="md-nav__link">
         
   
   
@@ -898,7 +973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/advanced-concepts/quadratics/" class="md-nav__link">
+      <a href="../learn/concepts/quadratics/" class="md-nav__link">
         
   
   
@@ -921,7 +996,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/advanced-concepts/troubleshooting/" class="md-nav__link">
+      <a href="../learn/concepts/troubleshooting/" class="md-nav__link">
         
   
   
@@ -944,7 +1019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../learn/advanced-concepts/internals/" class="md-nav__link">
+      <a href="../learn/concepts/internals/" class="md-nav__link">
         
   
   
@@ -2042,7 +2117,7 @@
 <h2 id="linting-and-formatting">Linting and formatting</h2>
 <p>We use Ruff for linting and formatting. The pre-commit hooks will run <code>ruff format</code> on commit. You should also make sure <code>ruff check</code> returns no errors before submitting a PR. To format code blocks in the documentation run: <code>doccmd --language=python --no-pad-file --command="ruff format" docs/</code>.</p>
 <h2 id="additional-tips">Additional tips</h2>
-<p>I recommend skimming or reading the <a href="../learn/advanced-concepts/internals/">Internal Details</a> page for some background on how Pyoframe works.</p>
+<p>I recommend skimming or reading the <a href="../learn/concepts/internals/">Internal Details</a> page for some background on how Pyoframe works.</p>
 <p>For core developers:</p>
 <ul>
 <li>If you use <code>.unique</code>, <code>.join</code>, <code>.sort</code>, or <code>.group_by</code> on a Polars dataframe, make sure to set the <code>maintain_order</code> parameter appropriately (typically, <code>maintain_order=Config.maintain_order</code>).</li>
@@ -2073,7 +2148,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="December 30, 2025 22:20:54 UTC">December 30, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
   </span>
 
     
