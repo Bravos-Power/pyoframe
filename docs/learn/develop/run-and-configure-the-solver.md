@@ -2,6 +2,12 @@
 
 To run your optimization model call,
 
+<!-- invisible-code-block: python
+import pyoframe as pf
+
+m = pf.Model()
+-->
+
 ```python
 m.optimize()
 ```

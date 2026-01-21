@@ -104,6 +104,7 @@ Passing multiple DataFrames to `pf.Variable()` will create a variable for every 
     years = pd.DataFrame({"year": [2025, 2026, 2027]})
     locations = pd.DataFrame({"city": ["Toronto", "Mexico City"]})
 
+    m = pf.Model()
     m.Cartesian_Var = pf.Variable(years, locations)
     ```
 
@@ -113,6 +114,7 @@ Passing multiple DataFrames to `pf.Variable()` will create a variable for every 
     years = pl.DataFrame({"year": [2025, 2026, 2027]})
     locations = pl.DataFrame({"city": ["Toronto", "Mexico City"]})
 
+    m = pf.Model()
     m.Cartesian_Var = pf.Variable(years, locations)
     ```
 
@@ -138,6 +140,14 @@ Passing multiple DataFrames to `pf.Variable()` will create a variable for every 
     An alternative way to create a variable with multiple dimensions (e.g. `year` and `city`) is to pass a single DataFrame with multiple columns to `pf.Variable`. This approach lets you control exactly which rows to include, allowing for sparsely populated variables instead of the cartesian product.
 
 ### Other approaches
+
+<!-- invisible-code-block: python
+years = pl.DataFrame({"year": [2025, 2026, 2027]})
+
+m = pf.Model()
+m.Yearly_Var = pf.Variable(years)
+-->
+
 
 DataFrames are not the only way to create a dimensioned variable. In the following examples, all the `m.Yearly_Var` are equivalent.
 
@@ -189,16 +199,16 @@ DataFrames are not the only way to create a dimensioned variable. In the followi
 <!-- invisible-code-block: python
 from polars.testing import assert_frame_equal
 
-for df in [
-    m.Yearly_Var_1.data,
-    m.Yearly_Var_2.data,
-    m.Yearly_Var_3.data,
-    m.Yearly_Var_4.data,
-    m.Yearly_Var_5.data,
-    m.Yearly_Var.data,
+for con in [
+    m.Yearly_Var,
+    m.Yearly_Var_1,
+    m.Yearly_Var_2,
+    m.Yearly_Var_3,
+    m.Yearly_Var_4,
+    m.Yearly_Var_5,
 ]:
-    assert "day" in df.columns
-    assert len(df) == 5
+    assert "year" in con.data.columns
+    assert len(con.data) == 3
 
 -->
 

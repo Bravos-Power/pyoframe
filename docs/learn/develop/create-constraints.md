@@ -2,6 +2,14 @@
 
 Create constraints by using the `<=`, `>=`, and `==` operators between two expressions. For example,
 
+<!-- invisible-code-block: python
+import pyoframe as pf
+
+m = pf.Model()
+m.Hours_Worked = pf.Variable({"day": ["Mon", "Tue", "Wed", "Thu", "Fri"]})
+
+-->
+
 ```python
 m.Con_Max_Weekly_Hours = m.Hours_Worked.sum() <= 40
 ```

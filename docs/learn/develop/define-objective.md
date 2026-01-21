@@ -2,6 +2,16 @@
 
 To set an objective for your optimization problem, assign an expression to either the `.minimize` or `.maximize` attribute of the Model. For example:
 
+<!-- invisible-code-block: python
+import pyoframe as pf
+
+m = pf.Model()
+m.X = pf.Variable()
+capital_costs = m.X * 3
+operating_costs = 5 * m.X
+
+-->
+
 ```python
 m.minimize = capital_costs + operating_costs
 ```
@@ -13,6 +23,7 @@ Note that the objective expression must be dimensionless (it makes no sense to h
 For larger models, it is often convenient to define the objective function incrementally. To do so, use the `+=` operator:
 
 ```python
+m = pf.Model()
 m.minimize = 0
 
 # Later in your code

@@ -90,6 +90,6 @@ The functions [`sum`][pyoframe.Expression.sum], [`sum_by`][pyoframe.Expression.s
 ```pycon
 >>> m.Hours_Worked.sum()
 <Expression (linear) terms=5>
-Hours_Worked[Mon] + Hours_Worked[Tue] + Hours_Worked[Wed] + Hours_Worked[Thu] + Hours_Worked[Fri]
+Hours_Worked[Mon] + Hours_Worked[Tue] + Hours_Worked[Wed] + Hours_Worked[Thu] + Hours_Worked[Fri]
 
 ```
