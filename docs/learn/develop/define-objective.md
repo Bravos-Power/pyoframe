@@ -6,9 +6,8 @@ To set an objective for your optimization problem, assign an expression to eithe
 import pyoframe as pf
 
 m = pf.Model()
-m.X = pf.Variable()
-capital_costs = m.X * 3
-operating_costs = 5 * m.X
+capital_costs = pf.Expression.constant(3)
+operating_costs = pf.Expression.constant(3)
 
 -->
 
