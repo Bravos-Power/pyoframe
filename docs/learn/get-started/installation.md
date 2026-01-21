@@ -50,7 +50,7 @@ Select your chosen solver and follow the installation instructions.
     To install Gurobi:
 
     1. [Download Gurobi](https://www.gurobi.com/downloads/gurobi-software/) from their website (login required) and follow the installation instructions.
-    2. Ensure you have a valid Gurobi license installed on your machine. (If you're using Gurobi Compute Server or other atypical licensing setups, refer to [License configuration](../concepts/solver-access.md#license-configuration-copt-and-gurobi).)
+    2. Ensure you have a valid Gurobi license installed on your machine. (If you're using Gurobi Compute Server or other atypical licensing setups, refer to [License configuration](../develop/run-and-configure-the-solver.md#configure-an-advanced-license).)
 
     !!! warning "Do not install Gurobi using `pip`"
 
@@ -61,7 +61,7 @@ Select your chosen solver and follow the installation instructions.
     To install COPT:
     
     1. Download COPT from the e-mail you received after [requesting a license](https://www.cardopt.com/copt) and follow the installation instructions.
-    2. Ensure you have valid COPT license files on your machine. (If you're using floating, cluster, or web licenses refer to [License configuration](../concepts/solver-access.md#license-configuration-copt-and-gurobi).)
+    2. Ensure you have valid COPT license files on your machine. (If you're using floating, cluster, or web licenses refer to [License configuration](../develop/run-and-configure-the-solver.md#configure-an-advanced-license).)
     3. Set the `COPT_HOME` environment variable to point to your COPT installation directory.
 
 === "Ipopt"
