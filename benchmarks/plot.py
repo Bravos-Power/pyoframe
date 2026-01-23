@@ -20,40 +20,32 @@ def get_latest_data():
     df = pl.read_csv(BENCHMARKS_DB)
     df = df.filter(pl.col("error").is_null())
     df = df.group_by(["problem", "library", "solver", "size"]).agg(pl.col("*").last())
-    df = df.with_columns((pl.col("time_s") / 60).alias("time_min"))
+    df = df.with_columns((pl.col("memory_uss_mb") / 1024).alias("memory_uss_GiB"))
+
+    # Add normalization column
+    join_cols = ["size", "solver", "problem"]
+    pyoframe_results = df.filter(library="pyoframe").drop("library")
+    assert pyoframe_results.height > 0, (
+        "Cannot normalize results: no pyoframe data found"
+    )
+    df = df.join(
+        pyoframe_results, on=join_cols, how="left", validate="m:1", suffix="_pyoframe"
+    )
+
+    df = df.with_columns(
+        (pl.col("time_s") / pl.col("time_s_pyoframe")).alias("time_normalized"),
+        (pl.col("memory_uss_GiB") / pl.col("memory_uss_GiB_pyoframe")).alias(
+            "memory_uss_normalized"
+        ),
+    )
 
     return df
 
 
-def normalize_results(results: pl.DataFrame):
-    join_cols = ["size", "solver", "library"]
-
-    pyoframe_results = results.filter(pl.col("library") == "pyoframe").drop("library")
-    assert pyoframe_results.height > 0, (
-        "Cannot normalize results: no pyoframe data found"
-    )
-    results = results.join(
-        pyoframe_results,
-        on=["size", "solver"],
-    )
-
-    results = results.select(
-        *(
-            join_cols
-            + [
-                pl.col(c) / pl.col(f"{c}_right")
-                for c in ["time_s", "memory_uss_mb", "time_min"]
-            ]
-        )
-    )
-
-    return results
-
-
-def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
+def plot(results: pl.DataFrame, output, problem):
     assert results.height > 0, "No results to plot"
 
-    scale = "linear" if not normalized else "linear"
+    scale = "linear"
     x_label = "Number of variables"
 
     results = results.with_columns(
@@ -62,10 +54,6 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
         .otherwise(pl.col("library"))
         .alias("library")
     )
-
-    if not normalized:
-        results = results.with_columns(pl.col("memory_uss_mb") / 1e3)
-
     combined_plot = None
     for solver in results.get_column("solver").unique():
         solver_results = results.filter(pl.col("solver") == solver)
@@ -76,16 +64,6 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
         ]
         x_axis = alt.Axis(values=tick_values, format="e")
         y_axis_time = y_axis_mem = alt.Axis(labelExpr="datum.value + 'x'", grid=True)
-        if not normalized:
-            max_time = solver_results["time_min"].max()
-            max_mem = solver_results["memory_uss_mb"].max()
-
-            time_ticks = [
-                10**i for i in range(-2, int(math.ceil(math.log10(max_time))) + 1)
-            ]
-            y_axis_time = alt.Axis(values=time_ticks)
-            mem_ticks = [10**i for i in range(int(math.ceil(math.log10(max_mem))) + 1)]
-            y_axis_mem = alt.Axis(values=mem_ticks)
 
         left_plot = (
             alt.Chart(solver_results)
@@ -98,9 +76,9 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
                     axis=x_axis,
                 ),
                 y=alt.Y(
-                    "time_min",
+                    "time_normalized",
                     scale=alt.Scale(type=scale),
-                    title="Time / Pyoframe time" if normalized else "Time (min)",
+                    title="Time / Pyoframe time",
                     axis=y_axis_time,
                 ),
                 color="library",
@@ -118,9 +96,7 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
                 y=alt.Y(
                     "memory_uss_mb",
                     scale=alt.Scale(type=scale),
-                    title="Memory / Pyoframe memory"
-                    if normalized
-                    else "Peak memory usage (USS, GB)",
+                    title="Memory / Pyoframe memory",
                     axis=y_axis_mem,
                 ),
                 color="library",
@@ -143,8 +119,126 @@ def plot(results: pl.DataFrame, output, problem, log_y=True, normalized=False):
     combined_plot.save(output)
 
 
+def plot_combined(results: pl.DataFrame, output):
+    plot = None
+    for (problem,), problem_df in results.group_by("problem"):
+        chart = alt.Chart(problem_df).encode(color=alt.Color("library", legend=None))
+        bins = [
+            [1, 10, 30, 60, 120],
+            [0.1, 0.5, 1, 5, 10, 100],
+        ]
+        xs = ["time_s_pyoframe", "memory_uss_GiB_pyoframe"]
+        ys = ["time_normalized", "memory_uss_normalized"]
+        titles = ["Time to construct", "Peak memory usage"]
+        x_labels = ["Time for Pyoframe (seconds)", "Memory used by Pyoframe (GiB)"]
+        y_labels = ["Time relative to Pyoframe", "Memory relative to Pyoframe"]
+        row = None
+        for x, y, bin, title, x_label, y_label in zip(
+            xs, ys, bins, titles, x_labels, y_labels
+        ):
+            lines = (
+                chart.mark_line(point=True)
+                .encode(
+                    alt.X(x).scale(type="log", bins=bin, nice=False).title(x_label),
+                    alt.Y(y)
+                    .axis(labelExpr="datum.value + 'x'", grid=True)
+                    .title(y_label),
+                )
+                .properties(title=title)
+            )
+            labels = chart.encode(
+                alt.X(f"max({x})"),
+                alt.Y(y, aggregate=alt.ArgmaxDef(argmax=x)),
+                text="library",
+            ).mark_text(align="left", dx=4)
+            facet = lines + labels
+            if row is None:
+                row = facet
+            else:
+                row |= facet
+        if plot is None:
+            plot = row
+        else:
+            plot &= row
+
+    plot.save(output)
+
+
+def plot_combined_v2(results: pl.DataFrame, output):
+    plot = None
+    for (problem,), problem_df in results.group_by("problem"):
+        chart = alt.Chart(problem_df).encode(
+            color=alt.condition(
+                alt.datum.library == "pyoframe",
+                alt.value("black"),
+                alt.Color("library", legend=None),
+            )
+        )
+
+        xs = ["time_s_pyoframe", "memory_uss_GiB_pyoframe"]
+        ys = ["time_normalized", "memory_uss_normalized"]
+        titles = ["Time to construct", "Peak memory usage"]
+        y_labels = ["Time relative to Pyoframe", "Memory relative to Pyoframe"]
+        units = ["sec", "GiB"]
+        row = None
+        for x, y, title, y_label, unit in zip(xs, ys, titles, y_labels, units):
+            tick_values = [10**i for i in range(1, 9)]
+            lines = (
+                chart.mark_line(point=True)
+                .encode(
+                    alt.X("size")
+                    .scale(type="log")
+                    .title("Number of variables")
+                    .axis(grid=False, format="~s", values=tick_values),
+                    alt.Y(y)
+                    .axis(labelExpr="datum.value + 'x'", grid=True)
+                    .title(y_label),
+                )
+                .properties(title=title)
+            )
+            labels = chart.encode(
+                alt.X("max(size)"),
+                alt.Y(y, aggregate=alt.ArgmaxDef(argmax=x)),
+                text="library",
+            ).mark_text(align="left", dx=4, fontSize=12)
+
+            pyoframe_data = problem_df.filter(library="pyoframe")
+            pyoframe_data = pyoframe_data.with_columns(
+                pl.col(x).round_sig_figs(1).map_elements(lambda v: f"{v:g} {unit}")
+            )
+            pyoframe_labels = (
+                alt.Chart(pyoframe_data)
+                .encode(alt.X("size"), alt.Y(y), alt.Text(x))
+                .mark_text(align="center", dy=-10, fontSize=12)
+            )
+
+            pyoframe_background = pyoframe_labels.mark_text(
+                align="center",
+                stroke="white",
+                strokeWidth=5,
+                strokeJoin="round",
+                strokeOpacity=0.6,
+                dy=-10,
+                fontSize=12,
+            )
+            facet = lines + pyoframe_background + pyoframe_labels + labels
+            if row is None:
+                row = facet
+            else:
+                row |= facet
+        if plot is None:
+            plot = row
+        else:
+            plot &= row
+
+    plot.save(output)
+
+
 def plot_all_summary():
     df = get_latest_data()
+    for (solver,), solver_df in df.group_by("solver"):
+        plot_combined(solver_df, CWD / "results" / f"results_{solver}.svg")
+        plot_combined_v2(solver_df, CWD / "results" / f"results_v2_{solver}.svg")
     for problem in config["problems"]:
         problem_df = df.filter(problem=problem)
         if problem_df.height == 0:
@@ -165,15 +259,7 @@ def plot_all_summary():
                 problem_lib_mapper("size").alias("size")
             )
 
-        plot(problem_df, CWD / "results" / problem / "combined_results.png", problem)
-        normalized_df = normalize_results(problem_df)
-        plot(
-            normalized_df,
-            CWD / "results" / problem / "normalized_results.png",
-            problem,
-            log_y=False,
-            normalized=True,
-        )
+        plot(problem_df, CWD / "results" / problem / "results.svg", problem)
 
 
 def plot_memory_usage_over_time():
@@ -223,6 +309,13 @@ def plot_memory_usage_over_time():
         ):
             if group.height == 0:
                 continue
+
+            if group["process_name"].n_unique() > 1:
+                group = group.group_by("time_s", "library").agg(
+                    pl.col("uss_MiB", "rss_MiB", "vms_MiB", "num_threads").sum(),
+                    pl.col("marker").first(),
+                )
+
             panel = (
                 alt.Chart(group)
                 .mark_line(strokeWidth=1)
@@ -234,11 +327,11 @@ def plot_memory_usage_over_time():
                 .properties(title=f"Memory usage over time (N={size}, {solver})")
             )
             # add rss as dashed lines
-            panel += (
-                alt.Chart(group)
-                .mark_line(strokeWidth=1, strokeDash=[2, 2])
-                .encode(x=alt.X("time_s"), y=alt.Y("rss_MiB"), color="library:N")
-            )
+            # panel += (
+            #     alt.Chart(group)
+            #     .mark_line(strokeWidth=1, strokeDash=[2, 2])
+            #     .encode(x=alt.X("time_s"), y=alt.Y("rss_MiB"), color="library:N")
+            # )
             keypoints = group.filter(pl.col("marker").is_not_null())
             if keypoints.height > 0:
                 panel += keypoints.plot.scatter(

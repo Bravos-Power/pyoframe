@@ -4,8 +4,8 @@ from benchmark_utils import BaseBenchmark
 
 
 class Benchmark(BaseBenchmark):
-    def __init__(self, solver, **kwargs):
-        super().__init__(solver, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         if self.solver == "gurobi":
             self._solver_instance = pulp.GUROBI()

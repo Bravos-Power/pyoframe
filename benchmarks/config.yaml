@@ -11,8 +11,6 @@ problems:
       - "input_100000.parquet"
       - "input_1000000.parquet"
       - "input_10000000.parquet"
-  # create_variable:
-  #   size: [10000, 100000, 1000000, 10000000, 100000000]
   # facility_location:
   #   size: [2, 4, 8, 16, 32, 64, 128, 256, 512]
   #   construct_only: true
@@ -29,11 +27,11 @@ solvers:
 
 libraries:
   - pyoframe
-  # - pyomo
-  # - cvxpy
-  # - gurobipy
-  # - jump
-  # - linopy
-  # - pyoptinterface
-  # - pulp
-  # - ampl
+  - pyomo
+  - cvxpy
+  - gurobipy
+  - jump
+  - linopy
+  - pyoptinterface
+  - pulp
+  - ampl
