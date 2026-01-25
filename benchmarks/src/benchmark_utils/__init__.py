@@ -19,6 +19,7 @@ class BaseBenchmark(ABC):
         input_dir=None,
         results_dir=None,
         size=None,
+        emit_benchmarking_logs=False,
         **kwargs,
     ):
         self.solver = solver
@@ -26,6 +27,7 @@ class BaseBenchmark(ABC):
         self.input_dir = Path(input_dir) if input_dir else None
         self.results_dir = Path(results_dir) if results_dir else None
         self.size = size
+        self.emit_benchmarking_logs = emit_benchmarking_logs
         self.kwargs = kwargs
 
     @abstractmethod
@@ -49,7 +51,8 @@ class BaseBenchmark(ABC):
     def _get_objective(self, model) -> float: ...
 
     def run(self):
-        print("PF_BENCHMARK: 1_START", flush=True)
+        if self.emit_benchmarking_logs:
+            print("PF_BENCHMARK: 1_START", flush=True)
         with (
             contextlib.chdir(self.input_dir)
             if self.input_dir
@@ -60,12 +63,15 @@ class BaseBenchmark(ABC):
         if self.block_solver:
             self.set_timeout_to_zero(self.model)
 
-        print("PF_BENCHMARK: 2_SOLVE", flush=True)
+        if self.emit_benchmarking_logs:
+            print("PF_BENCHMARK: 2_SOLVE", flush=True)
         self.solve(self.model)
-        print("PF_BENCHMARK: 5_SOLVE_RETURNED", flush=True)
+        if self.emit_benchmarking_logs:
+            print("PF_BENCHMARK: 5_SOLVE_RETURNED", flush=True)
 
         if self.results_dir is not None and not self.block_solver:
             with contextlib.chdir(self.results_dir):
                 self.write_results(self.model, **self.kwargs)
-        print("PF_BENCHMARK: 6_DONE", flush=True)
+        if self.emit_benchmarking_logs:
+            print("PF_BENCHMARK: 6_DONE", flush=True)
         return self.model

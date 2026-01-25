@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["*"]
   schedule:
-    - cron: "0 5 * * WED"
+    - cron: "0 5 * * WED"  # Every Wed at 05:00
 
 jobs:
   run:
@@ -37,6 +37,4 @@ jobs:
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
       - name: Run benchmarks
         run: |
-          cd benchmarks
-          cp config.testing.yaml config.yaml
-          snakemake --cores all
+          python benchmarks/test.py

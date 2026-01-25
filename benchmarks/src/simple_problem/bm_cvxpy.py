@@ -6,41 +6,29 @@ from benchmark_utils.cvxpy import Benchmark
 class Bench(Benchmark):
     def build(self, **kwargs):
         df = pl.read_parquet(f"input_{self.size}.parquet")
+        self.ids = df.select("id")
+        costs = df["cost"].to_numpy()
 
-        ids = df["id"].to_list()
+        n = len(self.ids)
 
-        cost = dict(df.rows())
+        self.X = cp.Variable(n)
 
-        n = len(ids)
-
-        X = cp.Variable(n)
-
-        c = [cost[i] for i in ids]
-
-        objective = cp.Minimize(c @ X)
+        objective = cp.Minimize(costs @ self.X)
 
         constraints = [
-            X >= 0,
-            X <= 1,
-            cp.sum(X) >= n / 2,
+            0 <= self.X,
+            self.X <= 1,
+            cp.sum(self.X) >= n / 2,
         ]
 
-        problem = cp.Problem(objective, constraints)
+        model = cp.Problem(objective, constraints)
 
-        self.problem = problem
-        self.X = X
-        self.ids = ids
+        return model
 
-        return problem
+    def write_results(self, model, **kwargs):
+        solution = self.ids.with_columns(solution=pl.lit(self.X.value))
 
-    def write_results(self, problem, **kwargs):
-        data = [(i, float(self.X.value[k])) for k, i in enumerate(self.ids)]
-
-        pl.DataFrame(
-            data,
-            schema={"id": pl.Int64, "value": pl.Float64},
-            orient="row",
-        ).write_parquet(f"output_{self.size}.parquet")
+        solution.write_parquet(f"output_{self.size}.parquet")
 
 
 if __name__ == "__main__":
@@ -50,9 +38,5 @@ if __name__ == "__main__":
     results_dir = cwd / "model_results"
     results_dir.mkdir(exist_ok=True)
 
-    bench = Bench(
-        size=10_000,
-        input_dir=cwd / "model_data",
-        results_dir=results_dir,
-    )
+    bench = Bench(size=10_000, input_dir=cwd / "model_data", results_dir=results_dir)
     bench.run()

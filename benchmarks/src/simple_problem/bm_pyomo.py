@@ -18,7 +18,7 @@ class Bench(Benchmark):
     def write_results(self, model, **kwargs):
         pl.DataFrame(
             [(id, model.X[id].value) for id in model.Xs],
-            schema={"id": pl.Int64, "value": pl.Float64},
+            schema={"id": pl.Int64, "solution": pl.Float64},
             orient="row",
         ).write_parquet(f"output_{self.size}.parquet")
 

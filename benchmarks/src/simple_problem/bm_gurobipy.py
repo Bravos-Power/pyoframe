@@ -19,7 +19,7 @@ class Bench(Benchmark):
     def write_results(self, model, **kwargs):
         pl.DataFrame(
             [(id, var.getAttr(gp.GRB.Attr.X)) for id, var in self.X.items()],
-            schema={"id": pl.Int64, "value": pl.Float64},
+            schema={"id": pl.Int64, "solution": pl.Float64},
             orient="row",
         ).write_parquet(f"output_{self.size}.parquet")
 

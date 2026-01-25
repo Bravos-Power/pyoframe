@@ -28,7 +28,7 @@ class Bench(Benchmark):
                 (id, self.model.get_variable_attribute(x, poi.VariableAttribute.Value))
                 for id, x in self.X.items()
             ],
-            schema={"id": pl.Int64, "value": pl.Float64},
+            schema={"id": pl.Int64, "solution": pl.Float64},
             orient="row",
         ).write_parquet(f"output_{self.size}.parquet")
 

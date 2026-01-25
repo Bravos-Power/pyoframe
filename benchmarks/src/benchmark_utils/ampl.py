@@ -7,6 +7,7 @@ class Benchmark(BaseBenchmark):
 
     def solve(self, model):
         model.option["solver"] = self.solver
+        model.setOption("gurobi_options", "outlev=1")
         model.solve()
 
     def _get_objective(self, model) -> float:
