@@ -15,11 +15,7 @@ class Bench(Benchmark):
 
         objective = cp.Minimize(costs @ self.X)
 
-        constraints = [
-            0 <= self.X,
-            self.X <= 1,
-            cp.sum(self.X) >= n / 2,
-        ]
+        constraints = [0 <= self.X, self.X <= 1, cp.sum(self.X) >= n / 2]
 
         model = cp.Problem(objective, constraints)
 

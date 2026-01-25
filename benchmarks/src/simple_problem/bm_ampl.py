@@ -24,7 +24,6 @@ class Bench(Benchmark):
         """)
 
         cost = pd.read_parquet(f"input_{self.size}.parquet").set_index("id")
-
         model.set["IDS"] = cost.index
         model.param["cost"] = cost
 

@@ -13,7 +13,6 @@ import signal
 import subprocess
 import threading
 import time
-from collections import defaultdict
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,76 +29,113 @@ TIMESTAMP = time.strftime("%Y%m%d_%H%M%S")
 
 CWD = Path(__file__).parent
 
-BENCHMARK_RESULTS_SCHEMA: dict = {
-    "date": pl.Utf8,
-    "problem": pl.Utf8,
-    "library": pl.Utf8,
-    "solver": pl.Utf8,
-    "size": pl.Int64,
-    "num_variables": pl.Int64,
-    "total_time_s": pl.Float64,
-    "solve_time_s": pl.Float64,
-    "max_memory_uss_mb": pl.Float64,
-    "objective_value": pl.Float64,
-    "error": pl.Utf8,
-}
+
+@dataclass
+class Benchmark:
+    problem: str
+    solver: str
+    library: str
+    size: int | None
 
 
 def run_all_benchmarks(config, ignore_past_results=False):
     base_dir = CWD / "results" / config["name"]
     base_dir.mkdir(parents=True, exist_ok=True)
-    past_results_path = base_dir / "benchmark_results.csv"
 
-    past_results = read_past_results(past_results_path)
+    past_results = PastResults(base_dir, ignore_past_results=ignore_past_results)
 
-    if ignore_past_results:
-        past_results = past_results.filter(date=TIMESTAMP)
+    timeout = config.get("timeout", None)
 
     for problem, problem_config in config["problems"].items():
         prepare_benchmark_problem(problem, problem_config)
 
-        if config.get("save_outputs", False):
-            p: Path = base_dir / problem / "outputs"
-            p.mkdir(parents=True, exist_ok=True)
-            context_manager = nullcontext(p)
-        else:
-            context_manager = TemporaryDirectory()
-
-        with context_manager as results_dir:
-            results_dir = Path(results_dir)
-            all_completed_benchmarks = []
-            for solver, library in itertools.product(
-                config["solvers"], config["libraries"]
-            ):
-                result_dir = results_dir / solver / library
-                result_dir.mkdir(parents=True, exist_ok=True)
-                try:
-                    completed_benchmarks = run_library_benchmarks(
-                        solver,
-                        library,
-                        problem,
-                        problem_config,
-                        config,
-                        past_results.filter(
-                            problem=problem, library=library, solver=solver
-                        ),
-                        result_dir,
-                        past_results_path,
+        num_repeats = problem_config.get("repeat", config.get("repeat", 1))
+        for size in sorted(problem_config.get("size", [None])):
+            with get_base_results_dir(
+                config, base_dir, problem, size
+            ) as base_results_dir:
+                for solver, library in itertools.product(
+                    config["solvers"], config["libraries"]
+                ):
+                    benchmark = Benchmark(
+                        problem=problem, solver=solver, library=library, size=size
                     )
-                    all_completed_benchmarks.extend(completed_benchmarks)
-                except BenchmarkError as e:
-                    print(f"{problem}: {e}")
+                    if not get_benchmark_code(benchmark).exists():
+                        print(f"{problem}: Skipping {library} as no benchmark found.")
+                        continue
 
-            check_results_match(problem, all_completed_benchmarks)
+                    if not should_run_benchmark(
+                        benchmark, past_results, timeout, num_repeats
+                    ):
+                        print(
+                            f"{problem} (n={size}): Skipping {library}, already benchmarked or timed out."
+                        )
+                        continue
 
-        df = read_past_results(past_results_path)
-        df = df.filter(date=TIMESTAMP, problem=problem)
-        if df["objective_value"].n_unique() <= 1:
-            print(f"{problem}: Objective values match across all runs.")
-        else:
-            raise ValueError(
-                f"{problem}: Objective values do not match, see .csv results."
-            )
+                    input_dir = (
+                        CWD / "src" / problem / "model_data"
+                        if "inputs" in problem_config
+                        else None
+                    )
+                    try:
+                        for i in range(num_repeats):
+                            print(
+                                f"{problem} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
+                            )
+
+                            run_benchmark(
+                                benchmark,
+                                past_results,
+                                timeout=timeout,
+                                input_dir=input_dir,
+                                results_dir=get_results_dir(
+                                    base_results_dir, library, solver
+                                ),
+                            )
+                    except BenchmarkError as e:
+                        print(f"{problem}: {e}")
+
+                check_results_match(
+                    problem,
+                    base_results_dir,
+                    past_results.read(date=TIMESTAMP, size=size, problem=problem),
+                )
+
+            df = past_results.read(date=TIMESTAMP, problem=problem, size=size)
+            if df["objective_value"].n_unique() <= 1:
+                print(f"{problem}: Objective values match across all runs.")
+            else:
+                raise ValueError(
+                    f"{problem}: Objective values do not match for size {size}, see .csv results."
+                )
+
+
+def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeats):
+    past_results_df = past_results.read(
+        problem=benchmark.problem, library=benchmark.library, solver=benchmark.solver
+    )
+
+    # Previously errored on this run, don't try again.
+    if past_results_df.filter(pl.col("error").is_not_null(), date=TIMESTAMP).height > 0:
+        return False
+
+    if benchmark.size is not None:
+        past_results_df = past_results_df.filter(size=benchmark.size)
+
+    # Check if already completed
+    if past_results_df.filter(pl.col("error").is_null()).height >= num_repeats:
+        return False
+
+    # Previously timed out at this size, don't try again.
+    prior_timeouts = past_results_df.filter(error="TIMEOUT")
+    if (
+        timeout is not None
+        and prior_timeouts.height > 0
+        and prior_timeouts["total_time_s"].max() >= timeout
+    ):
+        return False
+
+    return True
 
 
 def prepare_benchmark_problem(problem: str, problem_config):
@@ -120,85 +156,9 @@ def prepare_benchmark_problem(problem: str, problem_config):
     )
 
 
-def run_library_benchmarks(
-    solver,
-    library,
-    problem: str,
-    problem_config,
-    config,
-    past_results,
-    base_results_dir: Path,
-    past_results_path: Path,
-) -> list[Path]:
-    problem_dir = CWD / "src" / problem
-
-    ext = "jl" if library == "jump" else "py"
-    if not (problem_dir / f"bm_{library}.{ext}").exists():
-        print(f"{problem}: Skipping {library} as no benchmark found.")
-        return []
-
-    num_repeats = problem_config.get("repeat", config.get("repeat", 1))
-    timeout = config.get("timeout", None)
-
-    sizes = sorted(problem_config.get("size", [None]))
-
-    completed_benchmarks = []
-    for size in sorted(sizes):
-        if size is not None:
-            past_result = past_results.filter(size=size)
-        else:
-            past_result = past_results
-
-        # Past non-error result, no need to repeat
-        if past_result.filter(pl.col("error").is_null()).height >= num_repeats:
-            continue
-
-        # Previously timed out at this size, don't try again.
-        prior_timeouts = past_result.filter(error="TIMEOUT")
-        if (
-            timeout is not None
-            and prior_timeouts.height > 0
-            and prior_timeouts["total_time_s"].max() >= timeout
-        ):
-            break
-
-        results_dir = (
-            base_results_dir / str(size)
-            if size is not None
-            else base_results_dir / "default"
-        )
-        results_dir.mkdir(parents=True, exist_ok=True)
-        input_dir = problem_dir / "model_data" if "inputs" in problem_config else None
-
-        for i in range(num_repeats):
-            print(
-                f"{problem} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
-            )
-
-            run_benchmark(
-                problem,
-                library,
-                solver,
-                past_results_path,
-                size,
-                timeout=timeout,
-                input_dir=input_dir,
-                results_dir=results_dir,
-            )
-            completed_benchmarks.append(results_dir)
-
-    if not completed_benchmarks:
-        print(f"{problem}: All sizes already benchmarked for {library}.")
-
-    return completed_benchmarks
-
-
 def run_benchmark(
-    problem,
-    library,
-    solver,
-    past_results_path: Path,
-    size: int | None = None,
+    benchmark: Benchmark,
+    past_results: "PastResults",
     timeout: int | None = None,
     input_dir=None,
     results_dir: Path | None = None,
@@ -210,33 +170,29 @@ def run_benchmark(
     ):
         if monitor_result is None:
             monitor_result = MonitorResult()
-        new_result = pl.DataFrame(
+
+        past_results.append(
             {
                 "date": TIMESTAMP,
-                "problem": problem,
-                "library": library,
-                "solver": solver,
-                "size": size,
+                "problem": benchmark.problem,
+                "library": benchmark.library,
+                "solver": benchmark.solver,
+                "size": benchmark.size,
                 "num_variables": monitor_result.num_variables,
                 "total_time_s": safe_round(total_time, 3),
                 "solve_time_s": safe_round(monitor_result.solve_time, 3),
                 "max_memory_uss_mb": safe_round(monitor_result.max_memory_uss_mb, 3),
                 "objective_value": monitor_result.objective_value,
                 "error": error,
-            },
-            schema=BENCHMARK_RESULTS_SCHEMA,
+            }
         )
 
-        read_past_results(past_results_path).vstack(new_result).write_csv(
-            past_results_path
-        )
-
-    using_julia = library == "jump"
+    using_julia = benchmark.library == "jump"
 
     if not using_julia:
-        args = dict(solver=f"'{solver}'", emit_benchmarking_logs="True")
-        if size is not None:
-            args["size"] = str(size)
+        args = dict(solver=f"'{benchmark.solver}'", emit_benchmarking_logs="True")
+        if benchmark.size is not None:
+            args["size"] = str(benchmark.size)
         if input_dir is not None:
             args["input_dir"] = f"'{input_dir}'"
             args["results_dir"] = f"'{results_dir}'"
@@ -246,21 +202,21 @@ def run_benchmark(
         cmd = [
             "python",
             "-c",
-            f"from {problem}.bm_{library} import Bench; Bench({args}).run()",
+            f"from {benchmark.problem}.bm_{benchmark.library} import Bench; Bench({args}).run()",
         ]
     else:
         cmd = [
             "julia",
             f"--project={CWD}",
-            CWD / f"src/{problem}/bm_jump.jl",
-            solver,
-            str(size),
+            CWD / f"src/{benchmark.problem}/bm_jump.jl",
+            benchmark.solver,
+            str(benchmark.size),
             str(results_dir),
         ]
 
     max_memory_queue = queue.Queue()
 
-    mem_log_dir = past_results_path.parent / problem / "mem_log"
+    mem_log_dir = past_results.base_dir / benchmark.problem / "mem_log"
     mem_log_dir.mkdir(parents=True, exist_ok=True)
 
     # See paper for explanation
@@ -271,26 +227,27 @@ def run_benchmark(
 
     with subprocess.Popen(
         cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE, text=True, bufsize=1, env=env
-    ) as benchmark:
+    ) as benchmark_proc:
         memory_thread = threading.Thread(
             target=monitor_benchmark,
             args=(
-                benchmark,
+                benchmark_proc,
                 max_memory_queue,
-                mem_log_dir / f"{TIMESTAMP}_{library}_{solver}_{size}.parquet",
+                mem_log_dir
+                / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}.parquet",
             ),
         )
         memory_thread.start()
 
         try:
-            return_code = benchmark.wait(timeout=timeout)
+            return_code = benchmark_proc.wait(timeout=timeout)
             total_time = time.time() - start_time
         except subprocess.TimeoutExpired:
-            kill_process(benchmark, using_julia)
+            kill_process(benchmark_proc, using_julia)
             save_result(total_time=timeout, error="TIMEOUT")
             raise BenchmarkError("Benchmark timed out")
         except KeyboardInterrupt as e:
-            kill_process(benchmark, using_julia)
+            kill_process(benchmark_proc, using_julia)
             raise e
 
         if return_code != 0:
@@ -440,58 +397,60 @@ def monitor_benchmark(proc, result_queue, output_file):
     result_queue.put(result)
 
 
-def check_results_match(problem: str, completed_benchmarks: list[Path]):
-    print(len(completed_benchmarks))
-    dirs_to_compare = defaultdict(list)
-    for dir in completed_benchmarks:
-        size = dir.parts[-1]
-        library = dir.parts[-2]
-        solver = dir.parts[-3]
-        dirs_to_compare[size].append((library, solver, dir))
+def check_results_match(
+    problem: str, base_results_dir: Path | str, results: pl.DataFrame
+):
+    reference = None
 
-    comparisons_completed = set()
-    for size, dirs in dirs_to_compare.items():
-        ref_lib, ref_solver, ref_dir = dirs[0]
+    libs_compared = set()
 
-        files_in_ref = list(f.name for f in ref_dir.glob("*"))
+    for (library, solver), group in results.group_by(["library", "solver"]):
+        results_dir = get_results_dir(base_results_dir, library, solver)
+        files = list(f.name for f in results_dir.glob("*"))
 
-        for library, solver, dir in dirs[1:]:
-            files = (f.name for f in dir.glob("*"))
+        if reference is None:
+            reference = (library, solver, results_dir, files)
+            continue
 
-            if set(files) != set(files_in_ref):
-                missing_in_ref = set(files) - set(files_in_ref)
-                missing_in_dir = set(files_in_ref) - set(files)
-                assert len(missing_in_ref) > 0 or len(missing_in_dir) > 0
-                if len(missing_in_dir) > 0:
-                    raise BenchmarkError(
-                        f"{problem}: For size {size}, benchmark ({library}, {solver}) is missing files: {', '.join(missing_in_dir)} compared to {(ref_lib, ref_solver)}."
-                    )
-                if len(missing_in_ref) > 0:
-                    raise BenchmarkError(
-                        f"{problem}: For size {size}, benchmark ({ref_lib}, {ref_solver}) has extra files: {', '.join(missing_in_ref)} compared to {(library, solver)}."
-                    )
+        ref_lib, ref_solver, ref_dir, files_in_ref = reference
 
-            for filename in files_in_ref:
-                ref = pl.read_parquet(ref_dir / filename)
-                diff = pl.read_parquet(dir / filename)
-                try:
-                    assert_frame_equal(
-                        ref,
-                        diff,
-                        check_dtypes=False,
-                        check_row_order=False,
-                        check_column_order=False,
-                    )
-                except AssertionError as e:
-                    raise BenchmarkError(
-                        f"Benchmarks produced different results between {(ref_lib, ref_solver)} and {(library, solver)} for size {size}."
-                    ) from e
+        if set(files) != set(files_in_ref):
+            missing_in_ref = set(files) - set(files_in_ref)
+            missing_in_dir = set(files_in_ref) - set(files)
+            assert len(missing_in_ref) > 0 or len(missing_in_dir) > 0
+            if len(missing_in_dir) > 0:
+                raise BenchmarkError(
+                    f"{problem}: Benchmark ({library}, {solver}) is missing files: {', '.join(missing_in_dir)} compared to {(ref_lib, ref_solver)}."
+                )
+            if len(missing_in_ref) > 0:
+                raise BenchmarkError(
+                    f"{problem}: Benchmark ({ref_lib}, {ref_solver}) has extra files: {', '.join(missing_in_ref)} compared to {(library, solver)}."
+                )
 
-                comparisons_completed.add(ref_lib)
-                comparisons_completed.add(library)
+        if len(files_in_ref) == 0:
+            continue
 
-    if len(comparisons_completed) > 1:
-        print(f"{problem}: Outputs match across {', '.join(comparisons_completed)}")
+        for filename in files_in_ref:
+            ref = pl.read_parquet(ref_dir / filename)
+            diff = pl.read_parquet(results_dir / filename)
+            try:
+                assert_frame_equal(
+                    ref,
+                    diff,
+                    check_dtypes=False,
+                    check_row_order=False,
+                    check_column_order=False,
+                )
+            except AssertionError as e:
+                raise BenchmarkError(
+                    f"Benchmarks produced different results between {(ref_lib, ref_solver)} and {(library, solver)}."
+                ) from e
+
+        libs_compared.add(ref_lib)
+        libs_compared.add(library)
+
+    if len(libs_compared) > 1:
+        print(f"{problem}: Outputs match across {', '.join(libs_compared)}")
 
 
 def kill_process(proc, using_julia, timeout=2):
@@ -510,14 +469,84 @@ def read_config(name="config.yaml") -> dict:
         return yaml.safe_load(f)
 
 
-def read_past_results(path) -> pl.DataFrame:
-    if path.exists():
-        return pl.read_csv(path).cast(BENCHMARK_RESULTS_SCHEMA)
+def get_benchmark_code(benchmark: Benchmark) -> Path:
+    ext = "jl" if benchmark.library == "jump" else "py"
+    return CWD / "src" / benchmark.problem / f"bm_{benchmark.library}.{ext}"
 
-    path.parent.mkdir(exist_ok=True)
-    df = pl.DataFrame(schema=BENCHMARK_RESULTS_SCHEMA)
-    df.write_csv(path)
-    return df
+
+def get_base_results_dir(config, base_dir: Path, problem: str, size: int | None):
+    if config.get("save_outputs", False):
+        p: Path = (
+            base_dir
+            / problem
+            / "outputs"
+            / (str(size) if size is not None else "default")
+        )
+        p.mkdir(parents=True, exist_ok=True)
+        return nullcontext(p)
+    else:
+        return TemporaryDirectory()
+
+
+def get_results_dir(base_results_dir: Path | str, library: str, solver: str):
+    results_dir = Path(base_results_dir) / solver / library
+    results_dir.mkdir(parents=True, exist_ok=True)
+    return results_dir
+
+
+class PastResults:
+    BENCHMARK_RESULTS_SCHEMA: dict = {
+        "date": pl.Utf8,
+        "problem": pl.Utf8,
+        "library": pl.Utf8,
+        "solver": pl.Utf8,
+        "size": pl.Int64,
+        "num_variables": pl.Int64,
+        "total_time_s": pl.Float64,
+        "solve_time_s": pl.Float64,
+        "max_memory_uss_mb": pl.Float64,
+        "objective_value": pl.Float64,
+        "error": pl.Utf8,
+    }
+
+    FILE_NAME = "benchmark_results.csv"
+
+    def __init__(self, base_dir: Path, ignore_past_results: bool = False) -> None:
+        self.base_dir = base_dir
+        self._path = base_dir / self.FILE_NAME
+
+        if self._path.exists():
+            self._data = pl.read_csv(self._path).cast(self.BENCHMARK_RESULTS_SCHEMA)
+        else:
+            self._path.parent.mkdir(exist_ok=True)
+            self._data = pl.DataFrame(schema=self.BENCHMARK_RESULTS_SCHEMA)
+            self._data.write_csv(self._path)
+
+        if ignore_past_results:
+            self._data = self._data.filter(date=TIMESTAMP)
+
+    def read(
+        self, *, size=None, date=None, library=None, solver=None, problem=None
+    ) -> pl.DataFrame:
+        df = self._data
+        if size is not None:
+            df = df.filter(size=size)
+        if date is not None:
+            df = df.filter(date=date)
+        if library is not None:
+            df = df.filter(library=library)
+        if solver is not None:
+            df = df.filter(solver=solver)
+        if problem is not None:
+            df = df.filter(problem=problem)
+        return df
+
+    def append(self, row: dict):
+        self._data = self._data.vstack(
+            pl.DataFrame(row, schema=self.BENCHMARK_RESULTS_SCHEMA)
+        )
+
+        self._data.write_csv(self._path)
 
 
 def safe_round(value, ndigits):

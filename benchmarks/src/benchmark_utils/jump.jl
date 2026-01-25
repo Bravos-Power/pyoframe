@@ -1,6 +1,6 @@
-module BenchmarkBase
+module Benchmark
 
-export optimize, run
+export run
 
 using JuMP
 
@@ -21,11 +21,11 @@ else
 end
 
 
-function optimize(model::JuMP.Model)
+function optimize!(model::JuMP.Model)
     println("PF_BENCHMARK: 2_SOLVE")
     flush(stdout)
 
-    optimize!(model)
+    JuMP.optimize!(model)
 
     println("PF_BENCHMARK: 5_SOLVE_RETURNED")
     flush(stdout)

@@ -1,5 +1,5 @@
 repeat: 1 # TODO repeat
-timeout: 600 # seconds, per run
+timeout: 1200 # seconds, per run
 name: "main"
 problems:
   # memory_overhead:
