@@ -7,16 +7,20 @@ modeling_interfaces:
   linopy:
     github: PyPSA/linopy
     include_paths: ["linopy"]
-  pyomo_core:
+  pyomo_no_contrib:
     github: Pyomo/pyomo
-    include_paths: ["pyomo/core"]
+    include_paths: ["pyomo"]
+    exclude_paths: ["pyomo/contrib"]
+  pyomo:
+    github: Pyomo/pyomo
+    include_paths: ["pyomo"]
   cvxpy:
     github: cvxpy/cvxpy
     include_paths:
       - "cvxpy"
     exclude_paths:
       - "cvxpy/cvxcore/include/Eigen"
-      - "cvxpy/cvxcore/python"
+      - "cvxpy/cvxcore/python"  # mostly auto-generated or third-party code
   jump:
     github: jump-dev/JuMP.jl
     include_paths: ["src"]

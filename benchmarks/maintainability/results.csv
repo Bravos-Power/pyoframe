@@ -1,8 +1,9 @@
-modeling_interface,Python,C++,Julia,total,factor
-pyoframe,2614,,,2614,1.0
-pulp,7793,,,7793,3.0
-linopy,8088,,,8088,3.1
-jump,,,12258,12258,4.7
-pyoptinterface,5338,17981,,23319,8.9
-cvxpy,27306,1300,,28606,10.9
-pyomo_core,28753,,,28753,11.0
+modeling_interface,Python,Julia,C/C++,total,factor
+pyoframe,2614,,0,2614,1.0
+pulp,7793,,0,7793,3.0
+linopy,8095,,0,8095,3.1
+jump,,12258,0,12258,4.7
+pyoptinterface,5338,,17981,23319,8.9
+cvxpy,27456,,1300,28756,11.0
+pyomo_no_contrib,82344,,0,82344,31.5
+pyomo,151503,,6925,158428,60.6

@@ -8,34 +8,57 @@ import polars as pl
 import yaml
 
 
-def check_installed():
-    try:
-        subprocess.run(
-            ["git", "--version"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            "Git is not installed. Please install Git to run this script."
-        ) from e
+def main():
+    cwd = Path(__file__).parent
 
-    try:
-        subprocess.run(
-            ["cloc", "--version"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+    # Read config.yaml
+    with open(cwd / "config.yaml") as file:
+        config = yaml.safe_load(file)
+
+    results = pl.DataFrame()
+
+    for modeling_interface, mi_config in config["modeling_interfaces"].items():
+        github = mi_config["github"].lower()
+        results = pl.concat(
+            [
+                results,
+                measure_lines_of_code(
+                    github,
+                    cwd / "downloads" / github.partition("/")[2],
+                    include_paths=mi_config["include_paths"],
+                    exclude_paths=mi_config.get("exclude_paths", []),
+                    include_exts=config["valid_extensions"],
+                    exclude_dirs=config["always_exclude_dirs"],
+                ).with_columns(modeling_interface=pl.lit(modeling_interface)),
+            ],
+            how="diagonal",
         )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            "cloc is not installed. Please install cloc to run this script."
-        ) from e
+
+    results = results.with_columns(
+        (
+            pl.col("C++").fill_null(0)
+            + pl.col("C/C++ Header").fill_null(0)
+            + pl.col("C").fill_null(0)
+        ).alias("C/C++")
+    ).drop("C/C++ Header", "C", "C++")
+    results = results.select(
+        "modeling_interface",
+        *[col for col in results.columns if col not in ("modeling_interface", "SUM")],
+        total="SUM",
+    ).sort("total")
+    results = results.with_columns(
+        factor=(
+            pl.col("total")
+            / results.filter(modeling_interface="pyoframe")["total"].item()
+        ).round(1)
+    )
+    print(results)
+
+    results.write_csv(cwd / "results.csv")
 
 
 def measure_lines_of_code(
-    github,
+    github: str,
     downloads_dir: Path,
     *,
     include_paths: list[str],
@@ -47,7 +70,6 @@ def measure_lines_of_code(
         url = "https://github.com/" + github
         subprocess.run(["git", "clone", url, downloads_dir], check=True)
 
-    # run cloc
     cmd = ["cloc"]
     cmd += include_paths
     if exclude_paths:
@@ -79,56 +101,6 @@ def measure_lines_of_code(
     )
 
     return df
-
-
-def main():
-    check_installed()
-
-    cwd = Path(__file__).parent
-
-    # Read config.yaml
-    with open(cwd / "config.yaml") as file:
-        config = yaml.safe_load(file)
-
-    always_exclude_dirs = config["always_exclude_dirs"]
-    valid_extensions = config["valid_extensions"]
-
-    results = pl.DataFrame()
-
-    for modeling_interface, mi_config in config["modeling_interfaces"].items():
-        results = pl.concat(
-            [
-                results,
-                measure_lines_of_code(
-                    mi_config["github"],
-                    cwd / "downloads" / modeling_interface,
-                    include_paths=mi_config["include_paths"],
-                    exclude_paths=mi_config.get("exclude_paths", []),
-                    include_exts=valid_extensions,
-                    exclude_dirs=always_exclude_dirs,
-                ).with_columns(modeling_interface=pl.lit(modeling_interface)),
-            ],
-            how="diagonal",
-        )
-
-    # reorder columns
-    results = results.with_columns(
-        (pl.col("C++") + pl.col("C/C++ Header")).alias("C++")
-    ).drop("C/C++ Header")
-    results = results.select(
-        "modeling_interface",
-        *[col for col in results.columns if col not in ("modeling_interface", "SUM")],
-        total="SUM",
-    ).sort("total")
-    results = results.with_columns(
-        factor=(
-            pl.col("total")
-            / results.filter(modeling_interface="pyoframe")["total"].item()
-        ).round(1)
-    )
-
-    print(results)
-    results.write_csv(cwd / "results.csv")
 
 
 if __name__ == "__main__":
