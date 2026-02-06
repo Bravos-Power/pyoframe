@@ -28,3 +28,6 @@ modeling_interfaces:
       - "src"
     exclude_paths:
       - "third_party"
+  pulp:
+    github: coin-or/pulp
+    include_paths: ["pulp"]

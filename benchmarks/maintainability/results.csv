@@ -1,7 +1,8 @@
-modeling_interface,blank,comment,code,nFiles
-pyomo_core,7985,15195,28753,111
-cvxpy,9826,19822,28606,366
-pyoptinterface,3282,1316,23319,73
-jump,4792,9264,12258,41
-linopy,2429,3771,8088,20
-pyoframe,760,1979,2614,10
+modeling_interface,Python,C++,Julia,total,factor
+pyoframe,2614,,,2614,1.0
+pulp,7793,,,7793,3.0
+linopy,8088,,,8088,3.1
+jump,,,12258,12258,4.7
+pyoptinterface,5338,17981,,23319,8.9
+cvxpy,27306,1300,,28606,10.9
+pyomo_core,28753,,,28753,11.0

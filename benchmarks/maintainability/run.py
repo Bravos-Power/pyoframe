@@ -42,7 +42,7 @@ def measure_lines_of_code(
     exclude_paths: list[str],
     exclude_dirs: list[str],
     include_exts: list[str],
-) -> dict[str, int]:
+) -> pl.DataFrame:
     if not downloads_dir.exists() or not any(downloads_dir.iterdir()):
         url = "https://github.com/" + github
         subprocess.run(["git", "clone", url, downloads_dir], check=True)
@@ -72,7 +72,13 @@ def measure_lines_of_code(
         raise RuntimeError(
             f"Failed to parse cloc output as JSON: {result.stdout}"
         ) from e
-    return cloc_output["SUM"]
+
+    df = pl.DataFrame(cloc_output)
+    df = df.select(
+        pl.col(c).struct.field("code").alias(c) for c in df.columns if c != "header"
+    )
+
+    return df
 
 
 def main():
@@ -87,29 +93,42 @@ def main():
     always_exclude_dirs = config["always_exclude_dirs"]
     valid_extensions = config["valid_extensions"]
 
-    results = {}
+    results = pl.DataFrame()
 
     for modeling_interface, mi_config in config["modeling_interfaces"].items():
-        results[modeling_interface] = measure_lines_of_code(
-            mi_config["github"],
-            cwd / "downloads" / modeling_interface,
-            include_paths=mi_config["include_paths"],
-            exclude_paths=mi_config.get("exclude_paths", []),
-            include_exts=valid_extensions,
-            exclude_dirs=always_exclude_dirs,
+        results = pl.concat(
+            [
+                results,
+                measure_lines_of_code(
+                    mi_config["github"],
+                    cwd / "downloads" / modeling_interface,
+                    include_paths=mi_config["include_paths"],
+                    exclude_paths=mi_config.get("exclude_paths", []),
+                    include_exts=valid_extensions,
+                    exclude_dirs=always_exclude_dirs,
+                ).with_columns(modeling_interface=pl.lit(modeling_interface)),
+            ],
+            how="diagonal",
         )
 
-    results = pl.DataFrame(results, orient="row")
-    results = results.unpivot(
-        on=results.columns, variable_name="modeling_interface", value_name="data"
+    # reorder columns
+    results = results.with_columns(
+        (pl.col("C++") + pl.col("C/C++ Header")).alias("C++")
+    ).drop("C/C++ Header")
+    results = results.select(
+        "modeling_interface",
+        *[col for col in results.columns if col not in ("modeling_interface", "SUM")],
+        total="SUM",
+    ).sort("total")
+    results = results.with_columns(
+        factor=(
+            pl.col("total")
+            / results.filter(modeling_interface="pyoframe")["total"].item()
+        ).round(1)
     )
-    results = results.select("modeling_interface", pl.col("data").struct.unnest()).sort(
-        "code", descending=True
-    )
-
-    results.write_csv(cwd / "results.csv")
 
     print(results)
+    results.write_csv(cwd / "results.csv")
 
 
 if __name__ == "__main__":
