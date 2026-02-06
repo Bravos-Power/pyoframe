@@ -36,6 +36,7 @@ class Benchmark:
     solver: str
     library: str
     size: int | None
+    construct_only: bool = False
 
 
 def run_all_benchmarks(config, ignore_past_results=False):
@@ -58,7 +59,11 @@ def run_all_benchmarks(config, ignore_past_results=False):
                     config["solvers"], config["libraries"]
                 ):
                     benchmark = Benchmark(
-                        problem=problem, solver=solver, library=library, size=size
+                        problem=problem,
+                        solver=solver,
+                        library=library,
+                        size=size,
+                        construct_only=problem_config.get("construct_only", False),
                     )
                     if not get_benchmark_code(benchmark).exists():
                         print(f"{problem}: Skipping {library} as no benchmark found.")
@@ -95,19 +100,47 @@ def run_all_benchmarks(config, ignore_past_results=False):
                     except BenchmarkError as e:
                         print(f"{problem}: {e}")
 
-                check_results_match(
+                check_results_output_match(
                     problem,
                     base_results_dir,
                     past_results.read(date=TIMESTAMP, size=size, problem=problem),
                 )
 
-            df = past_results.read(date=TIMESTAMP, problem=problem, size=size)
-            if df["objective_value"].n_unique() <= 1:
-                print(f"{problem}: Objective values match across all runs.")
-            else:
-                raise ValueError(
-                    f"{problem}: Objective values do not match for size {size}, see .csv results."
-                )
+                check_results_csv_align(past_results, problem=problem, size=size)
+
+
+def check_results_csv_align(past_results, problem, size):
+    df = past_results.read(problem=problem, size=size).filter(pl.col("error").is_null())
+
+    # Check objective values
+    df = df.with_columns(pl.col("objective_value").round_sig_figs(6))
+
+    num_objectives = df.group_by("objective_value").agg(
+        pl.col("solver", "library").first()
+    )
+    if num_objectives.height <= 1:
+        print(f"{problem}: Objective values match across all runs.")
+    else:
+        raise ValueError(
+            f"{problem}: Objective values do not match for size {size}, see .csv results:\n{num_objectives}"
+        )
+
+    # Check number of variables
+    df = df.with_columns(
+        pl.when(library="pyoframe")
+        .then(pl.col("num_variables") - 1)
+        .otherwise("num_variables")
+    )
+
+    num_variables = df.group_by("num_variables").agg(
+        pl.col("solver", "library").first()
+    )
+    if num_variables.height <= 1:
+        print(f"{problem}: Number of variables match across all runs.")
+    else:
+        raise ValueError(
+            f"{problem}: Number of variables do not match for size {size}, see .csv results:\n{num_variables}"
+        )
 
 
 def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeats):
@@ -193,6 +226,8 @@ def run_benchmark(
         args = dict(solver=f"'{benchmark.solver}'", emit_benchmarking_logs="True")
         if benchmark.size is not None:
             args["size"] = str(benchmark.size)
+        if benchmark.construct_only:
+            args["block_solver"] = "True"
         if input_dir is not None:
             args["input_dir"] = f"'{input_dir}'"
             args["results_dir"] = f"'{results_dir}'"
@@ -212,6 +247,7 @@ def run_benchmark(
             benchmark.solver,
             str(benchmark.size),
             str(results_dir),
+            "true" if benchmark.construct_only else "false",
         ]
 
     max_memory_queue = queue.Queue()
@@ -256,6 +292,13 @@ def run_benchmark(
 
         result = max_memory_queue.get(timeout=10)
         memory_thread.join(timeout=10)
+
+    if benchmark.construct_only:
+        result.solve_time = 0
+    else:
+        if result.objective_value is None:
+            save_result(total_time=total_time, error="ERROR")
+            raise BenchmarkError("No objective value found in benchmark output")
 
     save_result(
         total_time=total_time,
@@ -312,7 +355,15 @@ def monitor_benchmark(proc, result_queue, output_file):
                     )
                     marker = "4_GUROBI_END"
                 elif line.startswith("Optimal objective "):
+                    assert result.objective_value is None, (
+                        "Multiple objective values found"
+                    )
                     result.objective_value = float(line.strip().rpartition(" ")[2])
+                elif line.startswith("Best objective "):
+                    assert result.objective_value is None, (
+                        "Multiple objective values found"
+                    )
+                    result.objective_value = float(line.split(" ")[2].rstrip(","))
         except ValueError:
             pass
 
@@ -397,7 +448,7 @@ def monitor_benchmark(proc, result_queue, output_file):
     result_queue.put(result)
 
 
-def check_results_match(
+def check_results_output_match(
     problem: str, base_results_dir: Path | str, results: pl.DataFrame
 ):
     reference = None

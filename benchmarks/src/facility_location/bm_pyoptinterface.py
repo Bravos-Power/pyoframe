@@ -9,17 +9,17 @@ in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 
 import numpy as np
 import pyoptinterface as poi
-from benchmark_utils.pyoptinterface import PyOptInterfaceBenchmark
+from benchmark_utils.pyoptinterface import Benchmark
 
 
-class Bench(PyOptInterfaceBenchmark):
-    def build(self):
+class Bench(Benchmark):
+    def build(self, **kwargs):
         if isinstance(self.size, int):
             G = F = self.size
         else:
             G, F = self.size
 
-        m = self.create_model()
+        m = super().build(**kwargs)
         # Create variables
         y = add_ndarray_variable(m, (F, 2), lb=0.0, ub=1.0)
         s = add_ndarray_variable(m, (G + 1, G + 1, F), lb=0.0)

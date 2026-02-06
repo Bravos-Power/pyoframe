@@ -6,10 +6,10 @@ See: https://www.cvxpy.org/tutorial/dcp/index.html#dcp-problems
 
 import cvxpy as cp
 import numpy as np
-from benchmark_utils.cvxpy import CvxpyBenchmark
+from benchmark_utils.cvxpy import Benchmark
 
 
-class Bench(CvxpyBenchmark):
+class Bench(Benchmark):
     def build(self):
         if isinstance(self.size, int):
             G = F = self.size

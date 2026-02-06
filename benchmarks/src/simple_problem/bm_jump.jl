@@ -1,6 +1,4 @@
-
 include("../benchmark_utils/jump.jl")
-module SimpleLP
 
 using JuMP
 using ..Benchmark
@@ -29,5 +27,3 @@ Benchmark.run(@__DIR__, main)
 
 # To test run from the benchmarks directory:
 # julia --project=. src/simple_problem/bm_jump.jl gurobi 1000 src/simple_problem/model_results
-
-end

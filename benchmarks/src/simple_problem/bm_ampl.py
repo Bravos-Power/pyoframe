@@ -30,9 +30,9 @@ class Bench(Benchmark):
         return model
 
     def write_results(self, model, **kwargs):
-        model.var["X"].get_values().to_pandas().to_parquet(
-            f"output_{self.size}.parquet"
-        )
+        model.var["X"].get_values().to_pandas().reset_index(names="id").rename(
+            columns={"X.val": "solution"}
+        ).to_parquet(f"output_{self.size}.parquet")
 
 
 if __name__ == "__main__":

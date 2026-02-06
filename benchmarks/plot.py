@@ -42,7 +42,7 @@ def get_latest_data(base_path: Path):
 
 def plot_combined(results: pl.DataFrame, output):
     panels = [[], []]
-    for (problem,), problem_df in results.group_by("problem"):
+    for (problem,), problem_df in results.group_by("problem", maintain_order=True):
         chart = alt.Chart(problem_df).encode(
             color=alt.condition(
                 alt.datum.library == "pyoframe",

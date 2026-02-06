@@ -6,8 +6,6 @@ This is the exact same problem as described in the original [JuMP paper](https:/
 
 The purpose of this problem is to choose the location of $F$ facilities such that the maximum distance between any customer and its nearest facility is minimized. The $C^2$ Customers are evenly spread out over a square grid (see image below). Facilities can be placed anywhere in the grid.
 
-TODO add image
-
 
 ### Problem formulation
 

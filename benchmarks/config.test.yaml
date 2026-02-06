@@ -2,12 +2,12 @@
 name: test
 save_outputs: true
 problems:
+  facility_location:
+    size: [2]
   simple_problem:
     size: [100]
     inputs:
       - "input_100.parquet"
-  # facility_location:
-  #   size: [2, 4, 8, 16, 32, 64, 128, 256, 512]
   # energy_planning:
   #   requires_inputs: true
   #   size: [2, 4, 24, 168, 730, 8670]
@@ -27,3 +27,4 @@ libraries:
   - jump
   - linopy
   - pyoptinterface
+  - ampl

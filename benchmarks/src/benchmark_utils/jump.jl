@@ -25,6 +25,11 @@ function optimize!(model::JuMP.Model)
     println("PF_BENCHMARK: 2_SOLVE")
     flush(stdout)
 
+    if length(ARGS) >= 4 && ARGS[4] == "true"
+        set_time_limit_sec(model, 0.0)
+        set_optimizer_attribute(model, "Presolve", 0)
+    end
+
     JuMP.optimize!(model)
 
     println("PF_BENCHMARK: 5_SOLVE_RETURNED")

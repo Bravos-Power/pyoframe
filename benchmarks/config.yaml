@@ -2,8 +2,6 @@ repeat: 1 # TODO repeat
 timeout: 1200 # seconds, per run
 name: "main"
 problems:
-  # memory_overhead:
-  #   repeat: 5
   simple_problem:
     size: [10000, 100000, 1000000, 10000000, 50000000]
     inputs:
@@ -12,14 +10,12 @@ problems:
       - "input_1000000.parquet"
       - "input_10000000.parquet"
       - "input_50000000.parquet"
-  # facility_location:
-  #   size: [2, 4, 8, 16, 32, 64, 128, 256, 512]
-  #   construct_only: true
+  facility_location:
+    size: [16, 32, 64, 128, 192]
+    construct_only: true
   # energy_planning:
   #   inputs: "*"
   #   size: [2, 4, 24, 168, 730, 8670]
-  # dummy_model:
-  #   size: [2, 100, 200, 300, 400, 500, 1000, 2000]
 
 solvers:
   - gurobi

@@ -2,7 +2,7 @@
 
 import pytest
 
-from .bm_cvxpy import Bench as CvxpyBenchmark
+from .bm_cvxpy_ignore import Bench as CvxpyBenchmark
 from .bm_gurobipy import Bench as GurobiBenchmark
 from .bm_pyoframe import Bench as PyoframeBenchmark
 from .bm_pyomo import Bench as PyomoBenchmark

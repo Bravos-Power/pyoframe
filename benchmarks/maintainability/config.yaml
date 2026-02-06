@@ -1,0 +1,30 @@
+valid_extensions: ["py", "jl", "cpp", "hpp", "c", "h", "c", "i"]
+always_exclude_dirs: ["tests", "test"]
+modeling_interfaces:
+  pyoframe:
+    github: Bravos-Power/pyoframe
+    include_paths: ["src"]
+  linopy:
+    github: PyPSA/linopy
+    include_paths: ["linopy"]
+  pyomo_core:
+    github: Pyomo/pyomo
+    include_paths: ["pyomo/core"]
+  cvxpy:
+    github: cvxpy/cvxpy
+    include_paths:
+      - "cvxpy"
+    exclude_paths:
+      - "cvxpy/cvxcore/include/Eigen"
+      - "cvxpy/cvxcore/python"
+  jump:
+    github: jump-dev/JuMP.jl
+    include_paths: ["src"]
+  pyoptinterface:
+    github: metab0t/PyOptInterface
+    include_paths:
+      - "include"
+      - "lib"
+      - "src"
+    exclude_paths:
+      - "third_party"

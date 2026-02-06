@@ -13,7 +13,13 @@ class Benchmark(BaseBenchmark):
         self._solver_factory.options["timelimit"] = 0.0
 
     def solve(self, model):
-        self._solver_factory.solve(model, tee=True)
+        try:
+            self._solver_factory.solve(model, tee=True)
+        except ValueError as e:
+            if self.block_solver:
+                pass
+            else:
+                raise e
 
     def _get_objective(self, model) -> float:
         return value(model.obj)

@@ -1,29 +1,24 @@
 """Pyoframe implementation of the facility location benchmark."""
 
-import polars as pl
-from benchmark_utils.pyoframe import PyoframeBenchmark
+from benchmark_utils.pyoframe import Benchmark
 
-from pyoframe import Model, Set, Variable
+from pyoframe import Model, Param, Set, Variable
 
 
-class Bench(PyoframeBenchmark):
+class Bench(Benchmark):
     def build(self):
         G = F = self.size
         G = G + 1  # Add one to match Julia
 
         grid = range(G)
-        customer_position_x = pl.DataFrame(
+        customer_position_x = Param(
             {"x": grid, "x_pos": [step / (G - 1) for step in grid]}
-        ).to_expr()
-        customer_position_y = pl.DataFrame(
-            {"y": grid, "y_pos": [step / (G - 1) for step in grid]}
-        ).to_expr()
-
-        model = Model(
-            solver=self.solver,
-            solver_uses_variable_names=self.use_var_names,
-            print_uses_variable_names=False,
         )
+        customer_position_y = Param(
+            {"y": grid, "y_pos": [step / (G - 1) for step in grid]}
+        )
+
+        model = Model()
         model.facilities = Set(f=range(F))
         model.x_axis = Set(x=grid)
         model.y_axis = Set(y=grid)
@@ -62,4 +57,4 @@ class Bench(PyoframeBenchmark):
 
 
 if __name__ == "__main__":
-    Bench("gurobi", 5).run()
+    Bench("gurobi", size=2).run()
