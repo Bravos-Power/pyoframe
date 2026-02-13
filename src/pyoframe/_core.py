@@ -2071,11 +2071,11 @@ class Constraint(BaseBlock):
             return self
 
         var_name = f"{self.name}_relaxation"
-        assert not hasattr(m, var_name), (
+        assert var_name not in m, (
             "Conflicting names, relaxation variable already exists on the model."
         )
         var = Variable(self, lb=0, ub=max)
-        setattr(m, var_name, var)
+        m[var_name] = var
 
         if self.sense == ConstraintSense.LE:
             self.lhs -= var
@@ -2467,13 +2467,13 @@ class Variable(BaseOperableBlock):
         super()._on_add_to_model(model, name)
         self._assign_ids()
         if self._lb_expr is not None:
-            setattr(model, f"{name}_lb", self._lb_expr <= self)
+            model[f"{name}_lb"] = self._lb_expr <= self
 
         if self._ub_expr is not None:
-            setattr(model, f"{name}_ub", self <= self._ub_expr)
+            model[f"{name}_ub"] = self <= self._ub_expr
 
         if self._equals is not None:
-            setattr(model, f"{name}_equals", self == self._equals)
+            model[f"{name}_equals"] = self == self._equals
 
     @classmethod
     def _get_id_column_name(cls):

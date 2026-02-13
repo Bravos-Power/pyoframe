@@ -94,6 +94,7 @@ class Model:
         "maximize",
         "_logger",
         "_last_log",
+        "_components",
     ]
 
     def __init__(
@@ -107,6 +108,7 @@ class Model:
         sense: ObjSense | ObjSenseValue | None = None,
         verbose: bool = False,
     ):
+        self._components: dict[str, Any] = {}
         self._poi, self.solver = Model._create_poi_model(solver, solver_env)
         self.solver_name: str = self.solver.name
         self._variables: list[Variable] = []
@@ -397,40 +399,38 @@ class Model:
             raise ValueError("Can't set .maximize in a minimization problem.")
         self.objective = value
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name not in Model._reserved_attributes and not isinstance(
-            __value, (BaseBlock, pl.DataFrame, pd.DataFrame)
-        ):
+    def _register_component(self, name: str, value: Any) -> None:
+        if not isinstance(value, (BaseBlock, pl.DataFrame, pd.DataFrame)):
             raise PyoframeError(
-                f"Cannot set attribute '{__name}' on the model because it isn't a subtype of BaseBlock (e.g. Variable, Constraint, ...)"
+                f"Cannot set component '{name}' on the model because it isn't a subtype of BaseBlock (e.g. Variable, Constraint, ...)"
             )
 
-        if isinstance(__value, BaseBlock) and __name not in Model._reserved_attributes:
-            if __value._get_id_column_name() is not None:
-                assert not hasattr(self, __name), (
-                    f"Cannot create {__name} since it was already created."
+        if isinstance(value, BaseBlock):
+            if value._get_id_column_name() is not None:
+                assert name not in self._components, (
+                    f"Cannot create {name} since it was already created."
                 )
 
             log = self._logger is not None and isinstance(
-                __value, (Constraint, Variable)
+                value, (Constraint, Variable)
             )
 
             if log:
                 start_time = time.time()
 
-            __value._on_add_to_model(self, __name)
+            value._on_add_to_model(self, name)
 
             if log:
                 solver_time = time.time() - start_time  # type: ignore
 
-            if isinstance(__value, Variable):
-                self._variables.append(__value)
+            if isinstance(value, Variable):
+                self._variables.append(value)
                 if self._var_map is not None:
-                    self._var_map.add(__value)
+                    self._var_map.add(value)
                 if log:
                     type_name = "variable"
-            elif isinstance(__value, Constraint):
-                self._constraints.append(__value)
+            elif isinstance(value, Constraint):
+                self._constraints.append(value)
                 if log:
                     type_name = "constraint"
 
@@ -439,10 +439,34 @@ class Model:
                 self._last_log += elapsed_time  # type: ignore
 
                 self._logger.debug(  # type: ignore
-                    f"Added {type_name} '{__name}' to model ({elapsed_time:.1f}s elapsed, {solver_time:.1f}s for solver, n={len(__value)})"  # type: ignore
+                    f"Added {type_name} '{name}' to model ({elapsed_time:.1f}s elapsed, {solver_time:.1f}s for solver, n={len(value)})"  # type: ignore
                 )
 
+        self._components[name] = value
+
+    def __setattr__(self, __name: str, __value: Any) -> None:
+        if __name in Model._reserved_attributes:
+            return super().__setattr__(__name, __value)
+        self._register_component(__name, __value)
         return super().__setattr__(__name, __value)
+
+    def __setitem__(self, name: str, value: Any) -> None:
+        if name in Model._reserved_attributes:
+            raise PyoframeError(
+                f"Cannot use reserved name '{name}' as a component name."
+            )
+        self._register_component(name, value)
+        if name.isidentifier():
+            super().__setattr__(name, value)
+
+    def __getitem__(self, name: str) -> Any:
+        try:
+            return self._components[name]
+        except KeyError:
+            raise KeyError(f"Component '{name}' not found in the model.") from None
+
+    def __contains__(self, name: object) -> bool:
+        return name in self._components
 
     # Defining a custom __getattribute__ prevents type checkers from complaining about attribute access
     def __getattribute__(self, name: str) -> Any:
