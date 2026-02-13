@@ -1,0 +1,4 @@
+type,vcf_type
+Solar PV,solar
+CSP,solar
+Wind,wind

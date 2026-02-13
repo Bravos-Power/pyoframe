@@ -1,0 +1,30 @@
+# Note: we don't allow timeouts
+name: test
+save_outputs: true
+problems:
+  facility_location:
+    size: [2]
+  simple_problem:
+    size: [100]
+    inputs:
+      - "input_100.parquet"
+  # energy_planning:
+  #   requires_inputs: true
+  #   size: [2, 4, 24, 168, 730, 8670]
+  # dummy_model:
+  #   size: [2, 100, 200, 300, 400, 500, 1000, 2000]
+
+solvers:
+  - gurobi
+  # - highs
+  # - mosek
+
+libraries:
+  - pyoframe
+  - pyomo
+  - cvxpy
+  - gurobipy
+  - jump
+  - linopy
+  - pyoptinterface
+  - ampl
