@@ -1,6 +1,7 @@
 # Note: we don't allow timeouts
 name: test
 save_outputs: true
+julia_trace_compile: true
 problems:
   facility_location:
     size: [2]

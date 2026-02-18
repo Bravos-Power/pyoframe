@@ -55,7 +55,7 @@ def plot_combined(results: pl.DataFrame, output):
         ys = ["construct_time_normalized", "memory_uss_normalized"]
         titles = ["Time to construct", "Peak memory usage"]
         units = ["sec", "GiB"]
-        max_ys = [10, 4]
+        max_ys = [10, 5]
         for label, y, title, unit, panel_col, max_y in zip(
             lib_names, ys, titles, units, panels, max_ys
         ):

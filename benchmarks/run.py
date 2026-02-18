@@ -20,6 +20,7 @@ from tempfile import TemporaryDirectory
 
 import polars as pl
 import psutil
+import tomllib
 import yaml
 from polars.testing import assert_frame_equal
 
@@ -37,6 +38,7 @@ class Benchmark:
     library: str
     size: int | None
     construct_only: bool = False
+    julia_trace_compile: bool = False
 
 
 def run_all_benchmarks(config, ignore_past_results=False):
@@ -64,6 +66,7 @@ def run_all_benchmarks(config, ignore_past_results=False):
                         library=library,
                         size=size,
                         construct_only=problem_config.get("construct_only", False),
+                        julia_trace_compile=config.get("julia_trace_compile", False),
                     )
                     if not get_benchmark_code(benchmark).exists():
                         print(f"{problem}: Skipping {library} as no benchmark found.")
@@ -133,7 +136,7 @@ def check_results_csv_align(past_results, problem, size):
     )
 
     num_variables = df.group_by("num_variables").agg(
-        pl.col("solver", "library").first()
+        pl.col("solver", "library").unique()
     )
     if num_variables.height <= 1:
         print(f"{problem}: Number of variables match across all runs.")
@@ -189,6 +192,38 @@ def prepare_benchmark_problem(problem: str, problem_config):
     )
 
 
+def precompile_julia_benchmarks(
+    problem: str, *, bench_file: Path, image_path: Path, trace_compile_path: Path
+):
+    if image_path.exists():
+        return
+
+    print(f"{problem}: Creating system image for Julia benchmarks...")
+
+    if not trace_compile_path.exists():
+        raise FileNotFoundError(
+            f"Precompile statements file not found at {trace_compile_path}. Try running python test.py to generate it."
+        )
+
+    with open(CWD / "Project.toml", "rb") as f:
+        project_toml = tomllib.load(f)
+    dependencies = list(project_toml.get("deps", {}).keys())
+    dependencies_str = ", ".join(f'"{dep}"' for dep in dependencies)
+
+    cmd = [
+        "julia",
+        f"--project={CWD}",
+        "-e",
+        f'''using PackageCompiler; create_sysimage(
+            [{dependencies_str}],
+            sysimage_path="{image_path}",
+            precompile_statements_file="{trace_compile_path}",
+        )''',
+    ]
+
+    subprocess.run(cmd, check=True)
+
+
 def run_benchmark(
     benchmark: Benchmark,
     past_results: "PastResults",
@@ -207,10 +242,10 @@ def run_benchmark(
         past_results.append(
             {
                 "date": TIMESTAMP,
-                "problem": benchmark.problem,
-                "library": benchmark.library,
                 "solver": benchmark.solver,
+                "problem": benchmark.problem,
                 "size": benchmark.size,
+                "library": benchmark.library,
                 "num_variables": monitor_result.num_variables,
                 "total_time_s": safe_round(total_time, 3),
                 "solve_time_s": safe_round(monitor_result.solve_time, 3),
@@ -240,10 +275,26 @@ def run_benchmark(
             f"from {benchmark.problem}.bm_{benchmark.library} import Bench; Bench({args}).run()",
         ]
     else:
-        cmd = [
-            "julia",
-            f"--project={CWD}",
-            CWD / f"src/{benchmark.problem}/bm_jump.jl",
+        problem_dir = CWD / "src" / benchmark.problem
+        image_path = problem_dir / "julia_sysimage.so"
+        benchmark_path = problem_dir / "bm_jump.jl"
+        trace_compile_path = problem_dir / "julia_precompile_statements.jl"
+
+        cmd = ["julia", f"--project={CWD}"]
+
+        if benchmark.julia_trace_compile:
+            cmd += ["--trace-compile", str(trace_compile_path)]
+        else:
+            precompile_julia_benchmarks(
+                benchmark.problem,
+                bench_file=benchmark_path,
+                image_path=image_path,
+                trace_compile_path=trace_compile_path,
+            )
+            cmd += ["--sysimage", str(image_path)]
+
+        cmd += [
+            str(benchmark_path),
             benchmark.solver,
             str(benchmark.size),
             str(results_dir),

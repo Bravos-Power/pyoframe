@@ -13,16 +13,11 @@ from benchmark_utils.pyomo import Benchmark
 
 class Bench(Benchmark):
     def build(self):
-        if isinstance(self.size, int):
-            G = F = self.size
-        else:
-            G, F = self.size
+        G = F = self.size
 
         model = pyo.ConcreteModel()
-        model.G = G
-        model.F = F
-        model.Grid = pyo.RangeSet(0, model.G)
-        model.Facs = pyo.RangeSet(1, model.F)
+        model.Grid = pyo.RangeSet(0, G)
+        model.Facs = pyo.RangeSet(1, F)
         model.Dims = pyo.RangeSet(1, 2)
         model.facility_position = pyo.Var(model.Facs, model.Dims, bounds=(0.0, 1.0))
         model.dist = pyo.Var(model.Grid, model.Grid, model.Facs, bounds=(0.0, None))
@@ -54,7 +49,7 @@ class Bench(Benchmark):
             model.Grid,
             model.Facs,
             rule=lambda mod, i, j, f: mod.r[i, j, f, 1]
-            == (1.0 * i) / mod.G - mod.facility_position[f, 1],
+            == (1.0 * i) / G - mod.facility_position[f, 1],
         )
 
         model.quaddistk2 = pyo.Constraint(
@@ -62,7 +57,7 @@ class Bench(Benchmark):
             model.Grid,
             model.Facs,
             rule=lambda mod, i, j, f: mod.r[i, j, f, 2]
-            == (1.0 * j) / mod.G - mod.facility_position[f, 2],
+            == (1.0 * j) / G - mod.facility_position[f, 2],
         )
 
         model.quaddist = pyo.Constraint(

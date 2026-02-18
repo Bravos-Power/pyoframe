@@ -16,7 +16,7 @@ class Bench(Benchmark):
 
         var X {i in IDS} >= 0, <= 1;
 
-        minimize TotalCost:
+        minimize obj:
             sum {i in IDS} cost[i] * X[i];
 
         s.t. con_X:

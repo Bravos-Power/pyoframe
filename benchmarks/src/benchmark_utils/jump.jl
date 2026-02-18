@@ -4,7 +4,7 @@ export run
 
 using JuMP
 
-if ARGS[1] == "gurobi"
+if isempty(ARGS) || ARGS[1] == "gurobi"
     import Gurobi
 
     # direct_model is faster and more memory efficient (according to tests on July 13, 2025).
