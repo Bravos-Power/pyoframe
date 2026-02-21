@@ -22,5 +22,5 @@ if __name__ == "__main__":
     cwd = Path(__file__).parent
     results_dir = cwd / "model_results"
     results_dir.mkdir(exist_ok=True)
-    bench = Bench(size=10_000, input_dir=cwd / "model_data", results_dir=results_dir)
+    bench = Bench(size=100_000, input_dir=cwd / "model_data", results_dir=results_dir)
     bench.run()

@@ -70,6 +70,7 @@ class BaseBenchmark(ABC):
             print("PF_BENCHMARK: 5_SOLVE_RETURNED", flush=True)
 
         if self.results_dir is not None and not self.block_solver:
+            self.results_dir.mkdir(parents=True, exist_ok=True)
             with contextlib.chdir(self.results_dir):
                 self.write_results(self.model, **self.kwargs)
         if self.emit_benchmarking_logs:

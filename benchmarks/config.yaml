@@ -13,9 +13,20 @@ problems:
   facility_location:
     size: [16, 32, 64, 128, 192]
     construct_only: true
-  # energy_planning:
-  #   inputs: "*"
-  #   size: [2, 4, 24, 168, 730, 8670]
+  energy_planning_security_constrained_dispatch:
+    code_dir: energy_planning
+    inputs: "*"
+    size: [2, 4, 24, 168]
+    args:
+      security_constrained: true
+      capacity_expansion: false
+  energy_planning_capacity_expansion:
+    code_dir: energy_planning
+    inputs: "*"
+    size: [2, 4, 24, 168, 720]
+    args:
+      security_constrained: false
+      capacity_expansion: true
 
 solvers:
   - gurobi

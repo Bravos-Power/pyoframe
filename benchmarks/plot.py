@@ -1,6 +1,5 @@
 """Produces plots from benchmark results."""
 
-import importlib
 import os
 from pathlib import Path
 
@@ -128,9 +127,17 @@ def plot_combined(results: pl.DataFrame, output):
     plot.configure_view(stroke=None).save(output)
 
 
+def plot_solve_time(df, output_path):
+    df = df.filter(pl.col("solve_time_s") > 0)
+
+    # TODO normalize
+
+
 def plot_all_summary(base_path: Path, config):
     df = get_latest_data(base_path)
+
     for (solver,), solver_df in df.group_by("solver"):
+        plot_solve_time(solver_df, base_path / f"solve_time_{solver}.svg")
         plot_combined(solver_df, base_path / f"results_{solver}.svg")
     for problem in config["problems"]:
         problem_df = df.filter(problem=problem)
@@ -139,18 +146,6 @@ def plot_all_summary(base_path: Path, config):
 
         if not os.path.exists(base_path / problem):
             os.makedirs(base_path / problem)
-
-        problem_lib = importlib.import_module(problem)
-        problem_lib_mapper = None
-        try:
-            problem_lib_mapper = problem_lib.size_to_num_variables
-        except AttributeError:
-            pass
-
-        if problem_lib_mapper is not None:
-            problem_df = problem_df.with_columns(
-                problem_lib_mapper("size").alias("size")
-            )
 
 
 def plot_memory_usage_over_time(base_path: Path, config):

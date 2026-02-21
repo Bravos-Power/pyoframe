@@ -3,27 +3,34 @@
 from pathlib import Path
 
 import polars as pl
-from benchmark_utils.pyoframe import PyoframeBenchmark
+from benchmark_utils.pyoframe import Benchmark
 
 from pyoframe import Model, Param, Set, Variable
 
 
-class Bench(PyoframeBenchmark):
-    def build(self):
+class Bench(Benchmark):
+    def build(
+        self,
+        capacity_expansion: bool = True,
+        security_constrained: bool = True,
+        verbose: bool = False,
+        **kwargs,
+    ):
+        assert len(kwargs) == 0, f"Unexpected kwargs: {kwargs}"
         assert self.input_dir is not None, "Input directory must be specified."
 
-        m = Model(solver=self.solver, solver_uses_variable_names=True, verbose=True)
+        m = Model(verbose=verbose)
 
         ## LOAD DATA
-        BASE_MW = 100
-
-        m.gens = pl.read_parquet(self.input_dir / "generators.parquet")
-        lines = pl.read_parquet(self.input_dir / "lines_simplified.parquet")
+        m.gens = pl.read_parquet("generators.parquet")
+        lines = pl.read_parquet("lines_simplified.parquet")
         from_buses = lines.select("line_id", bus="from_bus")
         to_buses = lines.select("line_id", bus="to_bus")
-        loads = pl.read_parquet(self.input_dir / "loads.parquet")
-        capex = pl.read_csv(self.input_dir / "capex_costs.csv")
-        cost_params = pl.read_csv(self.input_dir / "cost_parameters.csv")
+        loads = pl.read_parquet("loads.parquet")
+        capex = pl.read_csv("capex_costs.csv")
+        cost_params = pl.read_csv("cost_parameters.csv")
+
+        BASE_MW = 100
         COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
 
         ## DEFINE SETS AND PARAMS ##
@@ -41,8 +48,13 @@ class Bench(PyoframeBenchmark):
         loads = Param(loads["bus", "datetime", "active_load"]).within(m.hours)
 
         ## DEFINE VARIABLES ##
-        m.Build_Out = Variable(m.gens["gen_id"], lb=0, ub=m.gens["gen_id", "Pmax"])
-        m.Dispatch = Variable(m.gens["gen_id"], m.hours, lb=0, ub=m.Build_Out)
+        if capacity_expansion:
+            m.Build_Out = Variable(m.gens["gen_id"], lb=0, ub=m.gens["gen_id", "Pmax"])
+            m.Dispatch = Variable(m.gens["gen_id"], m.hours, lb=0, ub=m.Build_Out)
+        else:
+            m.Dispatch = Variable(
+                m.gens["gen_id"], m.hours, lb=0, ub=m.gens["gen_id", "Pmax"]
+            )
         m.Voltage_Angle = Variable(buses, m.hours)
         m.Power_Flow = Variable(
             lines["line_id"], m.hours, lb=-m.line_rating, ub=m.line_rating
@@ -64,30 +76,27 @@ class Bench(PyoframeBenchmark):
             | m.Power_Flow.map(to_buses)
         )
 
-        m.minimize = COST_UNSERVED_LOAD * m.Load_Unserved.sum()
-
         ## SET OBJECTIVE ##
-        operating_costs = (
-            m.Dispatch * m.gens["gen_id", "cost_per_MWh_linear"]
-        ).sum() + (m.Build_Out.map(m.gens[["gen_id", "type"]]) * capex).sum()
-        capital_costs = (
-            m.Build_Out * m.gens["gen_id", "hourly_overhead_per_MW_capacity"]
-        ).sum() * len(m.hours)
-        m.minimize += operating_costs + capital_costs
+        m.minimize = COST_UNSERVED_LOAD * m.Load_Unserved.sum()
+        m.minimize += (m.Dispatch * m.gens["gen_id", "cost_per_MWh_linear"]).sum()
+
+        if capacity_expansion:
+            m.minimize += (m.Build_Out.map(m.gens[["gen_id", "type"]]) * capex).sum()
+            m.minimize += (
+                m.Build_Out * m.gens["gen_id", "hourly_overhead_per_MW_capacity"]
+            ).sum() * len(m.hours)
 
         self.add_dispatch_capacity_constraints(m)
-        # self.add_security_constraints(m)
+        if security_constrained:
+            self.add_security_constraints(m)
 
         m.params.Crossover = False
         m.params.Method = 2
 
-        print(m.variables_size_info(memory_unit="mb"))
-        print(m.constraints_size_info(memory_unit="mb"))
-
         return m
 
     def add_security_constraints(self, m: Model):
-        bodf = Param(self.input_dir / "branch_outage_dist_facts.parquet")
+        bodf = Param("branch_outage_dist_facts.parquet")
 
         # Power flow on outage_line * factor + affected_line_flow <= affected_line_rating
         conting_flow = m.Power_Flow.over(
@@ -102,39 +111,51 @@ class Bench(PyoframeBenchmark):
     def add_dispatch_capacity_constraints(self, m: Model):
         m.Con_Yearly_Limits = m.Dispatch.map(m.gens[["gen_id", "type"]]).sum(
             "datetime"
-        ).drop_extras() <= Param(self.input_dir / "yearly_limits.parquet") * len(
-            m.hours
-        ) / (24 * 365)
+        ).drop_extras() <= Param("yearly_limits.parquet") * len(m.hours) / (24 * 365)
 
-        vcf = Param(self.input_dir / "variable_capacity_factors.parquet").within(
-            m.hours
-        )
-        vcf_type_to_type = pl.read_csv(self.input_dir / "map_type_to_vcf_type.csv")
+        vcf = Param("variable_capacity_factors.parquet").within(m.hours)
+        vcf_type_to_type = pl.read_csv("map_type_to_vcf_type.csv")
 
         m.Con_Variable_Dispatch_Limit = m.Dispatch.drop_extras() <= (
             vcf.map(vcf_type_to_type).map(m.gens[["gen_id", "type"]])
             * m.gens["gen_id", "Pmax"]
         )
 
-    def save_results(self, m: Model, path: Path) -> None:
-        m.Power_Flow.solution.join(
-            m.Power_Flow_ub.dual.rename({"dual": "ub_dual"}), on=["line_id", "datetime"]
+    def write_results(
+        self,
+        model,
+        capacity_expansion: bool = True,
+        security_constrained: bool = True,
+        **kwargs,
+    ):
+        model.Power_Flow.solution.join(
+            model.Power_Flow_ub.dual.rename({"dual": "ub_dual"}),
+            on=["line_id", "datetime"],
         ).join(
-            m.Power_Flow_lb.dual.rename({"dual": "lb_dual"}), on=["line_id", "datetime"]
-        ).write_parquet(path / "power_flow.parquet")
+            model.Power_Flow_lb.dual.rename({"dual": "lb_dual"}),
+            on=["line_id", "datetime"],
+        ).write_parquet("power_flow.parquet")
 
-        m.Build_Out.solution.write_parquet(path / "build_out.parquet")
-        m.Dispatch.solution.write_parquet(path / "dispatch.parquet")
-        m.Load_Unserved.solution.filter(pl.col("solution") != 0).write_parquet(
-            path / "load_unserved.parquet"
+        if capacity_expansion:
+            model.Build_Out.solution.write_parquet("build_out.parquet")
+        model.Dispatch.solution.write_parquet("dispatch.parquet")
+        model.Load_Unserved.solution.filter(pl.col("solution") != 0).write_parquet(
+            "load_unserved.parquet"
         )
 
 
 if __name__ == "__main__":
     from pyoptinterface import TerminationStatusCode
 
-    input_dir = Path(__file__).parent / "model_data"
-    benchmark = Bench("gurobi", size=24 * 31, input_dir=input_dir, block_solver=False)
+    base_dir = Path(__file__).parent
+    benchmark = Bench(
+        size=24,
+        input_dir=base_dir / "model_data",
+        results_dir=base_dir / "results",
+        verbose=True,
+        security_constrained=False,
+        capacity_expansion=True,
+    )
     m = benchmark.run()
     if m.attr.TerminationStatus in {
         TerminationStatusCode.INFEASIBLE,
@@ -145,7 +166,3 @@ if __name__ == "__main__":
         warnings.warn("Model is infeasible, computing IIS...")
         m.compute_IIS()
         m.write("inf.ilp")
-
-    results_dir = Path(__file__).parent / "results"
-    results_dir.mkdir(exist_ok=True)
-    benchmark.save_results(m, results_dir)

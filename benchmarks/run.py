@@ -33,12 +33,14 @@ CWD = Path(__file__).parent
 
 @dataclass
 class Benchmark:
-    problem: str
+    name: str
+    code_dir: str
     solver: str
     library: str
     size: int | None
-    construct_only: bool = False
-    julia_trace_compile: bool = False
+    construct_only: bool
+    args: dict[str, str]
+    julia_trace_compile: bool
 
 
 def run_all_benchmarks(config, ignore_past_results=False):
@@ -49,46 +51,47 @@ def run_all_benchmarks(config, ignore_past_results=False):
 
     timeout = config.get("timeout", None)
 
-    for problem, problem_config in config["problems"].items():
-        prepare_benchmark_problem(problem, problem_config)
+    for name, problem_config in config["problems"].items():
+        code_dir = problem_config.get("code_dir", name)
+        prepare_benchmark_problem(name, code_dir, problem_config)
 
         num_repeats = problem_config.get("repeat", config.get("repeat", 1))
         for size in sorted(problem_config.get("size", [None])):
-            with get_base_results_dir(
-                config, base_dir, problem, size
-            ) as base_results_dir:
+            with get_base_results_dir(config, base_dir, name, size) as base_results_dir:
                 for solver, library in itertools.product(
                     config["solvers"], config["libraries"]
                 ):
                     benchmark = Benchmark(
-                        problem=problem,
+                        name=name,
+                        code_dir=code_dir,
                         solver=solver,
                         library=library,
                         size=size,
                         construct_only=problem_config.get("construct_only", False),
                         julia_trace_compile=config.get("julia_trace_compile", False),
+                        args=problem_config.get("args", {}),
                     )
                     if not get_benchmark_code(benchmark).exists():
-                        print(f"{problem}: Skipping {library} as no benchmark found.")
+                        print(f"{name}: Skipping {library} as no benchmark found.")
                         continue
 
                     if not should_run_benchmark(
                         benchmark, past_results, timeout, num_repeats
                     ):
                         print(
-                            f"{problem} (n={size}): Skipping {library}, already benchmarked or timed out."
+                            f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
                         )
                         continue
 
                     input_dir = (
-                        CWD / "src" / problem / "model_data"
+                        CWD / "src" / code_dir / "model_data"
                         if "inputs" in problem_config
                         else None
                     )
                     try:
                         for i in range(num_repeats):
                             print(
-                                f"{problem} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
+                                f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
                             )
 
                             run_benchmark(
@@ -101,15 +104,15 @@ def run_all_benchmarks(config, ignore_past_results=False):
                                 ),
                             )
                     except BenchmarkError as e:
-                        print(f"{problem}: {e}")
+                        print(f"{name}: {e}")
 
                 check_results_output_match(
-                    problem,
+                    name,
                     base_results_dir,
-                    past_results.read(date=TIMESTAMP, size=size, problem=problem),
+                    past_results.read(date=TIMESTAMP, size=size, problem=name),
                 )
 
-                check_results_csv_align(past_results, problem=problem, size=size)
+                check_results_csv_align(past_results, problem=name, size=size)
 
 
 def check_results_csv_align(past_results, problem, size):
@@ -148,7 +151,7 @@ def check_results_csv_align(past_results, problem, size):
 
 def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeats):
     past_results_df = past_results.read(
-        problem=benchmark.problem, library=benchmark.library, solver=benchmark.solver
+        problem=benchmark.name, library=benchmark.library, solver=benchmark.solver
     )
 
     # Previously errored on this run, don't try again.
@@ -174,7 +177,7 @@ def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeat
     return True
 
 
-def prepare_benchmark_problem(problem: str, problem_config):
+def prepare_benchmark_problem(problem: str, code_dir: str, problem_config):
     if "inputs" not in problem_config:
         return
 
@@ -188,12 +191,12 @@ def prepare_benchmark_problem(problem: str, problem_config):
         cmd.extend(input_files)
 
     subprocess.run(
-        cmd, stdout=subprocess.DEVNULL, cwd=CWD / "src" / problem, check=True
+        cmd, stdout=subprocess.DEVNULL, cwd=CWD / "src" / code_dir, check=True
     )
 
 
 def precompile_julia_benchmarks(
-    problem: str, *, bench_file: Path, image_path: Path, trace_compile_path: Path
+    problem: str, *, image_path: Path, trace_compile_path: Path
 ):
     if image_path.exists():
         return
@@ -243,7 +246,7 @@ def run_benchmark(
             {
                 "date": TIMESTAMP,
                 "solver": benchmark.solver,
-                "problem": benchmark.problem,
+                "problem": benchmark.name,
                 "size": benchmark.size,
                 "library": benchmark.library,
                 "num_variables": monitor_result.num_variables,
@@ -266,16 +269,25 @@ def run_benchmark(
         if input_dir is not None:
             args["input_dir"] = f"'{input_dir}'"
             args["results_dir"] = f"'{results_dir}'"
+        for arg_name, arg_value in benchmark.args.items():
+            if isinstance(arg_value, str):
+                args[arg_name] = f"'{arg_value}'"
+            elif isinstance(arg_value, bool):
+                args[arg_name] = "True" if arg_value else "False"
+            else:
+                raise NotImplementedError(
+                    f"Unsupported argument type for {arg_name}: {type(arg_value)}"
+                )
 
         args = ", ".join(f"{k}={v}" for k, v in args.items())
 
         cmd = [
             "python",
             "-c",
-            f"from {benchmark.problem}.bm_{benchmark.library} import Bench; Bench({args}).run()",
+            f"from {benchmark.code_dir}.bm_{benchmark.library} import Bench; Bench({args}).run()",
         ]
     else:
-        problem_dir = CWD / "src" / benchmark.problem
+        problem_dir = CWD / "src" / benchmark.code_dir
         image_path = problem_dir / "julia_sysimage.so"
         benchmark_path = problem_dir / "bm_jump.jl"
         trace_compile_path = problem_dir / "julia_precompile_statements.jl"
@@ -286,8 +298,7 @@ def run_benchmark(
             cmd += ["--trace-compile", str(trace_compile_path)]
         else:
             precompile_julia_benchmarks(
-                benchmark.problem,
-                bench_file=benchmark_path,
+                benchmark.name,
                 image_path=image_path,
                 trace_compile_path=trace_compile_path,
             )
@@ -303,7 +314,7 @@ def run_benchmark(
 
     max_memory_queue = queue.Queue()
 
-    mem_log_dir = past_results.base_dir / benchmark.problem / "mem_log"
+    mem_log_dir = past_results.base_dir / benchmark.name / "mem_log"
     mem_log_dir.mkdir(parents=True, exist_ok=True)
 
     # See paper for explanation
@@ -318,6 +329,7 @@ def run_benchmark(
         memory_thread = threading.Thread(
             target=monitor_benchmark,
             args=(
+                start_time,
                 benchmark_proc,
                 max_memory_queue,
                 mem_log_dir
@@ -365,8 +377,7 @@ class MonitorResult:
     objective_value: float | None = None
 
 
-def monitor_benchmark(proc, result_queue, output_file):
-    start_time = time.time()
+def monitor_benchmark(start_time, proc, result_queue, output_file):
     pid = proc.pid
     ps_proc = psutil.Process(pid)
 
@@ -399,8 +410,12 @@ def monitor_benchmark(proc, result_queue, output_file):
                     result.num_variables = int(
                         re.search(r"(\d+) columns", line).group(1)
                     )
-                elif line.startswith("Solved in "):
-                    assert result.solve_time is None, "Multiple solve times found"
+                elif line.startswith("Solved in ") or line.startswith(
+                    "Barrier solved model in "
+                ):
+                    assert result.solve_time is None, (
+                        "Multiple solve times found"
+                    )  # maybe barrier was solved and then solved overall?
                     result.solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
@@ -573,7 +588,7 @@ def read_config(name="config.yaml") -> dict:
 
 def get_benchmark_code(benchmark: Benchmark) -> Path:
     ext = "jl" if benchmark.library == "jump" else "py"
-    return CWD / "src" / benchmark.problem / f"bm_{benchmark.library}.{ext}"
+    return CWD / "src" / benchmark.code_dir / f"bm_{benchmark.library}.{ext}"
 
 
 def get_base_results_dir(config, base_dir: Path, problem: str, size: int | None):

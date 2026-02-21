@@ -5,10 +5,27 @@ julia_trace_compile: true
 problems:
   facility_location:
     size: [2]
+  facility_location_construct_only:
+    size: [2]
+    construct_only: true
   simple_problem:
     size: [100]
     inputs:
       - "input_100.parquet"
+  energy_planning_security_constrained_dispatch:
+    code_dir: energy_planning
+    inputs: "*"
+    size: [2]
+    args:
+      security_constrained: true
+      capacity_expansion: false
+  energy_planning_capacity_expansion:
+    code_dir: energy_planning
+    inputs: "*"
+    size: [2]
+    args:
+      security_constrained: false
+      capacity_expansion: true
   # energy_planning:
   #   requires_inputs: true
   #   size: [2, 4, 24, 168, 730, 8670]
