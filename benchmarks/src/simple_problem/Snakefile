@@ -1,0 +1,21 @@
+from pathlib import Path
+
+INPUT_DIR = Path("./model_data")
+
+
+rule generate_input:
+    output:
+        INPUT_DIR / "input_{n}.parquet",
+    run:
+        import polars as pl
+        import numpy as np
+
+        pl.set_random_seed(42)
+        generator = np.random.default_rng(seed=42)
+
+        n = int(wildcards.n)
+
+        df = pl.DataFrame(dict(id=range(1, 2 * n + 1))).sample(n)
+
+        df = df.with_columns(cost=pl.Series(generator.uniform(1, 1000, size=n)))
+        df.sort("id").write_parquet(output[0])

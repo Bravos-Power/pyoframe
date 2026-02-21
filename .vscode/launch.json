@@ -12,6 +12,29 @@
             "args": [
                 "serve"
             ]
+        },
+        {
+            "name": "Snakemake",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "snakemake",
+            "cwd": "${workspaceFolder}/benchmarks",
+            "args": [
+                "--cores",
+                "all"
+            ],
+        },
+        {
+            "name": "Python Debugger: Snakemake",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "snakemake",
+            "cwd": "${workspaceFolder}/benchmarks",
+            "args": [
+                "--cores",
+                "1",
+                "--debug"
+            ]
         }
     ]
 }
