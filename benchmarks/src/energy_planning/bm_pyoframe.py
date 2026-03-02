@@ -141,14 +141,12 @@ class Bench(Benchmark):
         ).join(
             model.Power_Flow_lb.dual.rename({"dual": "lb_dual"}),
             on=["line_id", "datetime"],
-        ).write_csv("power_flow.csv")
+        ).write_parquet("power_flow.parquet")
 
         if capacity_expansion:
-            model.Build_Out.solution.write_csv("build_out.csv")
-        model.Dispatch.solution.write_csv("dispatch.csv")
-        model.Load_Unserved.solution.filter(pl.col("solution").round(6) != 0).write_csv(
-            "load_unserved.csv"
-        )
+            model.Build_Out.solution.write_parquet("build_out.parquet")
+        model.Dispatch.solution.write_parquet("dispatch.parquet")
+        model.Load_Unserved.solution.write_parquet("load_unserved.parquet")
 
 
 if __name__ == "__main__":

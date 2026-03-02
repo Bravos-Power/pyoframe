@@ -246,18 +246,18 @@ class Bench(Benchmark):
                 model, model.Power_Flow_lb, *power_flow_keys
             ).rename({"dual": "lb_dual"}),
             on=power_flow_keys,
-        ).write_csv("power_flow.csv")
+        ).write_parquet("power_flow.parquet")
 
         if capacity_expansion:
-            create_result_df_for_var(model.Build_Out, "gen_id").write_csv(
-                "build_out.csv"
+            create_result_df_for_var(model.Build_Out, "gen_id").write_parquet(
+                "build_out.parquet"
             )
-        create_result_df_for_var(model.Dispatch, "gen_id", "datetime").write_csv(
-            "dispatch.csv"
+        create_result_df_for_var(model.Dispatch, "gen_id", "datetime").write_parquet(
+            "dispatch.parquet"
         )
-        create_result_df_for_var(model.Load_Unserved, "bus", "datetime").filter(
-            pl.col("solution").round(6) != 0
-        ).write_csv("load_unserved.csv")
+        create_result_df_for_var(model.Load_Unserved, "bus", "datetime").write_parquet(
+            "load_unserved.parquet"
+        )
 
 
 def create_result_df_for_var(var, *key_names):

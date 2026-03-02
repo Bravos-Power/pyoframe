@@ -141,6 +141,9 @@ def check_results_csv_aligns(past_results, problem, size):
         .otherwise("num_variables")
     )
 
+    # ampl has a presolve so number of variables should not be compared (instead objective value is sufficient)
+    df = df.filter(pl.col("library") != "ampl")
+
     num_variables = df.group_by("num_variables").agg(
         pl.col("solver", "library").unique()
     )
@@ -579,16 +582,35 @@ def check_results_output_match(
             diff = diff.select(ref.columns)  # reorder columns to match
             ref = ref.sort(*ref.columns)
             diff = diff.sort(*diff.columns)
+
+            # We need to round both absolutely and relatively (round and round_sig_figs)
+            ref = ref.with_columns(
+                pl.col(c).round_sig_figs(5).round(6)
+                for c in ref.columns
+                if ref[c].dtype.is_float()
+            )
+            diff = diff.with_columns(
+                pl.col(c).round_sig_figs(5).round(6)
+                for c in diff.columns
+                if diff[c].dtype.is_float()
+            )
+
             for c in ref.columns:
-                if ref[c].dtype.is_float():
-                    ref = ref.with_columns(pl.col(c).round(6))
-                if diff[c].dtype.is_float():
-                    diff = diff.with_columns(pl.col(c).round(6))
-                if not (ref[c] == diff[c]).all():
-                    num_diffs = (ref[c] != diff[c]).sum()
-                    print(
-                        f"WARNING: {problem}: {ref_lib} vs {library}: {filename}[{c}]: {num_diffs} in {ref.height} rows differ, maybe multiple solutions exist"
-                    )
+                ref_col, diff_col = ref[c], diff[c]
+                if not (ref_col == diff_col).all():
+                    num_conflicts = (ref_col != diff_col).sum()
+                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {num_conflicts} in {ref.height} rows differ"
+                    if (
+                        num_conflicts / ref.height > 0.05
+                    ):  # if more than 1% of rows differ, raise an error
+                        ref_conflict = ref.filter(ref_col != diff_col)
+                        diff_conflict = diff.filter(ref_col != diff_col)
+                        raise BenchmarkError(
+                            msg
+                            + f"\nReference:\n{ref_conflict}\nDiff:\n{diff_conflict}"
+                        )
+                    else:
+                        print(f"WARNING: {msg}, maybe multiple solutions exist?")
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)

@@ -1,6 +1,5 @@
 """Produces plots from benchmark results."""
 
-import os
 from pathlib import Path
 
 import altair as alt
@@ -39,9 +38,11 @@ def get_latest_data(base_path: Path):
     return df
 
 
-def plot_combined(results: pl.DataFrame, output):
+def plot_combined(results: pl.DataFrame, output, config):
     panels = [[], []]
+    results = results.sort("problem")
     for (problem,), problem_df in results.group_by("problem", maintain_order=True):
+        problem_label = config["problems"][problem].get("label", problem)
         chart = alt.Chart(problem_df).encode(
             color=alt.condition(
                 alt.datum.library == "pyoframe",
@@ -61,7 +62,7 @@ def plot_combined(results: pl.DataFrame, output):
             max_data = problem_df.select(y).max().item()
             y_scale = "linear"
             min_y = 0
-            if max_data > max_y:
+            if max_data is not None and max_data > max_y:
                 max_y = max_data * 1.1
                 y_scale = "log"
                 min_y = 0.5
@@ -75,7 +76,7 @@ def plot_combined(results: pl.DataFrame, output):
                     .axis(grid=False, format="~s", values=tick_values),
                     alt.Y(y)
                     .axis(labelExpr="datum.value + 'x'", grid=True)
-                    .title(problem)
+                    .title(problem_label)
                     .scale(type=y_scale, domain=[min_y, max_y]),
                 )
                 .properties(title=title)
@@ -132,27 +133,6 @@ def plot_combined(results: pl.DataFrame, output):
     plot = y_labels[0] | columns[0] | y_labels[1] | columns[1]
 
     plot.configure_view(stroke=None).save(output)
-
-
-def plot_solve_time(df, output_path):
-    df = df.filter(pl.col("solve_time_s") > 0)
-
-    # TODO normalize
-
-
-def plot_all_summary(base_path: Path, config):
-    df = get_latest_data(base_path)
-
-    for (solver,), solver_df in df.group_by("solver"):
-        plot_solve_time(solver_df, base_path / f"solve_time_{solver}.svg")
-        plot_combined(solver_df, base_path / f"results_{solver}.svg")
-    for problem in config["problems"]:
-        problem_df = df.filter(problem=problem)
-        if problem_df.height == 0:
-            continue
-
-        if not os.path.exists(base_path / problem):
-            os.makedirs(base_path / problem)
 
 
 def plot_memory_usage_over_time(base_path: Path, config):
@@ -248,8 +228,12 @@ def plot_all(config_name="config.yaml"):
         config = yaml.safe_load(f)
     base_path = cwd / "results" / config["name"]
 
-    plot_all_summary(base_path, config)
     plot_memory_usage_over_time(base_path, config)
+
+    df = get_latest_data(base_path)
+
+    for (solver,), solver_df in df.group_by("solver"):
+        plot_combined(solver_df, base_path / f"results_{solver}.svg", config)
 
 
 if __name__ == "__main__":

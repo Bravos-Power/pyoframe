@@ -12,7 +12,7 @@ problems:
     size: [100]
     inputs:
       - "input_100.parquet"
-  energy_planning_simple:
+  energy_simple:
     code_dir: energy_planning
     inputs: "*"
     size: [2]
@@ -24,31 +24,13 @@ problems:
     solver_args:
       Method: 2
       Crossover: false
-  energy_planning_security_constrained_dispatch:
+  energy_all:
     code_dir: energy_planning
     inputs: "*"
     size: [1]
-    args:
-      security_constrained: true
-      capacity_expansion: false
     solver_args:
       Method: 2
       Crossover: false
-  energy_planning_capacity_expansion:
-    code_dir: energy_planning
-    inputs: "*"
-    size: [2]
-    args:
-      security_constrained: false
-      capacity_expansion: true
-    solver_args:
-      Method: 2
-      Crossover: false
-  # energy_planning:
-  #   requires_inputs: true
-  #   size: [2, 4, 24, 168, 730, 8670]
-  # dummy_model:
-  #   size: [2, 100, 200, 300, 400, 500, 1000, 2000]
 
 solvers:
   - gurobi
