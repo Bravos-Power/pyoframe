@@ -21,7 +21,9 @@ if __name__ == "__main__":
 
     if args.problem is not None:
         if args.problem not in config["problems"]:
-            raise ValueError(f"Problem '{args.problem}' not found in config.")
+            raise ValueError(
+                f"Problem '{args.problem}' not found in config. Options are: {list(config['problems'].keys())}"
+            )
         config["problems"] = {
             k: v for k, v in config["problems"].items() if k == args.problem
         }

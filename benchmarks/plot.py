@@ -58,6 +58,13 @@ def plot_combined(results: pl.DataFrame, output):
         for label, y, title, unit, panel_col, max_y in zip(
             lib_names, ys, titles, units, panels, max_ys
         ):
+            max_data = problem_df.select(y).max().item()
+            y_scale = "linear"
+            min_y = 0
+            if max_data > max_y:
+                max_y = max_data * 1.1
+                y_scale = "log"
+                min_y = 0.5
             tick_values = [10**i for i in range(1, 9)]
             lines = (
                 chart.mark_line(point=True, clip=True)
@@ -69,7 +76,7 @@ def plot_combined(results: pl.DataFrame, output):
                     alt.Y(y)
                     .axis(labelExpr="datum.value + 'x'", grid=True)
                     .title(problem)
-                    .scale(domain=[0, max_y]),
+                    .scale(type=y_scale, domain=[min_y, max_y]),
                 )
                 .properties(title=title)
             )

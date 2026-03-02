@@ -13,6 +13,8 @@ class Bench(Benchmark):
         self,
         capacity_expansion: bool = True,
         security_constrained: bool = True,
+        yearly_limits: bool = True,
+        variable_capacity_factors: bool = True,
         verbose: bool = False,
         **kwargs,
     ):
@@ -32,6 +34,7 @@ class Bench(Benchmark):
 
         BASE_MW = 100
         COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
+        SLACK_BUS = 1
 
         ## DEFINE SETS AND PARAMS ##
         buses = Set(from_buses["bus"].unique()) + Set(to_buses["bus"].unique())
@@ -39,13 +42,13 @@ class Bench(Benchmark):
         # Shrink the time horizon to allow for different model sizes
         hours = loads.get_column("datetime").unique().sort()
         if self.size is not None:
-            print(f"Shrinking model to first {self.size} hours")
             hours = hours.head(self.size)
+            loads = loads.filter(pl.col("datetime").is_in(hours.implode()))
         m.hours = Set(hours)
 
         m.line_rating = Param(lines["line_id", "line_rating_MW"])
         susceptance = 1 / Param(lines["line_id", "reactance"])
-        loads = Param(loads["bus", "datetime", "active_load"]).within(m.hours)
+        loads = Param(loads["bus", "datetime", "active_load"])
 
         ## DEFINE VARIABLES ##
         if capacity_expansion:
@@ -62,7 +65,7 @@ class Bench(Benchmark):
         m.Load_Unserved = Variable(loads, lb=0, ub=loads)
 
         ## DEFINE CONSTRAINTS ##
-        m.Con_Slack_Bus = m.Voltage_Angle.pick(bus=1) == 0
+        m.Con_Slack_Bus = m.Voltage_Angle.pick(bus=SLACK_BUS) == 0
 
         m.Con_Power_Flow = m.Power_Flow == BASE_MW * susceptance * (
             m.Voltage_Angle.map(to_buses) - m.Voltage_Angle.map(from_buses)
@@ -86,12 +89,14 @@ class Bench(Benchmark):
                 m.Build_Out * m.gens["gen_id", "hourly_overhead_per_MW_capacity"]
             ).sum() * len(m.hours)
 
-        self.add_dispatch_capacity_constraints(m)
         if security_constrained:
             self.add_security_constraints(m)
 
-        m.params.Crossover = False
-        m.params.Method = 2
+        if yearly_limits:
+            self.add_yearly_limits(m)
+
+        if variable_capacity_factors:
+            self.add_vcf(m)
 
         return m
 
@@ -108,11 +113,7 @@ class Bench(Benchmark):
         m.Con_Contingency_Pos = conting_flow <= line_rating
         m.Con_Contingency_Neg = -line_rating <= conting_flow
 
-    def add_dispatch_capacity_constraints(self, m: Model):
-        m.Con_Yearly_Limits = m.Dispatch.map(m.gens[["gen_id", "type"]]).sum(
-            "datetime"
-        ).drop_extras() <= Param("yearly_limits.parquet") * len(m.hours) / (24 * 365)
-
+    def add_vcf(self, m: Model):
         vcf = Param("variable_capacity_factors.parquet").within(m.hours)
         vcf_type_to_type = pl.read_csv("map_type_to_vcf_type.csv")
 
@@ -120,6 +121,12 @@ class Bench(Benchmark):
             vcf.map(vcf_type_to_type).map(m.gens[["gen_id", "type"]])
             * m.gens["gen_id", "Pmax"]
         )
+
+    def add_yearly_limits(self, m: Model):
+        yearly_limits = Param("yearly_limits.parquet")
+        m.Con_Yearly_Limits = m.Dispatch.map(m.gens[["gen_id", "type"]]).sum(
+            "datetime"
+        ).drop_extras() <= yearly_limits * len(m.hours) / (24 * 365)
 
     def write_results(
         self,
@@ -134,13 +141,13 @@ class Bench(Benchmark):
         ).join(
             model.Power_Flow_lb.dual.rename({"dual": "lb_dual"}),
             on=["line_id", "datetime"],
-        ).write_parquet("power_flow.parquet")
+        ).write_csv("power_flow.csv")
 
         if capacity_expansion:
-            model.Build_Out.solution.write_parquet("build_out.parquet")
-        model.Dispatch.solution.write_parquet("dispatch.parquet")
-        model.Load_Unserved.solution.filter(pl.col("solution") != 0).write_parquet(
-            "load_unserved.parquet"
+            model.Build_Out.solution.write_csv("build_out.csv")
+        model.Dispatch.solution.write_csv("dispatch.csv")
+        model.Load_Unserved.solution.filter(pl.col("solution").round(6) != 0).write_csv(
+            "load_unserved.csv"
         )
 
 
@@ -149,9 +156,9 @@ if __name__ == "__main__":
 
     base_dir = Path(__file__).parent
     benchmark = Bench(
-        size=24,
+        size=2,
         input_dir=base_dir / "model_data",
-        results_dir=base_dir / "results",
+        results_dir=base_dir / "results_pyoframe",
         verbose=True,
         security_constrained=False,
         capacity_expansion=True,

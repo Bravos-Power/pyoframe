@@ -19,6 +19,9 @@ class Benchmark(BaseBenchmark):
         model.attr.TimeLimitSec = 0
 
     def solve(self, model):
+        if self.solver_args:
+            for key, value in self.solver_args.items():
+                setattr(model.params, key, value)
         model.optimize()
         return model
 

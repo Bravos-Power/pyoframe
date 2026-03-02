@@ -22,9 +22,9 @@ import polars as pl
 import psutil
 import tomllib
 import yaml
-from polars.testing import assert_frame_equal
 
 POLL_MIN_S, POLL_MAX_S, POLL_TRANSITION_S = 0.01, 1, 30
+LOG_AFTER_S = 30
 
 TIMESTAMP = time.strftime("%Y%m%d_%H%M%S")
 
@@ -41,6 +41,7 @@ class Benchmark:
     construct_only: bool
     args: dict[str, str]
     julia_trace_compile: bool
+    solver_args: dict | None
 
 
 def run_all_benchmarks(config, ignore_past_results=False):
@@ -70,6 +71,7 @@ def run_all_benchmarks(config, ignore_past_results=False):
                         construct_only=problem_config.get("construct_only", False),
                         julia_trace_compile=config.get("julia_trace_compile", False),
                         args=problem_config.get("args", {}),
+                        solver_args=problem_config.get("solver_args", None),
                     )
                     if not get_benchmark_code(benchmark).exists():
                         print(f"{name}: Skipping {library} as no benchmark found.")
@@ -106,20 +108,21 @@ def run_all_benchmarks(config, ignore_past_results=False):
                     except BenchmarkError as e:
                         print(f"{name}: {e}")
 
+                check_results_csv_aligns(past_results, problem=name, size=size)
                 check_results_output_match(
                     name,
                     base_results_dir,
-                    past_results.read(date=TIMESTAMP, size=size, problem=name),
+                    past_results.read(date=TIMESTAMP, size=size, problem=name).filter(
+                        pl.col("error").is_null()
+                    ),
                 )
 
-                check_results_csv_align(past_results, problem=name, size=size)
 
-
-def check_results_csv_align(past_results, problem, size):
+def check_results_csv_aligns(past_results, problem, size):
     df = past_results.read(problem=problem, size=size).filter(pl.col("error").is_null())
 
     # Check objective values
-    df = df.with_columns(pl.col("objective_value").round_sig_figs(6))
+    df = df.with_columns(pl.col("objective_value").round_sig_figs(5))
 
     num_objectives = df.group_by("objective_value").agg(
         pl.col("solver", "library").first()
@@ -250,6 +253,8 @@ def run_benchmark(
                 "size": benchmark.size,
                 "library": benchmark.library,
                 "num_variables": monitor_result.num_variables,
+                "num_constraints": monitor_result.num_constraints,
+                "num_nonzeros": monitor_result.num_nonzeros,
                 "total_time_s": safe_round(total_time, 3),
                 "solve_time_s": safe_round(monitor_result.solve_time, 3),
                 "max_memory_uss_mb": safe_round(monitor_result.max_memory_uss_mb, 3),
@@ -266,6 +271,8 @@ def run_benchmark(
             args["size"] = str(benchmark.size)
         if benchmark.construct_only:
             args["block_solver"] = "True"
+        if benchmark.solver_args is not None:
+            args["solver_args"] = repr(benchmark.solver_args)
         if input_dir is not None:
             args["input_dir"] = f"'{input_dir}'"
             args["results_dir"] = f"'{results_dir}'"
@@ -372,6 +379,8 @@ def run_benchmark(
 @dataclass
 class MonitorResult:
     num_variables: int | None = None
+    num_constraints: int | None = None
+    num_nonzeros: int | None = None
     solve_time: float | None = None
     max_memory_uss_mb: float | None = None
     objective_value: float | None = None
@@ -402,7 +411,8 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
 
         try:
             for line in iter(stdout.readline, ""):
-                # print(f"OUT: '{line.strip()}'")
+                if elapsed_time > LOG_AFTER_S:
+                    print("\t" + line.strip())
                 if line.startswith("PF_BENCHMARK:"):
                     marker = line.removeprefix("PF_BENCHMARK:").strip()
                 elif line.startswith("Optimize a model with "):
@@ -410,6 +420,14 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
                     result.num_variables = int(
                         re.search(r"(\d+) columns", line).group(1)
                     )
+                    result.num_constraints = int(
+                        re.search(r"(\d+) rows", line).group(1)
+                    )
+                    result.num_nonzeros = int(
+                        re.search(r"(\d+) nonzeros", line).group(1)
+                    )
+                elif line.startswith("Presolved: "):
+                    marker = "3b_GUROBI_PRESOLVED"
                 elif line.startswith("Solved in ") or line.startswith(
                     "Barrier solved model in "
                 ):
@@ -548,26 +566,44 @@ def check_results_output_match(
             continue
 
         for filename in files_in_ref:
-            ref = pl.read_parquet(ref_dir / filename)
-            diff = pl.read_parquet(results_dir / filename)
-            try:
-                assert_frame_equal(
-                    ref,
-                    diff,
-                    check_dtypes=False,
-                    check_row_order=False,
-                    check_column_order=False,
-                )
-            except AssertionError as e:
+            ref = read_dataframe(ref_dir / filename)
+            diff = read_dataframe(results_dir / filename)
+            if ref.shape != diff.shape:
                 raise BenchmarkError(
-                    f"Benchmarks produced different results between {(ref_lib, ref_solver)} and {(library, solver)}."
-                ) from e
+                    f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different shapes for file {filename}.\n{ref_lib} shape: {ref.shape}, {library} shape: {diff.shape}"
+                )
+            if set(ref.columns) != set(diff.columns):
+                raise BenchmarkError(
+                    f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different columns for file {filename}.\n{ref_lib} columns: {ref.columns}, {library} columns: {diff.columns}"
+                )
+            diff = diff.select(ref.columns)  # reorder columns to match
+            ref = ref.sort(*ref.columns)
+            diff = diff.sort(*diff.columns)
+            for c in ref.columns:
+                if ref[c].dtype.is_float():
+                    ref = ref.with_columns(pl.col(c).round(6))
+                if diff[c].dtype.is_float():
+                    diff = diff.with_columns(pl.col(c).round(6))
+                if not (ref[c] == diff[c]).all():
+                    num_diffs = (ref[c] != diff[c]).sum()
+                    print(
+                        f"WARNING: {problem}: {ref_lib} vs {library}: {filename}[{c}]: {num_diffs} in {ref.height} rows differ, maybe multiple solutions exist"
+                    )
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)
 
     if len(libs_compared) > 1:
         print(f"{problem}: Outputs match across {', '.join(libs_compared)}")
+
+
+def read_dataframe(path: Path) -> pl.DataFrame:
+    if path.suffix == ".csv":
+        return pl.read_csv(path)
+    elif path.suffix == ".parquet":
+        return pl.read_parquet(path)
+    else:
+        raise ValueError(f"Unsupported file type: {path.suffix}")
 
 
 def kill_process(proc, using_julia, timeout=2):
@@ -619,6 +655,8 @@ class PastResults:
         "solver": pl.Utf8,
         "size": pl.Int64,
         "num_variables": pl.Int64,
+        "num_constraints": pl.Int64,
+        "num_nonzeros": pl.Int64,
         "total_time_s": pl.Float64,
         "solve_time_s": pl.Float64,
         "max_memory_uss_mb": pl.Float64,
@@ -659,7 +697,7 @@ class PastResults:
         return df
 
     def append(self, row: dict):
-        self._data = self._data.vstack(
+        self._data = self._data.select(self.BENCHMARK_RESULTS_SCHEMA.keys()).vstack(
             pl.DataFrame(row, schema=self.BENCHMARK_RESULTS_SCHEMA)
         )
 

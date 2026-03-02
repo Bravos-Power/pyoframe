@@ -8,6 +8,9 @@ class Benchmark(BaseBenchmark):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._solver_factory = SolverFactory(self.solver)
+        if self.solver_args:
+            for key, value in self.solver_args.items():
+                self._solver_factory.options[key] = value
 
     def set_timeout_to_zero(self, model) -> None:
         self._solver_factory.options["timelimit"] = 0.0

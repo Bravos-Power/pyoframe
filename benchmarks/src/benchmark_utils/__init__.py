@@ -6,6 +6,7 @@ Note that this contributes to every benchmark so we try to keep the imports most
 from __future__ import annotations
 
 import contextlib
+import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,7 @@ class BaseBenchmark(ABC):
         results_dir=None,
         size=None,
         emit_benchmarking_logs=False,
+        solver_args=None,
         **kwargs,
     ):
         self.solver = solver
@@ -29,6 +31,7 @@ class BaseBenchmark(ABC):
         self.size = size
         self.emit_benchmarking_logs = emit_benchmarking_logs
         self.kwargs = kwargs
+        self.solver_args = solver_args
 
     @abstractmethod
     def build(self, **kwargs) -> Any: ...
@@ -70,7 +73,9 @@ class BaseBenchmark(ABC):
             print("PF_BENCHMARK: 5_SOLVE_RETURNED", flush=True)
 
         if self.results_dir is not None and not self.block_solver:
-            self.results_dir.mkdir(parents=True, exist_ok=True)
+            if self.results_dir.exists():
+                shutil.rmtree(self.results_dir)
+            self.results_dir.mkdir(parents=True)
             with contextlib.chdir(self.results_dir):
                 self.write_results(self.model, **self.kwargs)
         if self.emit_benchmarking_logs:
