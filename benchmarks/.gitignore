@@ -1,0 +1,5 @@
+results/**
+src/*/raw_data/downloads/**
+src/*/raw_data/preprocessed/**
+julia_sysimage.so
+julia_precompile_statements.jl
