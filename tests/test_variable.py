@@ -108,3 +108,18 @@ def test_solution_failures(solver):
     m.optimize()
 
     assert m.X.solution == pytest.approx(5, **get_tol(solver))
+
+    # add check for other types of failures
+    if solver.name == "gurobi":
+        m = Model(solver)
+        m.X = Variable(Set(x=range(1000)))
+        m.maximize = m.X.sum()
+        m.constraint = m.X <= 5
+        m.attr.TimeLimitSec = 0
+
+        m.optimize()
+
+        with pytest.raises(
+            RuntimeError, match=re.escape("Failed to retrieve the variable's solution")
+        ):
+            print(m.X.solution)
