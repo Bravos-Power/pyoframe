@@ -2487,7 +2487,7 @@ class Variable(BaseOperableBlock):
         Return type is a DataFrame if the variable has dimensions, otherwise it is a single value.
         Binary and integer variables are returned as integers.
 
-        Raises an error if the model has not been solved or if the variable's solution cannot be retrieved for some reason (e.g. unboundedness, infeasibility, or an unexpected solver error).
+        Raises an error if the model has not yet been solved.
 
         Examples:
             >>> m = pf.Model()
