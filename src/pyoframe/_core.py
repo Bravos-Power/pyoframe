@@ -2487,6 +2487,8 @@ class Variable(BaseOperableBlock):
         Return type is a DataFrame if the variable has dimensions, otherwise it is a single value.
         Binary and integer variables are returned as integers.
 
+        Raises an error if the model has not been solved or if the variable's solution cannot be retrieved for some reason (e.g. unboundedness, infeasibility, or an unexpected solver error).
+
         Examples:
             >>> m = pf.Model()
             >>> m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)
@@ -2496,10 +2498,6 @@ class Variable(BaseOperableBlock):
             >>> m.var_dimensionless = pf.Variable(
             ...     lb=4.5, ub=5.5, vtype=pf.VType.INTEGER
             ... )
-            >>> m.var_continuous.solution
-            Traceback (most recent call last):
-            ...
-            RuntimeError: Failed to retrieve solution for variable. Are you sure the model has been solved?
             >>> m.optimize()
             >>> m.var_continuous.solution
             shape: (3, 2)
@@ -2526,18 +2524,39 @@ class Variable(BaseOperableBlock):
             >>> m.var_dimensionless.solution
             5
         """
+        assert self._model is not None, (
+            "Cannot retrieve the variable's solution because the variable has not been added to a model."
+        )
+        termination_status = self._model.attr.TerminationStatus
+
+        # protects against segfault in ipopt. see: https://github.com/metab0t/PyOptInterface/issues/91
+        invalid_termination_codes = (
+            poi.TerminationStatusCode.INFEASIBLE,
+            poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
+            poi.TerminationStatusCode.DUAL_INFEASIBLE,
+        )
+        if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
+            raise ValueError(
+                "Cannot retrieve the variable's solution because the model has not yet been solved. Did you forget to call .optimize()?"
+            )
+        elif termination_status in invalid_termination_codes:
+            raise ValueError(
+                f"Cannot retrieve the variable's solution because the model's status is '{termination_status.name}'."
+            )
+
         try:
             solution = self.attr.Value
         except RuntimeError as e:
-            raise RuntimeError(
-                "Failed to retrieve solution for variable. Are you sure the model has been solved?"
-            ) from e
+            msg = "Failed to retrieve the variable's solution."
+            if termination_status != poi.TerminationStatusCode.OPTIMAL:
+                msg += f" Did the solver find an optimal solution? (Its termination status is '{termination_status.name}')"
+            raise RuntimeError(msg) from e
+
         if isinstance(solution, pl.DataFrame):
             solution = solution.rename({"Value": SOLUTION_KEY})
 
         if self.vtype in [VType.BINARY, VType.INTEGER]:
             if isinstance(solution, pl.DataFrame):
-                # TODO handle values that are out of bounds of Int64 (i.e. when problem is unbounded)
                 solution = solution.with_columns(
                     pl.col("solution").alias("solution_float"),
                     pl.col("solution").round().cast(pl.Int64),

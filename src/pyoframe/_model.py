@@ -408,7 +408,7 @@ class Model:
         if isinstance(__value, BaseBlock) and __name not in Model._reserved_attributes:
             if __value._get_id_column_name() is not None:
                 assert not hasattr(self, __name), (
-                    f"Cannot create {__name} since it was already created."
+                    f"Cannot assign name '{__name}' to {__value.__class__.__name__} because '{__name}' is already in use."
                 )
 
             log = self._logger is not None and isinstance(

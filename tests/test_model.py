@@ -1,5 +1,7 @@
 """Tests related to defining Pyoframe models."""
 
+import re
+
 import pytest
 from pytest import approx
 
@@ -101,3 +103,15 @@ def test_verbose(default_solver, caplog):
 
     m.constr = m.X >= 5
     assert "Added constraint 'constr'" in caplog.text
+
+
+def test_protected_variables(default_solver):
+    m = pf.Model(default_solver)
+
+    with pytest.raises(
+        AssertionError,
+        match=re.escape(
+            "Cannot assign name 'constraints' to Variable because 'constraints' is already in use."
+        ),
+    ):
+        m.constraints = pf.Variable()
