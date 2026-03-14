@@ -7,6 +7,7 @@ import pytest
 from polars.testing import assert_frame_equal
 
 from pyoframe import Expression, Model, Param, Set, Variable, VType
+from tests.util import get_tol
 
 
 def test_equals_param(solver):
@@ -76,3 +77,49 @@ def test_auto_broadcast(default_solver):
 
     m.v1 = Variable(altern_dim, val, lb=val)
     m.v2 = Variable(altern_dim, val, ub=val)
+
+
+def test_solution_failures(solver):
+    m = Model(solver)
+
+    m.X = Variable()
+    m.Y = Variable()
+
+    m.maximize = m.X
+
+    with pytest.raises(
+        ValueError,
+        match=re.escape("Did you forget to call .optimize()?"),
+    ):
+        m.X.solution
+
+    m.optimize()
+
+    if solver.name != "ipopt":  # ipopt just returns large numbers. TODO standardize?
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "Cannot retrieve the variable's solution because the model's status is"
+            ),
+        ):
+            m.X.solution
+
+    m.constraint = m.X <= 5
+    m.optimize()
+
+    assert m.X.solution == pytest.approx(5, **get_tol(solver))
+
+    # add check for other types of failures
+    if solver.name == "gurobi":
+        m = Model(solver)
+        m.X = Variable(Set(x=range(1000)))
+        m.maximize = m.X.sum()
+        m.constraint = m.X <= 5
+        m.attr.TimeLimitSec = 0
+
+        m.optimize()
+
+        with pytest.raises(
+            RuntimeError, match=re.escape("Failed to retrieve the variable's solution")
+        ):
+            print(m.X.solution)
