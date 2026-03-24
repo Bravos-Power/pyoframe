@@ -11,7 +11,6 @@ import yaml
 def main():
     cwd = Path(__file__).parent
 
-    # Read config.yaml
     with open(cwd / "config.yaml") as file:
         config = yaml.safe_load(file)
 
@@ -29,6 +28,7 @@ def main():
                     exclude_paths=mi_config.get("exclude_paths", []),
                     include_exts=config["valid_extensions"],
                     exclude_dirs=config["always_exclude_dirs"],
+                    branch=mi_config.get("branch", None),
                 ).with_columns(modeling_interface=pl.lit(modeling_interface)),
             ],
             how="diagonal",
@@ -52,6 +52,9 @@ def main():
             / results.filter(modeling_interface="pyoframe")["total"].item()
         ).round(1)
     )
+
+    results = results.sort("factor")
+
     print(results)
 
     results.write_csv(cwd / "results.csv")
@@ -65,10 +68,30 @@ def measure_lines_of_code(
     exclude_paths: list[str],
     exclude_dirs: list[str],
     include_exts: list[str],
+    branch: str | None = None,
 ) -> pl.DataFrame:
     if not downloads_dir.exists() or not any(downloads_dir.iterdir()):
         url = "https://github.com/" + github
         subprocess.run(["git", "clone", url, downloads_dir], check=True)
+
+    if branch is not None:
+        subprocess.run(["git", "checkout", branch], check=True, cwd=downloads_dir)
+    else:
+        # Checkout the default branch (e.g., main or master)
+        default_branch = (
+            subprocess.check_output(
+                ["git", "rev-parse", "--abbrev-ref", "origin/HEAD"],
+                cwd=downloads_dir,
+                text=True,
+            )
+            .strip()
+            .replace("origin/", "")
+        )
+        subprocess.run(
+            ["git", "switch", default_branch],
+            check=True,
+            cwd=downloads_dir,
+        )
 
     cmd = ["cloc"]
     cmd += include_paths

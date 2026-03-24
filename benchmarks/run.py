@@ -691,6 +691,7 @@ class PastResults:
     def __init__(self, base_dir: Path, ignore_past_results: bool = False) -> None:
         self.base_dir = base_dir
         self._path = base_dir / self.FILE_NAME
+        self._ignore_past_results = ignore_past_results
 
         if self._path.exists():
             self._data = pl.read_csv(self._path).cast(self.BENCHMARK_RESULTS_SCHEMA)
@@ -698,9 +699,6 @@ class PastResults:
             self._path.parent.mkdir(exist_ok=True)
             self._data = pl.DataFrame(schema=self.BENCHMARK_RESULTS_SCHEMA)
             self._data.write_csv(self._path)
-
-        if ignore_past_results:
-            self._data = self._data.filter(date=TIMESTAMP)
 
     def read(
         self, *, size=None, date=None, library=None, solver=None, problem=None
@@ -716,6 +714,9 @@ class PastResults:
             df = df.filter(solver=solver)
         if problem is not None:
             df = df.filter(problem=problem)
+        if self._ignore_past_results:
+            df = df.filter(date=TIMESTAMP)
+
         return df
 
     def append(self, row: dict):

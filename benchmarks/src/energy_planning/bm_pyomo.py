@@ -258,6 +258,9 @@ class Bench(Benchmark):
         create_result_df_for_var(model.Load_Unserved, "bus", "datetime").write_parquet(
             "load_unserved.parquet"
         )
+        create_result_df_for_constr(
+            model, model.Con_Power_Balance, "bus", "datetime"
+        ).write_parquet("power_balance_duals.parquet")
 
 
 def create_result_df_for_var(var, *key_names):
@@ -297,4 +300,4 @@ if __name__ == "__main__":
         yearly_limits=False,
         variable_capacity_factors=False,
     )
-    m = benchmark.run()
+    benchmark.run()

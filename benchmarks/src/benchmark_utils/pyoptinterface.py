@@ -28,6 +28,9 @@ class Benchmark(BaseBenchmark):
         model.set_model_attribute(poi.ModelAttribute.TimeLimitSec, 0.0)
 
     def solve(self, model):
+        if self.solver_args is not None:
+            for key, value in self.solver_args.items():
+                model.set_raw_parameter(key, value)
         model.optimize()
 
     def _get_objective(self, model) -> float:

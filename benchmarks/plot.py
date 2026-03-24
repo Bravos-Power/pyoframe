@@ -10,6 +10,8 @@ import yaml
 def get_latest_data(base_path: Path):
     df = pl.read_csv(base_path / "benchmark_results.csv")
     df = df.filter(pl.col("error").is_null())
+    if df.is_empty():
+        return df
     df = df.group_by(["problem", "library", "solver", "size"]).agg(pl.col("*").last())
     df = df.with_columns((pl.col("max_memory_uss_mb") / 1024).alias("memory_uss_GiB"))
     df = df.with_columns(
@@ -231,6 +233,9 @@ def plot_all(config_name="config.yaml"):
     plot_memory_usage_over_time(base_path, config)
 
     df = get_latest_data(base_path)
+
+    if df.is_empty():
+        return
 
     for (solver,), solver_df in df.group_by("solver"):
         plot_combined(solver_df, base_path / f"results_{solver}.svg", config)

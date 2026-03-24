@@ -147,6 +147,7 @@ class Bench(Benchmark):
             model.Build_Out.solution.write_parquet("build_out.parquet")
         model.Dispatch.solution.write_parquet("dispatch.parquet")
         model.Load_Unserved.solution.write_parquet("load_unserved.parquet")
+        model.Con_Power_Balance.dual.write_parquet("power_balance_duals.parquet")
 
 
 if __name__ == "__main__":

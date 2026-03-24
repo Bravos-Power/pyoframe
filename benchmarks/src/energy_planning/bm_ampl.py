@@ -238,6 +238,12 @@ class Bench(Benchmark):
             model.var["Load_Unserved"], ["bus", "datetime"], "val", "solution"
         ).to_parquet("load_unserved.parquet", index=False)
 
+        _df = _entity_df(
+            model.con["Con_Power_Balance"], ["bus", "datetime"], "dual", "dual"
+        )
+        _df["dual"] *= -1  # Fix sign
+        _df.to_parquet("power_balance_duals.parquet", index=False)
+
 
 if __name__ == "__main__":
     base_dir = Path(__file__).parent
