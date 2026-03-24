@@ -31,7 +31,7 @@ jobs:
         run: |
           pip install -e .
           cd benchmarks
-          pip install -e .
+          pip install -e .[energy-planning]
       - name: Install Julia packages
         run: |
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
