@@ -477,7 +477,12 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
             )
         )
 
-        for child in ps_proc.children(recursive=True):
+        try:
+            children = ps_proc.children(recursive=True)
+        except psutil.NoSuchProcess:
+            children = []
+
+        for child in children:
             try:
                 if child.pid not in process_names:
                     process_names[child.pid] = child.name()
