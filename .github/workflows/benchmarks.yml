@@ -27,10 +27,10 @@ jobs:
           COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
           COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
           CHECK_LICENSE: true
-      - name: Install scipy-sparse dependencies
+      - name: Install scikit-sparse dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python-scipy libsuitesparse-dev
+          sudo apt-get install -y libsuitesparse-dev
       - name: Install dependencies
         run: |
           pip install -e .
