@@ -6,7 +6,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Expression, Model, Param, Set, Variable, VType
+from pyoframe import Config, Expression, Model, Param, Set, Variable, VType
 from tests.util import get_tol
 
 
@@ -145,3 +145,16 @@ def test_solution_integer_tolerance(solver):
 
     assert m.X.get_solution(return_integers=False) == 10.0
     assert (m.Y.get_solution(return_integers=False)["solution"] == 10.0).all()
+
+    m.X._attr._getter = lambda attr: 9.8
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Unable to convert solution for variable 'X' from float to int. Consider loosening pf.Config.integer_tolerance"
+        ),
+    ):
+        assert m.X.solution == 9.8
+
+    Config.integer_tolerance = 0
+
+    assert m.X.solution == 10
