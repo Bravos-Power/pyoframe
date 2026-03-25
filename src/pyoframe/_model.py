@@ -275,6 +275,17 @@ class Model:
                     env_config.set(key, value)
                 env = copt.Env(env_config)
             model = copt.Model(env)
+        elif solver.name == "mosek":
+            from pyoptinterface import mosek
+
+            try:
+                model = mosek.Model()
+            except RuntimeError as e:  # pragma: no cover
+                if "MOSEK library is not loaded" in str(e):
+                    raise RuntimeError(
+                        "Could not find the Mosek solver. Are you sure you've properly installed it and added it to your PATH?"
+                    ) from e
+                raise e
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."
@@ -761,3 +772,12 @@ class Model:
                 return self.poi.get_model_raw_attribute(name)
             else:
                 raise e
+        except RuntimeError as e:
+            # Add extra check since pyoptinterface doesn't use OPTIMIZE_NOT_CALLED when using mosek
+            if (
+                name == "TerminationStatus"
+                and self.solver.name == "mosek"
+                and "No solution type is available" in str(e)
+            ):
+                return poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
+            raise e

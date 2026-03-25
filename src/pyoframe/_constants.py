@@ -74,6 +74,13 @@ SUPPORTED_SOLVERS = [
         # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
         check_termination_status_when_retrieving_solution=True,
     ),
+    _Solver(
+        "mosek",
+        # mosek returns a value even when infeasible
+        check_termination_status_when_retrieving_solution=True,
+        # by default, not providing names actually sets the names to an empty string so there's no downside to instead provide "C" and "V" as names.
+        accelerate_with_repeat_names=True,
+    ),
 ]
 
 
@@ -468,7 +475,7 @@ VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt", "mosek"]
 assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
     s.name for s in SUPPORTED_SOLVERS
 }

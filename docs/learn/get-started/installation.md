@@ -74,3 +74,16 @@ Select your chosen solver and follow the installation instructions.
     ```
     2. Download the [Ipopt binaries](https://github.com/coin-or/Ipopt/releases) from GitHub. Version 3.14.x is recommended since it is the latest version that we've tested.
     3. On Windows, unpack the zip and add the `bin` folder to your Path variable. If not on Windows, you may have to build the solver from source, see further details [here](https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt).
+
+=== "Mosek"
+
+    To install [mosek](https://www.mosek.com):
+
+    1. Install Mosek v10.2 from the website's [downloads page](https://www.mosek.com/downloads/10.2.19/) or (if using Python 3.12 or earlier) install via pip:
+    ```bash
+    pip install mosek==10.2
+    ```
+
+    2. Ensure you have placed your Mosek license in the appropriate folder (see Mosek's email instructions).
+    
+    Note that Pyoframe relies on pyoptinterface and pyoptinterface only supports Mosek v10.2. Other versions might work but no guarantees are provided.
