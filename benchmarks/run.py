@@ -121,6 +121,10 @@ def run_all_benchmarks(config, ignore_past_results=False):
 def check_results_csv_aligns(past_results, problem, size):
     df = past_results.read(problem=problem, size=size).filter(pl.col("error").is_null())
 
+    if df.height <= 1:
+        print(f"{problem} (n={size}): Not enough successful runs to compare results.")
+        return
+
     # Check objective values
     df = df.with_columns(pl.col("objective_value").round_sig_figs(5))
 
@@ -128,7 +132,9 @@ def check_results_csv_aligns(past_results, problem, size):
         pl.col("solver", "library").first()
     )
     if num_objectives.height <= 1:
-        print(f"{problem}: Objective values match across all runs.")
+        print(
+            f"{problem}: Objective values match across all runs ({df['library'].unique().to_list()})."
+        )
     else:
         raise ValueError(
             f"{problem}: Objective values do not match for size {size}, see .csv results:\n{num_objectives}"

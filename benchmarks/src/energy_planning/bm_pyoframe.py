@@ -159,8 +159,10 @@ if __name__ == "__main__":
         input_dir=base_dir / "model_data",
         results_dir=base_dir / "results_pyoframe",
         verbose=True,
-        security_constrained=False,
         capacity_expansion=True,
+        security_constrained=True,
+        yearly_limits=True,
+        variable_capacity_factors=True,
     )
     m = benchmark.run()
     if m.attr.TerminationStatus in {

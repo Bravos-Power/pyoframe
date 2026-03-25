@@ -31,7 +31,7 @@ class BaseBenchmark(ABC):
         self.size = size
         self.emit_benchmarking_logs = emit_benchmarking_logs
         self.kwargs = kwargs
-        self.solver_args = solver_args
+        self.solver_args = solver_args if solver_args else {}
 
     @abstractmethod
     def build(self, **kwargs) -> Any: ...

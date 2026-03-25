@@ -8,7 +8,7 @@ version = "0.0.0"
 dependencies = [
     # solvers
     "pyomo==6.9.2",
-    "linopy==0.5.5",
+    "linopy==0.6.5",
     "pyoptinterface==0.5.1",
     "cvxpy[GUROBI,MOSEK]==1.7.1",
     "amplpy==0.16.0",
