@@ -2530,25 +2530,25 @@ class Variable(BaseOperableBlock):
         )
         termination_status = self._model.attr.TerminationStatus
 
-        # protects against segfault in ipopt. see: https://github.com/metab0t/PyOptInterface/issues/91
         invalid_termination_codes = (
             poi.TerminationStatusCode.INFEASIBLE,
             poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
             poi.TerminationStatusCode.DUAL_INFEASIBLE,
         )
-        if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
-            raise ValueError(
-                "Cannot retrieve the variable's solution because the model has not yet been solved. Did you forget to call .optimize()?"
-            )
-        elif termination_status in invalid_termination_codes:
-            raise ValueError(
-                f"Cannot retrieve the variable's solution because the model's status is '{termination_status.name}'."
+        if (
+            self._model.solver.check_termination_status_when_retrieving_solution
+            and termination_status in invalid_termination_codes
+        ):
+            raise RuntimeError(
+                f"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '{termination_status.name}')."
             )
 
         try:
             solution = self.attr.Value
         except RuntimeError as e:
             msg = "Failed to retrieve the variable's solution."
+            if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
+                msg += " It seems that you forgot to call .optimize()"
             if termination_status != poi.TerminationStatusCode.OPTIMAL:
                 msg += f" Did the solver find an optimal solution? (Its termination status is '{termination_status.name}')"
             raise RuntimeError(msg) from e

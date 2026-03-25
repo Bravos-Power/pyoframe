@@ -27,6 +27,8 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
+    supports_unbounded: bool = True
+    check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
     If True, Pyoframe sets all the variable and constraint names to 'V'
@@ -63,8 +65,15 @@ SUPPORTED_SOLVERS = [
         supports_integer_variables=False,
         supports_objective_sense=False,
         supports_write=False,
+        # ipopt just returns large numbers instead of "unbounded"
+        supports_unbounded=False,
     ),
-    _Solver("copt", supports_non_convex=False),
+    _Solver(
+        "copt",
+        supports_non_convex=False,
+        # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
+        check_termination_status_when_retrieving_solution=True,
+    ),
 ]
 
 
