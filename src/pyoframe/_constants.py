@@ -83,10 +83,11 @@ SUPPORTED_SOLVERS = [
         "mosek",
         # mosek returns a value even when infeasible
         check_termination_status_when_retrieving_solution=True,
-        # by default, not providing names actually sets the names to an empty string so there's no downside to instead provide "C" and "V" as names.
+        # by default, not providing names actually sets the names to an empty string so there appears to be no downside to instead provide "C" and "V" as names.
+        # conveniently, this prevents malformed .lp files by forcing the user to set solver_uses_variable_names=True if they want to use .write() with Mosek.
         accelerate_with_repeat_names=True,
         supports_square_brackets_in_lp_files=False,
-        # mosek raises an error when querying the status prior to solving
+        # mosek raises an error when querying the status prior to solving. https://github.com/metab0t/PyOptInterface/issues/94
         supports_optimize_not_called=False,
         supports_non_convex=False,
         # See https://github.com/metab0t/PyOptInterface/issues/95
