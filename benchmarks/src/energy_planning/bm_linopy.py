@@ -185,10 +185,10 @@ class Bench(Benchmark):
             rating_filtered = container.line_rating.sel(line_id=total_flow.data.line_id)
 
             container.Con_Security_lb = m.add_constraints(
-                total_flow <= rating_filtered, name="Con_Security_lb"
+                total_flow <= rating_filtered, name=f"Con_Security_lb_{outage}"
             )
             container.Con_Security_ub = m.add_constraints(
-                total_flow >= -rating_filtered, name="Con_Security_ub"
+                total_flow >= -rating_filtered, name=f"Con_Security_ub_{outage}"
             )
 
     def add_vcf(self, m, container):
