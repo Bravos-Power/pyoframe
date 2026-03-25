@@ -27,6 +27,7 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
+    supports_write_sol: bool = True
     supports_unbounded: bool = True
     supports_square_brackets_in_lp_files: bool = True
     supports_optimize_not_called: bool = True
@@ -49,6 +50,8 @@ class _Solver:
             assert self.supports_quadratic_constraints, (
                 "Non-convex solvers typically support quadratic constraints. Are you sure this is correct?"
             )
+        if not self.supports_write:
+            self.supports_write_sol = False
 
     def __repr__(self):
         return self.name
@@ -86,8 +89,8 @@ SUPPORTED_SOLVERS = [
         # mosek raises an error when querying the status prior to solving
         supports_optimize_not_called=False,
         supports_non_convex=False,
-        # TODO enable once we get clarity on https://github.com/metab0t/PyOptInterface/issues/95
-        supports_write=False,
+        # See https://github.com/metab0t/PyOptInterface/issues/95
+        supports_write_sol=False,
     ),
 ]
 

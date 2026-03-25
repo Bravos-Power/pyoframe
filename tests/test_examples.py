@@ -238,7 +238,7 @@ def write_results(example: Example, model: pf.Model, results_dir, solver: _Solve
         )
 
     if example.unique_solution:
-        if supports_write:
+        if supports_write and solver.supports_write_sol:
             model.write(results_dir / f"solution-{model.solver.name}-{readability}.sol")
 
         module = example.import_model_module()

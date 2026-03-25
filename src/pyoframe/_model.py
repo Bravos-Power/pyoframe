@@ -485,7 +485,7 @@ class Model:
         m = pf.Model(solver_uses_variable_names=True)
         ```
 
-        For Gurobi, `solver_uses_variable_names=True` is mandatory when using
+        For Gurobi and Mosek, `solver_uses_variable_names=True` is mandatory when using
         .write(). This may become mandatory for other solvers too without notice.
 
         Parameters:
