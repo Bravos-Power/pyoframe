@@ -108,6 +108,7 @@ class ConfigDefaults:
     print_max_terms: int = 5
     maintain_order: bool = True
     id_dtype = pl.UInt32
+    _initialize_silent = False
 
 
 class _Config:
@@ -362,6 +363,15 @@ class _Config:
     @id_dtype.setter
     def id_dtype(self, value):
         self._settings.id_dtype = value
+
+    @property
+    def _initialize_silent(self) -> bool:
+        """Internal setting used for testing which silences the solver output."""
+        return self._settings._initialize_silent
+
+    @_initialize_silent.setter
+    def _initialize_silent(self, value: bool):
+        self._settings._initialize_silent = value
 
     def reset_defaults(self):
         """Resets all configuration options to their default values.

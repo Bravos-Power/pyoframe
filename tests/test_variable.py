@@ -26,7 +26,6 @@ def test_equals_param(solver):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
     m.maximize = m.Choose100.sum()
-    m.attr.Silent = True
     m.optimize()
     assert m.maximize.value == 300
     assert m.maximize.evaluate() == 300

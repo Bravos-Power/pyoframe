@@ -2041,7 +2041,6 @@ class Constraint(BaseBlock):
             Traceback (most recent call last):
             ...
             ValueError: .relax() must be called before the Constraint is added to the model
-            >>> m.attr.Silent = True
             >>> m.optimize()
             >>> m.maximize.value
             -50.0

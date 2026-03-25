@@ -159,7 +159,6 @@ class Model:
         Examples:
             >>> m = pf.Model()
             >>> m.v = pf.Variable(lb=1, ub=1, vtype="integer")
-            >>> m.attr.Silent = True  # Prevent solver output from being printed
             >>> m.optimize()
             >>> m.attr.TerminationStatus
             <TerminationStatusCode.OPTIMAL: 2>
@@ -281,10 +280,14 @@ class Model:
                 f"Solver {solver} not recognized or supported."
             )  # pragma: no cover
 
+        if Config._initialize_silent:
+            model.set_model_attribute(poi.ModelAttribute.Silent, True)
+
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
         assert constant_var.index == CONST_TERM, (
             "The first variable should have index 0."
         )
+
         return model, solver
 
     @property
