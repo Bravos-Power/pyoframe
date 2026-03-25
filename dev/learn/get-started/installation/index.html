@@ -2157,11 +2157,13 @@
 <th>Gurobi (paid)</th>
 <th>COPT (paid)</th>
 <th>Ipopt (free)</th>
+<th>Mosek (paid)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Linear programs (LPs)</td>
+<td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -2173,9 +2175,11 @@
 <td>✅</td>
 <td>✅</td>
 <td>❌</td>
+<td>✅</td>
 </tr>
 <tr>
 <td>Quadratic objective (convex)</td>
+<td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -2187,10 +2191,12 @@
 <td>✅</td>
 <td>❌</td>
 <td>✅</td>
+<td>❌</td>
 </tr>
 <tr>
 <td>Quadratic constraints (convex)</td>
 <td>❌</td>
+<td>✅</td>
 <td>✅</td>
 <td>✅</td>
 <td>✅</td>
@@ -2201,9 +2207,11 @@
 <td>✅</td>
 <td>❌</td>
 <td>✅</td>
+<td>❌</td>
 </tr>
 <tr>
 <td>*Integer variables cannot be used with quadratic objectives.</td>
+<td></td>
 <td></td>
 <td></td>
 <td></td>
@@ -2217,7 +2225,7 @@
 </div>
 <h2 id="step-3-install-the-solver">Step 3: Install the solver</h2>
 <p>Select your chosen solver and follow the installation instructions.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="2:4"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">HiGHS</label><label for="__tabbed_2_2">Gurobi</label><label for="__tabbed_2_3">COPT</label><label for="__tabbed_2_4">Ipopt</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:5"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><input id="__tabbed_2_5" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">HiGHS</label><label for="__tabbed_2_2">Gurobi</label><label for="__tabbed_2_3">COPT</label><label for="__tabbed_2_4">Ipopt</label><label for="__tabbed_2_5">Mosek</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>To install <a href="https://highs.dev/">HiGHS</a> run:</p>
@@ -2253,6 +2261,20 @@
 <li>On Windows, unpack the zip and add the <code>bin</code> folder to your Path variable. If not on Windows, you may have to build the solver from source, see further details <a href="https://metab0t.github.io/PyOptInterface/getting_started.html#ipopt">here</a>.</li>
 </ol>
 </div>
+<div class="tabbed-block">
+<p>To install <a href="https://www.mosek.com">mosek</a>:</p>
+<ol>
+<li>
+<p>Install Mosek v10.2 from the website's <a href="https://www.mosek.com/downloads/10.2.19/">downloads page</a> or (if using Python 3.12 or earlier) install via pip:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">mosek</span><span class="o">==</span><span class="m">10</span>.2
+</span></code></pre></div></p>
+</li>
+<li>
+<p>Ensure you have placed your Mosek license in the appropriate folder (see Mosek's email instructions).</p>
+</li>
+</ol>
+<p>Note that Pyoframe relies on pyoptinterface and pyoptinterface only supports Mosek v10.2. Other versions might work but no guarantees are provided.</p>
+</div>
 </div>
 </div>
 
@@ -2277,7 +2299,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 25, 2026 21:04:16 UTC">March 25, 2026</span>
   </span>
 
     
