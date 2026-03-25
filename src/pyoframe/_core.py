@@ -1951,11 +1951,12 @@ class Constraint(BaseBlock):
         if isinstance(dual, pl.DataFrame):
             dual = dual.rename({"Dual": DUAL_KEY})
 
-        # Weirdly, IPOPT returns dual values with the opposite sign, so we correct this bug.
-        # It also does this for maximization problems
-        # but since we flip the objective (because Ipopt doesn't support maximization), the double negatives cancel out.
+        # Since pyoptinterface v0.6.0, the only correction needed is to negate the dual when we artificially converted the problem to a maximization one.
         assert self._model is not None
-        if self._model.solver.name == "ipopt" and self._model.sense == ObjSense.MIN:
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
             if isinstance(dual, pl.DataFrame):
                 dual = dual.with_columns(-pl.col(DUAL_KEY))
             else:
