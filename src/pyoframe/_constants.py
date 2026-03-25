@@ -28,6 +28,8 @@ class _Solver:
     supports_objective_sense: bool = True
     supports_write: bool = True
     supports_unbounded: bool = True
+    supports_square_brackets_in_lp_files: bool = True
+    supports_optimize_not_called: bool = True
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -80,6 +82,10 @@ SUPPORTED_SOLVERS = [
         check_termination_status_when_retrieving_solution=True,
         # by default, not providing names actually sets the names to an empty string so there's no downside to instead provide "C" and "V" as names.
         accelerate_with_repeat_names=True,
+        supports_square_brackets_in_lp_files=False,
+        # mosek raises an error when querying the status prior to solving
+        supports_optimize_not_called=False,
+        supports_non_convex=False,
     ),
 ]
 

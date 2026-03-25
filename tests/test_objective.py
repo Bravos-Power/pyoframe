@@ -14,8 +14,12 @@ def test_get_obj_value(solver):
     m.maximize = m.X
 
     with pytest.raises(
-        ValueError,
-        match="Cannot retrieve the objective value before calling model.optimize()",
+        RuntimeError,
+        match=re.escape(
+            "It seems that you forgot to call .optimize()"
+            if solver.name != "mosek"
+            else "Did the solver find an optimal solution?"
+        ),
     ):
         m.objective.value
 

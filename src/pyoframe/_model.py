@@ -772,12 +772,3 @@ class Model:
                 return self.poi.get_model_raw_attribute(name)
             else:
                 raise e
-        except RuntimeError as e:
-            # Add extra check since pyoptinterface doesn't use OPTIMIZE_NOT_CALLED when using mosek
-            if (
-                name == "TerminationStatus"
-                and self.solver.name == "mosek"
-                and "No solution type is available" in str(e)
-            ):
-                return poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
-            raise e

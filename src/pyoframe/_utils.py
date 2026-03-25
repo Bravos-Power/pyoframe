@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import pandas as pd
 import polars as pl
+import pyoptinterface as poi
 
 from pyoframe._constants import (
     COEF_KEY,
@@ -89,7 +90,11 @@ def _is_iterable(input: Any | Iterable[Any]) -> bool:
 
 
 def concat_dimensions(
-    df: pl.DataFrame, prefix: str, keep_dims: bool = True, to_col: str = "concated_dim"
+    df: pl.DataFrame,
+    prefix: str,
+    keep_dims: bool = True,
+    to_col: str = "concated_dim",
+    square_brackets: bool = True,
 ) -> pl.DataFrame:
     """Returns a new DataFrame with the column 'concated_dim'.
 
@@ -140,6 +145,21 @@ def concat_dimensions(
         │ [3,N]        │
         └──────────────┘
 
+        >>> concat_dimensions(df, prefix="x", square_brackets=False)
+        shape: (6, 3)
+        ┌──────┬──────┬──────────────┐
+        │ dim1 ┆ dim2 ┆ concated_dim │
+        │ ---  ┆ ---  ┆ ---          │
+        │ i64  ┆ str  ┆ str          │
+        ╞══════╪══════╪══════════════╡
+        │ 1    ┆ Y    ┆ x_1_Y        │
+        │ 2    ┆ Y    ┆ x_2_Y        │
+        │ 3    ┆ Y    ┆ x_3_Y        │
+        │ 1    ┆ N    ┆ x_1_N        │
+        │ 2    ┆ N    ┆ x_2_N        │
+        │ 3    ┆ N    ┆ x_3_N        │
+        └──────┴──────┴──────────────┘
+
         Properly handles cases with no dimensions and ignores reserved columns
         >>> df = pl.DataFrame({VAR_KEY: [1, 2]})
         >>> concat_dimensions(df, prefix="x")
@@ -157,11 +177,13 @@ def concat_dimensions(
         prefix = ""
     dimensions = [col for col in df.columns if col not in RESERVED_COL_KEYS]
     if dimensions:
-        query = pl.concat_str(
-            pl.lit(prefix + "["),
-            pl.concat_str(*dimensions, separator=","),
-            pl.lit("]"),
-        )
+        query = [
+            pl.lit(prefix + ("[" if square_brackets else "_")),
+            pl.concat_str(*dimensions, separator="," if square_brackets else "_"),
+        ]
+        if square_brackets:
+            query.append(pl.lit("]"))
+        query = pl.concat_str(*query)
     else:
         query = pl.lit(prefix)
 
@@ -255,6 +277,23 @@ def unwrap_single_values(func) -> pl.DataFrame | Any:
         return result
 
     return wrapper
+
+
+def failed_attr_error(model, prefix) -> RuntimeError:
+    try:
+        termination_status = model.attr.TerminationStatus
+    except RuntimeError:
+        termination_status = None
+
+    msg = prefix
+
+    if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
+        msg += " It seems that you forgot to call .optimize()."
+    elif termination_status != poi.TerminationStatusCode.OPTIMAL:
+        msg += " Did the solver find an optimal solution?"
+        if termination_status is not None:
+            msg += f" (Its termination status is '{termination_status.name}')"
+    return RuntimeError(msg)
 
 
 @dataclass
