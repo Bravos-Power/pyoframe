@@ -20,14 +20,14 @@ Install Pyoframe using your preferred package manager:
 
 Pyoframe makes it easy to _build_ models, but a separate solver is needed to _solve_ the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, choose HiGHS. Note that both Gurobi and COPT offer free licenses for academics.
 
-| Compatibility table                                           | HiGHS (free) | Gurobi (paid) | COPT (paid) | Ipopt (free) |
-| ------------------------------------------------------------- | ------------ | ------------- | ----------- | ------------ |
-| Linear programs (LPs)                                         | ✅           | ✅            | ✅          | ✅           |
-| Mixed integer programs (MIPs)                                 | ✅*          | ✅            | ✅          | ❌           |
-| Quadratic objective (convex)                                  | ✅           | ✅            | ✅          | ✅           |
-| Quadratic objective (non-convex)                              | ❌           | ✅            | ❌          | ✅           |
-| Quadratic constraints (convex)                                | ❌           | ✅            | ✅          | ✅           |
-| Quadratic constraints (non-convex)                            | ❌           | ✅            | ❌          | ✅           |
+| Compatibility table                                           | HiGHS (free) | Gurobi (paid) | COPT (paid) | Ipopt (free) | Mosek (paid) |
+| ------------------------------------------------------------- | ------------ | ------------- | ----------- | ------------ | ------------ |
+| Linear programs (LPs)                                         | ✅           | ✅           | ✅          | ✅           | ✅          |
+| Mixed integer programs (MIPs)                                 | ✅*          | ✅           | ✅          | ❌           | ✅          |
+| Quadratic objective (convex)                                  | ✅           | ✅           | ✅          | ✅           | ✅          |
+| Quadratic objective (non-convex)                              | ❌           | ✅           | ❌          | ✅           | ❌          |
+| Quadratic constraints (convex)                                | ❌           | ✅           | ✅          | ✅           | ✅          |
+| Quadratic constraints (non-convex)                            | ❌           | ✅           | ❌          | ✅           | ❌          |
 | *Integer variables cannot be used with quadratic objectives.  |
 
 !!! tip "Don't see your preferred solver?"

@@ -86,6 +86,8 @@ SUPPORTED_SOLVERS = [
         # mosek raises an error when querying the status prior to solving
         supports_optimize_not_called=False,
         supports_non_convex=False,
+        # TODO enable once we get clarity on https://github.com/metab0t/PyOptInterface/issues/95
+        supports_write=False,
     ),
 ]
 

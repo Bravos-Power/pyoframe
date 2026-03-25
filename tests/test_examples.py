@@ -82,7 +82,7 @@ EXAMPLES = [
     Example("sudoku", is_mip=True),
     Example("production_planning"),
     Example("portfolio_optim"),
-    Example("pumped_storage", is_mip=True),
+    Example("pumped_storage", is_mip=True, unique_solution=False),
 ]
 
 

@@ -1337,7 +1337,7 @@ class Expression(BaseOperableBlock):
             >>> m.expr.evaluate()
             Traceback (most recent call last):
             ...
-            ValueError: Cannot evaluate the expression 'expr' before calling model.optimize().
+            RuntimeError: Cannot evaluate the expression 'expr'. It seems that you forgot to call .optimize().
 
             >>> m.constant_expression = m.expr - 2 * m.X * m.X
             >>> m.constant_expression.evaluate()
