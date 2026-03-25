@@ -26,7 +26,6 @@ def test_equals_param(solver):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
     m.maximize = m.Choose100.sum()
-    m.attr.Silent = True
     m.optimize()
     assert m.maximize.value == 300
     assert m.maximize.evaluate() == 300
@@ -88,18 +87,20 @@ def test_solution_failures(solver):
     m.maximize = m.X
 
     with pytest.raises(
-        ValueError,
-        match=re.escape("Did you forget to call .optimize()?"),
+        RuntimeError,
+        match=re.escape("It seems that you forgot to call .optimize()"),
     ):
         m.X.solution
 
     m.optimize()
 
-    if solver.name != "ipopt":  # ipopt just returns large numbers. TODO standardize?
+    if solver.supports_unbounded:
         with pytest.raises(
-            ValueError,
+            RuntimeError,
             match=re.escape(
-                "Cannot retrieve the variable's solution because the model's status is"
+                "Did the solver find an optimal solution?"
+                if not solver.check_termination_status_when_retrieving_solution
+                else "because the solver did not find an optimal solution"
             ),
         ):
             m.X.solution

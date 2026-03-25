@@ -23,7 +23,7 @@ dependencies = [
     "polars~=1.0",
     "pyarrow",
     "pandas<3",
-    "pyoptinterface==0.5.1", # pinned to avoid broken versions
+    "pyoptinterface==0.6.0", # pinned to avoid broken versions
 ]
 
 [project.optional-dependencies]

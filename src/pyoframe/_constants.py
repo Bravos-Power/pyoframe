@@ -27,6 +27,8 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
+    supports_unbounded: bool = True
+    check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
     If True, Pyoframe sets all the variable and constraint names to 'V'
@@ -63,8 +65,15 @@ SUPPORTED_SOLVERS = [
         supports_integer_variables=False,
         supports_objective_sense=False,
         supports_write=False,
+        # ipopt just returns large numbers instead of "unbounded"
+        supports_unbounded=False,
     ),
-    _Solver("copt", supports_non_convex=False),
+    _Solver(
+        "copt",
+        supports_non_convex=False,
+        # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
+        check_termination_status_when_retrieving_solution=True,
+    ),
 ]
 
 
@@ -99,6 +108,7 @@ class ConfigDefaults:
     print_max_terms: int = 5
     maintain_order: bool = True
     id_dtype = pl.UInt32
+    _initialize_silent = False
 
 
 class _Config:
@@ -353,6 +363,15 @@ class _Config:
     @id_dtype.setter
     def id_dtype(self, value):
         self._settings.id_dtype = value
+
+    @property
+    def _initialize_silent(self) -> bool:
+        """Internal setting used for testing which silences the solver output."""
+        return self._settings._initialize_silent
+
+    @_initialize_silent.setter
+    def _initialize_silent(self, value: bool):
+        self._settings._initialize_silent = value
 
     def reset_defaults(self):
         """Resets all configuration options to their default values.

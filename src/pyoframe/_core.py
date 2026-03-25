@@ -1410,10 +1410,6 @@ class Expression(BaseOperableBlock):
         data = self.data
 
         if self.is_quadratic:
-            # Workaround for bug https://github.com/metab0t/PyOptInterface/issues/59
-            if self._model is None or self._model.solver.name == "highs":
-                data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
-
             return poi.ScalarQuadraticFunction(
                 coefficients=data.get_column(COEF_KEY).to_numpy(),
                 var1s=data.get_column(VAR_KEY).to_numpy(),
@@ -1951,11 +1947,12 @@ class Constraint(BaseBlock):
         if isinstance(dual, pl.DataFrame):
             dual = dual.rename({"Dual": DUAL_KEY})
 
-        # Weirdly, IPOPT returns dual values with the opposite sign, so we correct this bug.
-        # It also does this for maximization problems
-        # but since we flip the objective (because Ipopt doesn't support maximization), the double negatives cancel out.
+        # Since pyoptinterface v0.6.0, the only correction needed is to negate the dual when we artificially converted the problem to a maximization one.
         assert self._model is not None
-        if self._model.solver.name == "ipopt" and self._model.sense == ObjSense.MIN:
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
             if isinstance(dual, pl.DataFrame):
                 dual = dual.with_columns(-pl.col(DUAL_KEY))
             else:
@@ -2044,7 +2041,6 @@ class Constraint(BaseBlock):
             Traceback (most recent call last):
             ...
             ValueError: .relax() must be called before the Constraint is added to the model
-            >>> m.attr.Silent = True
             >>> m.optimize()
             >>> m.maximize.value
             -50.0
@@ -2529,25 +2525,25 @@ class Variable(BaseOperableBlock):
         )
         termination_status = self._model.attr.TerminationStatus
 
-        # protects against segfault in ipopt. see: https://github.com/metab0t/PyOptInterface/issues/91
         invalid_termination_codes = (
             poi.TerminationStatusCode.INFEASIBLE,
             poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
             poi.TerminationStatusCode.DUAL_INFEASIBLE,
         )
-        if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
-            raise ValueError(
-                "Cannot retrieve the variable's solution because the model has not yet been solved. Did you forget to call .optimize()?"
-            )
-        elif termination_status in invalid_termination_codes:
-            raise ValueError(
-                f"Cannot retrieve the variable's solution because the model's status is '{termination_status.name}'."
+        if (
+            self._model.solver.check_termination_status_when_retrieving_solution
+            and termination_status in invalid_termination_codes
+        ):
+            raise RuntimeError(
+                f"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '{termination_status.name}')."
             )
 
         try:
             solution = self.attr.Value
         except RuntimeError as e:
             msg = "Failed to retrieve the variable's solution."
+            if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
+                msg += " It seems that you forgot to call .optimize()"
             if termination_status != poi.TerminationStatusCode.OPTIMAL:
                 msg += f" Did the solver find an optimal solution? (Its termination status is '{termination_status.name}')"
             raise RuntimeError(msg) from e
