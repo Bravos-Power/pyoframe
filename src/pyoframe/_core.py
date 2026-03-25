@@ -2476,14 +2476,25 @@ class Variable(BaseOperableBlock):
         return VAR_KEY
 
     @property
-    @unwrap_single_values
-    def solution(self):
+    def solution(self) -> pl.DataFrame | float | int:
+        """Syntactic shortcut for [`Variable.get_solution()`][pyoframe.Variable.get_solution]."""
+        return self.get_solution()
+
+    def get_solution(self, return_integers: bool = True) -> pl.DataFrame | float | int:
         """Retrieves a variable's optimal value after the model has been solved.
 
-        Return type is a DataFrame if the variable has dimensions, otherwise it is a single value.
-        Binary and integer variables are returned as integers.
+        Returns:
+            A DataFrame if the variable has dimensions and a `float` or `int` otherwise.
 
-        Raises an error if the model has not yet been solved.
+        Raises:
+            RuntimeError:
+                If the model has not been solved or the solver failed to find an optimal solution.
+
+        Parameters:
+            return_integers:
+                When `True`, the solution to binary and integer variables are returned as integers instead of floats.
+                Integers are obtained by rounding floats to the nearest integer.
+                If the rounding causes a change greater than [`Config.integer_tolerance`][pyoframe._Config.integer_tolerance], rounding is canceled, a warning is emitted, and floats are returned.
 
         Examples:
             >>> m = pf.Model()
@@ -2548,31 +2559,42 @@ class Variable(BaseOperableBlock):
                 msg += f" Did the solver find an optimal solution? (Its termination status is '{termination_status.name}')"
             raise RuntimeError(msg) from e
 
-        if isinstance(solution, pl.DataFrame):
+        is_df = isinstance(solution, pl.DataFrame)
+
+        if is_df:
             solution = solution.rename({"Value": SOLUTION_KEY})
 
-        if self.vtype in [VType.BINARY, VType.INTEGER]:
-            if isinstance(solution, pl.DataFrame):
+        if return_integers and self.vtype in [VType.BINARY, VType.INTEGER]:
+            if is_df:
                 solution = solution.with_columns(
-                    pl.col("solution").alias("solution_float"),
-                    pl.col("solution").round().cast(pl.Int64),
+                    _solution_int=pl.col(SOLUTION_KEY).round().cast(pl.Int64),
                 )
-                if Config.integer_tolerance != 0:
-                    df = solution.filter(
-                        (pl.col("solution_float") - pl.col("solution")).abs()
-                        > Config.integer_tolerance
-                    )
-                    assert df.is_empty(), (
-                        f"Variable {self.name} has a non-integer value: {df}\nThis should not happen."
-                    )
-                solution = solution.drop("solution_float")
             else:
-                solution_float = solution
-                solution = int(round(solution))
-                if Config.integer_tolerance != 0:
-                    assert abs(solution - solution_float) < Config.integer_tolerance, (
-                        f"Value of variable {self.name} is not an integer: {solution}. This should not happen."
+                solution_int = int(round(solution))  # type: ignore
+
+            if Config.integer_tolerance == 0:
+                within_tolerance = True
+            else:
+                if is_df:
+                    within_tolerance = solution.filter(
+                        (pl.col(SOLUTION_KEY) - pl.col("_solution_int")).abs()
+                        > Config.integer_tolerance
+                    ).is_empty()
+                else:
+                    within_tolerance = (
+                        abs(solution - solution_int) <= Config.integer_tolerance  # type: ignore
                     )
+
+            if within_tolerance:
+                solution = (
+                    solution.drop(SOLUTION_KEY).rename({"_solution_int": SOLUTION_KEY})
+                    if is_df
+                    else solution_int  # type: ignore
+                )
+            else:
+                warnings.warn(
+                    f"Unable to convert solution for variable '{self.name}' from float to int. Consider loosening pf.Config.integer_tolerance."
+                )
 
         return solution
 

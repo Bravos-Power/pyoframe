@@ -6,7 +6,7 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Expression, Model, Param, Set, Variable, VType
+from pyoframe import Config, Expression, Model, Param, Set, Variable, VType
 from tests.util import get_tol
 
 
@@ -124,3 +124,37 @@ def test_solution_failures(solver):
             RuntimeError, match=re.escape("Failed to retrieve the variable's solution")
         ):
             print(m.X.solution)
+
+
+def test_solution_integer_tolerance(solver):
+    if not solver.supports_integer_variables:
+        pytest.skip(
+            f"Solver {solver.name} does not support integer or binary variables, skipping test."
+        )
+    m = Model(solver)
+
+    m.X = Variable(vtype=VType.INTEGER, lb=0, ub=10)
+
+    m.Y = Variable(Set(dim1=range(10)), vtype=VType.INTEGER, lb=0, ub=10)
+
+    m.maximize = m.X + m.Y.sum()
+    m.optimize()
+
+    assert m.X.solution == 10
+    assert (m.Y.solution["solution"] == 10).all()
+
+    assert m.X.get_solution(return_integers=False) == 10.0
+    assert (m.Y.get_solution(return_integers=False)["solution"] == 10.0).all()
+
+    m.X._attr._getter = lambda attr: 9.8
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Unable to convert solution for variable 'X' from float to int. Consider loosening pf.Config.integer_tolerance"
+        ),
+    ):
+        assert m.X.solution == 9.8
+
+    Config.integer_tolerance = 0
+
+    assert m.X.solution == 10

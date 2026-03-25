@@ -95,7 +95,7 @@ class ConfigDefaults:
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
     disable_extras_checks: bool = False
     enable_is_duplicated_expression_safety_check: bool = False
-    integer_tolerance: float = 1e-8
+    integer_tolerance: float = 1e-4
     float_to_str_precision: int | None = 5
     print_polars_config: pl.Config = field(
         default_factory=lambda: pl.Config(
@@ -213,13 +213,12 @@ class _Config:
 
     @property
     def integer_tolerance(self) -> float:
-        """Tolerance for checking if a floating point value is an integer.
+        """Tolerance used when converting integer solutions from floats to ints.
 
-        !!! info
-            For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
-            To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
-            Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
-            unexpected errors. Setting the tolerance to zero disables the check.
+        See [`Variable.get_solution`][pyoframe.Variable.get_solution] for more information.
+        Default is `1e-4`. When set to `0`, the tolerance check is disabled meaning that rounding is performed regardless of the magnitude of the change.
+
+        When changing Gurobi's [`IntFeasTol` parameter](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#intfeastol) it is often desirable to correspondingly change this setting. Note that `integer_tolerance` may have to be looser than `IntFeasTol` to avoid warnings (see [this thread](https://support.gurobi.com/hc/en-us/community/posts/11662153368849/comments/11665327308305)).
         """
         return self._settings.integer_tolerance
 
