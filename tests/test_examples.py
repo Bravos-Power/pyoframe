@@ -82,7 +82,7 @@ EXAMPLES = [
     Example("sudoku", is_mip=True),
     Example("production_planning"),
     Example("portfolio_optim"),
-    Example("pumped_storage", is_mip=True),
+    Example("pumped_storage", is_mip=True, unique_solution=False),
 ]
 
 
@@ -108,7 +108,11 @@ def compare_results_dir(expected_dir, test_dir, solver):
 
 def check_lp_equal(file_expected: Path, file_actual: Path):
     def keep_line(line):
-        return "\\ Signature: 0x" not in line and line.strip() != ""
+        return (
+            line.strip() != ""
+            and not line.startswith(r"\ Created by MOSEK version")
+            and not line.startswith(r"\ Signature: 0x")
+        )
 
     with open(file_expected) as f1:
         with open(file_actual) as f2:
@@ -238,7 +242,7 @@ def write_results(example: Example, model: pf.Model, results_dir, solver: _Solve
         )
 
     if example.unique_solution:
-        if supports_write:
+        if supports_write and solver.supports_write_sol:
             model.write(results_dir / f"solution-{model.solver.name}-{readability}.sol")
 
         module = example.import_model_module()

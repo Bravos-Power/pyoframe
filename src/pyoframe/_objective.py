@@ -6,6 +6,7 @@ import pyoptinterface as poi
 
 from pyoframe._constants import ObjSense
 from pyoframe._core import Expression, Operable
+from pyoframe._utils import failed_attr_error
 
 
 # TODO don't subclass Expression to avoid a bunch of unnecessary functions being available.
@@ -86,14 +87,21 @@ class Objective(Expression):
         )
 
         if (
-            self._model.attr.TerminationStatus
+            self._model.solver.supports_optimize_not_called
+            and self._model.attr.TerminationStatus
             == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
         ):
-            raise ValueError(
-                "Cannot retrieve the objective value before calling model.optimize()."
+            raise RuntimeError(
+                "Cannot retrieve the objective value. It seems that you forgot to call .optimize()."
             )
 
-        obj_value: float = self._model.attr.ObjectiveValue
+        try:
+            obj_value: float = self._model.attr.ObjectiveValue
+        except RuntimeError as e:
+            raise failed_attr_error(
+                self._model, "Failed to retrieve the objective value."
+            ) from e
+
         if (
             not self._model.solver.supports_objective_sense
             and self._model.sense == ObjSense.MAX

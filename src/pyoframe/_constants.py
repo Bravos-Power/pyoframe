@@ -27,7 +27,10 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
+    supports_write_sol: bool = True
     supports_unbounded: bool = True
+    supports_square_brackets_in_lp_files: bool = True
+    supports_optimize_not_called: bool = True
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -47,6 +50,8 @@ class _Solver:
             assert self.supports_quadratic_constraints, (
                 "Non-convex solvers typically support quadratic constraints. Are you sure this is correct?"
             )
+        if not self.supports_write:
+            self.supports_write_sol = False
 
     def __repr__(self):
         return self.name
@@ -73,6 +78,20 @@ SUPPORTED_SOLVERS = [
         supports_non_convex=False,
         # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
         check_termination_status_when_retrieving_solution=True,
+    ),
+    _Solver(
+        "mosek",
+        # mosek returns a value even when infeasible
+        check_termination_status_when_retrieving_solution=True,
+        # by default, not providing names actually sets the names to an empty string so there appears to be no downside to instead provide "C" and "V" as names.
+        # conveniently, this prevents malformed .lp files by forcing the user to set solver_uses_variable_names=True if they want to use .write() with Mosek.
+        accelerate_with_repeat_names=True,
+        supports_square_brackets_in_lp_files=False,
+        # mosek raises an error when querying the status prior to solving. https://github.com/metab0t/PyOptInterface/issues/94
+        supports_optimize_not_called=False,
+        supports_non_convex=False,
+        # See https://github.com/metab0t/PyOptInterface/issues/95
+        supports_write_sol=False,
     ),
 ]
 
@@ -468,7 +487,7 @@ VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt", "mosek"]
 assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
     s.name for s in SUPPORTED_SOLVERS
 }

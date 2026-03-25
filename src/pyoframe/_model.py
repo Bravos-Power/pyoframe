@@ -275,6 +275,17 @@ class Model:
                     env_config.set(key, value)
                 env = copt.Env(env_config)
             model = copt.Model(env)
+        elif solver.name == "mosek":
+            from pyoptinterface import mosek
+
+            try:
+                model = mosek.Model()
+            except RuntimeError as e:  # pragma: no cover
+                if "MOSEK library is not loaded" in str(e):
+                    raise RuntimeError(
+                        "Could not find the Mosek solver. Are you sure you've properly installed it and added it to your PATH?"
+                    ) from e
+                raise e
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."
@@ -468,14 +479,16 @@ class Model:
         Consult your solver documentation to learn more.
 
         When creating your model, set [`solver_uses_variable_names`][pyoframe.Model]
-        to make the outputed file human-readable.
+        to make the outputted file human-readable.
 
         ```python
         m = pf.Model(solver_uses_variable_names=True)
         ```
 
-        For Gurobi, `solver_uses_variable_names=True` is mandatory when using
+        For Gurobi and Mosek, `solver_uses_variable_names=True` is mandatory when using
         .write(). This may become mandatory for other solvers too without notice.
+
+        Mosek users only: writing a solution file (e.g., `.sol`) does not work as expected. See [this issue](https://github.com/metab0t/PyOptInterface/issues/95).
 
         Parameters:
             file_path:

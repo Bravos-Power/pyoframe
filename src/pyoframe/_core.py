@@ -40,6 +40,7 @@ from pyoframe._utils import (
     FuncArgs,
     cast_coef_to_string,
     concat_dimensions,
+    failed_attr_error,
     get_obj_repr,
     pairwise,
     parse_inputs_as_iterable,
@@ -1336,7 +1337,7 @@ class Expression(BaseOperableBlock):
             >>> m.expr.evaluate()
             Traceback (most recent call last):
             ...
-            ValueError: Cannot evaluate the expression 'expr' before calling model.optimize().
+            RuntimeError: Cannot evaluate the expression 'expr'. It seems that you forgot to call .optimize().
 
             >>> m.constant_expression = m.expr - 2 * m.X * m.X
             >>> m.constant_expression.evaluate()
@@ -1379,23 +1380,21 @@ class Expression(BaseOperableBlock):
 
         if self.degree() == 0:
             df = df.drop(self._variable_columns)
-        elif (
-            self._model.attr.TerminationStatus
-            == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
-        ):
-            raise ValueError(
-                f"Cannot evaluate the expression '{self.name}' before calling model.optimize()."
-            )
         else:
-            for var_col in self._variable_columns:
-                values = [
-                    sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
-                    for v_id in df.get_column(var_col).to_list()
-                ]
+            try:
+                for var_col in self._variable_columns:
+                    values = [
+                        sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
+                        for v_id in df.get_column(var_col).to_list()
+                    ]
 
-                df = df.drop(var_col).with_columns(
-                    pl.col(SOLUTION_KEY) * pl.Series(values, dtype=pl.Float64)
-                )
+                    df = df.drop(var_col).with_columns(
+                        pl.col(SOLUTION_KEY) * pl.Series(values, dtype=pl.Float64)
+                    )
+            except RuntimeError as e:
+                raise failed_attr_error(
+                    self._model, f"Cannot evaluate the expression '{self.name}'."
+                ) from e
 
         dims = self.dimensions
         if dims is not None:
@@ -1783,6 +1782,7 @@ class Constraint(BaseBlock):
         sense = self.sense._to_poi()
         dims = self.dimensions
         df = self.lhs.data
+        solver = self._model.solver
         add_constraint = (
             self._model.poi._add_quadratic_constraint
             if is_quadratic
@@ -1792,7 +1792,7 @@ class Constraint(BaseBlock):
         # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
         # Specifying "" is the same as not specifying anything, see pyoptinterface:
         # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-        name = "C" if self._model.solver.accelerate_with_repeat_names else ""
+        name = "C" if solver.accelerate_with_repeat_names else ""
 
         if dims is None:
             if self._model.solver_uses_variable_names:
@@ -1865,9 +1865,11 @@ class Constraint(BaseBlock):
             # Note 3: we could have merged the if-else using an expansion operator (*) but that is slow.
             # Note 4: using kwargs is slow and including the constant term for linear expressions is faster.
             if use_var_names:
-                names = concat_dimensions(df_unique, prefix=self.name)[
-                    "concated_dim"
-                ].to_list()
+                names = concat_dimensions(
+                    df_unique,
+                    prefix=self.name,
+                    square_brackets=solver.supports_square_brackets_in_lp_files,
+                )["concated_dim"].to_list()
                 if is_quadratic:
                     ids = [
                         add_constraint(
@@ -2426,9 +2428,11 @@ class Variable(BaseOperableBlock):
 
         dynamic_names = dims is not None and self._model.solver_uses_variable_names
         if dynamic_names:
-            names = concat_dimensions(self.data, prefix=self.name)[
-                "concated_dim"
-            ].to_list()
+            names = concat_dimensions(
+                self.data,
+                prefix=self.name,
+                square_brackets=solver.supports_square_brackets_in_lp_files,
+            )["concated_dim"].to_list()
             if solver.supports_integer_variables:
                 ids = [poi_add_var(domain, lb, ub, name).index for name in names]
             else:
@@ -2534,30 +2538,30 @@ class Variable(BaseOperableBlock):
         assert self._model is not None, (
             "Cannot retrieve the variable's solution because the variable has not been added to a model."
         )
-        termination_status = self._model.attr.TerminationStatus
 
-        invalid_termination_codes = (
-            poi.TerminationStatusCode.INFEASIBLE,
-            poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
-            poi.TerminationStatusCode.DUAL_INFEASIBLE,
-        )
-        if (
-            self._model.solver.check_termination_status_when_retrieving_solution
-            and termination_status in invalid_termination_codes
-        ):
-            raise RuntimeError(
-                f"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '{termination_status.name}')."
+        if self._model.solver.check_termination_status_when_retrieving_solution:
+            try:
+                termination_status = self._model.attr.TerminationStatus
+            except RuntimeError:
+                termination_status = None
+
+            invalid_termination_codes = (
+                poi.TerminationStatusCode.INFEASIBLE,
+                poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
+                poi.TerminationStatusCode.DUAL_INFEASIBLE,
             )
+
+            if termination_status in invalid_termination_codes:
+                raise RuntimeError(
+                    f"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '{termination_status.name}')."
+                )
 
         try:
             solution = self.attr.Value
         except RuntimeError as e:
-            msg = "Failed to retrieve the variable's solution."
-            if termination_status == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED:
-                msg += " It seems that you forgot to call .optimize()"
-            if termination_status != poi.TerminationStatusCode.OPTIMAL:
-                msg += f" Did the solver find an optimal solution? (Its termination status is '{termination_status.name}')"
-            raise RuntimeError(msg) from e
+            raise failed_attr_error(
+                self._model, "Failed to retrieve the variable's solution."
+            ) from e
 
         is_df = isinstance(solution, pl.DataFrame)
 

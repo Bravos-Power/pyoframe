@@ -88,7 +88,11 @@ def test_solution_failures(solver):
 
     with pytest.raises(
         RuntimeError,
-        match=re.escape("It seems that you forgot to call .optimize()"),
+        match=re.escape(
+            "It seems that you forgot to call .optimize()"
+            if solver.name != "mosek"
+            else "Did the solver find an optimal solution?"
+        ),
     ):
         m.X.solution
 
