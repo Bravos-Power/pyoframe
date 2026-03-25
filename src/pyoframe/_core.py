@@ -1410,10 +1410,6 @@ class Expression(BaseOperableBlock):
         data = self.data
 
         if self.is_quadratic:
-            # Workaround for bug https://github.com/metab0t/PyOptInterface/issues/59
-            if self._model is None or self._model.solver.name == "highs":
-                data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
-
             return poi.ScalarQuadraticFunction(
                 coefficients=data.get_column(COEF_KEY).to_numpy(),
                 var1s=data.get_column(VAR_KEY).to_numpy(),
