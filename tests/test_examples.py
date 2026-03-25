@@ -108,7 +108,7 @@ def compare_results_dir(expected_dir, test_dir, solver):
 
 def check_lp_equal(file_expected: Path, file_actual: Path):
     def keep_line(line):
-        return "\\ Signature: 0x" not in line and line.strip() != ""
+        return "\\ Signature: 0x" not in line and line.strip() != "" and "Created by MOSEK version" not in line
 
     with open(file_expected) as f1:
         with open(file_actual) as f2:
