@@ -147,7 +147,7 @@ def test_write_lp(use_var_names, solver: _Solver):
 
 def test_write_sol(use_var_names, solver):
     if not (
-        solver.supports_write_sol
+        solver.supports_write
         and (use_var_names or not solver.accelerate_with_repeat_names)
     ):
         return pytest.skip(f"{solver.name} does not support writing solution files.")

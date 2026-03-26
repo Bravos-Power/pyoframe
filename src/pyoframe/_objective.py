@@ -87,8 +87,7 @@ class Objective(Expression):
         )
 
         if (
-            self._model.solver.supports_optimize_not_called
-            and self._model.attr.TerminationStatus
+            self._model.attr.TerminationStatus
             == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
         ):
             raise RuntimeError(

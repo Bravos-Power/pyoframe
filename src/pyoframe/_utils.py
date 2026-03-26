@@ -280,7 +280,7 @@ def unwrap_single_values(func) -> pl.DataFrame | Any:
 
 
 def failed_attr_error(model, prefix) -> RuntimeError:
-    try:
+    try:  # not necessary since https://github.com/metab0t/PyOptInterface/issues/94 was fixed but let's be safe!
         termination_status = model.attr.TerminationStatus
     except RuntimeError:
         termination_status = None
