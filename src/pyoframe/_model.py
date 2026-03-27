@@ -88,6 +88,7 @@ class Model:
         "attr",
         "sense",
         "_solver_uses_variable_names",
+        "_last_update",
         "ONE",
         "solver_name",
         "minimize",
@@ -104,6 +105,7 @@ class Model:
         name: str | None = None,
         solver_uses_variable_names: bool = False,
         print_uses_variable_names: bool = True,
+        debug: bool = False,
         sense: ObjSense | ObjSenseValue | None = None,
         verbose: bool = False,
     ):
@@ -119,6 +121,9 @@ class Model:
         self._params = Container(self._set_param, self._get_param)
         self._attr = Container(self._set_attr, self._get_attr)
         self._solver_uses_variable_names = solver_uses_variable_names
+        self._last_update = None
+        if debug:
+            self._last_update = time.time()
 
         self._logger = None
         self._last_log = None
