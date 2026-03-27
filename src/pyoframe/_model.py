@@ -488,8 +488,6 @@ class Model:
         For Gurobi and Mosek, `solver_uses_variable_names=True` is mandatory when using
         .write(). This may become mandatory for other solvers too without notice.
 
-        Mosek users only: writing a solution file (e.g., `.sol`) does not work as expected. See [this issue](https://github.com/metab0t/PyOptInterface/issues/95).
-
         Parameters:
             file_path:
                 The path to the file to write to.

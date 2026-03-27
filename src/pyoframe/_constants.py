@@ -27,10 +27,8 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
-    supports_write_sol: bool = True
     supports_unbounded: bool = True
     supports_square_brackets_in_lp_files: bool = True
-    supports_optimize_not_called: bool = True
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -50,8 +48,6 @@ class _Solver:
             assert self.supports_quadratic_constraints, (
                 "Non-convex solvers typically support quadratic constraints. Are you sure this is correct?"
             )
-        if not self.supports_write:
-            self.supports_write_sol = False
 
     def __repr__(self):
         return self.name
@@ -87,11 +83,7 @@ SUPPORTED_SOLVERS = [
         # conveniently, this prevents malformed .lp files by forcing the user to set solver_uses_variable_names=True if they want to use .write() with Mosek.
         accelerate_with_repeat_names=True,
         supports_square_brackets_in_lp_files=False,
-        # mosek raises an error when querying the status prior to solving. https://github.com/metab0t/PyOptInterface/issues/94
-        supports_optimize_not_called=False,
         supports_non_convex=False,
-        # See https://github.com/metab0t/PyOptInterface/issues/95
-        supports_write_sol=False,
     ),
 ]
 
