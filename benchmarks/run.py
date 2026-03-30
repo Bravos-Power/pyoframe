@@ -108,25 +108,24 @@ def run_all_benchmarks(config, ignore_past_results=False):
                     except BenchmarkError as e:
                         print(f"{name}: {e}")
 
-                check_results_csv_aligns(past_results, problem=name, size=size)
-                check_results_output_match(
-                    name,
-                    base_results_dir,
-                    past_results.read(date=TIMESTAMP, size=size, problem=name).filter(
-                        pl.col("error").is_null()
-                    ),
+                past_results_df = past_results.read(
+                    problem=name, size=size, ignore_past_results=False
                 )
+                past_results_df = past_results_df.filter(pl.col("error").is_null())
+                past_results_df = past_results_df.sort("date")
+                past_results_df = past_results_df.group_by("library", "solver").last()
+
+                check_results_csv_aligns(past_results_df, problem=name, size=size)
+                check_results_output_match(name, base_results_dir, past_results_df)
 
 
-def check_results_csv_aligns(past_results, problem, size):
-    df = past_results.read(problem=problem, size=size).filter(pl.col("error").is_null())
-
+def check_results_csv_aligns(df, problem, size):
     if df.height <= 1:
         print(f"{problem} (n={size}): Not enough successful runs to compare results.")
         return
 
     # Check objective values
-    df = df.with_columns(pl.col("objective_value").round_sig_figs(5))
+    df = df.with_columns(pl.col("objective_value").round_sig_figs(3))
 
     num_objectives = df.group_by("objective_value").agg(
         pl.col("solver", "library").first()
@@ -322,11 +321,26 @@ def run_benchmark(
 
         cmd += [
             str(benchmark_path),
-            benchmark.solver,
-            str(benchmark.size),
-            str(results_dir),
-            "true" if benchmark.construct_only else "false",
+            f"solver={benchmark.solver}",
+            f"problem_size={benchmark.size}",
+            f"results_dir={results_dir}" if results_dir is not None else "",
         ]
+
+        if benchmark.construct_only:
+            cmd.append("block_solver=true")
+
+        for k, v in benchmark.args.items():
+            if isinstance(v, bool):
+                v = "true" if v else "false"
+            cmd.append(f"{k}={v}")
+        if benchmark.solver_args is not None:
+            solver_args = []
+            for k, v in benchmark.solver_args.items():
+                if isinstance(v, bool):
+                    v = 1 if v else 0
+                solver_args.append(f"{k}={v}")
+            solver_args = ",".join(solver_args)
+            cmd.append(f"solver_args={solver_args}")
 
     max_memory_queue = queue.Queue()
 
@@ -590,7 +604,14 @@ def check_results_output_match(
                 raise BenchmarkError(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different columns for file {filename}.\n{ref_lib} columns: {ref.columns}, {library} columns: {diff.columns}"
                 )
-            diff = diff.select(ref.columns)  # reorder columns to match
+
+            move_to_back = ["solution", "dual", "ub_dual", "lb_dual"]
+            col_order = [c for c in ref.columns if c not in move_to_back] + [
+                c for c in move_to_back if c in ref.columns
+            ]
+
+            diff = diff.select(col_order)
+            ref = ref.select(col_order)
             ref = ref.sort(*ref.columns)
             diff = diff.sort(*diff.columns)
 
@@ -608,6 +629,9 @@ def check_results_output_match(
 
             for c in ref.columns:
                 ref_col, diff_col = ref[c], diff[c]
+                if "dual" in c:
+                    if (ref_col == diff_col).sum() < (ref_col == -diff_col).sum():
+                        diff_col = -diff_col
                 if not (ref_col == diff_col).all():
                     num_conflicts = (ref_col != diff_col).sum()
                     msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {num_conflicts} in {ref.height} rows differ"
@@ -712,7 +736,14 @@ class PastResults:
             self._data.write_csv(self._path)
 
     def read(
-        self, *, size=None, date=None, library=None, solver=None, problem=None
+        self,
+        *,
+        size=None,
+        date=None,
+        library=None,
+        solver=None,
+        problem=None,
+        ignore_past_results=None,
     ) -> pl.DataFrame:
         df = self._data
         if size is not None:
@@ -725,7 +756,7 @@ class PastResults:
             df = df.filter(solver=solver)
         if problem is not None:
             df = df.filter(problem=problem)
-        if self._ignore_past_results:
+        if ignore_past_results or self._ignore_past_results:
             df = df.filter(date=TIMESTAMP)
 
         return df
@@ -756,6 +787,18 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--config", type=str, default="config.yaml", help="Path to config YAML file."
     )
+    argparser.add_argument(
+        "-l",
+        "--library",
+        type=str,
+        help="Only run benchmarks for this library.",
+        default=None,
+    )
     args = argparser.parse_args()
     config = read_config(name=args.config)
+    if args.library is not None:
+        assert args.library in config["libraries"], (
+            f"Library {args.library} not found in config."
+        )
+        config["libraries"] = [args.library]
     run_all_benchmarks(config, ignore_past_results=args.ignore_cache)

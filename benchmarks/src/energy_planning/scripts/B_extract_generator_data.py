@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.20.4"
 app = marimo.App()
 
 
@@ -340,6 +340,8 @@ def _(df_clean5, pl):
         pl.col("PlantAndGenID").unique(),
         pl.col("Lat", "Lon").mean(),
     )
+    # Since Julia doesn't supported nested schemas
+    df_clean6 = df_clean6.with_columns(pl.col("PlantAndGenID").list.join(";"))
 
     (
         f"Reduced number of dispatchable generators by {len(df_clean5) - len(df_clean6)} by fusing identical plants.",

@@ -72,6 +72,10 @@ class Bench(Benchmark):
 
         m.LOADS = pyo.Set(initialize=m.load.keys(), dimen=2)
 
+        m.gens_at_bus = {b: [g for g in m.G if m.gen_bus[g] == b] for b in m.B}
+        m.lines_to_bus = {b: [l for l in m.L if m.line_to[l] == b] for b in m.B}
+        m.lines_from_bus = {b: [l for l in m.L if m.line_from[l] == b] for b in m.B}
+
         # -------------------------
         # VARIABLES
         # -------------------------
@@ -127,9 +131,9 @@ class Bench(Benchmark):
             m.T,
             rule=lambda m, b, t: (
                 m.load.get((b, t), 0)
-                == sum(m.Dispatch[g, t] for g in m.G if m.gen_bus[g] == b)
-                + sum(m.Power_Flow[l, t] for l in m.L if m.line_to[l] == b)
-                - sum(m.Power_Flow[l, t] for l in m.L if m.line_from[l] == b)
+                == sum(m.Dispatch[g, t] for g in m.gens_at_bus[b])
+                + sum(m.Power_Flow[l, t] for l in m.lines_to_bus[b])
+                - sum(m.Power_Flow[l, t] for l in m.lines_from_bus[b])
                 + (m.Load_Unserved[b, t] if (b, t) in m.LOADS else 0)
             ),
         )

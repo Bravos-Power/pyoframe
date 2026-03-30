@@ -2,12 +2,13 @@ include("../benchmark_utils/jump.jl")
 
 using JuMP
 using ..Benchmark
-using Parquet
+using Parquet2
 using DataFrames
+using Parquet2: Dataset
 
 function main(model::JuMP.Model, size::Int)
     # Load input data
-    data = DataFrame(read_parquet("input_$(size).parquet"))
+    data = DataFrame(Dataset("input_$(size).parquet"))
     
     @variable(model, 0 <= x[data.id] <= 1)
     data.x = Array(x)
@@ -20,7 +21,7 @@ function main(model::JuMP.Model, size::Int)
     solution = DataFrames.DataFrame(table)
 
     # Write via Polars again
-    write_parquet("output_$(size).parquet", solution)
+    Parquet2.writefile("output_$(size).parquet", solution)
 end
 
 Benchmark.run(@__DIR__, main)

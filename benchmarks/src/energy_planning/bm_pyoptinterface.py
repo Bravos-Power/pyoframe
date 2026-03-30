@@ -79,6 +79,29 @@ class Bench(Benchmark):
 
         container.LOADS = container.load.keys()
 
+        #
+        # COMPUTED PARAMS
+        #
+        container.gens_at_bus = poi.tupledict(
+            {
+                b: [g for g in container.G if container.gen_bus[g] == b]
+                for b in container.B
+            }
+        )
+        container.lines_to_bus = poi.tupledict(
+            {
+                b: [l for l in container.L if container.line_to[l] == b]
+                for b in container.B
+            }
+        )
+
+        container.lines_from_bus = poi.tupledict(
+            {
+                b: [l for l in container.L if container.line_from[l] == b]
+                for b in container.B
+            }
+        )
+
         # -------------------------
         # VARIABLES
         # -------------------------
@@ -158,19 +181,13 @@ class Bench(Benchmark):
             rule=lambda b, t: model.add_linear_constraint(
                 container.load.get((b, t), 0)
                 == poi.quicksum(
-                    container.Dispatch[g, t]
-                    for g in container.G
-                    if container.gen_bus[g] == b
+                    container.Dispatch[g, t] for g in container.gens_at_bus[b]
                 )
                 + poi.quicksum(
-                    container.Power_Flow[l, t]
-                    for l in container.L
-                    if container.line_to[l] == b
+                    container.Power_Flow[l, t] for l in container.lines_to_bus[b]
                 )
                 - poi.quicksum(
-                    container.Power_Flow[l, t]
-                    for l in container.L
-                    if container.line_from[l] == b
+                    container.Power_Flow[l, t] for l in container.lines_from_bus[b]
                 )
                 + (container.Load_Unserved[b, t] if (b, t) in container.LOADS else 0)
             ),
