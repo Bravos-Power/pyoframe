@@ -44,6 +44,8 @@ def plot_combined(results: pl.DataFrame, output, config):
     panels = [[], []]
     results = results.sort("problem")
     for (problem,), problem_df in results.group_by("problem", maintain_order=True):
+        if problem not in config["problems"]:
+            continue
         problem_label = config["problems"][problem].get("label", problem)
         chart = alt.Chart(problem_df).encode(
             color=alt.condition(

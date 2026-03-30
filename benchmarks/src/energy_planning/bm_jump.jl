@@ -212,6 +212,9 @@ function main(
 	write_container_parquet(value.(Dispatch); filename = "dispatch.parquet", header = [:gen_id, :datetime, :solution])
 	write_container_parquet(value.(Load_Unserved); filename = "load_unserved.parquet", header = [:bus, :datetime, :solution])
 	write_container_parquet(dual.(Con_Power_Balance); filename = "power_balance_duals.parquet", header = [:bus, :datetime, :dual])
+	if capacity_expansion
+		write_container_parquet(value.(Build_Out); filename = "build_out.parquet", header = [:gen_id, :solution])
+	end
 
     
     pf_df = DataFrame(Containers.rowtable(
@@ -248,4 +251,4 @@ end
 Benchmark.run(@__DIR__, main)
 
 # To test run from the benchmarks directory:
-# julia --project=. src/simple_problem/bm_jump.jl gurobi 1000 src/simple_problem/model_results
+# julia --project=. src/energy_planning/bm_jump.jl solver=gurobi problem_size=1000 results_dir=src/energy_planning/results_jump

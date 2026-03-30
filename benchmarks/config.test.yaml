@@ -28,9 +28,6 @@ problems:
     code_dir: energy_planning
     inputs: "*"
     size: [1]
-    solver_args:
-      Method: 2
-      Crossover: false
 
 solvers:
   - gurobi

@@ -405,6 +405,7 @@ class MonitorResult:
     num_constraints: int | None = None
     num_nonzeros: int | None = None
     solve_time: float | None = None
+    barrier_solve_time: float | None = None
     max_memory_uss_mb: float | None = None
     objective_value: float | None = None
 
@@ -451,20 +452,22 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
                     )
                 elif line.startswith("Presolved: "):
                     marker = "3b_GUROBI_PRESOLVED"
-                elif line.startswith("Solved in ") or line.startswith(
-                    "Barrier solved model in "
-                ):
-                    assert result.solve_time is None, (
-                        "Multiple solve times found"
-                    )  # maybe barrier was solved and then solved overall?
+                elif line.startswith("Solved in "):
+                    assert result.solve_time is None, "Multiple solve times found"
                     result.solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
                     marker = "4_GUROBI_END"
-                elif line.startswith("Optimal objective "):
-                    assert result.objective_value is None, (
-                        "Multiple objective values found"
+                elif line.startswith("Barrier solved model in "):
+                    assert result.barrier_solve_time is None, (
+                        "Multiple barrier solve times found"
                     )
+                    result.barrier_solve_time = float(
+                        re.search(r"([\d.]+) seconds", line).group(1)
+                    )
+                    marker = "4_GUROBI_END"
+                elif line.startswith("Optimal objective "):
+                    # Allow multiple, always take last
                     result.objective_value = float(line.strip().rpartition(" ")[2])
                 elif line.startswith("Best objective "):
                     assert result.objective_value is None, (
@@ -527,6 +530,9 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
         )
         time.sleep(delay)
 
+    if result.solve_time is None and result.barrier_solve_time is not None:
+        result.solve_time = result.barrier_solve_time
+
     df = pl.DataFrame(
         memory_data,
         schema={
@@ -563,6 +569,9 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
 def check_results_output_match(
     problem: str, base_results_dir: Path | str, results: pl.DataFrame
 ):
+    if not config.get("save_outputs", False):
+        results = results.filter(date=TIMESTAMP)
+
     reference = None
 
     libs_compared = set()
@@ -587,7 +596,7 @@ def check_results_output_match(
                 )
             if len(missing_in_ref) > 0:
                 raise BenchmarkError(
-                    f"{problem}: Benchmark ({ref_lib}, {ref_solver}) has extra files: {', '.join(missing_in_ref)} compared to {(library, solver)}."
+                    f"{problem}: Benchmark ({ref_lib}, {ref_solver}) is missing files: {', '.join(missing_in_ref)} compared to {(library, solver)}."
                 )
 
         if len(files_in_ref) == 0:

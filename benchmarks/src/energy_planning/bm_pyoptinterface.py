@@ -79,9 +79,9 @@ class Bench(Benchmark):
 
         container.LOADS = container.load.keys()
 
-        #
+        # -------------------------
         # COMPUTED PARAMS
-        #
+        # -------------------------
         container.gens_at_bus = poi.tupledict(
             {
                 b: [g for g in container.G if container.gen_bus[g] == b]
@@ -239,29 +239,32 @@ class Bench(Benchmark):
 
     def add_security_constraints(self, model, container):
         bodf = pl.read_parquet("branch_outage_dist_facts.parquet").select(
-            ["outage_line_id", "affected_line_id", "factor"]
+            "outage_line_id", "affected_line_id", "factor"
         )
         bodf_dict = poi.tupledict(
             {(row[0], row[1]): row[2] for row in bodf.iter_rows()}
         )
 
-        container.Con_Contingency_Pos = poi.make_tupledict(
+        conting_flow = poi.make_tupledict(
             bodf_dict.keys(),
             container.T,
-            rule=lambda out, aff, t: model.add_linear_constraint(
+            rule=lambda out, aff, t: (
                 container.Power_Flow[aff, t]
                 + bodf_dict[out, aff] * container.Power_Flow[out, t]
-                <= container.line_rating[aff]
+            ),
+        )
+
+        container.Con_Contingency_Pos = poi.make_tupledict(
+            conting_flow.keys(),
+            rule=lambda out, aff, t: model.add_linear_constraint(
+                conting_flow[out, aff, t] <= container.line_rating[aff]
             ),
         )
 
         container.Con_Contingency_Neg = poi.make_tupledict(
-            bodf_dict.keys(),
-            container.T,
+            conting_flow.keys(),
             rule=lambda out, aff, t: model.add_linear_constraint(
-                container.Power_Flow[aff, t]
-                + bodf_dict[out, aff] * container.Power_Flow[out, t]
-                >= -container.line_rating[aff]
+                -container.line_rating[aff] <= conting_flow[out, aff, t]
             ),
         )
 
@@ -371,11 +374,12 @@ if __name__ == "__main__":
 
     base_dir = Path(__file__).parent
     benchmark = Bench(
-        size=2,
+        size=1,
         input_dir=base_dir / "model_data",
         results_dir=base_dir / "results_pyoptinterface",
-        security_constrained=False,
-        capacity_expansion=False,
-        yearly_limits=False,
+        security_constrained=True,
+        capacity_expansion=True,
+        yearly_limits=True,
+        variable_capacity_factors=True,
     )
     benchmark.run()

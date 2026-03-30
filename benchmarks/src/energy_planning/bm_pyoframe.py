@@ -151,11 +151,9 @@ class Bench(Benchmark):
 
 
 if __name__ == "__main__":
-    from pyoptinterface import TerminationStatusCode
-
     base_dir = Path(__file__).parent
     benchmark = Bench(
-        size=2,
+        size=1,
         input_dir=base_dir / "model_data",
         results_dir=base_dir / "results_pyoframe",
         verbose=True,
@@ -165,12 +163,3 @@ if __name__ == "__main__":
         variable_capacity_factors=True,
     )
     m = benchmark.run()
-    if m.attr.TerminationStatus in {
-        TerminationStatusCode.INFEASIBLE,
-        TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
-    }:
-        import warnings
-
-        warnings.warn("Model is infeasible, computing IIS...")
-        m.compute_IIS()
-        m.write("inf.ilp")
