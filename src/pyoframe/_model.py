@@ -584,7 +584,7 @@ class Model:
         """Returns a DataFrame with information about the memory usage of each variable in the model.
 
         !!! warning "Experimental"
-            This method is experimental and may change or be removed in future versions. We're interested in your [feedback]([feedback](https://github.com/Bravos-Power/pyoframe/issues).
+            This method is experimental and may change or be removed in future versions. We're interested in your [feedback](https://github.com/Bravos-Power/pyoframe/issues).
 
         Parameters:
             memory_unit:
