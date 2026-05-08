@@ -293,3 +293,16 @@ def test_integers_throw_error(solver: _Solver):
         ValueError, match="does not support integer or binary variables"
     ):
         m.A = pf.Variable(vtype=pf.VType.BINARY)
+
+
+def test_mixed_objective(solver):
+    # test for bug https://github.com/Bravos-Power/pyoframe/issues/236
+    m = pf.Model(solver)
+
+    m.X = pf.Variable(lb=1, ub=10)
+    m.minimize = (m.X * m.X) + m.X
+    m.optimize()
+
+    assert m.X.solution == approx(1.0, **get_tol(solver)), (
+        f"Failed with status code: {m.attr.TerminationStatus}"
+    )
