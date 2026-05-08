@@ -1409,11 +1409,24 @@ class Expression(BaseOperableBlock):
         data = self.data
 
         if self.is_quadratic:
-            return poi.ScalarQuadraticFunction(
-                coefficients=data.get_column(COEF_KEY).to_numpy(),
-                var1s=data.get_column(VAR_KEY).to_numpy(),
-                var2s=data.get_column(QUAD_VAR_KEY).to_numpy(),
-            )
+            quadratic_data = data.filter(pl.col(QUAD_VAR_KEY) != CONST_TERM)
+            affine_data = data.filter(pl.col(QUAD_VAR_KEY) == CONST_TERM)
+            if affine_data.is_empty():
+                return poi.ScalarQuadraticFunction(
+                    coefficients=quadratic_data.get_column(COEF_KEY).to_numpy(),
+                    var1s=quadratic_data.get_column(VAR_KEY).to_numpy(),
+                    var2s=quadratic_data.get_column(QUAD_VAR_KEY).to_numpy(),
+                )
+            else:
+                return poi.ScalarQuadraticFunction(
+                    coefficients=quadratic_data.get_column(COEF_KEY).to_numpy(),
+                    var1s=quadratic_data.get_column(VAR_KEY).to_numpy(),
+                    var2s=quadratic_data.get_column(QUAD_VAR_KEY).to_numpy(),
+                    affine_part=poi.ScalarAffineFunction(
+                        coefficients=affine_data.get_column(COEF_KEY).to_numpy(),
+                        variables=affine_data.get_column(VAR_KEY).to_numpy(),
+                    ),
+                )
         else:
             return poi.ScalarAffineFunction(
                 coefficients=data.get_column(COEF_KEY).to_numpy(),
@@ -1774,6 +1787,8 @@ class Constraint(BaseBlock):
         """This function is the main bottleneck for pyoframe.
 
         I've spent a lot of time optimizing it.
+
+        TODO: consider that the zero variables might need to be removed as it might cause issues similar to https://github.com/Bravos-Power/pyoframe/pull/237
         """
         assert self._model is not None
 
