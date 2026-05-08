@@ -1788,7 +1788,7 @@ class Constraint(BaseBlock):
 
         I've spent a lot of time optimizing it.
 
-        TODO: consider removing the constant terms ahead of time to see if it improves speed.
+        TODO: consider that the zero variables might need to be removed as it might cause issues similar to https://github.com/Bravos-Power/pyoframe/pull/237
         """
         assert self._model is not None
 
