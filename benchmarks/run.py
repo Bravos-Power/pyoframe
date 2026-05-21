@@ -116,7 +116,9 @@ def run_all_benchmarks(config, ignore_past_results=False):
                 past_results_df = past_results_df.group_by("library", "solver").last()
 
                 check_results_csv_aligns(past_results_df, problem=name, size=size)
-                check_results_output_match(name, base_results_dir, past_results_df)
+                check_results_output_match(
+                    name, base_results_dir, past_results_df, config
+                )
 
 
 def check_results_csv_aligns(df, problem, size):
@@ -567,7 +569,7 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
 
 
 def check_results_output_match(
-    problem: str, base_results_dir: Path | str, results: pl.DataFrame
+    problem: str, base_results_dir: Path | str, results: pl.DataFrame, config
 ):
     if not config.get("save_outputs", False):
         results = results.filter(date=TIMESTAMP)

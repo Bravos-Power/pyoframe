@@ -10,7 +10,6 @@ include("../benchmark_utils/jump.jl")
 
 using JuMP
 using ..Benchmark
-using Parquet
 using DataFrames
 
 function main(model::JuMP.Model, size::Int)
