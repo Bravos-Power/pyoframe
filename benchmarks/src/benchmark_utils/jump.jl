@@ -31,6 +31,7 @@ if solver == "gurobi"
     # direct_model is faster and more memory efficient (according to tests on July 13, 2025).
     # We use it to make a fair comparison with the other models.
     base_model = direct_model(Gurobi.Optimizer())
+    # base_model = Model(Gurobi.Optimizer)
 elseif solver == "highs"
     import HiGHS
     base_model = Model(HiGHS.Optimizer)

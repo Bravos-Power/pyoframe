@@ -126,7 +126,7 @@ function main(
 			sum(Dispatch[g, t] for g in gens_at_bus[b]) +
 			sum(Power_Flow[l, t] for l in lines_to_bus[b]) -
 			sum(Power_Flow[l, t] for l in lines_from_bus[b]) +
-			((b, t) in Load_Unserved ? Load_Unserved[b, t] : 0.0)
+			(load[b, t] > 0 ? Load_Unserved[b, t] : 0.0)
 		)
 	)
 
@@ -139,7 +139,7 @@ function main(
 		(
 			sum(
 				COST_UNSERVED_LOAD * Load_Unserved[b, t]
-				for b in B, t in T if (b, t) in Load_Unserved
+				for b in B, t in T if load[b, t] > 0
 			) +
 			sum(gen_cost[g] * Dispatch[g, t] for g in G, t in T) +
 			(capacity_expansion ?
@@ -164,12 +164,12 @@ function main(
 		AFF = bodf.affected_line_id
 		FAC = bodf.factor
 
-		@constraint(model, [i in eachindex(OUT), t in T],
+		@constraint(model, Power_Flow_ub[i in eachindex(OUT), t in T],
 			Power_Flow[AFF[i], t] + FAC[i]*Power_Flow[OUT[i], t]
 			<=
 			line_rating[AFF[i]])
 
-		@constraint(model, [i in eachindex(OUT), t in T],
+		@constraint(model, Power_Flow_lb[i in eachindex(OUT), t in T],
 			Power_Flow[AFF[i], t] + FAC[i]*Power_Flow[OUT[i], t]
 			>=
 			-line_rating[AFF[i]])
