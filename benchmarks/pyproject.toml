@@ -18,13 +18,16 @@ dependencies = [
     "gdown==5.2.0",             # To download data from Google Drive
     "papermill==2.6.0",         #  To run notebooks
     "altair==5.5.0",            # For plotting in notebooks
-    "vegafusion==2.0.3",               # For altair with large data
+    "vegafusion==2.0.3",        # For altair with large data
     "xarray==2025.7.1",
     "numpy==2.3.1",
     "vl-convert-python==1.8.0", # For saving plots in altair
     "snakeviz==2.2.2",          # For viewing profiling results
     "memray==1.17.2",           # For memory profiling
     "pytest==8.4.1",
+    "great_tables[extra]==0.21.0",     # For creating tables
+    "marimo==0.23.3",           # For the energy planning notebooks and table notebooks
+    "matplotlib==3.10.9",       # For color scales
 ]
 
 [project.optional-dependencies]
@@ -33,5 +36,4 @@ energy-planning = [
     "scipy==1.16.0",
     "nbformat==5.10.4",
     "nbconvert==7.16.6",
-    "marimo==0.20.2"  # For the energy planning notebooks
 ]
