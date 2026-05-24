@@ -43,8 +43,8 @@ def _(pl, results_raw):
         subset=["problem", "library", "size"], keep="last", maintain_order=True
     )
 
-    # remove errors
-    results = results.filter(pl.col("error").is_null()).drop("error")
+    # keep only timeout errors
+    results = results.filter((pl.col("error") == "TIMEOUT") | pl.col("error").is_null())
 
     # compute overhead as total_time - solve_time
     results = results.with_columns(
@@ -82,6 +82,7 @@ def _(pl, results_raw):
         "max_memory_uss_gib",
         "num_variables",
         "avg_solve_time_s",
+        "error",
     )
 
     # Merge pyoframe results to get relative overheads
@@ -137,7 +138,7 @@ def _(pl, results_raw):
     results = results.with_columns(
         pl.col("avg_solve_time_s")
         .map_elements(round_two_sig_figs, pl.String)
-        .fill_null("N/A"),
+        .fill_null("N/A*"),
         time=pl.concat_str(
             pl.lit("<span style='font-weight: bold"),
             # pl.col("overhead_time_color"),
@@ -172,6 +173,12 @@ def _(pl, results_raw):
         ),
     )
 
+    # Handle timeout
+    results = results.with_columns(
+        time=pl.when(error="TIMEOUT").then(pl.lit("T/O")).otherwise(pl.col("time")),
+        memory=pl.when(error="TIMEOUT").then(pl.lit("T/O")).otherwise(pl.col("memory")),
+    )
+
     # Rename problems for better display
     results = results.with_columns(
         pl.col("library")
@@ -185,7 +192,7 @@ def _(pl, results_raw):
                 "Cvxpy": "CVXPY",
             }
         ),
-        pl.col("problem").replace_strict(
+        problem_name=pl.col("problem").replace_strict(
             {
                 "simple_problem": "Simple Problem",
                 "energy_planning_capacity_expansion": "Electrical Grid Capacity Expansion Problem",
@@ -201,31 +208,60 @@ def _(pl, results_raw):
                 "facility_location": 3,
             }
         ),
+        library_order=pl.col("library").replace_strict(
+            {
+                "pyoframe": 0,
+                "pyoptinterface": 1,
+                "gurobipy": 2,
+                "jump": 3,
+                "linopy": 4,
+                "ampl": 5,
+                "pyomo": 6,
+                "cvxpy": 7,
+                "pulp": 8,
+            }
+        ),
     )
-    results = results.sort(["problem_order"])
+    results = results.sort(["problem_order", "library_order", "num_variables"])
 
     results
     return (results,)
 
 
 @app.cell
-def _(Path, RESULTS_FILE, gt, log, mpl, results):
+def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     results_table = results
 
     # Pivot
     results_table = results_table.select(
-        "problem", "library", "size", "time", "memory", "avg_solve_time_s"
+        "problem",
+        "problem_name",
+        "library",
+        "size",
+        "time",
+        "memory",
+        "avg_solve_time_s",
     )
     results_table = results_table.pivot(
-        on="library", index=["problem", "size", "avg_solve_time_s"]
+        on="library", index=["problem", "problem_name", "size", "avg_solve_time_s"]
     ).fill_null("—")
 
-    col_names = {c: c.split("_")[-1] for c in results_table.columns}
+    # Add N/A for linopy
+    results_table = results_table.with_columns(
+        time_Linopy=pl.when(problem="facility_location")
+        .then(pl.lit("N/A**"))
+        .otherwise("time_Linopy"),
+        memory_Linopy=pl.when(problem="facility_location")
+        .then(pl.lit("N/A**"))
+        .otherwise("memory_Linopy"),
+    )
+
+    col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
     col_names["avg_solve_time_s"] = "Gurobi Solve Time (s)"
 
     table = (
-        gt.GT(results_table)
-        .tab_stub(rowname_col="size", groupname_col="problem")
+        gt.GT(results_table.drop("problem"))
+        .tab_stub(rowname_col="size", groupname_col="problem_name")
         .tab_stubhead(
             label=gt.html(
                 "Number of variables<br/><span style='color: grey;'>(Problem size)</span>"
@@ -253,10 +289,14 @@ def _(Path, RESULTS_FILE, gt, log, mpl, results):
             locations=gt.loc.body(columns=3),
         )
         .cols_label_rotate()
-        # .opt_row_striping(row_striping=False)
         .tab_options(row_striping_background_color="white", data_row_padding="0.5")
         .cols_align(
             align="right",
+        )
+        .tab_source_note(
+            gt.html(
+                "T/O = Timeout (>10 min)<br/>* To replicate the JuMP paper benchmarks, we set a solve time limit of 0 seconds.<br/>** Linopy does not support quadratic constraints."
+            )
         )
     )
 
@@ -283,6 +323,8 @@ def _(Path, RESULTS_FILE, gt, log, mpl, results):
             for i, metric in enumerate(["overhead_time_relative", "memory_relative"]):
                 if color.is_empty():
                     color_hex = "white"
+                elif color[metric].item() is None:
+                    color_hex = "grey"
                 else:
                     amount = color.select(metric).item()
 
@@ -297,7 +339,9 @@ def _(Path, RESULTS_FILE, gt, log, mpl, results):
                 )
 
     table.save(
-        Path(RESULTS_FILE).parent / "benchmark_results_table.pdf", web_driver="edge"
+        Path(RESULTS_FILE).parent / "benchmark_results_table.png",
+        web_driver="edge",
+        scale=2,
     )
     table.write_raw_html(Path(RESULTS_FILE).parent / "benchmark_results_table.html")
     table
