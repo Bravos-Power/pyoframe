@@ -4,6 +4,7 @@ Saves results to results/benchmark_results.csv.
 """
 
 import argparse
+import enum
 import itertools
 import math
 import os
@@ -13,6 +14,7 @@ import signal
 import subprocess
 import threading
 import time
+import warnings
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,7 +26,8 @@ import tomllib
 import yaml
 
 POLL_MIN_S, POLL_MAX_S, POLL_TRANSITION_S = 0.01, 1, 30
-LOG_AFTER_S = 30
+LOG_AFTER_S = 0
+MIN_DATAPOINTS_FOR_GUROBI_MEMORY = 5
 
 TIMESTAMP = time.strftime("%Y%m%d_%H%M%S")
 
@@ -268,6 +271,9 @@ def run_benchmark(
                 "total_time_s": safe_round(total_time, 3),
                 "solve_time_s": safe_round(monitor_result.solve_time, 3),
                 "max_memory_uss_mb": safe_round(monitor_result.max_memory_uss_mb, 3),
+                "max_solver_memory_uss_mb": safe_round(
+                    monitor_result.max_solver_memory_uss_mb, 3
+                ),
                 "objective_value": monitor_result.objective_value,
                 "error": error,
             }
@@ -366,6 +372,7 @@ def run_benchmark(
                 max_memory_queue,
                 mem_log_dir
                 / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}.parquet",
+                benchmark.construct_only,
             ),
         )
         memory_thread.start()
@@ -409,10 +416,17 @@ class MonitorResult:
     solve_time: float | None = None
     barrier_solve_time: float | None = None
     max_memory_uss_mb: float | None = None
+    max_solver_memory_uss_mb: float | None = None
     objective_value: float | None = None
 
 
-def monitor_benchmark(start_time, proc, result_queue, output_file):
+class Markers(enum.Enum):
+    GUROBI_START = "3_GUROBI_START"
+    GUROBI_PRESOLVED = "3b_GUROBI_PRESOLVED"
+    GUROBI_END = "4_GUROBI_END"
+
+
+def monitor_benchmark(start_time, proc, result_queue, output_file, construct_only):
     pid = proc.pid
     ps_proc = psutil.Process(pid)
 
@@ -423,26 +437,42 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
     result = MonitorResult()
 
     keep_checking = True
+    last_event_time = start_time
 
     os.set_blocking(stdout.fileno(), False)  # Requires Python 3.12 for windows
 
     while keep_checking:
-        elapsed_time = time.time() - start_time
+        curr_time = time.time()
+        elapsed_time = curr_time - start_time
 
-        marker = None
+        uss, rss, vms, num_threads = None, None, None, None
+        events = []
 
-        # This setup allows us to get memory one last time after process ends
+        # This setup allows us to finish reading the output
         if not ps_proc.is_running():
             keep_checking = False
 
+        # We use USS (Unique Set Size) to measure memory usage because it works
+        # across OSes and represents the memory freed if the process were to end
+        # in my opinion is a good metric.
+        # https://psutil.readthedocs.io/en/latest/index.html#psutil.Process.memory_full_info
+        try:
+            memory_info = ps_proc.memory_full_info()
+            uss, rss, vms = memory_info.uss, memory_info.rss, memory_info.vms
+            num_threads = len(ps_proc.threads())
+        except psutil.NoSuchProcess as e:
+            if ps_proc.is_running():
+                raise Exception("Process disappeared unexpectedly") from e
+
         try:
             for line in iter(stdout.readline, ""):
-                if elapsed_time > LOG_AFTER_S:
-                    print("\t" + line.strip())
-                if line.startswith("PF_BENCHMARK:"):
-                    marker = line.removeprefix("PF_BENCHMARK:").strip()
+                event = None
+                line = line.strip()
+
+                if line.startswith("BENCHMARK_EVENT:"):
+                    event = line.removeprefix("BENCHMARK_EVENT:").strip()
                 elif line.startswith("Optimize a model with "):
-                    marker = "3_GUROBI_START"
+                    event = Markers.GUROBI_START.value
                     result.num_variables = int(
                         re.search(r"(\d+) columns", line).group(1)
                     )
@@ -453,13 +483,13 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
                         re.search(r"(\d+) nonzeros", line).group(1)
                     )
                 elif line.startswith("Presolved: "):
-                    marker = "3b_GUROBI_PRESOLVED"
+                    event = Markers.GUROBI_PRESOLVED.value
                 elif line.startswith("Solved in "):
                     assert result.solve_time is None, "Multiple solve times found"
                     result.solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
-                    marker = "4_GUROBI_END"
+                    event = Markers.GUROBI_END.value
                 elif line.startswith("Barrier solved model in "):
                     assert result.barrier_solve_time is None, (
                         "Multiple barrier solve times found"
@@ -467,40 +497,30 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
                     result.barrier_solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
-                    marker = "4_GUROBI_END"
+                    event = Markers.GUROBI_END.value
                 elif line.startswith("Optimal objective "):
                     # Allow multiple, always take last
-                    result.objective_value = float(line.strip().rpartition(" ")[2])
+                    result.objective_value = float(line.rpartition(" ")[2])
+                    event = Markers.GUROBI_END.value
                 elif line.startswith("Best objective "):
                     assert result.objective_value is None, (
                         "Multiple objective values found"
                     )
                     result.objective_value = float(line.split(" ")[2].rstrip(","))
+                    event = Markers.GUROBI_END.value
+
+                if event is not None:
+                    last_event_time = curr_time
+                    # print(f"[MARK] {marker}")
+                    if event not in events:
+                        events.append(event)
+
+                if elapsed_time > LOG_AFTER_S:
+                    print("\t" + line)
         except ValueError:
             pass
 
-        # We use USS (Unique Set Size) to measure memory usage because it works
-        # across OSes and represents the memory freed if the process were to end
-        # in my opinion is a good metric.
-        # https://psutil.readthedocs.io/en/latest/index.html#psutil.Process.memory_full_info
-        try:
-            memory_info = ps_proc.memory_full_info()
-            num_threads = len(ps_proc.threads())
-        except psutil.NoSuchProcess:
-            assert ps_proc.is_running() is not None, "Process disappeared unexpectedly"
-            break
-
-        memory_data.append(
-            (
-                elapsed_time,
-                pid,
-                memory_info.uss,
-                memory_info.rss,
-                memory_info.vms,
-                num_threads,
-                marker,
-            )
-        )
+        memory_data.append((elapsed_time, pid, uss, rss, vms, num_threads, events))
 
         try:
             children = ps_proc.children(recursive=True)
@@ -528,7 +548,7 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
             )
 
         delay = POLL_MAX_S - (POLL_MAX_S - POLL_MIN_S) * math.exp(
-            -elapsed_time / POLL_TRANSITION_S
+            -(curr_time - last_event_time) / POLL_TRANSITION_S
         )
         time.sleep(delay)
 
@@ -544,7 +564,7 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
             "rss_MiB": pl.Float64,
             "vms_MiB": pl.Float64,
             "num_threads": pl.UInt16,
-            "marker": pl.Utf8,
+            "events": pl.List(pl.Utf8),
         },
         orient="row",
     )
@@ -558,6 +578,39 @@ def monitor_benchmark(start_time, proc, result_queue, output_file):
             .get_column("uss_MiB")
             .max()
         )  # type: ignore
+
+        if not construct_only:
+            if Markers.GUROBI_START.value not in df["events"].explode().to_list():
+                warnings.warn("Failed to detect Gurobi start event.")
+            elif Markers.GUROBI_END.value not in df["events"].explode().to_list():
+                warnings.warn("Failed to detect Gurobi end event.")
+            else:
+                gurobi_start_time = df.filter(
+                    pl.col("events").list.contains(Markers.GUROBI_START.value)
+                )["time_s"].min()
+                gurobi_end_time = df.filter(
+                    pl.col("events").list.contains(Markers.GUROBI_END.value)
+                )["time_s"].max()
+                gurobi_baseline_uss = df.filter(time_s=gurobi_start_time)[
+                    "uss_MiB"
+                ].sum()
+                df_gurobi_only = (
+                    df.filter(
+                        pl.col("time_s").is_between(gurobi_start_time, gurobi_end_time)
+                    )
+                    .group_by("time_s")
+                    .agg(pl.col("uss_MiB").sum())
+                )
+                if len(df_gurobi_only) >= MIN_DATAPOINTS_FOR_GUROBI_MEMORY:
+                    gurobi_max_uss = df_gurobi_only["uss_MiB"].max()
+                    assert gurobi_max_uss is not None
+                    assert gurobi_baseline_uss is not None
+                    assert gurobi_max_uss >= gurobi_baseline_uss, (
+                        f"Gurobi max USS {gurobi_max_uss} is less than baseline USS {gurobi_baseline_uss}, something went wrong with memory log parsing: {df}"
+                    )
+                    result.max_solver_memory_uss_mb = (
+                        gurobi_max_uss - gurobi_baseline_uss
+                    )
 
         df = df.with_columns(
             pl.col("pid").replace_strict(process_names, return_dtype=pl.Utf8)
@@ -656,7 +709,7 @@ def check_results_output_match(
                             + f"\nReference:\n{ref_conflict}\nDiff:\n{diff_conflict}"
                         )
                     else:
-                        print(f"WARNING: {msg}, maybe multiple solutions exist?")
+                        warnings.warn(f"{msg}, maybe multiple solutions exist?")
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)
@@ -728,6 +781,7 @@ class PastResults:
         "total_time_s": pl.Float64,
         "solve_time_s": pl.Float64,
         "max_memory_uss_mb": pl.Float64,
+        "max_solver_memory_uss_mb": pl.Float64,
         "objective_value": pl.Float64,
         "error": pl.Utf8,
     }
@@ -740,7 +794,13 @@ class PastResults:
         self._ignore_past_results = ignore_past_results
 
         if self._path.exists():
-            self._data = pl.read_csv(self._path).cast(self.BENCHMARK_RESULTS_SCHEMA)
+            data = pl.read_csv(self._path)
+            data = data.with_columns(
+                pl.lit(None).alias(col)
+                for col in self.BENCHMARK_RESULTS_SCHEMA
+                if col not in data.columns
+            )
+            self._data = data.cast(self.BENCHMARK_RESULTS_SCHEMA)
         else:
             self._path.parent.mkdir(exist_ok=True)
             self._data = pl.DataFrame(schema=self.BENCHMARK_RESULTS_SCHEMA)

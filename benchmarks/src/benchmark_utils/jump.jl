@@ -44,7 +44,7 @@ end
 
 
 function optimize!(model::JuMP.Model)
-    println("PF_BENCHMARK: 2_SOLVE")
+    println("BENCHMARK_EVENT: 2_SOLVE")
     flush(stdout)
 
     if block_solver
@@ -62,7 +62,7 @@ function optimize!(model::JuMP.Model)
 
     JuMP.optimize!(model)
 
-    println("PF_BENCHMARK: 5_SOLVE_RETURNED")
+    println("BENCHMARK_EVENT: 5_SOLVE_RETURNED")
     flush(stdout)
 
     if output_dir !== nothing
@@ -71,7 +71,7 @@ function optimize!(model::JuMP.Model)
 end
 
 function run(base_directory::String, main::Function)
-    println("PF_BENCHMARK: 1_START")
+    println("BENCHMARK_EVENT: 1_START")
     flush(stdout)
 
     model_data_dir = joinpath(base_directory, "model_data")
@@ -81,7 +81,7 @@ function run(base_directory::String, main::Function)
 
     main(base_model, problem_size; args_dict...)
 
-    println("PF_BENCHMARK: 6_DONE")
+    println("BENCHMARK_EVENT: 6_DONE")
     flush(stdout)
 end
 

@@ -1,5 +1,6 @@
 """Produces plots from benchmark results."""
 
+import argparse
 from pathlib import Path
 
 import altair as alt
@@ -157,6 +158,11 @@ def plot_memory_usage_over_time(base_path: Path, config):
                 file_terms[4],
             )
             df = pl.read_parquet(file)
+
+            # previous versions used markers but the schema is incompatible so we ignore
+            if "events" not in df.columns:
+                continue
+
             df = df.with_columns(
                 timestamp=pl.lit(f"{day} {time}"),
                 size=pl.lit(int(size)),
@@ -164,7 +170,11 @@ def plot_memory_usage_over_time(base_path: Path, config):
                 solver=pl.lit(solver),
             )
             all_data.append(df)
-        all_data_df = pl.concat(all_data)
+
+        if not all_data:
+            continue
+
+        all_data_df: pl.DataFrame = pl.concat(all_data)
         most_recent = all_data_df.group_by(["library", "solver", "size"]).agg(
             pl.col("timestamp").max()
         )
@@ -178,7 +188,7 @@ def plot_memory_usage_over_time(base_path: Path, config):
         only_most_recent = only_most_recent.sort("size")
 
         only_most_recent = only_most_recent.with_columns(
-            pl.col("uss_MiB", "vms_MiB", "rss_MiB") / 1024
+            pl.col("uss_MiB", "vms_MiB", "rss_MiB")
         )
 
         only_most_recent = only_most_recent.with_columns(
@@ -195,15 +205,15 @@ def plot_memory_usage_over_time(base_path: Path, config):
             if group["process_name"].n_unique() > 1:
                 group = group.group_by("time_frac_elapsed", "library").agg(
                     pl.col("uss_MiB", "rss_MiB", "vms_MiB", "num_threads").sum(),
-                    pl.col("marker").first(),
+                    events=pl.col("events").explode(),
                 )
 
             panel = (
                 alt.Chart(group)
-                .mark_line(strokeWidth=1)
+                .mark_line(strokeWidth=1, point=alt.OverlayMarkDef(size=5))
                 .encode(
                     x=alt.X("time_frac_elapsed:Q", title="Time (normalized)"),
-                    y=alt.Y("uss_MiB", title="Memory usage (GiB, USS)"),
+                    y=alt.Y("uss_MiB", title="Memory usage (MiB, USS)"),
                     color="library:N",
                 )
                 .properties(title=f"Memory usage over time (N={size}, {solver})")
@@ -214,13 +224,13 @@ def plot_memory_usage_over_time(base_path: Path, config):
             #     .mark_line(strokeWidth=1, strokeDash=[2, 2])
             #     .encode(x=alt.X("time_frac_elapsed"), y=alt.Y("rss_MiB"), color="library:N")
             # )
-            keypoints = group.filter(pl.col("marker").is_not_null())
+            keypoints = group.explode("events").filter(pl.col("events").is_not_null())
             if keypoints.height > 0:
                 panel += keypoints.plot.scatter(
                     x="time_frac_elapsed",
                     y="uss_MiB",
                     color="library:N",
-                    shape="marker:N",
+                    shape="events:N",
                 )
 
             if plt is None:
@@ -249,4 +259,9 @@ def plot_all(config_name="config.yaml"):
 
 
 if __name__ == "__main__":
-    plot_all()
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        "--config", type=str, default="config.yaml", help="Path to config YAML file."
+    )
+    args = argparser.parse_args()
+    plot_all(config_name=args.config)

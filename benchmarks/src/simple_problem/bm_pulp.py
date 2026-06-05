@@ -21,7 +21,7 @@ class Bench(Benchmark):
         data = [(i, pulp.value(var)) for i, var in self.X.items()]
 
         pl.DataFrame(
-            data, schema={"id": pl.Int64, "value": pl.Float64}, orient="row"
+            data, schema={"id": pl.Int64, "solution": pl.Float64}, orient="row"
         ).write_parquet(f"output_{self.size}.parquet")
 
 

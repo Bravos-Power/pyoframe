@@ -35,6 +35,8 @@ def _(RESULTS_FILE, pl):
 def _(pl, results_raw):
     results = results_raw
 
+    results = results.cast({"max_solver_memory_uss_mb": pl.Float64})
+
     # Only include gurobi for now
     results = results.filter(solver="gurobi").drop("solver")
 
@@ -52,7 +54,8 @@ def _(pl, results_raw):
 
     # convert to GiB
     results = results.with_columns(
-        max_memory_uss_gib=pl.col("max_memory_uss_mb") / 1024
+        max_memory_uss_gib=pl.col("max_memory_uss_mb") / 1024,
+        max_solver_memory_uss_gib=pl.col("max_solver_memory_uss_mb") / 1024,
     )
 
     # Replace zero solve_time with N/A
@@ -67,20 +70,31 @@ def _(pl, results_raw):
     results = results.with_columns(
         pl.col("num_variables").mode().first().over("problem", "size"),
         min_solve_time_s=pl.col("solve_time_s").min().over("problem", "size"),
+        min_solver_memory_uss_gib=pl.col("max_solver_memory_uss_gib")
+        .min()
+        .over("problem", "size"),
     )
 
-    # compute overhead as total_time - min_solve_time
+    # compute time and memory overhead
     results = results.with_columns(
         overhead_time_s=pl.when(pl.col("min_solve_time_s").is_not_null())
         .then(pl.col("total_time_s") - pl.col("min_solve_time_s"))
-        .otherwise(pl.col("total_time_s"))
+        .otherwise(pl.col("total_time_s")),
+        overhead_memory_uss_gib=pl.when(
+            pl.col("min_solver_memory_uss_gib").is_not_null()
+        )
+        .then(pl.col("max_memory_uss_gib") - pl.col("min_solver_memory_uss_gib"))
+        .otherwise("max_memory_uss_gib"),
     )
 
     # compute overhead relative to solve time
     results = results.with_columns(
         overhead_time_relative_solve=(
-            pl.col("overhead_time_s") / pl.col("min_solve_time_s")
-        )
+            pl.col("total_time_s") / pl.col("min_solve_time_s")
+        ),
+        overhead_memory_relative_solve=(
+            pl.col("max_memory_uss_gib") / pl.col("min_solver_memory_uss_gib")
+        ),
     )
 
     # Drop problems with 10K or less variables
@@ -95,7 +109,10 @@ def _(pl, results_raw):
         "max_memory_uss_gib",
         "num_variables",
         "min_solve_time_s",
+        "min_solver_memory_uss_gib",
+        "overhead_memory_uss_gib",
         "overhead_time_relative_solve",
+        "overhead_memory_relative_solve",
         "error",
     )
 
@@ -103,7 +120,7 @@ def _(pl, results_raw):
     pyoframe_results = results.filter(library="pyoframe")
     results = results.join(
         pyoframe_results.select(
-            "problem", "size", "overhead_time_s", "max_memory_uss_gib"
+            "problem", "size", "overhead_time_s", "overhead_memory_uss_gib"
         ),
         on=["problem", "size"],
         how="left",
@@ -112,26 +129,8 @@ def _(pl, results_raw):
     results = results.with_columns(
         overhead_time_relative=pl.col("overhead_time_s")
         / pl.col("overhead_time_s_pyoframe"),
-        memory_relative=pl.col("max_memory_uss_gib")
-        / pl.col("max_memory_uss_gib_pyoframe"),
-    )
-
-    # determine color
-    results = results.with_columns(
-        overhead_time_color=pl.when(pl.col("overhead_time_relative") < 0.9)
-        .then(pl.lit("green"))
-        .when(pl.col("overhead_time_relative") <= 1.1)
-        .then(pl.lit("black"))
-        .when(pl.col("overhead_time_relative") > 5)
-        .then(pl.lit("red"))
-        .otherwise(pl.lit("darkred")),
-        memory_color=pl.when(pl.col("memory_relative") < 0.9)
-        .then(pl.lit("green"))
-        .when(pl.col("memory_relative") <= 1.1)
-        .then(pl.lit("black"))
-        .when(pl.col("memory_relative") > 5)
-        .then(pl.lit("red"))
-        .otherwise(pl.lit("darkred")),
+        memory_relative=pl.col("overhead_memory_uss_gib")
+        / pl.col("overhead_memory_uss_gib_pyoframe"),
     )
 
     def round_two_sig_figs(val):
@@ -156,11 +155,22 @@ def _(pl, results_raw):
         else:
             return round_two_sig_figs(val_s / 60) + " min"
 
+    def format_memory(val_gib):
+        if val_gib * 1024 < 1:
+            return round_two_sig_figs(val_gib * 1024 * 1024) + " kB"
+        elif val_gib < 1:
+            return round_two_sig_figs(val_gib * 1024) + " MB"
+        else:
+            return round_two_sig_figs(val_gib) + " GB"
+
     # Round seconds to 1 decimal place
     results = results.with_columns(
         pl.col("min_solve_time_s")
         .map_elements(format_time, pl.String)
-        .fill_null("N/A*"),
+        .fill_null("N/A**"),
+        pl.col("min_solver_memory_uss_gib")
+        .map_elements(format_memory, pl.String)
+        .fill_null("N/A**"),
         time=pl.concat_str(
             pl.lit("<span style='font-weight: bold"),
             # pl.col("overhead_time_color"),
@@ -178,7 +188,7 @@ def _(pl, results_raw):
                     pl.lit("x"),
                 )
             )
-            .otherwise(pl.lit("~0x*")),
+            .otherwise(pl.lit("—")),
             pl.lit(")</span>"),
         ),
         memory=pl.concat_str(
@@ -187,7 +197,16 @@ def _(pl, results_raw):
             pl.lit(";'>"),
             pl.col("memory_relative").map_elements(round_two_sig_figs, pl.String),
             pl.lit("x</span><br/><span style='color: grey;'>("),
-            pl.col("max_memory_uss_gib").map_elements(round_two_sig_figs, pl.String),
+            pl.when(pl.col("overhead_memory_relative_solve").is_not_null())
+            .then(
+                pl.concat_str(
+                    pl.col("overhead_memory_relative_solve").map_elements(
+                        round_two_sig_figs, pl.String
+                    ),
+                    pl.lit("x"),
+                )
+            )
+            .otherwise(pl.lit("—")),
             pl.lit(")</span>"),
         ),
         size=pl.concat_str(
@@ -263,6 +282,8 @@ def _(pl, results_raw):
 def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     results_table = results
 
+    n_libraries = results["library"].n_unique()
+
     # Pivot
     results_table = results_table.select(
         "problem",
@@ -272,23 +293,41 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         "time",
         "memory",
         "min_solve_time_s",
+        "min_solver_memory_uss_gib",
     )
     results_table = results_table.pivot(
-        on="library", index=["problem", "problem_name", "size", "min_solve_time_s"]
+        on="library",
+        index=[
+            "problem",
+            "problem_name",
+            "size",
+            "min_solve_time_s",
+            "min_solver_memory_uss_gib",
+        ],
     ).fill_null("—")
+
+    # Reshuffle column order
+    cols = (
+        ["problem", "problem_name", "size", "min_solve_time_s"]
+        + [c for c in results_table.columns if c.startswith("time_")]
+        + ["min_solver_memory_uss_gib"]
+        + [c for c in results_table.columns if c.startswith("memory")]
+    )
+    results_table = results_table.select(cols)
 
     # Add N/A for linopy
     results_table = results_table.with_columns(
         time_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/A**"))
+        .then(pl.lit("N/A***"))
         .otherwise("time_Linopy"),
         memory_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/A**"))
+        .then(pl.lit("N/A***"))
         .otherwise("memory_Linopy"),
     )
 
     col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
-    col_names["min_solve_time_s"] = "Min. Gurobi Solve Time"
+    col_names["min_solve_time_s"] = "Gurobi Solve Time*"
+    col_names["min_solver_memory_uss_gib"] = "Gurobi Peak Memory Usage*"
 
     table = (
         gt.GT(results_table.drop("problem"))
@@ -300,20 +339,20 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         )
         .tab_spanner(
             gt.html(
-                "<span style='font-weight: bold;'>Time overhead relative to Pyoframe's overhead</span><br><span style='color: grey;'>(Time overhead relative to solve time)</span>"
+                "<span style='font-weight: bold;'>Time overhead relative to Pyoframe</span><br><span style='color: grey;'>(Increase in solve time due to modeling interface)</span>"
             ),
-            columns=[c for c in results_table.columns if c.startswith("time")],
+            columns=[c for c in results_table.columns if c.startswith("time_")],
         )
         .tab_spanner(
             gt.html(
-                "<span style='font-weight: bold;'>Peak memory usage relative to Pyoframe</span><br><span style='color: grey;'>(Peak memory in GiB)</span>"
+                "<span style='font-weight: bold;'>Memory overhead relative to Pyoframe</span><br><span style='color: grey;'>(Increase in peak memory usage due to modeling interface)</span>"
             ),
-            columns=[c for c in results_table.columns if "memory" in c],
+            columns=[c for c in results_table.columns if c.startswith("memory_")],
         )
         .cols_label(col_names)
         .tab_style(
-            style=gt.style.borders(sides="left"),
-            locations=gt.loc.body(columns=results["library"].n_unique() + 3),
+            style=gt.style.borders(sides=["left", "right"]),
+            locations=gt.loc.body(columns=n_libraries + 3),
         )
         .tab_style(
             style=gt.style.borders(sides="left"),
@@ -327,10 +366,11 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         .tab_source_note(
             gt.html(
                 """
-                k = thousand, M = million, ms = milliseconds, s = seconds, min = minutes
+                k = thousand; M = million; ms = milliseconds; s = seconds; min = minutes; kB = 1024 bytes; MB = 1,024² bytes; GB = 1,024³ bytes
                 <br/>T/O = Timeout (benchmark did not complete within 10 minutes)
-                <br/>* The facility location benchmark from the JuMP and PyOptInterface papers do not measure the solve time, perhaps because it is much larger than the overhead (>10 min, even for n=16).
-                <br/>** Linopy does not support quadratic constraints."""
+                <br/>* Gurobi's fastest solve time and lowest peak memory usage were used as the baseline when calculating overheads.<br/>  This technique ensures that there are no confusing negative overheads, but provides a worst-case estimate of the overhead.
+                <br/>** The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
+                <br/>*** Linopy does not support quadratic constraints."""
             )
         )
     )
@@ -349,13 +389,15 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     for row_i, (problem, size) in enumerate(
         results.select("problem", "size").unique(maintain_order=True).iter_rows()
     ):
-        offset = 3
         for col_i, (library,) in enumerate(
             results.select("library").unique(maintain_order=True).iter_rows()
         ):
             color = results.filter(problem=problem, size=size, library=library)
 
-            for i, metric in enumerate(["overhead_time_relative", "memory_relative"]):
+            for metric, offset in [
+                ("overhead_time_relative", 3),
+                ("memory_relative", 3 + n_libraries + 1),
+            ]:
                 if color.is_empty():
                     color_hex = "white"
                 elif color[metric].item() is None:
@@ -369,7 +411,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
                     style=gt.style.fill(color_hex),
                     locations=gt.loc.body(
                         rows=row_i,
-                        columns=col_i + offset + i * results["library"].n_unique(),
+                        columns=col_i + offset,
                     ),
                 )
 

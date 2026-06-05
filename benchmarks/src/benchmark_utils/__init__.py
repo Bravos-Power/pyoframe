@@ -55,7 +55,7 @@ class BaseBenchmark(ABC):
 
     def run(self):
         if self.emit_benchmarking_logs:
-            print("PF_BENCHMARK: 1_START", flush=True)
+            print("BENCHMARK_EVENT: 1_START", flush=True)
         with (
             contextlib.chdir(self.input_dir)
             if self.input_dir
@@ -67,10 +67,10 @@ class BaseBenchmark(ABC):
             self.set_timeout_to_zero(self.model)
 
         if self.emit_benchmarking_logs:
-            print("PF_BENCHMARK: 2_SOLVE", flush=True)
+            print("BENCHMARK_EVENT: 2_SOLVE", flush=True)
         self.solve(self.model)
         if self.emit_benchmarking_logs:
-            print("PF_BENCHMARK: 5_SOLVE_RETURNED", flush=True)
+            print("BENCHMARK_EVENT: 5_SOLVE_RETURNED", flush=True)
 
         if self.results_dir is not None and not self.block_solver:
             if self.results_dir.exists():
@@ -79,5 +79,5 @@ class BaseBenchmark(ABC):
             with contextlib.chdir(self.results_dir):
                 self.write_results(self.model, **self.kwargs)
         if self.emit_benchmarking_logs:
-            print("PF_BENCHMARK: 6_DONE", flush=True)
+            print("BENCHMARK_EVENT: 6_DONE", flush=True)
         return self.model
