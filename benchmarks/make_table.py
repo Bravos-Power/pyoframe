@@ -45,10 +45,14 @@ def _(pl, results_raw):
 
     # keep only timeout errors
     results = results.filter((pl.col("error") == "TIMEOUT") | pl.col("error").is_null())
-
-    # compute overhead as total_time - solve_time
     results = results.with_columns(
-        overhead_time_s=pl.col("total_time_s") - pl.col("solve_time_s")
+        total_time_s=pl.when(error="TIMEOUT").then(None).otherwise("total_time_s"),
+        solve_time_s=pl.when(error="TIMEOUT").then(None).otherwise("solve_time_s"),
+    )
+
+    # convert to GiB
+    results = results.with_columns(
+        max_memory_uss_gib=pl.col("max_memory_uss_mb") / 1024
     )
 
     # Replace zero solve_time with N/A
@@ -59,15 +63,24 @@ def _(pl, results_raw):
         .alias("solve_time_s")
     )
 
-    # convert to GiB
-    results = results.with_columns(
-        max_memory_uss_gib=pl.col("max_memory_uss_mb") / 1024
-    )
-
-    # Determine mode number of variables, and average solve time
+    # Determine mode number of variables, and min solve time
     results = results.with_columns(
         pl.col("num_variables").mode().first().over("problem", "size"),
-        pl.col("solve_time_s").mean().over("problem", "size").alias("avg_solve_time_s"),
+        min_solve_time_s=pl.col("solve_time_s").min().over("problem", "size"),
+    )
+
+    # compute overhead as total_time - min_solve_time
+    results = results.with_columns(
+        overhead_time_s=pl.when(pl.col("min_solve_time_s").is_not_null())
+        .then(pl.col("total_time_s") - pl.col("min_solve_time_s"))
+        .otherwise(pl.col("total_time_s"))
+    )
+
+    # compute overhead relative to solve time
+    results = results.with_columns(
+        overhead_time_relative_solve=(
+            pl.col("overhead_time_s") / pl.col("min_solve_time_s")
+        )
     )
 
     # Drop problems with 10K or less variables
@@ -81,7 +94,8 @@ def _(pl, results_raw):
         "overhead_time_s",
         "max_memory_uss_gib",
         "num_variables",
-        "avg_solve_time_s",
+        "min_solve_time_s",
+        "overhead_time_relative_solve",
         "error",
     )
 
@@ -128,16 +142,24 @@ def _(pl, results_raw):
         return f"{val:.2f}"
 
     def human_format(num):
-        for unit in ["", "K", "M", "B", "T"]:
+        for unit in ["", "k", "M", "B", "T"]:
             if abs(num) < 1000:
                 return f"{num:.0f}{unit}"
             num /= 1000
         return f"{num:.0f}P"
 
+    def format_time(val_s):
+        if val_s < 1:
+            return f"{val_s * 1000:.0f} ms"
+        elif val_s < 60:
+            return round_two_sig_figs(val_s) + " s"
+        else:
+            return round_two_sig_figs(val_s / 60) + " min"
+
     # Round seconds to 1 decimal place
     results = results.with_columns(
-        pl.col("avg_solve_time_s")
-        .map_elements(round_two_sig_figs, pl.String)
+        pl.col("min_solve_time_s")
+        .map_elements(format_time, pl.String)
         .fill_null("N/A*"),
         time=pl.concat_str(
             pl.lit("<span style='font-weight: bold"),
@@ -147,7 +169,16 @@ def _(pl, results_raw):
                 round_two_sig_figs, pl.String
             ),
             pl.lit("x</span><br/><span style='color: grey;'>("),
-            pl.col("overhead_time_s").map_elements(round_two_sig_figs, pl.String),
+            pl.when(pl.col("overhead_time_relative_solve").is_not_null())
+            .then(
+                pl.concat_str(
+                    pl.col("overhead_time_relative_solve").map_elements(
+                        round_two_sig_figs, pl.String
+                    ),
+                    pl.lit("x"),
+                )
+            )
+            .otherwise(pl.lit("~0x*")),
             pl.lit(")</span>"),
         ),
         memory=pl.concat_str(
@@ -197,7 +228,7 @@ def _(pl, results_raw):
                 "simple_problem": "Simple Problem",
                 "energy_planning_capacity_expansion": "Electrical Grid Capacity Expansion Problem",
                 "energy_planning_security_constrained_dispatch": "Electrical Grid Security-Constrained Dispatch Problem",
-                "facility_location": "Facility Location Problem (from JuMP paper)",
+                "facility_location": "Facility Location Problem (from JuMP/PyOptInterface papers)",
             }
         ),
         problem_order=pl.col("problem").replace_strict(
@@ -240,10 +271,10 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         "size",
         "time",
         "memory",
-        "avg_solve_time_s",
+        "min_solve_time_s",
     )
     results_table = results_table.pivot(
-        on="library", index=["problem", "problem_name", "size", "avg_solve_time_s"]
+        on="library", index=["problem", "problem_name", "size", "min_solve_time_s"]
     ).fill_null("—")
 
     # Add N/A for linopy
@@ -257,7 +288,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     )
 
     col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
-    col_names["avg_solve_time_s"] = "Gurobi Solve Time (s)"
+    col_names["min_solve_time_s"] = "Min. Gurobi Solve Time"
 
     table = (
         gt.GT(results_table.drop("problem"))
@@ -269,13 +300,13 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         )
         .tab_spanner(
             gt.html(
-                "Overhead Time Relative to Pyoframe<br><span style='color: grey;'>(Overhead in s)</span>"
+                "<span style='font-weight: bold;'>Time overhead relative to Pyoframe's overhead</span><br><span style='color: grey;'>(Time overhead relative to solve time)</span>"
             ),
             columns=[c for c in results_table.columns if c.startswith("time")],
         )
         .tab_spanner(
             gt.html(
-                "Peak Memory Usage Relative to Pyoframe<br><span style='color: grey;'>(Peak Memory in GiB)</span>"
+                "<span style='font-weight: bold;'>Peak memory usage relative to Pyoframe</span><br><span style='color: grey;'>(Peak memory in GiB)</span>"
             ),
             columns=[c for c in results_table.columns if "memory" in c],
         )
@@ -295,7 +326,11 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         )
         .tab_source_note(
             gt.html(
-                "T/O = Timeout (>10 min)<br/>* To replicate the JuMP paper benchmarks, we set a solve time limit of 0 seconds.<br/>** Linopy does not support quadratic constraints."
+                """
+                k = thousand, M = million, ms = milliseconds, s = seconds, min = minutes
+                <br/>T/O = Timeout (benchmark did not complete within 10 minutes)
+                <br/>* The facility location benchmark from the JuMP and PyOptInterface papers do not measure the solve time, perhaps because it is much larger than the overhead (>10 min, even for n=16).
+                <br/>** Linopy does not support quadratic constraints."""
             )
         )
     )
@@ -324,7 +359,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
                 if color.is_empty():
                     color_hex = "white"
                 elif color[metric].item() is None:
-                    color_hex = "grey"
+                    color_hex = "lightgrey"
                 else:
                     amount = color.select(metric).item()
 

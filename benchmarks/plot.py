@@ -181,6 +181,11 @@ def plot_memory_usage_over_time(base_path: Path, config):
             pl.col("uss_MiB", "vms_MiB", "rss_MiB") / 1024
         )
 
+        only_most_recent = only_most_recent.with_columns(
+            time_frac_elapsed=pl.col("time_s")
+            / pl.col("time_s").max().over(["library", "solver", "size"])
+        )
+
         for (size, solver), group in only_most_recent.group_by(
             ["size", "solver"], maintain_order=True
         ):
@@ -188,7 +193,7 @@ def plot_memory_usage_over_time(base_path: Path, config):
                 continue
 
             if group["process_name"].n_unique() > 1:
-                group = group.group_by("time_s", "library").agg(
+                group = group.group_by("time_frac_elapsed", "library").agg(
                     pl.col("uss_MiB", "rss_MiB", "vms_MiB", "num_threads").sum(),
                     pl.col("marker").first(),
                 )
@@ -197,7 +202,7 @@ def plot_memory_usage_over_time(base_path: Path, config):
                 alt.Chart(group)
                 .mark_line(strokeWidth=1)
                 .encode(
-                    x=alt.X("time_s", title="Elapsed time (s)"),
+                    x=alt.X("time_frac_elapsed:Q", title="Time (normalized)"),
                     y=alt.Y("uss_MiB", title="Memory usage (GiB, USS)"),
                     color="library:N",
                 )
@@ -207,12 +212,12 @@ def plot_memory_usage_over_time(base_path: Path, config):
             # panel += (
             #     alt.Chart(group)
             #     .mark_line(strokeWidth=1, strokeDash=[2, 2])
-            #     .encode(x=alt.X("time_s"), y=alt.Y("rss_MiB"), color="library:N")
+            #     .encode(x=alt.X("time_frac_elapsed"), y=alt.Y("rss_MiB"), color="library:N")
             # )
             keypoints = group.filter(pl.col("marker").is_not_null())
             if keypoints.height > 0:
                 panel += keypoints.plot.scatter(
-                    x="time_s",
+                    x="time_frac_elapsed",
                     y="uss_MiB",
                     color="library:N",
                     shape="marker:N",

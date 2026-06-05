@@ -805,6 +805,12 @@ if __name__ == "__main__":
         help="Only run benchmarks for this library.",
         default=None,
     )
+    argparser.add_argument(
+        "-p",
+        "--problem",
+        default=None,
+        help="Only run a specific problem (e.g., 'energy_planning').",
+    )
     args = argparser.parse_args()
     config = read_config(name=args.config)
     if args.library is not None:
@@ -812,4 +818,9 @@ if __name__ == "__main__":
             f"Library {args.library} not found in config."
         )
         config["libraries"] = [args.library]
+    if args.problem is not None:
+        assert args.problem in config["problems"], (
+            f"Problem {args.problem} not found in config."
+        )
+        config["problems"] = {args.problem: config["problems"][args.problem]}
     run_all_benchmarks(config, ignore_past_results=args.ignore_cache)
