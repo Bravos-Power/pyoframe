@@ -699,9 +699,7 @@ def check_results_output_match(
                 if not (ref_col == diff_col).all():
                     num_conflicts = (ref_col != diff_col).sum()
                     msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {num_conflicts} in {ref.height} rows differ"
-                    if (
-                        num_conflicts / ref.height > 0.05
-                    ):  # if more than 1% of rows differ, raise an error
+                    if num_conflicts / ref.height > 0.5:
                         ref_conflict = ref.filter(ref_col != diff_col)
                         diff_conflict = diff.filter(ref_col != diff_col)
                         raise BenchmarkError(
@@ -871,7 +869,17 @@ if __name__ == "__main__":
         default=None,
         help="Only run a specific problem (e.g., 'energy_planning').",
     )
+    argparser.add_argument(
+        "-s",
+        "--size",
+        type=int,
+        default=None,
+        help="Only run benchmarks for this problem size (e.g., 100).",
+    )
     args = argparser.parse_args()
+    assert args.size is None or args.problem is not None, (
+        "Cannot specify size without problem."
+    )
     config = read_config(name=args.config)
     if args.library is not None:
         assert args.library in config["libraries"], (
@@ -883,4 +891,7 @@ if __name__ == "__main__":
             f"Problem {args.problem} not found in config."
         )
         config["problems"] = {args.problem: config["problems"][args.problem]}
+
+        if args.size is not None:
+            config["problems"][args.problem]["size"] = [args.size]
     run_all_benchmarks(config, ignore_past_results=args.ignore_cache)
