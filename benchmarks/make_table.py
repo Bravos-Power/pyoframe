@@ -33,30 +33,47 @@ def _(RESULTS_FILE, pl):
 
 @app.cell
 def _(pl, results_raw):
-    results = results_raw
+    results_latest = results_raw
 
-    results = results.cast({"max_solver_memory_uss_mb": pl.Float64})
+    results_latest = results_latest.cast({"max_solver_memory_uss_mb": pl.Float64})
 
     # Only include gurobi for now
-    results = results.filter(solver="gurobi").drop("solver")
+    results_latest = results_latest.filter(solver="gurobi").drop("solver")
 
     # keep only latest result
-    results = results.sort("date").unique(
-        subset=["problem", "library", "size"], keep="last", maintain_order=True
+    results_latest = (
+        results_latest.sort("date")
+        .unique(subset=["problem", "library", "size"], keep="last", maintain_order=True)
+        .drop("date")
     )
 
     # keep only timeout errors
-    results = results.filter((pl.col("error") == "TIMEOUT") | pl.col("error").is_null())
-    results = results.with_columns(
+    results_latest = results_latest.filter(
+        (pl.col("error") == "TIMEOUT") | pl.col("error").is_null()
+    )
+    results_latest = results_latest.with_columns(
         total_time_s=pl.when(error="TIMEOUT").then(None).otherwise("total_time_s"),
         solve_time_s=pl.when(error="TIMEOUT").then(None).otherwise("solve_time_s"),
     )
 
     # convert to GiB
-    results = results.with_columns(
+    results_latest = results_latest.with_columns(
         max_memory_uss_gib=pl.col("max_memory_uss_mb") / 1024,
         max_solver_memory_uss_gib=pl.col("max_solver_memory_uss_mb") / 1024,
+    ).drop("max_memory_uss_mb", "max_solver_memory_uss_mb")
+
+    # remove invalid solver_memory_uss_gib values
+    results_latest = results_latest.with_columns(
+        pl.col("max_solver_memory_uss_gib").replace(0, None)
     )
+
+    results_latest
+    return (results_latest,)
+
+
+@app.cell
+def _(pl, results_latest):
+    results = results_latest
 
     # Replace zero solve_time with N/A
     results = results.with_columns(
@@ -66,12 +83,12 @@ def _(pl, results_raw):
         .alias("solve_time_s")
     )
 
-    # Determine mode number of variables, and min solve time
+    # Determine median number of variables, and min solve time
     results = results.with_columns(
-        pl.col("num_variables").mode().first().over("problem", "size"),
+        pl.col("num_variables").median().over("problem", "size"),
         min_solve_time_s=pl.col("solve_time_s").min().over("problem", "size"),
-        min_solver_memory_uss_gib=pl.col("max_solver_memory_uss_gib")
-        .min()
+        solver_benchmark_memory_gib=pl.col("max_solver_memory_uss_gib")
+        .median()
         .over("problem", "size"),
     )
 
@@ -81,9 +98,9 @@ def _(pl, results_raw):
         .then(pl.col("total_time_s") - pl.col("min_solve_time_s"))
         .otherwise(pl.col("total_time_s")),
         overhead_memory_uss_gib=pl.when(
-            pl.col("min_solver_memory_uss_gib").is_not_null()
+            pl.col("solver_benchmark_memory_gib").is_not_null()
         )
-        .then(pl.col("max_memory_uss_gib") - pl.col("min_solver_memory_uss_gib"))
+        .then(pl.col("max_memory_uss_gib") - pl.col("solver_benchmark_memory_gib"))
         .otherwise("max_memory_uss_gib"),
     )
 
@@ -93,12 +110,12 @@ def _(pl, results_raw):
             pl.col("total_time_s") / pl.col("min_solve_time_s")
         ),
         overhead_memory_relative_solve=(
-            pl.col("max_memory_uss_gib") / pl.col("min_solver_memory_uss_gib")
+            pl.col("max_memory_uss_gib") / pl.col("solver_benchmark_memory_gib")
         ),
     )
 
     # Drop problems with 10K or less variables
-    results = results.filter(pl.col("num_variables") > 10_000)
+    # results = results.filter(pl.col("num_variables") > 10_000)
 
     # Only keep relevant columns for the table
     results = results.select(
@@ -109,7 +126,7 @@ def _(pl, results_raw):
         "max_memory_uss_gib",
         "num_variables",
         "min_solve_time_s",
-        "min_solver_memory_uss_gib",
+        "solver_benchmark_memory_gib",
         "overhead_memory_uss_gib",
         "overhead_time_relative_solve",
         "overhead_memory_relative_solve",
@@ -165,10 +182,10 @@ def _(pl, results_raw):
 
     # Round seconds to 1 decimal place
     results = results.with_columns(
-        pl.col("min_solve_time_s")
+        min_solve_time_s_pretty=pl.col("min_solve_time_s")
         .map_elements(format_time, pl.String)
         .fill_null("N/A**"),
-        pl.col("min_solver_memory_uss_gib")
+        solver_benchmark_memory_gib_pretty=pl.col("solver_benchmark_memory_gib")
         .map_elements(format_memory, pl.String)
         .fill_null("N/A**"),
         time=pl.concat_str(
@@ -178,36 +195,36 @@ def _(pl, results_raw):
             pl.col("overhead_time_relative").map_elements(
                 round_two_sig_figs, pl.String
             ),
-            pl.lit("x</span><br/><span style='color: grey;'>("),
+            pl.lit("x</span>"),
             pl.when(pl.col("overhead_time_relative_solve").is_not_null())
             .then(
                 pl.concat_str(
+                    pl.lit("<br/><span style='color: grey;'>("),
                     pl.col("overhead_time_relative_solve").map_elements(
                         round_two_sig_figs, pl.String
                     ),
-                    pl.lit("x"),
+                    pl.lit("x)</span>"),
                 )
             )
-            .otherwise(pl.lit("—")),
-            pl.lit(")</span>"),
+            .otherwise(pl.lit("")),
         ),
         memory=pl.concat_str(
             pl.lit("<span style='font-weight: bold"),
             # pl.col("memory_color"),
             pl.lit(";'>"),
             pl.col("memory_relative").map_elements(round_two_sig_figs, pl.String),
-            pl.lit("x</span><br/><span style='color: grey;'>("),
+            pl.lit("x</span>"),
             pl.when(pl.col("overhead_memory_relative_solve").is_not_null())
             .then(
                 pl.concat_str(
+                    pl.lit("<br/><span style='color: grey;'>("),
                     pl.col("overhead_memory_relative_solve").map_elements(
                         round_two_sig_figs, pl.String
                     ),
-                    pl.lit("x"),
+                    pl.lit("x)</span>"),
                 )
             )
-            .otherwise(pl.lit("—")),
-            pl.lit(")</span>"),
+            .otherwise(pl.lit("")),
         ),
         size=pl.concat_str(
             pl.col("num_variables").map_elements(human_format, pl.String),
@@ -215,7 +232,7 @@ def _(pl, results_raw):
             .then(pl.lit(""))
             .otherwise(
                 pl.concat_str(
-                    pl.lit("<br><span style='color: grey;'>(n="),
+                    pl.lit("<br/><span style='color: grey;'>(n="),
                     pl.col("size"),
                     pl.lit(")</span>"),
                 )
@@ -244,18 +261,18 @@ def _(pl, results_raw):
         ),
         problem_name=pl.col("problem").replace_strict(
             {
-                "simple_problem": "Simple Problem",
+                "simple_problem": "Trivial Problem (with data)",
                 "energy_planning_capacity_expansion": "Electrical Grid Capacity Expansion Problem",
-                "energy_planning_security_constrained_dispatch": "Electrical Grid Security-Constrained Dispatch Problem",
-                "facility_location": "Facility Location Problem (from JuMP/PyOptInterface papers)",
+                "energy_planning_security_constrained_dispatch": "Electrical Grid Dispatch Problem",
+                "facility_location": "Facility Location Problem (no data)",
             }
         ),
         problem_order=pl.col("problem").replace_strict(
             {
-                "simple_problem": 0,
-                "energy_planning_capacity_expansion": 1,
-                "energy_planning_security_constrained_dispatch": 2,
-                "facility_location": 3,
+                "facility_location": 0,
+                "simple_problem": 1,
+                "energy_planning_capacity_expansion": 2,
+                "energy_planning_security_constrained_dispatch": 3,
             }
         ),
         library_order=pl.col("library").replace_strict(
@@ -275,7 +292,7 @@ def _(pl, results_raw):
     results = results.sort(["problem_order", "library_order", "num_variables"])
 
     results
-    return (results,)
+    return results, round_two_sig_figs
 
 
 @app.cell
@@ -292,8 +309,8 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         "size",
         "time",
         "memory",
-        "min_solve_time_s",
-        "min_solver_memory_uss_gib",
+        "min_solve_time_s_pretty",
+        "solver_benchmark_memory_gib_pretty",
     )
     results_table = results_table.pivot(
         on="library",
@@ -301,16 +318,16 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             "problem",
             "problem_name",
             "size",
-            "min_solve_time_s",
-            "min_solver_memory_uss_gib",
+            "min_solve_time_s_pretty",
+            "solver_benchmark_memory_gib_pretty",
         ],
     ).fill_null("—")
 
     # Reshuffle column order
     cols = (
-        ["problem", "problem_name", "size", "min_solve_time_s"]
+        ["problem", "problem_name", "size", "min_solve_time_s_pretty"]
         + [c for c in results_table.columns if c.startswith("time_")]
-        + ["min_solver_memory_uss_gib"]
+        + ["solver_benchmark_memory_gib_pretty"]
         + [c for c in results_table.columns if c.startswith("memory")]
     )
     results_table = results_table.select(cols)
@@ -318,16 +335,16 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     # Add N/A for linopy
     results_table = results_table.with_columns(
         time_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/A***"))
+        .then(pl.lit("N/S"))
         .otherwise("time_Linopy"),
         memory_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/A***"))
+        .then(pl.lit("N/S"))
         .otherwise("memory_Linopy"),
     )
 
-    col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
-    col_names["min_solve_time_s"] = "Gurobi Solve Time*"
-    col_names["min_solver_memory_uss_gib"] = "Gurobi Peak Memory Usage*"
+    _col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
+    _col_names["min_solve_time_s_pretty"] = "Best Gurobi Solve Time"
+    _col_names["solver_benchmark_memory_gib_pretty"] = "Gurobi Memory Usage*"
 
     table = (
         gt.GT(results_table.drop("problem"))
@@ -349,7 +366,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             ),
             columns=[c for c in results_table.columns if c.startswith("memory_")],
         )
-        .cols_label(col_names)
+        .cols_label(_col_names)
         .tab_style(
             style=gt.style.borders(sides=["left", "right"]),
             locations=gt.loc.body(columns=n_libraries + 3),
@@ -367,10 +384,11 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             gt.html(
                 """
                 k = thousand; M = million; ms = milliseconds; s = seconds; min = minutes; kB = 1024 bytes; MB = 1,024² bytes; GB = 1,024³ bytes
-                <br/>T/O = Timeout (benchmark did not complete within 10 minutes)
-                <br/>* Gurobi's fastest solve time and lowest peak memory usage were used as the baseline when calculating overheads.<br/>  This technique ensures that there are no confusing negative overheads, but provides a worst-case estimate of the overhead.
+                <br/>T/O = Timeout (benchmark did not complete within the 20 minute time limit)
+                <br/>N/S = Not Supported (Linopy does not support quadratic constraints)
+                <br/>* Gurobi's memory usage is estimated by taking the median memory usage across all benchmark runs.
                 <br/>** The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
-                <br/>*** Linopy does not support quadratic constraints."""
+                """
             )
         )
     )
@@ -422,7 +440,206 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     )
     table.write_raw_html(Path(RESULTS_FILE).parent / "benchmark_results_table.html")
     table
+    return (n_libraries,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Raw time and memory values
+    """)
     return
+
+
+@app.cell
+def _(
+    Path,
+    RESULTS_FILE,
+    format_numeric,
+    gt,
+    n_libraries,
+    pl,
+    results,
+    round_two_sig_figs,
+):
+    _results_table = results
+
+    # Pivot
+    _results_table = _results_table.select(
+        "problem",
+        "problem_name",
+        "library",
+        pl.col("size").str.replace("<br/>", " ", literal=True),
+        format_numeric("min_solve_time_s", fill_null="N/A*"),
+        format_numeric("solver_benchmark_memory_gib", fill_null="N/A*"),
+        time=pl.col("overhead_time_s").map_elements(round_two_sig_figs, pl.String),
+        memory=pl.col("overhead_memory_uss_gib").map_elements(
+            round_two_sig_figs, pl.String
+        ),
+    )
+    _results_table = _results_table.pivot(
+        on="library",
+        index=[
+            "problem",
+            "problem_name",
+            "size",
+            "min_solve_time_s",
+            "solver_benchmark_memory_gib",
+        ],
+    ).fill_null("—")
+
+    # Reshuffle column order
+    _cols = (
+        ["problem", "problem_name", "size", "min_solve_time_s"]
+        + [c for c in _results_table.columns if c.startswith("time_")]
+        + ["solver_benchmark_memory_gib"]
+        + [c for c in _results_table.columns if c.startswith("memory")]
+    )
+    _results_table = _results_table.select(_cols)
+
+    # Add N/A for linopy
+    _results_table = _results_table.with_columns(
+        time_Linopy=pl.when(problem="facility_location")
+        .then(pl.lit("N/S"))
+        .otherwise("time_Linopy"),
+        memory_Linopy=pl.when(problem="facility_location")
+        .then(pl.lit("N/S"))
+        .otherwise("memory_Linopy"),
+    )
+
+    _col_names = {c: c.split("_")[-1] for c in _results_table.columns if c != "problem"}
+    _col_names["min_solve_time_s"] = "Gurobi Solve Time (s)"
+    _col_names["solver_benchmark_memory_gib"] = "Gurobi Memory Usage (GB)"
+    # _col_names = {}
+
+    _table = (
+        gt.GT(_results_table.drop("problem"))
+        .tab_stub(rowname_col="size", groupname_col="problem_name")
+        .tab_stubhead(
+            label=gt.html(
+                "Number of variables<br/><span style='color: grey;'>(Problem size)</span>"
+            )
+        )
+        .tab_spanner(
+            gt.html("<span style='font-weight: bold;'>Time overhead (s)</span>"),
+            columns=[c for c in _results_table.columns if c.startswith("time_")],
+        )
+        .tab_spanner(
+            gt.html("<span style='font-weight: bold;'>Memory overhead (GB)</span>"),
+            columns=[c for c in _results_table.columns if c.startswith("memory_")],
+        )
+        .cols_label(_col_names)
+        .tab_style(
+            style=gt.style.borders(sides=["left", "right"]),
+            locations=gt.loc.body(columns=n_libraries + 3),
+        )
+        .tab_style(
+            style=gt.style.borders(sides="left"),
+            locations=gt.loc.body(columns=3),
+        )
+        .cols_label_rotate()
+        .tab_options(row_striping_background_color="white", data_row_padding="0.5")
+        .cols_align(
+            align="right",
+        )
+        .tab_source_note(
+            gt.html(
+                """
+                k = thousand; M = million; ms = milliseconds; s = seconds; GB = 1,024³ bytes
+                <br/>T/O = Timeout (benchmark did not complete within the 20 minute time limit)
+                <br/>N/S = Not Supported (Linopy does not support quadratic constraints)
+                <br/>* The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
+                """
+            )
+        )
+    )
+
+    _table.save(
+        Path(RESULTS_FILE).parent / "benchmark_results_table_raw.png",
+        web_driver="edge",
+        scale=2,
+    )
+    _table
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Solve time and memory usage for different runs
+    """)
+    return
+
+
+@app.cell
+def _(Path, RESULTS_FILE, pl, results_latest):
+    import altair as alt
+
+    df_solver = results_latest
+
+    df_solver.select(
+        "problem", "library", "size", "solve_time_s", "max_solver_memory_uss_gib"
+    )
+
+    # compute relative difference of solve_time_s relative to median
+    df_solver = df_solver.with_columns(
+        relative_solve_time_s=pl.col("solve_time_s")
+        / pl.col("solve_time_s").median().over("problem", "size"),
+        relative_memory_gib=pl.col("max_solver_memory_uss_gib")
+        / pl.col("max_solver_memory_uss_gib").median().over("problem", "size"),
+    )
+
+    df_solver = df_solver.unpivot(
+        ["relative_solve_time_s", "relative_memory_gib"],
+        index=["problem", "library", "size"],
+        variable_name="metric",
+        value_name="relative_value",
+    )
+
+    df_solver = df_solver.with_columns(
+        pl.col("metric").replace(
+            {
+                "relative_solve_time_s": "Solve Time",
+                "relative_memory_gib": "Memory Usage",
+            }
+        )
+    )
+
+    _fig = df_solver.plot.scatter(
+        x=alt.X(
+            "relative_value:Q",
+            scale=alt.Scale(type="log"),
+            title="Gurobi's performance relative to benchmark median",
+        ),
+        y=alt.Y("library:O", title=""),
+        column=alt.Column("metric", title=""),
+        color=alt.Color("problem:N"),
+    )
+
+    _fig.save(Path(RESULTS_FILE).parent / "solver_performance.svg")
+    _fig
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Utils
+    """)
+    return
+
+
+@app.cell
+def _(pl, round_two_sig_figs):
+    def format_numeric(col_name, sig_figs=2, fill_null=None):
+        assert sig_figs == 2, "Only 2 significant figures is currently supported"
+        return (
+            pl.col(col_name)
+            .map_elements(round_two_sig_figs, pl.String)
+            .fill_null(fill_null)
+        )
+
+    return (format_numeric,)
 
 
 if __name__ == "__main__":

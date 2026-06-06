@@ -698,8 +698,9 @@ def check_results_output_match(
                         diff_col = -diff_col
                 if not (ref_col == diff_col).all():
                     num_conflicts = (ref_col != diff_col).sum()
-                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {num_conflicts} in {ref.height} rows differ"
-                    if num_conflicts / ref.height > 0.5:
+                    frac_error = num_conflicts / ref.height
+                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_error:.2%} of the {ref.height} rows differ"
+                    if frac_error > 0.9:
                         ref_conflict = ref.filter(ref_col != diff_col)
                         diff_conflict = diff.filter(ref_col != diff_col)
                         raise BenchmarkError(

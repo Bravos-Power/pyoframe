@@ -30,7 +30,7 @@ problems:
     label: "Electrical Grid Dispatch Problem"
     code_dir: energy_planning
     inputs: "*"
-    size: [2, 4, 24, 48, 72, 168]
+    size: [2, 4, 24, 48, 72]
     args:
       security_constrained: true
       capacity_expansion: false
