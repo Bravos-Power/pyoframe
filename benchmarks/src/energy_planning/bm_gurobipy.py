@@ -31,7 +31,6 @@ class Bench(Benchmark):
         capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
-        BASE_MW = 100
         COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
         SLACK_BUS = 1
 
@@ -151,8 +150,7 @@ class Bench(Benchmark):
             (
                 (
                     container.Power_Flow[l, t]
-                    == BASE_MW
-                    * container.susceptance[l]
+                    == container.susceptance[l]
                     * (
                         container.Voltage_Angle[container.line_to[l], t]
                         - container.Voltage_Angle[container.line_from[l], t]

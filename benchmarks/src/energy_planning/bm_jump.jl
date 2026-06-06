@@ -25,7 +25,6 @@ function main(
 	capex = CSV.read("capex_costs.csv", DataFrame)
 	cost_params = CSV.read("cost_parameters.csv", DataFrame)
 
-	BASE_MW = 100.0
 	COST_UNSERVED_LOAD = cost_params[cost_params.name .== "load_unserved_MWh", :cost][1]
 	SLACK_BUS = 1
 
@@ -112,7 +111,7 @@ function main(
 		[l in L, t in T],
 		(
 			Power_Flow[l, t] ==
-			BASE_MW * susceptance[l] *
+			susceptance[l] *
 			(Voltage_Angle[line_to[l], t] - Voltage_Angle[line_from[l], t])
 		)
 	)

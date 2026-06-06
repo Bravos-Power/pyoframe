@@ -25,7 +25,6 @@ class Bench(Benchmark):
         set GEN_TYPES;
         
         param COST_UNSERVED_LOAD;
-        param BASE_MW;
         param SLACK_BUS;
         param gen_bus {G};
         param gen_type {G} symbolic;
@@ -59,7 +58,7 @@ class Bench(Benchmark):
         s.t. Power_Flow_lb {l in L, t in T}: Power_Flow[l,t] >= -line_rating[l];
         s.t. Con_Slack_Bus {t in T}: Voltage_Angle[SLACK_BUS,t] = 0;
         s.t. Con_Power_Flow {l in L, t in T}:
-            Power_Flow[l,t] = BASE_MW * susceptance[l] * (Voltage_Angle[line_to[l],t] - Voltage_Angle[line_from[l],t]);
+            Power_Flow[l,t] = susceptance[l] * (Voltage_Angle[line_to[l],t] - Voltage_Angle[line_from[l],t]);
         s.t. Con_Power_Balance {b in B, t in T}:
             if (b,t) in LOADS then load[b,t] else 0 =
                 sum {g in G: gen_bus[g] = b} Dispatch[g,t] +
@@ -117,7 +116,6 @@ class Bench(Benchmark):
         ampl.param["susceptance"] = 1 / lines["reactance"]
 
         ampl.param["load"] = loads_df["active_load"]
-        ampl.param["BASE_MW"] = 100
         ampl.param["COST_UNSERVED_LOAD"] = cost_params.query(
             'name=="load_unserved_MWh"'
         )["cost"].iloc[0]

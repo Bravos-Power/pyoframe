@@ -45,7 +45,6 @@ class Bench(Benchmark):
         )
         cost_params = pd.read_csv("cost_parameters.csv").set_index("name")["cost"]
 
-        BASE_MW = 100
         COST_UNSERVED_LOAD = cost_params.loc["load_unserved_MWh"]
         SLACK_BUS = 1
 
@@ -121,8 +120,7 @@ class Bench(Benchmark):
 
         container.Con_Power_Flow = m.add_constraints(
             container.Power_Flow
-            == BASE_MW
-            * susceptance
+            == susceptance
             * (
                 container.Voltage_Angle.sel(bus=to_buses)
                 - container.Voltage_Angle.sel(bus=from_buses)

@@ -32,7 +32,6 @@ class Bench(Benchmark):
         capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
-        BASE_MW = 100
         COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
         SLACK_BUS = 1
 
@@ -58,6 +57,8 @@ class Bench(Benchmark):
             m.Dispatch = Variable(
                 m.gens["gen_id"], m.hours, lb=0, ub=m.gens["gen_id", "Pmax"]
             )
+        # Note that technically, the voltage angle variable is scaled by 100x since the BASE_MW is 100.
+        # This improves numerical stability.
         m.Voltage_Angle = Variable(buses, m.hours)
         m.Power_Flow = Variable(
             lines["line_id"], m.hours, lb=-m.line_rating, ub=m.line_rating
@@ -67,7 +68,7 @@ class Bench(Benchmark):
         ## DEFINE CONSTRAINTS ##
         m.Con_Slack_Bus = m.Voltage_Angle.pick(bus=SLACK_BUS) == 0
 
-        m.Con_Power_Flow = m.Power_Flow == BASE_MW * susceptance * (
+        m.Con_Power_Flow = m.Power_Flow == susceptance * (
             m.Voltage_Angle.map(to_buses) - m.Voltage_Angle.map(from_buses)
         )
 
@@ -128,13 +129,7 @@ class Bench(Benchmark):
             "datetime"
         ).drop_extras() <= yearly_limits * len(m.hours) / (24 * 365)
 
-    def write_results(
-        self,
-        model,
-        capacity_expansion: bool = True,
-        security_constrained: bool = True,
-        **kwargs,
-    ):
+    def write_results(self, model, capacity_expansion: bool = True, **kwargs):
         model.Power_Flow.solution.join(
             model.Power_Flow_ub.dual.rename({"dual": "ub_dual"}),
             on=["line_id", "datetime"],
@@ -157,9 +152,10 @@ if __name__ == "__main__":
         input_dir=base_dir / "model_data",
         results_dir=base_dir / "results_pyoframe",
         verbose=True,
-        capacity_expansion=True,
+        capacity_expansion=False,
         security_constrained=True,
-        yearly_limits=True,
-        variable_capacity_factors=True,
+        # solver_args={"Method": 2, "BarHomogeneous": 1},
+        # yearly_limits=True,
+        # variable_capacity_factors=True,
     )
     m = benchmark.run()
