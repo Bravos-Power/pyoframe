@@ -242,8 +242,8 @@ def _(pl, results_latest):
 
     # Handle timeout
     results = results.with_columns(
-        time=pl.when(error="TIMEOUT").then(pl.lit("T/O")).otherwise(pl.col("time")),
-        memory=pl.when(error="TIMEOUT").then(pl.lit("T/O")).otherwise(pl.col("memory")),
+        time=pl.when(error="TIMEOUT").then(pl.lit("TO")).otherwise(pl.col("time")),
+        memory=pl.when(error="TIMEOUT").then(pl.lit("TO")).otherwise(pl.col("memory")),
     )
 
     # Rename problems for better display
@@ -321,7 +321,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             "min_solve_time_s_pretty",
             "solver_benchmark_memory_gib_pretty",
         ],
-    ).fill_null("—")
+    ).fill_null("NI")
 
     # Reshuffle column order
     cols = (
@@ -335,10 +335,10 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     # Add N/A for linopy
     results_table = results_table.with_columns(
         time_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/S"))
+        .then(pl.lit("NS"))
         .otherwise("time_Linopy"),
         memory_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/S"))
+        .then(pl.lit("NS"))
         .otherwise("memory_Linopy"),
     )
 
@@ -384,8 +384,9 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             gt.html(
                 """
                 k = thousand; M = million; ms = milliseconds; s = seconds; min = minutes; kB = 1024 bytes; MB = 1,024² bytes; GB = 1,024³ bytes
-                <br/>T/O = Timeout (benchmark did not complete within the 20 minute time limit)
-                <br/>N/S = Not Supported (Linopy does not support quadratic constraints)
+                <br/>TO = Timeout (benchmark did not complete within the 20 minute time limit)
+                <br/>NS = Not Supported (Linopy does not support quadratic constraints)
+                <br/>NI = Not Implemented (CVXPY and PuLP were not implemented for all benchmarks to limit the benchmarking scope)
                 <br/>* Gurobi's memory usage is estimated by taking the median memory usage across all benchmark runs.
                 <br/>** The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
                 """
@@ -469,6 +470,7 @@ def _(
         "problem",
         "problem_name",
         "library",
+        "error",
         pl.col("size").str.replace("<br/>", " ", literal=True),
         format_numeric("min_solve_time_s", fill_null="N/A*"),
         format_numeric("solver_benchmark_memory_gib", fill_null="N/A*"),
@@ -477,6 +479,12 @@ def _(
             round_two_sig_figs, pl.String
         ),
     )
+
+    _results_table = _results_table.with_columns(
+        time=pl.when(error="TIMEOUT").then(pl.lit("TO")).otherwise(pl.col("time")),
+        memory=pl.when(error="TIMEOUT").then(pl.lit("TO")).otherwise(pl.col("memory")),
+    ).drop("error")
+
     _results_table = _results_table.pivot(
         on="library",
         index=[
@@ -486,7 +494,7 @@ def _(
             "min_solve_time_s",
             "solver_benchmark_memory_gib",
         ],
-    ).fill_null("—")
+    ).fill_null("NI")
 
     # Reshuffle column order
     _cols = (
@@ -500,10 +508,10 @@ def _(
     # Add N/A for linopy
     _results_table = _results_table.with_columns(
         time_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/S"))
+        .then(pl.lit("NS"))
         .otherwise("time_Linopy"),
         memory_Linopy=pl.when(problem="facility_location")
-        .then(pl.lit("N/S"))
+        .then(pl.lit("NS"))
         .otherwise("memory_Linopy"),
     )
 
@@ -545,9 +553,10 @@ def _(
         .tab_source_note(
             gt.html(
                 """
-                k = thousand; M = million; ms = milliseconds; s = seconds; GB = 1,024³ bytes
-                <br/>T/O = Timeout (benchmark did not complete within the 20 minute time limit)
-                <br/>N/S = Not Supported (Linopy does not support quadratic constraints)
+                k = thousand; M = million; s = seconds; GB = 1,024³ bytes
+                <br/>TO = Timeout (benchmark did not complete within the 20 minute time limit)
+                <br/>NS = Not Supported (Linopy does not support quadratic constraints)
+                <br/>NI = Not Implemented (CVXPY and PuLP were not implemented for all benchmarks to limit the benchmarking scope)
                 <br/>* The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
                 """
             )
