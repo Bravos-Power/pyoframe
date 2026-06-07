@@ -608,24 +608,33 @@ def _(Path, RESULTS_FILE, pl, results_latest):
     df_solver = df_solver.with_columns(
         pl.col("metric").replace(
             {
-                "relative_solve_time_s": "Solve Time",
-                "relative_memory_gib": "Memory Usage",
+                "relative_solve_time_s": "Gurobi Solve Time",
+                "relative_memory_gib": "Gurobi Memory Usage",
             }
-        )
+        ),
+        pl.col("problem").replace(
+            {
+                "energy_planning_capacity_expansion": "Electrical Grid Capacity Expansion Problem",
+                "energy_planning_security_constrained_dispatch": "Electrical Grid Dispatch Problem",
+                "simple_problem": "Trivial Problem",
+            }
+        ),
     )
 
     _fig = df_solver.plot.scatter(
         x=alt.X(
             "relative_value:Q",
             scale=alt.Scale(type="log"),
-            title="Gurobi's performance relative to benchmark median",
+            title="Normalized value",
         ),
         y=alt.Y("library:O", title=""),
         column=alt.Column("metric", title=""),
-        color=alt.Color("problem:N"),
+        color=alt.Color(
+            "problem:N", title="Benchmark", legend=alt.Legend(labelLimit=200)
+        ),
     )
 
-    _fig.save(Path(RESULTS_FILE).parent / "solver_performance.svg")
+    _fig.save(Path(RESULTS_FILE).parent / "solver_performance.pdf")
     _fig
     return
 

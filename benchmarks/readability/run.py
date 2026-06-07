@@ -245,7 +245,7 @@ def create_output_table(results: pl.DataFrame, cwd: Path) -> None:
         pl.col("library").map_elements(lambda lib: library_order.index(lib), pl.Int64)
     )
 
-    results = results.rename({"library": "Modeling Interface"})
+    results = results.rename({"library": "Modeling Framework"})
 
     print(results)
 
