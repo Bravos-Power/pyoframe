@@ -1,4 +1,4 @@
-"""Pyoframe implementation of the facility location benchmark."""
+"""Pyoframe implementation of the electrical grid benchmark."""
 
 from pathlib import Path
 
