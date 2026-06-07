@@ -28,6 +28,7 @@ dependencies = [
     "great_tables[extra]==0.21.0",     # For creating tables
     "marimo==0.23.3",           # For the energy planning notebooks and table notebooks
     "matplotlib==3.10.9",       # For color scales
+    "black==26.5.1",        # For code formatting for readability benchmark
 ]
 
 [project.optional-dependencies]
