@@ -281,7 +281,7 @@ def _(alt, df_clean3, pl):
     final_capacity = df_clean4["Pmax"].sum()
     all_other_proportion = (prior_capacity - final_capacity) / prior_capacity
 
-    df_clean4.group_by("type").sum().plot.bar(
+    df_clean4.group_by("type").agg(pl.col("Pmax").sum()).plot.bar(
         x=alt.X("type", sort=alt.SortField(field="Pmax", order="descending")),
         y=alt.Y("Pmax", title="Total Capacity (MW)"),
         color="type",
