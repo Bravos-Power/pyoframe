@@ -61,9 +61,31 @@ r12 0
 r13 -0.012
 
 # Basis
-HiGHS v1
+HiGHS_basis_file v2
 Valid
 # Columns 10
-0 1 0 0 0 0 0 0 1 1
+ONE 0
+c_ekk0 1
+c_ekk1 0
+c_ekk2 0
+c_ekk3 0
+c_ekk4 0
+c_ekk5 0
+c_ekk6 0
+c_ekk7 1
+c_ekk8 1
 # Rows 14
-1 1 1 1 1 1 1 2 1 1 2 1 1 2
+r0 1
+r1 1
+r2 1
+r3 1
+r4 1
+r5 1
+r6 1
+r7 2
+r8 1
+r9 1
+r10 2
+r11 1
+r12 1
+r13 2

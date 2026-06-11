@@ -47,21 +47,21 @@ So the solution is...
 >>> total_cost.evaluate()
 12.060249999999998
 >>> m.Buy.solution
-┌───────────┬──────────┐
-│ food      ┆ solution │
-│ ---       ┆ ---      │
-│ str       ┆ f64      │
-╞═══════════╪══════════╡
-│ hamburger ┆ 0.555263 │
-│ chicken   ┆ 0.0      │
-│ hot_dog   ┆ 0.0      │
-│ fries     ┆ 0.0      │
-│ macaroni  ┆ 0.0      │
-│ pizza     ┆ 0.0      │
-│ salad     ┆ 0.0      │
-│ milk      ┆ 6.8      │
-│ ice_cream ┆ 2.909211 │
-└───────────┴──────────┘
+┌──────────────┬──────────┐
+│ food         ┆ solution │
+│ ---          ┆ ---      │
+│ str          ┆ f64      │
+╞══════════════╪══════════╡
+│ veggieburger ┆ 0.555263 │
+│ tofu         ┆ 0.0      │
+│ lentils      ┆ 0.0      │
+│ chickpeas    ┆ 0.0      │
+│ macaroni     ┆ 0.0      │
+│ pizza        ┆ 0.0      │
+│ salad        ┆ 0.0      │
+│ milk         ┆ 6.8      │
+│ ice_cream    ┆ 2.909211 │
+└──────────────┴──────────┘
 
 ```
 
