@@ -1,4 +1,6 @@
 nav:
   - addition.md
-  - special-functions.md
-  - solver-access.md
+  - performance.md
+  - quadratics.md
+  - troubleshooting.md
+  - internals.md

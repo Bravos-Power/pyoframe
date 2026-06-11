@@ -6,7 +6,8 @@ import polars as pl
 import pytest
 from polars.testing import assert_frame_equal
 
-from pyoframe import Expression, Model, Param, Set, Variable, VType
+from pyoframe import Config, Expression, Model, Param, Set, Variable, VType
+from tests.util import get_tol
 
 
 def test_equals_param(solver):
@@ -25,7 +26,6 @@ def test_equals_param(solver):
         m.Choose100 = Variable(index, equals=100 * m.Choose)
     m.Choose100 = Variable(equals=100 * m.Choose)
     m.maximize = m.Choose100.sum()
-    m.attr.Silent = True
     m.optimize()
     assert m.maximize.value == 300
     assert m.maximize.evaluate() == 300
@@ -76,3 +76,85 @@ def test_auto_broadcast(default_solver):
 
     m.v1 = Variable(altern_dim, val, lb=val)
     m.v2 = Variable(altern_dim, val, ub=val)
+
+
+def test_solution_failures(solver):
+    m = Model(solver)
+
+    m.X = Variable()
+    m.Y = Variable()
+
+    m.maximize = m.X
+
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape("It seems that you forgot to call .optimize()"),
+    ):
+        m.X.solution
+
+    m.optimize()
+
+    if solver.supports_unbounded:
+        with pytest.raises(
+            RuntimeError,
+            match=re.escape(
+                "Did the solver find an optimal solution?"
+                if not solver.check_termination_status_when_retrieving_solution
+                else "because the solver did not find an optimal solution"
+            ),
+        ):
+            m.X.solution
+
+    m.constraint = m.X <= 5
+    m.optimize()
+
+    assert m.X.solution == pytest.approx(5, **get_tol(solver))
+
+    # add check for other types of failures
+    if solver.name == "gurobi":
+        m = Model(solver)
+        m.X = Variable(Set(x=range(1000)))
+        m.maximize = m.X.sum()
+        m.constraint = m.X <= 5
+        m.attr.TimeLimitSec = 0
+
+        m.optimize()
+
+        with pytest.raises(
+            RuntimeError, match=re.escape("Failed to retrieve the variable's solution")
+        ):
+            print(m.X.solution)
+
+
+def test_solution_integer_tolerance(solver):
+    if not solver.supports_integer_variables:
+        pytest.skip(
+            f"Solver {solver.name} does not support integer or binary variables, skipping test."
+        )
+    m = Model(solver)
+
+    m.X = Variable(vtype=VType.INTEGER, lb=0, ub=10)
+
+    m.Y = Variable(Set(dim1=range(10)), vtype=VType.INTEGER, lb=0, ub=10)
+
+    m.maximize = m.X + m.Y.sum()
+    m.optimize()
+
+    assert m.X.solution == 10
+    assert (m.Y.solution["solution"] == 10).all()
+
+    assert m.X.get_solution(return_integers=False) == 10.0
+    assert (m.Y.get_solution(return_integers=False)["solution"] == 10.0).all()
+
+    m.X._attr._getter = lambda attr: 9.8
+    with pytest.warns(
+        UserWarning,
+        match=re.escape(
+            "Unable to convert solution for variable 'X' from float to int. Consider loosening pf.Config.integer_tolerance"
+        ),
+    ):
+        assert m.X.solution == 9.8
+
+    Config.integer_tolerance = 0
+
+    assert m.X.solution == 10

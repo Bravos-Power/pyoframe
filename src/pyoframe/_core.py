@@ -40,6 +40,7 @@ from pyoframe._utils import (
     FuncArgs,
     cast_coef_to_string,
     concat_dimensions,
+    failed_attr_error,
     get_obj_repr,
     pairwise,
     parse_inputs_as_iterable,
@@ -1336,7 +1337,7 @@ class Expression(BaseOperableBlock):
             >>> m.expr.evaluate()
             Traceback (most recent call last):
             ...
-            ValueError: Cannot evaluate the expression 'expr' before calling model.optimize().
+            RuntimeError: Cannot evaluate the expression 'expr'. It seems that you forgot to call .optimize().
 
             >>> m.constant_expression = m.expr - 2 * m.X * m.X
             >>> m.constant_expression.evaluate()
@@ -1379,23 +1380,21 @@ class Expression(BaseOperableBlock):
 
         if self.degree() == 0:
             df = df.drop(self._variable_columns)
-        elif (
-            self._model.attr.TerminationStatus
-            == poi.TerminationStatusCode.OPTIMIZE_NOT_CALLED
-        ):
-            raise ValueError(
-                f"Cannot evaluate the expression '{self.name}' before calling model.optimize()."
-            )
         else:
-            for var_col in self._variable_columns:
-                values = [
-                    sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
-                    for v_id in df.get_column(var_col).to_list()
-                ]
+            try:
+                for var_col in self._variable_columns:
+                    values = [
+                        sm.get_variable_attribute(poi.VariableIndex(v_id), attr)
+                        for v_id in df.get_column(var_col).to_list()
+                    ]
 
-                df = df.drop(var_col).with_columns(
-                    pl.col(SOLUTION_KEY) * pl.Series(values, dtype=pl.Float64)
-                )
+                    df = df.drop(var_col).with_columns(
+                        pl.col(SOLUTION_KEY) * pl.Series(values, dtype=pl.Float64)
+                    )
+            except RuntimeError as e:
+                raise failed_attr_error(
+                    self._model, f"Cannot evaluate the expression '{self.name}'."
+                ) from e
 
         dims = self.dimensions
         if dims is not None:
@@ -1410,15 +1409,24 @@ class Expression(BaseOperableBlock):
         data = self.data
 
         if self.is_quadratic:
-            # Workaround for bug https://github.com/metab0t/PyOptInterface/issues/59
-            if self._model is None or self._model.solver.name == "highs":
-                data = data.sort(VAR_KEY, QUAD_VAR_KEY, descending=False)
-
-            return poi.ScalarQuadraticFunction(
-                coefficients=data.get_column(COEF_KEY).to_numpy(),
-                var1s=data.get_column(VAR_KEY).to_numpy(),
-                var2s=data.get_column(QUAD_VAR_KEY).to_numpy(),
-            )
+            quadratic_data = data.filter(pl.col(QUAD_VAR_KEY) != CONST_TERM)
+            affine_data = data.filter(pl.col(QUAD_VAR_KEY) == CONST_TERM)
+            if affine_data.is_empty():
+                return poi.ScalarQuadraticFunction(
+                    coefficients=quadratic_data.get_column(COEF_KEY).to_numpy(),
+                    var1s=quadratic_data.get_column(VAR_KEY).to_numpy(),
+                    var2s=quadratic_data.get_column(QUAD_VAR_KEY).to_numpy(),
+                )
+            else:
+                return poi.ScalarQuadraticFunction(
+                    coefficients=quadratic_data.get_column(COEF_KEY).to_numpy(),
+                    var1s=quadratic_data.get_column(VAR_KEY).to_numpy(),
+                    var2s=quadratic_data.get_column(QUAD_VAR_KEY).to_numpy(),
+                    affine_part=poi.ScalarAffineFunction(
+                        coefficients=affine_data.get_column(COEF_KEY).to_numpy(),
+                        variables=affine_data.get_column(VAR_KEY).to_numpy(),
+                    ),
+                )
         else:
             return poi.ScalarAffineFunction(
                 coefficients=data.get_column(COEF_KEY).to_numpy(),
@@ -1779,6 +1787,8 @@ class Constraint(BaseBlock):
         """This function is the main bottleneck for pyoframe.
 
         I've spent a lot of time optimizing it.
+
+        TODO: consider that the zero variables might need to be removed as it might cause issues similar to https://github.com/Bravos-Power/pyoframe/pull/237
         """
         assert self._model is not None
 
@@ -1787,6 +1797,7 @@ class Constraint(BaseBlock):
         sense = self.sense._to_poi()
         dims = self.dimensions
         df = self.lhs.data
+        solver = self._model.solver
         add_constraint = (
             self._model.poi._add_quadratic_constraint
             if is_quadratic
@@ -1796,7 +1807,7 @@ class Constraint(BaseBlock):
         # GRBaddconstr uses sprintf when no name or "" is given. sprintf is slow. As such, we specify "C" as the name.
         # Specifying "" is the same as not specifying anything, see pyoptinterface:
         # https://github.com/metab0t/PyOptInterface/blob/6d61f3738ad86379cff71fee77077d4ea919f2d5/lib/gurobi_model.cpp#L338
-        name = "C" if self._model.solver.accelerate_with_repeat_names else ""
+        name = "C" if solver.accelerate_with_repeat_names else ""
 
         if dims is None:
             if self._model.solver_uses_variable_names:
@@ -1869,9 +1880,11 @@ class Constraint(BaseBlock):
             # Note 3: we could have merged the if-else using an expansion operator (*) but that is slow.
             # Note 4: using kwargs is slow and including the constant term for linear expressions is faster.
             if use_var_names:
-                names = concat_dimensions(df_unique, prefix=self.name)[
-                    "concated_dim"
-                ].to_list()
+                names = concat_dimensions(
+                    df_unique,
+                    prefix=self.name,
+                    square_brackets=solver.supports_square_brackets_in_lp_files,
+                )["concated_dim"].to_list()
                 if is_quadratic:
                     ids = [
                         add_constraint(
@@ -1951,11 +1964,12 @@ class Constraint(BaseBlock):
         if isinstance(dual, pl.DataFrame):
             dual = dual.rename({"Dual": DUAL_KEY})
 
-        # Weirdly, IPOPT returns dual values with the opposite sign, so we correct this bug.
-        # It also does this for maximization problems
-        # but since we flip the objective (because Ipopt doesn't support maximization), the double negatives cancel out.
+        # Since pyoptinterface v0.6.0, the only correction needed is to negate the dual when we artificially converted the problem to a maximization one.
         assert self._model is not None
-        if self._model.solver.name == "ipopt" and self._model.sense == ObjSense.MIN:
+        if (
+            not self._model.solver.supports_objective_sense
+            and self._model.sense == ObjSense.MAX
+        ):
             if isinstance(dual, pl.DataFrame):
                 dual = dual.with_columns(-pl.col(DUAL_KEY))
             else:
@@ -2044,7 +2058,6 @@ class Constraint(BaseBlock):
             Traceback (most recent call last):
             ...
             ValueError: .relax() must be called before the Constraint is added to the model
-            >>> m.attr.Silent = True
             >>> m.optimize()
             >>> m.maximize.value
             -50.0
@@ -2430,9 +2443,11 @@ class Variable(BaseOperableBlock):
 
         dynamic_names = dims is not None and self._model.solver_uses_variable_names
         if dynamic_names:
-            names = concat_dimensions(self.data, prefix=self.name)[
-                "concated_dim"
-            ].to_list()
+            names = concat_dimensions(
+                self.data,
+                prefix=self.name,
+                square_brackets=solver.supports_square_brackets_in_lp_files,
+            )["concated_dim"].to_list()
             if solver.supports_integer_variables:
                 ids = [poi_add_var(domain, lb, ub, name).index for name in names]
             else:
@@ -2480,12 +2495,25 @@ class Variable(BaseOperableBlock):
         return VAR_KEY
 
     @property
-    @unwrap_single_values
-    def solution(self):
+    def solution(self) -> pl.DataFrame | float | int:
+        """Syntactic shortcut for [`Variable.get_solution()`][pyoframe.Variable.get_solution]."""
+        return self.get_solution()
+
+    def get_solution(self, return_integers: bool = True) -> pl.DataFrame | float | int:
         """Retrieves a variable's optimal value after the model has been solved.
 
-        Return type is a DataFrame if the variable has dimensions, otherwise it is a single value.
-        Binary and integer variables are returned as integers.
+        Returns:
+            A DataFrame if the variable has dimensions and a `float` or `int` otherwise.
+
+        Raises:
+            RuntimeError:
+                If the model has not been solved or the solver failed to find an optimal solution.
+
+        Parameters:
+            return_integers:
+                When `True`, the solution to binary and integer variables are returned as integers instead of floats.
+                Integers are obtained by rounding floats to the nearest integer.
+                If the rounding causes a change greater than [`Config.integer_tolerance`][pyoframe._Config.integer_tolerance], rounding is canceled, a warning is emitted, and floats are returned.
 
         Examples:
             >>> m = pf.Model()
@@ -2496,10 +2524,6 @@ class Variable(BaseOperableBlock):
             >>> m.var_dimensionless = pf.Variable(
             ...     lb=4.5, ub=5.5, vtype=pf.VType.INTEGER
             ... )
-            >>> m.var_continuous.solution
-            Traceback (most recent call last):
-            ...
-            RuntimeError: Failed to retrieve solution for variable. Are you sure the model has been solved?
             >>> m.optimize()
             >>> m.var_continuous.solution
             shape: (3, 2)
@@ -2526,38 +2550,70 @@ class Variable(BaseOperableBlock):
             >>> m.var_dimensionless.solution
             5
         """
+        assert self._model is not None, (
+            "Cannot retrieve the variable's solution because the variable has not been added to a model."
+        )
+
+        if self._model.solver.check_termination_status_when_retrieving_solution:
+            try:
+                termination_status = self._model.attr.TerminationStatus
+            except RuntimeError:
+                termination_status = None
+
+            invalid_termination_codes = (
+                poi.TerminationStatusCode.INFEASIBLE,
+                poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
+                poi.TerminationStatusCode.DUAL_INFEASIBLE,
+            )
+
+            if termination_status in invalid_termination_codes:
+                raise RuntimeError(
+                    f"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '{termination_status.name}')."
+                )
+
         try:
             solution = self.attr.Value
         except RuntimeError as e:
-            raise RuntimeError(
-                "Failed to retrieve solution for variable. Are you sure the model has been solved?"
+            raise failed_attr_error(
+                self._model, "Failed to retrieve the variable's solution."
             ) from e
-        if isinstance(solution, pl.DataFrame):
+
+        is_df = isinstance(solution, pl.DataFrame)
+
+        if is_df:
             solution = solution.rename({"Value": SOLUTION_KEY})
 
-        if self.vtype in [VType.BINARY, VType.INTEGER]:
-            if isinstance(solution, pl.DataFrame):
-                # TODO handle values that are out of bounds of Int64 (i.e. when problem is unbounded)
+        if return_integers and self.vtype in [VType.BINARY, VType.INTEGER]:
+            if is_df:
                 solution = solution.with_columns(
-                    pl.col("solution").alias("solution_float"),
-                    pl.col("solution").round().cast(pl.Int64),
+                    _solution_int=pl.col(SOLUTION_KEY).round().cast(pl.Int64),
                 )
-                if Config.integer_tolerance != 0:
-                    df = solution.filter(
-                        (pl.col("solution_float") - pl.col("solution")).abs()
-                        > Config.integer_tolerance
-                    )
-                    assert df.is_empty(), (
-                        f"Variable {self.name} has a non-integer value: {df}\nThis should not happen."
-                    )
-                solution = solution.drop("solution_float")
             else:
-                solution_float = solution
-                solution = int(round(solution))
-                if Config.integer_tolerance != 0:
-                    assert abs(solution - solution_float) < Config.integer_tolerance, (
-                        f"Value of variable {self.name} is not an integer: {solution}. This should not happen."
+                solution_int = int(round(solution))  # type: ignore
+
+            if Config.integer_tolerance == 0:
+                within_tolerance = True
+            else:
+                if is_df:
+                    within_tolerance = solution.filter(
+                        (pl.col(SOLUTION_KEY) - pl.col("_solution_int")).abs()
+                        > Config.integer_tolerance
+                    ).is_empty()
+                else:
+                    within_tolerance = (
+                        abs(solution - solution_int) <= Config.integer_tolerance  # type: ignore
                     )
+
+            if within_tolerance:
+                solution = (
+                    solution.drop(SOLUTION_KEY).rename({"_solution_int": SOLUTION_KEY})
+                    if is_df
+                    else solution_int  # type: ignore
+                )
+            else:
+                warnings.warn(
+                    f"Unable to convert solution for variable '{self.name}' from float to int. Consider loosening pf.Config.integer_tolerance."
+                )
 
         return solution
 

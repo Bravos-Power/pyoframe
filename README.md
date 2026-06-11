@@ -4,9 +4,8 @@
 [![Build](https://github.com/Bravos-Power/pyoframe/actions/workflows/ci.yml/badge.svg)](https://github.com/Bravos-Power/pyoframe/actions/workflows/ci.yml)
 [![Docs](https://github.com/Bravos-Power/pyoframe/actions/workflows/publish_doc.yml/badge.svg)](https://Bravos-Power.github.io/pyoframe/latest/reference/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Issues Needing Triage](https://img.shields.io/github/issues-search/Bravos-Power/pyoframe?query=no%3Alabel%20is%3Aopen&label=Needs%20Triage)](https://github.com/Bravos-Power/pyoframe/issues?q=is%3Aopen+is%3Aissue+no%3Alabel)
-[![Open Bugs](https://img.shields.io/github/issues-search/Bravos-Power/pyoframe?query=label%3Abug%20is%3Aopen&label=Open%20Bugs)](https://github.com/Bravos-Power/pyoframe/issues?q=is%3Aopen+is%3Aissue+label%3Abug)
-
+[![Unaddressed issues](https://img.shields.io/github/issues-search/Bravos-Power/pyoframe?query=is%3Aissue%20state%3Aopen%20no%3Alabel&label=Unaddressed%20issues)](https://github.com/Bravos-Power/pyoframe/issues?q=is%3Aissue%20state%3Aopen%20no%3Alabel)
+[![Open bugs](https://img.shields.io/github/issues-search/Bravos-Power/pyoframe?query=is%3Aopen%20is%3Aissue%20label%3Abug&label=Open%20bugs)](https://github.com/Bravos-Power/pyoframe/issues?q=is%3Aopen%20is%3Aissue%20label%3Abug)
 
 A library to rapidly and memory-efficiently formulate large and sparse optimization models using Pandas or Polars DataFrames.
 

@@ -114,7 +114,7 @@ First, multiply the variable by the protein amount.
 
 As you can see, Pyoframe with a bit of magic converted the `Variable` into an `Expression` where the coefficients are the protein amounts.
 
-*[with a bit of magic]: Pyoframe always converts DataFrames into Expressions by taking the first columns as dimensions and the last column as values. Additionally, multiplication is always done between elements with the same dimensions.
+*[with a bit of magic]: Pyoframe always converts DataFrames into Expressions by taking the first columns as dimensions and the last column as values. Additionally, operations are always compute between values with the same labels.
 
 Second, notice that the `Expression` still has the `food` dimension—it really contains two separate expressions, one for tofu and one for chickpeas. All objective functions must be a single expression (without dimensions) so let's sum over the `food` dimension.
 

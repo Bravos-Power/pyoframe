@@ -164,7 +164,6 @@ class Model:
         Examples:
             >>> m = pf.Model()
             >>> m.v = pf.Variable(lb=1, ub=1, vtype="integer")
-            >>> m.attr.Silent = True  # Prevent solver output from being printed
             >>> m.optimize()
             >>> m.attr.TerminationStatus
             <TerminationStatusCode.OPTIMAL: 2>
@@ -281,15 +280,30 @@ class Model:
                     env_config.set(key, value)
                 env = copt.Env(env_config)
             model = copt.Model(env)
+        elif solver.name == "mosek":
+            from pyoptinterface import mosek
+
+            try:
+                model = mosek.Model()
+            except RuntimeError as e:  # pragma: no cover
+                if "MOSEK library is not loaded" in str(e):
+                    raise RuntimeError(
+                        "Could not find the Mosek solver. Are you sure you've properly installed it and added it to your PATH?"
+                    ) from e
+                raise e
         else:
             raise ValueError(
                 f"Solver {solver} not recognized or supported."
             )  # pragma: no cover
 
+        if Config._initialize_silent:
+            model.set_model_attribute(poi.ModelAttribute.Silent, True)
+
         constant_var = model.add_variable(lb=1, ub=1, name="ONE")
         assert constant_var.index == CONST_TERM, (
             "The first variable should have index 0."
         )
+
         return model, solver
 
     @property
@@ -413,7 +427,7 @@ class Model:
         if isinstance(__value, BaseBlock) and __name not in Model._reserved_attributes:
             if __value._get_id_column_name() is not None:
                 assert not hasattr(self, __name), (
-                    f"Cannot create {__name} since it was already created."
+                    f"Cannot assign name '{__name}' to {__value.__class__.__name__} because '{__name}' is already in use."
                 )
 
             log = self._logger is not None and isinstance(
@@ -470,13 +484,13 @@ class Model:
         Consult your solver documentation to learn more.
 
         When creating your model, set [`solver_uses_variable_names`][pyoframe.Model]
-        to make the outputed file human-readable.
+        to make the outputted file human-readable.
 
         ```python
         m = pf.Model(solver_uses_variable_names=True)
         ```
 
-        For Gurobi, `solver_uses_variable_names=True` is mandatory when using
+        For Gurobi and Mosek, `solver_uses_variable_names=True` is mandatory when using
         .write(). This may become mandatory for other solvers too without notice.
 
         Parameters:
@@ -575,7 +589,7 @@ class Model:
         """Returns a DataFrame with information about the memory usage of each variable in the model.
 
         !!! warning "Experimental"
-            This method is experimental and may change or be removed in future versions. We're interested in your [feedback]([feedback](https://github.com/Bravos-Power/pyoframe/issues).
+            This method is experimental and may change or be removed in future versions. We're interested in your [feedback](https://github.com/Bravos-Power/pyoframe/issues).
 
         Parameters:
             memory_unit:

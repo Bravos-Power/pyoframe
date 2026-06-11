@@ -133,11 +133,16 @@ def test_write_lp(use_var_names, solver: _Solver):
         gp_model.optimize()
         assert gp_model.ObjVal == obj_value
 
+        search_str = (
+            "population[CAN,Toronto]"
+            if solver.supports_square_brackets_in_lp_files
+            else "population_CAN_Toronto"
+        )
         with open(file_path) as f:
             if use_var_names:
-                assert "population[CAN,Toronto]" in f.read()
+                assert search_str in f.read()
             else:
-                assert "population[CAN,Toronto]" not in f.read()
+                assert search_str not in f.read()
 
 
 def test_write_sol(use_var_names, solver):
@@ -145,8 +150,9 @@ def test_write_sol(use_var_names, solver):
         solver.supports_write
         and (use_var_names or not solver.accelerate_with_repeat_names)
     ):
-        pytest.skip(f"{solver.name} does not support writing solution files.")
+        return pytest.skip(f"{solver.name} does not support writing solution files.")
     with TemporaryDirectory() as tmpdir:
+        tmpdir = "."
         m = Model(solver, solver_uses_variable_names=use_var_names)
         cities = pl.DataFrame(
             {
@@ -165,11 +171,16 @@ def test_write_sol(use_var_names, solver):
         m.optimize()
         m.write(file_path)
 
+        search_str = (
+            "population[CAN,Toronto]"
+            if solver.supports_square_brackets_in_lp_files
+            else "population_CAN_Toronto"
+        )
         with open(file_path) as f:
             if use_var_names:
-                assert "population[CAN,Toronto]" in f.read()
+                assert search_str in f.read()
             else:
-                assert "population[CAN,Toronto]" not in f.read()
+                assert search_str not in f.read()
 
 
 if __name__ == "__main__":

@@ -27,6 +27,9 @@ class _Solver:
     supports_duals: bool = True
     supports_objective_sense: bool = True
     supports_write: bool = True
+    supports_unbounded: bool = True
+    supports_square_brackets_in_lp_files: bool = True
+    check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
     If True, Pyoframe sets all the variable and constraint names to 'V'
@@ -63,8 +66,25 @@ SUPPORTED_SOLVERS = [
         supports_integer_variables=False,
         supports_objective_sense=False,
         supports_write=False,
+        # ipopt just returns large numbers instead of "unbounded"
+        supports_unbounded=False,
     ),
-    _Solver("copt", supports_non_convex=False),
+    _Solver(
+        "copt",
+        supports_non_convex=False,
+        # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
+        check_termination_status_when_retrieving_solution=True,
+    ),
+    _Solver(
+        "mosek",
+        # mosek returns a value even when infeasible
+        check_termination_status_when_retrieving_solution=True,
+        # by default, not providing names actually sets the names to an empty string so there appears to be no downside to instead provide "C" and "V" as names.
+        # conveniently, this prevents malformed .lp files by forcing the user to set solver_uses_variable_names=True if they want to use .write() with Mosek.
+        accelerate_with_repeat_names=True,
+        supports_square_brackets_in_lp_files=False,
+        supports_non_convex=False,
+    ),
 ]
 
 
@@ -86,7 +106,7 @@ class ConfigDefaults:
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
     disable_extras_checks: bool = False
     enable_is_duplicated_expression_safety_check: bool = False
-    integer_tolerance: float = 1e-8
+    integer_tolerance: float = 1e-4
     float_to_str_precision: int | None = 5
     print_polars_config: pl.Config = field(
         default_factory=lambda: pl.Config(
@@ -99,6 +119,7 @@ class ConfigDefaults:
     print_max_terms: int = 5
     maintain_order: bool = True
     id_dtype = pl.UInt32
+    _initialize_silent = False
 
 
 class _Config:
@@ -203,13 +224,12 @@ class _Config:
 
     @property
     def integer_tolerance(self) -> float:
-        """Tolerance for checking if a floating point value is an integer.
+        """Tolerance used when converting integer solutions from floats to ints.
 
-        !!! info
-            For convenience, Pyoframe returns the solution of integer and binary variables as integers not floating point values.
-            To do so, Pyoframe must convert the solver-provided floating point values to integers. To avoid unexpected rounding errors,
-            Pyoframe uses this tolerance to check that the floating point result is an integer as expected. Overly tight tolerances can trigger
-            unexpected errors. Setting the tolerance to zero disables the check.
+        See [`Variable.get_solution`][pyoframe.Variable.get_solution] for more information.
+        Default is `1e-4`. When set to `0`, the tolerance check is disabled meaning that rounding is performed regardless of the magnitude of the change.
+
+        When changing Gurobi's [`IntFeasTol` parameter](https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#intfeastol) it is often desirable to correspondingly change this setting. Note that `integer_tolerance` may have to be looser than `IntFeasTol` to avoid warnings (see [this thread](https://support.gurobi.com/hc/en-us/community/posts/11662153368849/comments/11665327308305)).
         """
         return self._settings.integer_tolerance
 
@@ -354,6 +374,15 @@ class _Config:
     def id_dtype(self, value):
         self._settings.id_dtype = value
 
+    @property
+    def _initialize_silent(self) -> bool:
+        """Internal setting used for testing which silences the solver output."""
+        return self._settings._initialize_silent
+
+    @_initialize_silent.setter
+    def _initialize_silent(self, value: bool):
+        self._settings._initialize_silent = value
+
     def reset_defaults(self):
         """Resets all configuration options to their default values.
 
@@ -450,7 +479,7 @@ VTypeValue = Literal["continuous", "binary", "integer"]
 for enum, type in [(ObjSense, ObjSenseValue), (VType, VTypeValue)]:
     assert set(typing.get_args(type)) == {vtype.value for vtype in enum}
 
-SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt"]
+SUPPORTED_SOLVER_TYPES = Literal["gurobi", "highs", "ipopt", "copt", "mosek"]
 assert set(typing.get_args(SUPPORTED_SOLVER_TYPES)) == {
     s.name for s in SUPPORTED_SOLVERS
 }
