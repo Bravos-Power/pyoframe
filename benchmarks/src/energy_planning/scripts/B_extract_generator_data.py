@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.23.9"
 app = marimo.App()
 
 
@@ -232,9 +232,9 @@ def _(mo):
 
 
 @app.cell
-def _(alt, df_clean3):
+def _(alt, df_clean3, pl):
     # Inspect fuel types
-    df_clean3.group_by("FuelType").sum().plot.bar(
+    df_clean3.group_by("FuelType").agg(pl.col("Pmax").sum()).plot.bar(
         x=alt.X("FuelType", sort=alt.SortField(field="Pmax", order="descending")),
         y=alt.Y("Pmax", title="Total Capacity (MW)"),
         color="FuelType",

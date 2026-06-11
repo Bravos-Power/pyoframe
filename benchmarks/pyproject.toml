@@ -7,6 +7,7 @@ name = "pyoframe-benchmarks"
 version = "0.0.0"
 dependencies = [
     # solvers
+    "polars==1.41.2",  # pin to avoid issues
     "pyomo==6.9.2",
     "linopy==0.6.5",
     "pyoptinterface==0.5.1",
