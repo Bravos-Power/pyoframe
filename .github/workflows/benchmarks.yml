@@ -37,6 +37,10 @@ jobs:
           pip install -e .
           cd benchmarks
           pip install -e .[energy-planning]
+      - name: Install AMPL
+        run: |
+          python -m amplpy.modules install gurobi
+          python -m amplpy.modules activate ${{ secrets.AMPL_LICENSE_UUID }}
       - name: Install Julia packages
         run: |
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
