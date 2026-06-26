@@ -1439,6 +1439,7 @@ class Expression(BaseOperableBlock):
         str_col_name: str = "expression",
         include_const_term: bool = True,
         return_df: Literal[False] = False,
+        _compute_all_rows: bool = True,
     ) -> str: ...
 
     @overload
@@ -1447,6 +1448,7 @@ class Expression(BaseOperableBlock):
         str_col_name: str = "expression",
         include_const_term: bool = True,
         return_df: Literal[True] = True,
+        _compute_all_rows: bool = True,
     ) -> pl.DataFrame: ...
 
     def to_str(
@@ -1454,6 +1456,7 @@ class Expression(BaseOperableBlock):
         str_col_name: str = "expression",
         include_const_term: bool = True,
         return_df: bool = False,
+        _compute_all_rows: bool = True,
     ) -> str | pl.DataFrame:
         """Converts the expression to a human-readable string, or several arranged in a table.
 
@@ -1468,6 +1471,9 @@ class Expression(BaseOperableBlock):
                 If `False`, constant terms are omitted from the string representation.
             return_df:
                 If `True`, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
+            _compute_all_rows:
+                If `False` and `return_df` is True, only a subset of rows are included in the returned DataFrame. This option is used internally to accelerate conversions
+                that will be truncated anyways. This option may change in future versions of pyoframe.
 
         Examples:
             >>> import polars as pl
@@ -1521,8 +1527,47 @@ class Expression(BaseOperableBlock):
             3000000 +2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] …
 
         """
-        # TODO consider optimizing using LazyFrames since .head() could maybe be automatically pushed up the chain of operations.
         data = self.data if include_const_term else self.variable_terms
+
+        dimensions = self.dimensions
+
+        # Truncate data to speed up string conversion by ~2x
+        if dimensions is None:
+            truncate = data.height > Config.print_max_terms
+            if truncate:
+                data = data.head(Config.print_max_terms)
+        else:
+            if not return_df or not _compute_all_rows:
+                # The default for polars is 10. See https://github.com/pola-rs/polars/blob/507e4fc79c0c78162ab34d17c0499ec03850b0cc/crates/polars-core/src/fmt.rs#L32-L34
+                n = Config.print_polars_config.state(if_set=True).get(
+                    "POLARS_FMT_MAX_ROWS", 10
+                )
+                # Add 1 to get ellipses
+                n = int(n) + 1  # type: ignore
+
+                group_number = (
+                    data.select(dimensions)
+                    .unique(maintain_order=Config.maintain_order)
+                    .with_row_index("__group_index")
+                )
+
+                first_exclude = n // 2 + (1 if n % 2 == 1 else 0)
+                last_exclude = group_number.height - n // 2 - 1
+
+                data = data.join(
+                    group_number,
+                    on=dimensions,
+                    maintain_order="left" if Config.maintain_order else None,
+                )
+                data = data.filter(
+                    ~pl.col("__group_index").is_between(first_exclude, last_exclude)
+                ).drop("__group_index")
+
+            truncate = data.group_by(
+                dimensions, maintain_order=Config.maintain_order
+            ).agg(__truncated=pl.len() > Config.print_max_terms)
+            data = data.filter(pl.row_index().over(dimensions) < Config.print_max_terms)
+
         data = cast_coef_to_string(data)
 
         for var_col in self._variable_columns:
@@ -1549,8 +1594,6 @@ class Expression(BaseOperableBlock):
                 .alias(VAR_KEY)
             ).drop(QUAD_VAR_KEY)
 
-        dimensions = self.dimensions
-
         # Create a string for each term
         data = data.with_columns(
             pl.concat_str(
@@ -1562,28 +1605,31 @@ class Expression(BaseOperableBlock):
             .alias(str_col_name)
         ).drop(COEF_KEY, VAR_KEY)
 
-        if dimensions is not None:
-            data = data.group_by(dimensions, maintain_order=Config.maintain_order).agg(
-                pl.concat_str(
-                    pl.col(str_col_name)
-                    .head(Config.print_max_terms)
-                    .str.join(delimiter=" "),
-                    pl.when(pl.len() > Config.print_max_terms)
-                    .then(pl.lit(" …"))
-                    .otherwise(pl.lit("")),
-                )
-            )
-        else:
-            truncate = data.height > Config.print_max_terms
-            if truncate:
-                data = data.head(Config.print_max_terms)
-
+        if dimensions is None:
             data = data.select(pl.col(str_col_name).str.join(delimiter=" "))
 
-            if truncate:
+            if truncate:  # type: ignore
                 data = data.with_columns(
                     pl.concat_str(pl.col(str_col_name), pl.lit(" …"))
                 )
+        else:
+            data = data.group_by(dimensions, maintain_order=Config.maintain_order).agg(
+                pl.concat_str(
+                    pl.col(str_col_name).str.join(delimiter=" "),
+                )
+            )
+
+            data = data.join(
+                truncate,  # type: ignore
+                on=dimensions,
+                maintain_order="left" if Config.maintain_order else None,
+            )
+            data = data.with_columns(
+                pl.concat_str(
+                    pl.col(str_col_name),
+                    pl.when("__truncated").then(pl.lit(" …")).otherwise(pl.lit("")),
+                )
+            ).drop("__truncated")
 
         # Remove leading +
         data = data.with_columns(pl.col(str_col_name).str.strip_chars(characters="  +"))
@@ -1735,11 +1781,7 @@ class Constraint(BaseBlock):
         except KeyError:
             setter = self._model.poi.set_constraint_raw_attribute
 
-        constr_type = (
-            poi.ConstraintType.Quadratic
-            if self.lhs.is_quadratic
-            else poi.ConstraintType.Linear
-        )
+        constr_type = self._poi_constraint_type
 
         if self.dimensions is None:
             for key in self.data.get_column(CONSTRAINT_KEY):
@@ -1766,11 +1808,7 @@ class Constraint(BaseBlock):
         except KeyError:
             getter = self._model.poi.get_constraint_raw_attribute
 
-        constr_type = (
-            poi.ConstraintType.Quadratic
-            if self.lhs.is_quadratic
-            else poi.ConstraintType.Linear
-        )
+        constr_type = self._poi_constraint_type
 
         ids = self.data.get_column(CONSTRAINT_KEY).to_list()
         attr = [getter(poi.ConstraintIndex(constr_type, v_id), name) for v_id in ids]
@@ -1792,7 +1830,7 @@ class Constraint(BaseBlock):
         """
         assert self._model is not None
 
-        is_quadratic = self.lhs.is_quadratic
+        is_quadratic = self.is_quadratic
         use_var_names = self._model.solver_uses_variable_names
         sense = self.sense._to_poi()
         dims = self.dimensions
@@ -1937,6 +1975,23 @@ class Constraint(BaseBlock):
 
         self._data = df
 
+    def _delete(self):
+        assert self._model is not None
+
+        # TODO once https://github.com/metab0t/PyOptInterface/issues/103 is fixed, we can remove the check for "mosek" and update the error message
+        if (
+            not self._model.solver.supports_deletion
+            or self._model.solver.name == "mosek"
+        ):
+            raise Exception(
+                f"Cannot delete constraint '{self.name}' because the solver '{self._model.solver.name}' does not support constraint deletion."
+            )
+
+        constraint_type = self._poi_constraint_type
+        poi_model = self._model.poi
+        for constr_id in self.data.get_column(CONSTRAINT_KEY):
+            poi_model.delete_constraint(poi.ConstraintIndex(constraint_type, constr_id))
+
     @property
     def dual(self) -> pl.DataFrame | float:
         """Returns the constraint's dual values.
@@ -1975,6 +2030,19 @@ class Constraint(BaseBlock):
             else:
                 dual = -dual
         return dual
+
+    @property
+    def is_quadratic(self) -> bool:
+        """Returns `True` if the constraint is quadratic, `False` otherwise."""
+        return self.lhs.is_quadratic
+
+    @property
+    def _poi_constraint_type(self) -> poi.ConstraintType:
+        return (
+            poi.ConstraintType.Quadratic
+            if self.is_quadratic
+            else poi.ConstraintType.Linear
+        )
 
     @classmethod
     def _get_id_column_name(cls):
@@ -2210,7 +2278,10 @@ class Constraint(BaseBlock):
         """
         dims = self.dimensions
         str_table = self.lhs.to_str(
-            include_const_term=False, return_df=True, str_col_name="constraint"
+            include_const_term=False,
+            return_df=True,
+            str_col_name="constraint",
+            _compute_all_rows=return_df,
         )
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False, always_show_sign=False)
@@ -2493,6 +2564,19 @@ class Variable(BaseOperableBlock):
     @classmethod
     def _get_id_column_name(cls):
         return VAR_KEY
+
+    def _delete(self):
+        assert self._model is not None
+
+        if not self._model.solver.supports_deletion:
+            raise Exception(
+                f"Cannot delete variable '{self.name}' because the solver '{self._model.solver.name}' does not support deletion."
+            )
+
+        # TODO request pyoptinterface to expose version that doesn't require handle
+        self._model.poi.delete_variables(
+            [poi.VariableIndex(v_id) for v_id in self.data.get_column(VAR_KEY)]
+        )
 
     @property
     def solution(self) -> pl.DataFrame | float | int:

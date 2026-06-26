@@ -33,17 +33,13 @@ runs:
         mkdir -p ~/installers
 
     - name: Cache Installers
-      id: cache-installers-linux
-      uses: actions/cache@v4
-      env:
-        cache-name: cache-installers-linux-v2
+      id: cache-installers
+      uses: actions/cache@v6
       with:
         path: ~/installers
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-v2-${{ hashFiles('optimizer_version.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-v2-
+        key: installers-${{ runner.os }}
 
-    - if: ${{ steps.cache-installers-linux-v2.outputs.cache-hit != 'true' }}
+    - if: ${{ steps.cache-installers.outputs.cache-hit != 'true' }}
       shell: bash
       name: Download Installers
       run: |
