@@ -364,6 +364,11 @@ class NamedVariableMapper:
     def add(self, element: Variable) -> None:
         self._extend_registry(self._element_to_map(element))
 
+    def remove(self, element: Variable) -> None:
+        self.mapping_registry = self.mapping_registry.filter(
+            ~pl.col(self._ID_COL).is_in(element.data.get_column(VAR_KEY))
+        )
+
     def _extend_registry(self, df: pl.DataFrame) -> None:
         self.mapping_registry = pl.concat([self.mapping_registry, df])
 

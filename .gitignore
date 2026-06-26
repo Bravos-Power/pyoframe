@@ -14,3 +14,6 @@ site
 src/pyoframe/_version.py
 htmlcov/
 .snakemake/
+/sketch.py
+/*.sol
+/*.lp
