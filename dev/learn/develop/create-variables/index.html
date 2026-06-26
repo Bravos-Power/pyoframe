@@ -791,6 +791,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#delete-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Delete variable
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#set-bounds" class="md-nav__link">
     <span class="md-ellipsis">
       Set bounds
@@ -2096,6 +2105,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#delete-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Delete variable
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#set-bounds" class="md-nav__link">
     <span class="md-ellipsis">
       Set bounds
@@ -2197,9 +2215,14 @@
 <p class="admonition-title">Tip: Use uppercase names for variables</p>
 <p>Uppercase names for variables (i.e. <code>Var_Name</code> not <code>var_name</code>) makes variables (the most important part of your model) easy to distinguish from other model attributes.</p>
 </div>
+<h2 id="delete-variable">Delete variable</h2>
+<p>To delete a variable, simply remove it from the model using <code>del</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">del</span> <span class="n">m</span><span class="o">.</span><span class="n">Var_Name</span>
+</span></code></pre></div>
+<p>Note that the ipopt solver <a href="https://metab0t.github.io/PyOptInterface/ipopt.html">does not support deletion</a> due to its API design.</p>
 <h2 id="set-bounds">Set bounds</h2>
 <p>By default, variables are unbounded. To set a lower or upper bound, use the <code>lb</code> or <code>ub</code> arguments. For example,</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Positive_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Positive_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Bounds can be expressions</p>
@@ -2207,46 +2230,46 @@
 </div>
 <h2 id="set-domain">Set domain</h2>
 <p>By default, variables are continuous. To create a binary or integer variable use the <code>vtype</code> argument:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Binary_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">)</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Integer_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Binary_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Integer_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <h2 id="use-dimensions-and-labels">Use dimensions and labels</h2>
 <p>Passing a DataFrame to <code>pf.Variable</code> will create a variable for every row in the DataFrame. I call this a <em>dimensioned variable</em>.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">pandas</label><label for="__tabbed_1_2">polars</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
+<div class="tabbed-block">
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">polars</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pl</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
 </div>
 </div>
 <p>Notice how the DataFrame's column name becomes the dimension name and the DataFrame's values become the variable's labels:</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="go">&lt;Variable &#39;Yearly_Var&#39; height=3&gt;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="go">┌──────┬──────────────────┐</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="go">│ year ┆ variable         │</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="go">│ (3)  ┆                  │</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="go">╞══════╪══════════════════╡</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="go">│ 2025 ┆ Yearly_Var[2025] │</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="go">│ 2026 ┆ Yearly_Var[2026] │</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="go">│ 2027 ┆ Yearly_Var[2027] │</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="go">└──────┴──────────────────┘</span>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="go">&lt;Variable &#39;Yearly_Var&#39; height=3&gt;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="go">┌──────┬──────────────────┐</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="go">│ year ┆ variable         │</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="go">│ (3)  ┆                  │</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="go">╞══════╪══════════════════╡</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="go">│ 2025 ┆ Yearly_Var[2025] │</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="go">│ 2026 ┆ Yearly_Var[2026] │</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="go">│ 2027 ┆ Yearly_Var[2027] │</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="go">└──────┴──────────────────┘</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Labels must be unique</p>
@@ -2257,36 +2280,36 @@
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">pandas</label><label for="__tabbed_2_2">polars</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">locations</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span> <span class="s2">&quot;Mexico City&quot;</span><span class="p">]})</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">m</span><span class="o">.</span><span class="n">Cartesian_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">,</span> <span class="n">locations</span><span class="p">)</span>
-</span></code></pre></div>
-</div>
-<div class="tabbed-block">
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">locations</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span> <span class="s2">&quot;Mexico City&quot;</span><span class="p">]})</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">locations</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span> <span class="s2">&quot;Mexico City&quot;</span><span class="p">]})</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
 </span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 </span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">m</span><span class="o">.</span><span class="n">Cartesian_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">,</span> <span class="n">locations</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
+<div class="tabbed-block">
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">locations</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;city&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Toronto&quot;</span><span class="p">,</span> <span class="s2">&quot;Mexico City&quot;</span><span class="p">]})</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">m</span><span class="o">.</span><span class="n">Cartesian_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">,</span> <span class="n">locations</span><span class="p">)</span>
+</span></code></pre></div>
 </div>
 </div>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Cartesian_Var</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="go">&lt;Variable &#39;Cartesian_Var&#39; height=6&gt;</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="go">┌──────┬─────────────┬─────────────────────────────────┐</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="go">│ year ┆ city        ┆ variable                        │</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="go">│ (3)  ┆ (2)         ┆                                 │</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="go">╞══════╪═════════════╪═════════════════════════════════╡</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="go">│ 2025 ┆ Toronto     ┆ Cartesian_Var[2025,Toronto]     │</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="go">│ 2025 ┆ Mexico City ┆ Cartesian_Var[2025,Mexico_City] │</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="go">│ 2026 ┆ Toronto     ┆ Cartesian_Var[2026,Toronto]     │</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="go">│ 2026 ┆ Mexico City ┆ Cartesian_Var[2026,Mexico_City] │</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="go">│ 2027 ┆ Toronto     ┆ Cartesian_Var[2027,Toronto]     │</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="go">│ 2027 ┆ Mexico City ┆ Cartesian_Var[2027,Mexico_City] │</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="go">└──────┴─────────────┴─────────────────────────────────┘</span>
+</div>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Cartesian_Var</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="go">&lt;Variable &#39;Cartesian_Var&#39; height=6&gt;</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="go">┌──────┬─────────────┬─────────────────────────────────┐</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="go">│ year ┆ city        ┆ variable                        │</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="go">│ (3)  ┆ (2)         ┆                                 │</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="go">╞══════╪═════════════╪═════════════════════════════════╡</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="go">│ 2025 ┆ Toronto     ┆ Cartesian_Var[2025,Toronto]     │</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="go">│ 2025 ┆ Mexico City ┆ Cartesian_Var[2025,Mexico_City] │</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="go">│ 2026 ┆ Toronto     ┆ Cartesian_Var[2026,Toronto]     │</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="go">│ 2026 ┆ Mexico City ┆ Cartesian_Var[2026,Mexico_City] │</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="go">│ 2027 ┆ Toronto     ┆ Cartesian_Var[2027,Toronto]     │</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="go">│ 2027 ┆ Mexico City ┆ Cartesian_Var[2027,Mexico_City] │</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="go">└──────┴─────────────┴─────────────────────────────────┘</span>
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Use a multi-column DataFrame to create sparse variables</p>
@@ -2305,29 +2328,29 @@ m.Yearly_Var = pf.Variable(years)
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Pyoframe offers a <a class="autorefs autorefs-internal" href="../../../reference/public/Set/#pyoframe.Set"><code>Set</code></a> class to easily define dimensioned variables in a reusable way.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">])</span>  <span class="c1"># define once, reuse for multiple variables</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_1</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">])</span>  <span class="c1"># define once, reuse for multiple variables</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_1</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Dictionaries are shortcuts for writing <code>pf.Variable(pl.DataFrame(dict_data))</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_2</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_2</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">({</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">]})</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>Passing a Pyoframe object such as an expression or another variable to <code>pf.Variable()</code> will create a variable with the same labels as the object.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_3</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">)</span>  <span class="c1"># Creates a variable with the same labels as m.Yearly_Var</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_3</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">)</span>  <span class="c1"># Creates a variable with the same labels as m.Yearly_Var</span>
 </span></code></pre></div>
 </div>
 <div class="tabbed-block">
 <p>A pandas <code>Index</code> or <code>Series</code> (or a polars <code>Series</code>) is treated as a DataFrame.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;year&quot;</span><span class="p">)</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_4</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;year&quot;</span><span class="p">)</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_4</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
 </span></code></pre></div>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;year&quot;</span><span class="p">)</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_5</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">years</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mi">2025</span><span class="p">,</span> <span class="mi">2026</span><span class="p">,</span> <span class="mi">2027</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;year&quot;</span><span class="p">)</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">m</span><span class="o">.</span><span class="n">Yearly_Var_5</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">years</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </div>
@@ -2369,7 +2392,7 @@ for con in [
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 21, 2026 15:22:21 UTC">January 21, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 16:36:12 UTC">June 26, 2026</span>
   </span>
 
     
