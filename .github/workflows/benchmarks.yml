@@ -11,12 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Julia
         uses: julia-actions/setup-julia@v3
       - uses: julia-actions/cache@v3
+        with:
+          cache-name: julia-benchmarking-cache
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: "pip"
@@ -28,15 +30,16 @@ jobs:
           COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
           MOSEK_LICENSE: ${{ secrets.MOSEK_LIC_FILE }}
           CHECK_LICENSE: true
-      - name: Install scikit-sparse dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libsuitesparse-dev
+      # Should not be necessary since we shouldn't recompute input files!
+      # - name: Install scikit-sparse dependencies
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y libsuitesparse-dev
       - name: Install dependencies
         run: |
           pip install -e .
           cd benchmarks
-          pip install -e .[energy-planning]
+          pip install -e .
       - name: Install AMPL
         run: |
           python -m amplpy.modules install gurobi
