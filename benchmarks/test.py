@@ -22,6 +22,9 @@ if __name__ == "__main__":
         default=None,
         help="Only run a specific library (e.g., 'pyoframe').",
     )
+    parser.add_argument(
+        "--skip-building-inputs", action="store_true", help="Skip building input files."
+    )
     args = parser.parse_args()
 
     config = read_config(name="config.test.yaml")
@@ -42,6 +45,10 @@ if __name__ == "__main__":
             )
         config["libraries"] = [args.library]
 
-    run_all_benchmarks(config, ignore_past_results=not args.reuse)
+    run_all_benchmarks(
+        config,
+        ignore_past_results=not args.reuse,
+        build_inputs=not args.skip_building_inputs,
+    )
 
     plot_all(config_name="config.test.yaml")

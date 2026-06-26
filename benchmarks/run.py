@@ -47,7 +47,7 @@ class Benchmark:
     solver_args: dict | None
 
 
-def run_all_benchmarks(config, ignore_past_results=False):
+def run_all_benchmarks(config, ignore_past_results=False, build_inputs=True):
     base_dir = CWD / "results" / config["name"]
     base_dir.mkdir(parents=True, exist_ok=True)
 
@@ -57,7 +57,8 @@ def run_all_benchmarks(config, ignore_past_results=False):
 
     for name, problem_config in config["problems"].items():
         code_dir = problem_config.get("code_dir", name)
-        prepare_benchmark_problem(name, code_dir, problem_config)
+        if build_inputs:
+            prepare_benchmark_problem(name, code_dir, problem_config)
 
         num_repeats = problem_config.get("repeat", config.get("repeat", 1))
         for size in sorted(problem_config.get("size", [None])):
