@@ -462,6 +462,17 @@ class Model:
     def __getattribute__(self, name: str) -> Any:
         return super().__getattribute__(name)
 
+    def __delattr__(self, name: str) -> None:
+        value = getattr(self, name)
+        if isinstance(value, Variable):
+            self._variables.remove(value)
+            value._delete()
+        elif isinstance(value, Constraint):
+            self._constraints.remove(value)
+            value._delete()
+
+        return super().__delattr__(name)
+
     def __repr__(self) -> str:
         return get_obj_repr(
             self,

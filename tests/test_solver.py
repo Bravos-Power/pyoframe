@@ -17,7 +17,11 @@ def test_solver_works(solver_all):
 
     Note that the function parameter cannot be named "solver" (otherwise it uses the fixture).
     """
-    pf.Model(solver_all.name)
+    m = pf.Model(solver_all.name)
+    m.X = pf.Variable(lb=1)
+    m.minimize = m.X
+    m.optimize()
+    m.X.solution == 1
 
 
 def test_Config_default_solver():

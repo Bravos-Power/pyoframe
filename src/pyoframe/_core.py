@@ -1735,11 +1735,7 @@ class Constraint(BaseBlock):
         except KeyError:
             setter = self._model.poi.set_constraint_raw_attribute
 
-        constr_type = (
-            poi.ConstraintType.Quadratic
-            if self.lhs.is_quadratic
-            else poi.ConstraintType.Linear
-        )
+        constr_type = self._poi_constraint_type
 
         if self.dimensions is None:
             for key in self.data.get_column(CONSTRAINT_KEY):
@@ -1766,11 +1762,7 @@ class Constraint(BaseBlock):
         except KeyError:
             getter = self._model.poi.get_constraint_raw_attribute
 
-        constr_type = (
-            poi.ConstraintType.Quadratic
-            if self.lhs.is_quadratic
-            else poi.ConstraintType.Linear
-        )
+        constr_type = self._poi_constraint_type
 
         ids = self.data.get_column(CONSTRAINT_KEY).to_list()
         attr = [getter(poi.ConstraintIndex(constr_type, v_id), name) for v_id in ids]
@@ -1792,7 +1784,7 @@ class Constraint(BaseBlock):
         """
         assert self._model is not None
 
-        is_quadratic = self.lhs.is_quadratic
+        is_quadratic = self.is_quadratic
         use_var_names = self._model.solver_uses_variable_names
         sense = self.sense._to_poi()
         dims = self.dimensions
@@ -1937,6 +1929,19 @@ class Constraint(BaseBlock):
 
         self._data = df
 
+    def _delete(self):
+        assert self._model is not None
+
+        if not self._model.solver.supports_deletion:
+            raise Exception(
+                f"Cannot delete constraint '{self.name}' because the solver '{self._model.solver.name}' does not support deletion."
+            )
+
+        constraint_type = self._poi_constraint_type
+        poi_model = self._model.poi
+        for constr_id in self.data.get_column(CONSTRAINT_KEY):
+            poi_model.delete_constraint(poi.ConstraintIndex(constraint_type, constr_id))
+
     @property
     def dual(self) -> pl.DataFrame | float:
         """Returns the constraint's dual values.
@@ -1975,6 +1980,19 @@ class Constraint(BaseBlock):
             else:
                 dual = -dual
         return dual
+
+    @property
+    def is_quadratic(self) -> bool:
+        """Returns `True` if the constraint is quadratic, `False` otherwise."""
+        return self.lhs.is_quadratic
+
+    @property
+    def _poi_constraint_type(self) -> poi.ConstraintType:
+        return (
+            poi.ConstraintType.Quadratic
+            if self.is_quadratic
+            else poi.ConstraintType.Linear
+        )
 
     @classmethod
     def _get_id_column_name(cls):
@@ -2493,6 +2511,19 @@ class Variable(BaseOperableBlock):
     @classmethod
     def _get_id_column_name(cls):
         return VAR_KEY
+
+    def _delete(self):
+        assert self._model is not None
+
+        if not self._model.solver.supports_deletion:
+            raise Exception(
+                f"Cannot delete variable '{self.name}' because the solver '{self._model.solver.name}' does not support deletion."
+            )
+
+        # TODO request pyoptinterface to expose version that doesn't require handle
+        self._model.poi.delete_variables(
+            [poi.VariableIndex(v_id) for v_id in self.data.get_column(VAR_KEY)]
+        )
 
     @property
     def solution(self) -> pl.DataFrame | float | int:

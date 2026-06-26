@@ -115,3 +115,85 @@ def test_protected_variables(default_solver):
         ),
     ):
         m.constraints = pf.Variable()
+
+
+def test_delete_variable(solver):
+    m = pf.Model(solver)
+
+    # Basic case
+    m.X = pf.Variable()
+    saved_copy = m.X
+    saved_copy.attr.Name
+
+    if not solver.supports_deletion:
+        with pytest.raises(Exception, match="does not support deletion"):
+            del m.X
+        return
+
+    del m.X
+    assert len(m.variables) == 0
+    with pytest.raises(RuntimeError, match="Variable does not exist"):
+        saved_copy.attr.Name
+
+    # Dimensional case
+    m.X = pf.Variable(pf.Set(y=[1, 2, 3]))
+    saved_copy = m.X
+    saved_copy.attr.Name
+    del m.X
+    assert len(m.variables) == 0
+    with pytest.raises(RuntimeError, match="Variable does not exist"):
+        saved_copy.attr.Name
+
+    # When already in constraints it should be as if it were never there
+    m.X = pf.Variable(ub=10)
+    m.Y = pf.Variable(ub=10)
+    m.Z = pf.Variable(ub=10)
+    m.maximize = m.X + m.Y + m.Z
+    m.optimize()
+    assert m.objective.value == 30
+    del m.X
+    m.optimize()
+    assert m.objective.value == 20
+
+
+def test_delete_constraint(solver):
+    m = pf.Model(solver)
+    m.X = pf.Variable(lb=0)
+    m.Y = pf.Variable(pf.Set(y=[1, 2, 3]), lb=0)
+    m.minimize = m.X + m.Y.sum()
+
+    # Basic case
+    m.constr = m.X >= 5
+    m.optimize()
+    assert m.objective.value == approx(5, **get_tol(solver))
+
+    m.constr.attr.Dual
+
+    if not solver.supports_deletion:
+        with pytest.raises(Exception, match="does not support deletion"):
+            del m.constr
+        return
+
+    saved_copy = m.constr
+    del m.constr
+    assert len(m.constraints) == 0
+    # Once this bug in PyOptInterface is fixed, we can change the error message to "Constraint does not exist"
+    # See https://github.com/metab0t/PyOptInterface/pull/102
+    err_msg = (
+        "Constraint does not exist"
+        if solver.name != "gurobi"
+        else "Variable does not exist"
+    )
+    with pytest.raises(RuntimeError, match=err_msg):
+        saved_copy.attr.Dual
+
+    # Dimensional case
+    m.constr = m.Y >= 5
+    m.optimize()
+    assert m.objective.value == approx(15, **get_tol(solver))
+    saved_copy = m.constr
+    saved_copy.attr.Dual
+    del m.constr
+    assert len(m.constraints) == 0
+    with pytest.raises(RuntimeError, match=err_msg):
+        saved_copy.attr.Dual
