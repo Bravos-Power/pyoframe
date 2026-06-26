@@ -1439,7 +1439,7 @@ class Expression(BaseOperableBlock):
         str_col_name: str = "expression",
         include_const_term: bool = True,
         return_df: Literal[False] = False,
-        compute_all_rows: bool = True,
+        _compute_all_rows: bool = True,
     ) -> str: ...
 
     @overload
@@ -1448,7 +1448,7 @@ class Expression(BaseOperableBlock):
         str_col_name: str = "expression",
         include_const_term: bool = True,
         return_df: Literal[True] = True,
-        compute_all_rows: bool = True,
+        _compute_all_rows: bool = True,
     ) -> pl.DataFrame: ...
 
     def to_str(
@@ -1456,7 +1456,7 @@ class Expression(BaseOperableBlock):
         str_col_name: str = "expression",
         include_const_term: bool = True,
         return_df: bool = False,
-        compute_all_rows: bool = True,
+        _compute_all_rows: bool = True,
     ) -> str | pl.DataFrame:
         """Converts the expression to a human-readable string, or several arranged in a table.
 
@@ -1471,9 +1471,9 @@ class Expression(BaseOperableBlock):
                 If `False`, constant terms are omitted from the string representation.
             return_df:
                 If `True`, returns a DataFrame containing the human-readable strings instead of the DataFrame's string representation.
-            compute_all_rows:
-                If specified, only the first `n/2` and last `n/2` rows are included in the returned DataFrame, where `n` is determined according to the Polars setting ([`Config.print_polars_config`][pyoframe._Config.print_polars_config]).
-                This parameter is used internally to accelerate computations. When `return_df` is `False` it is overridden to `False` since only the first `n/2` and last `n/2` rows are needed to generate the string representation.
+            _compute_all_rows:
+                If `False` and `return_df` is True, only a subset of rows are included in the returned DataFrame. This option is used internally to accelerate conversions
+                that will be truncated anyways. This option may change in future versions of pyoframe.
 
         Examples:
             >>> import polars as pl
@@ -1537,7 +1537,7 @@ class Expression(BaseOperableBlock):
             if truncate:
                 data = data.head(Config.print_max_terms)
         else:
-            if not return_df or not compute_all_rows:
+            if not return_df or not _compute_all_rows:
                 # The default for polars is 10. See https://github.com/pola-rs/polars/blob/507e4fc79c0c78162ab34d17c0499ec03850b0cc/crates/polars-core/src/fmt.rs#L32-L34
                 n = Config.print_polars_config.state(if_set=True).get(
                     "POLARS_FMT_MAX_ROWS", 10
@@ -2281,7 +2281,7 @@ class Constraint(BaseBlock):
             include_const_term=False,
             return_df=True,
             str_col_name="constraint",
-            compute_all_rows=return_df,
+            _compute_all_rows=return_df,
         )
         rhs = self.lhs.constant_terms.with_columns(pl.col(COEF_KEY) * -1)
         rhs = cast_coef_to_string(rhs, drop_ones=False, always_show_sign=False)
