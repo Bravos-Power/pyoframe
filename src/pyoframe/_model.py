@@ -466,6 +466,8 @@ class Model:
         value = getattr(self, name)
         if isinstance(value, Variable):
             self._variables.remove(value)
+            if self._var_map is not None:
+                self._var_map.remove(value)
             value._delete()
         elif isinstance(value, Constraint):
             self._constraints.remove(value)

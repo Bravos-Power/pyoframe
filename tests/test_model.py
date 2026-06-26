@@ -122,25 +122,35 @@ def test_delete_variable(solver):
 
     # Basic case
     m.X = pf.Variable()
-    saved_copy = m.X
-    saved_copy.attr.Name
+
+    assert m._var_map.mapping_registry.height == 2
+    assert len(m.variables) == 1
+
+    m.X.attr.Name
 
     if not solver.supports_deletion:
         with pytest.raises(Exception, match="does not support deletion"):
             del m.X
         return
 
+    saved_copy = m.X
     del m.X
+
+    assert m._var_map.mapping_registry.height == 1
     assert len(m.variables) == 0
+
     with pytest.raises(RuntimeError, match="Variable does not exist"):
         saved_copy.attr.Name
 
     # Dimensional case
     m.X = pf.Variable(pf.Set(y=[1, 2, 3]))
+    assert len(m.variables) == 1
+    assert m._var_map.mapping_registry.height == 4
     saved_copy = m.X
     saved_copy.attr.Name
     del m.X
     assert len(m.variables) == 0
+    assert m._var_map.mapping_registry.height == 1
     with pytest.raises(RuntimeError, match="Variable does not exist"):
         saved_copy.attr.Name
 
@@ -197,3 +207,12 @@ def test_delete_constraint(solver):
     assert len(m.constraints) == 0
     with pytest.raises(RuntimeError, match=err_msg):
         saved_copy.attr.Dual
+
+    if solver.supports_quadratic_constraints:
+        # Quadratic case
+        m.constr = m.X**2 >= 25
+        m.optimize()
+        assert m.objective.value == approx(5, **get_tol(solver))
+        del m.constr
+        m.optimize()
+        assert m.objective.value == approx(0, **get_tol(solver))
