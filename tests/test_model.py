@@ -179,8 +179,9 @@ def test_delete_constraint(solver):
 
     m.constr.attr.Dual
 
-    if not solver.supports_deletion:
-        with pytest.raises(Exception, match="does not support deletion"):
+    # TODO once https://github.com/metab0t/PyOptInterface/issues/103 is fixed, we can remove the check for "mosek" and update the error message
+    if not solver.supports_deletion or solver.name == "mosek":
+        with pytest.raises(Exception, match="does not support constraint deletion"):
             del m.constr
         return
 

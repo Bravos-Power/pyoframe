@@ -7,13 +7,13 @@ _working_solvers = []
 for s in SUPPORTED_SOLVERS:
     try:
         # Same code as the solver_works test
-        pf.Model(s.name)
         m = pf.Model(s.name)
         m.X = pf.Variable(lb=1)
         m.minimize = m.X
         m.optimize()
         if m.X.solution == 1:
             _working_solvers.append(s)
+        del m  # Clean up to avoid pytest error
     except RuntimeError:
         pass
 if not _working_solvers:

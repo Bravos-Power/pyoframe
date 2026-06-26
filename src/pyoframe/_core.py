@@ -1932,9 +1932,13 @@ class Constraint(BaseBlock):
     def _delete(self):
         assert self._model is not None
 
-        if not self._model.solver.supports_deletion:
+        # TODO once https://github.com/metab0t/PyOptInterface/issues/103 is fixed, we can remove the check for "mosek" and update the error message
+        if (
+            not self._model.solver.supports_deletion
+            or self._model.solver.name == "mosek"
+        ):
             raise Exception(
-                f"Cannot delete constraint '{self.name}' because the solver '{self._model.solver.name}' does not support deletion."
+                f"Cannot delete constraint '{self.name}' because the solver '{self._model.solver.name}' does not support constraint deletion."
             )
 
         constraint_type = self._poi_constraint_type
