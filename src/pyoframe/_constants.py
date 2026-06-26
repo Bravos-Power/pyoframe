@@ -29,6 +29,7 @@ class _Solver:
     supports_write: bool = True
     supports_unbounded: bool = True
     supports_square_brackets_in_lp_files: bool = True
+    supports_deletion: bool = True
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -68,6 +69,7 @@ SUPPORTED_SOLVERS = [
         supports_write=False,
         # ipopt just returns large numbers instead of "unbounded"
         supports_unbounded=False,
+        supports_deletion=False,
     ),
     _Solver(
         "copt",

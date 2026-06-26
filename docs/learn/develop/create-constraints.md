@@ -17,6 +17,16 @@ m.Con_Max_Weekly_Hours = m.Hours_Worked.sum() <= 40
 !!! tip "Naming constraints"
     I like prefixing constraint names with `Con_` to easily distinguish them from other module attributes.
 
+## Delete constraints
+
+To delete a cosntraint, simply remove it from the model using `del`:
+
+```python
+del m.Con_Max_Weekly_Hours
+```
+
+Note that the ipopt solver [does not support deletion](https://metab0t.github.io/PyOptInterface/ipopt.html) due to its API design. Also, constraint deletion is disabled for Mosek until [this PyOptInterface issue](https://github.com/metab0t/PyOptInterface/issues/103) is resolved.
+
 
 ## Handle extra labels
 
