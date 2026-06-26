@@ -24,6 +24,16 @@ Var_Name
     Uppercase names for variables (i.e. `Var_Name` not `var_name`) makes variables (the most important part of your model) easy to distinguish from other model attributes.
 
 
+## Delete variable
+
+To delete a variable, simply remove it from the model using `del`:
+
+```python
+del m.Var_Name
+```
+
+Note that the ipopt solver [does not support deletion](https://metab0t.github.io/PyOptInterface/ipopt.html) due to its API design.
+
 ## Set bounds
 
 By default, variables are unbounded. To set a lower or upper bound, use the `lb` or `ub` arguments. For example,
