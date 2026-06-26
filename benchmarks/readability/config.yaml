@@ -1,0 +1,10 @@
+benchmarks:
+  facility_location:
+    path: "src/facility_location"
+    label: "Facility Location Problem"
+  simple_problem:
+    path: "src/simple_problem"
+    label: "Trivial Problem"
+  energy_planning:
+    path: "src/energy_planning"
+    label: "Electrical Grid Problem"
