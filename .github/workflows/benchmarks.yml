@@ -1,8 +1,5 @@
 name: Benchmarks
 on:
-  # TODO remove pull_request once it's consistent.
-  pull_request:
-    branches: ["*"]
   workflow_dispatch:
   schedule:
     - cron: "0 5 * * WED"  # Every Wed at 05:00
