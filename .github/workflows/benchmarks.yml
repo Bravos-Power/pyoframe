@@ -47,7 +47,8 @@ jobs:
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
       - name: Touch inputs to not regenerate
         run: |
-          snakemake --touch benchmarks/src/energy_planning/model_data
+          cd benchmarks/src/energy_planning
+          snakemake --touch ./model_data
       - name: Run benchmarks
         run: |
           python benchmarks/test.py --fail-on-error
