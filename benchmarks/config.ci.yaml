@@ -1,5 +1,6 @@
 # Note: we don't allow timeouts
 name: CI Test
+julia_trace_compile: true
 problems:
   facility_location:
     size: [2]
