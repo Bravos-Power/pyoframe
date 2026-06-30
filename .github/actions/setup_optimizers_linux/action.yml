@@ -17,6 +17,10 @@ inputs:
   MOSEK_LICENSE:
     description: "..."
     required: false
+  INSTALL_IPOPT:
+    description: "..."
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -118,6 +122,7 @@ runs:
         msktestlic
 
     - name: Setup IPOPT Installation
+      if: ${{ inputs.INSTALL_IPOPT == 'true' }}
       shell: bash
       run: |
         sudo apt-get install -y libopenblas-dev liblapack3 libgfortran5
@@ -127,6 +132,7 @@ runs:
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/ipopt" >> $GITHUB_ENV
         ls ~/ipopt
     - name: Test IPOPT
+      if: ${{ inputs.INSTALL_IPOPT == 'true' }}
       shell: bash
       run: |
         ipopt -v

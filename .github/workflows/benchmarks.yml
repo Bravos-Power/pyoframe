@@ -32,6 +32,7 @@ jobs:
         uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
+          INSTALL_IPOPT: false
       # Should not be necessary since we shouldn't recompute input files!
       # - name: Install scikit-sparse dependencies
       #   run: |
@@ -57,4 +58,4 @@ jobs:
           snakemake --touch ./model_data/
       - name: Run benchmarks
         run: |
-          python benchmarks/test.py --fail-on-error --config=benchmarks/config.ci.yaml
+          python benchmarks/test.py --fail-on-error --config=config.ci.yaml
