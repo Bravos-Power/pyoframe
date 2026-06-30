@@ -88,7 +88,6 @@ jobs:
           COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
           COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
           MOSEK_LICENSE: ${{ secrets.MOSEK_LIC_FILE }}
-          CHECK_LICENSE: true
       - name: Install dependencies
         run: pip install -e .[dev]
       - name: Run tests and collect coverage

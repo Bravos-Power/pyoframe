@@ -1,0 +1,272 @@
+import shutil
+import gdown
+import os
+from urllib.request import urlretrieve
+from pathlib import Path
+
+CATS_GITHUB_URL = "https://raw.githubusercontent.com/WISPO-POP/CATS-CaliforniaTestSystem/f260d8bd89e68997bf12d24e767475b2f2b88a77/"
+
+CWD = Path(".")
+INPUT_DIR = CWD / "raw_data"
+DOWNLOADS = INPUT_DIR / "downloads"
+CONSTANTS = INPUT_DIR / "constants"
+PROCESSED_INPUT_DIR = INPUT_DIR / "preprocessed"
+ANALYSIS_DIR = INPUT_DIR / "analysis"
+SCRIPTS_DIR = Path("./scripts")
+
+
+rule generate_all_inputs:
+    input:
+        PROCESSED_INPUT_DIR / "loads.parquet",
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+        PROCESSED_INPUT_DIR / "generators.parquet",
+        PROCESSED_INPUT_DIR / "yearly_limits.parquet",
+        PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
+        PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
+        PROCESSED_INPUT_DIR / "capex_costs.csv",
+        CONSTANTS / "map_type_to_vcf_type.csv",
+        CONSTANTS / "cost_parameters.csv",
+    output:
+        directory(CWD / "model_data"),
+    run:
+        output_dir = Path(output[0])
+        os.makedirs(output_dir, exist_ok=True)
+        for input_data in input:
+            shutil.copy(input_data, output_dir / Path(input_data).name)
+
+
+rule fetch_load_data:
+    """Downloads the load data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
+    output:
+        DOWNLOADS / "CATS_loads.csv",
+    run:
+        gdown.download(id="1Sz8st7g4Us6oijy1UYMPUvkA1XeZlIr8", output=output[0])
+
+
+rule fetch_generation_data:
+    """Downloads the generation data from the Google Drive folder hosted by the CATS project (https://drive.google.com/drive/folders/1Zo6ZeZ1OSjHCOWZybbTd6PgO4DQFs8_K)"""
+    output:
+        DOWNLOADS / "CATS_generation.csv",
+    run:
+        gdown.download(id="1CxLlcwAEUy-JvJQdAfVydJ1p9Ecot-4d", output=output[0])
+
+
+rule fetch_line_data:
+    output:
+        DOWNLOADS / "CATS_lines.json",
+    run:
+        urlretrieve(CATS_GITHUB_URL + "GIS/CATS_lines.json", output[0])
+
+
+rule fetch_generator_data:
+    output:
+        DOWNLOADS / "CATS_generators.csv",
+    run:
+        urlretrieve(CATS_GITHUB_URL + "GIS/CATS_gens.csv", output[0])
+
+
+rule fetch_matpower_data:
+    output:
+        DOWNLOADS / "CaliforniaTestSystem.m",
+    run:
+        urlretrieve(CATS_GITHUB_URL + "MATPOWER/CaliforniaTestSystem.m", output[0])
+
+
+rule fetch_nrel_atb_data:
+    output:
+        DOWNLOADS / "NREL_ATB_data.parquet",
+    run:
+        urlretrieve(
+            "https://oedi-data-lake.s3.amazonaws.com/ATB/electricity/parquet/2024/v3.0.0/ATBe.parquet",
+            output[0],
+        )
+
+
+rule parse_matpower_case:
+    input:
+        DOWNLOADS / "CaliforniaTestSystem.m",
+    output:
+        bus=PROCESSED_INPUT_DIR / "matpower_bus.parquet",
+        branch=PROCESSED_INPUT_DIR / "matpower_branch.parquet",
+        gen=PROCESSED_INPUT_DIR / "matpower_gen.parquet",
+    run:
+        from energy_planning.scripts.A_parse_matpower_case import (
+            app as parse_matpower_case,
+        )
+
+        parse_matpower_case.run(
+            defs={
+                "MATPOWER_CASE": input[0],
+                "BUS_OUTPUT_PATH": output[0],
+                "BRANCH_OUTPUT_PATH": output[1],
+                "GEN_OUTPUT_PATH": output[2],
+            }
+        )
+
+
+rule extract_load_data:
+    """Convert the load data to narrow format and keep only the active loads."""
+    input:
+        DOWNLOADS / "CATS_loads.csv",
+    output:
+        PROCESSED_INPUT_DIR / "loads.parquet",
+    run:
+        from energy_planning.scripts.B2_extract_load_data import (
+            app as extract_load_data,
+        )
+
+        extract_load_data.run(
+            defs={
+                "CATS_DATA": input[0],
+                "LOAD_DATA_OUT": output[0],
+            }
+        )
+
+
+rule extract_line_data:
+    input:
+        DOWNLOADS / "CATS_lines.json",
+        PROCESSED_INPUT_DIR / "matpower_branch.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "lines.parquet",
+    run:
+        from energy_planning.scripts.C_extract_line_data import app as extract_line_data
+
+        extract_line_data.run(
+            defs={
+                "CATS_DATA": input[0],
+                "MATPOWER_DATA": input[1],
+                "LINE_DATA_OUT": output[0],
+            }
+        )
+
+
+rule extract_generator_data:
+    """Group the generators by type and bus."""
+    input:
+        DOWNLOADS / "CATS_generators.csv",
+        PROCESSED_INPUT_DIR / "matpower_gen.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "generators.parquet",
+    run:
+        from energy_planning.scripts.B_extract_generator_data import (
+            app as process_generator_data,
+        )
+
+        process_generator_data.run(
+            defs={
+                "CATS_DATA": input[0],
+                "MATPOWER_DATA": input[1],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
+
+rule extract_capex_data:
+    input:
+        DOWNLOADS / "NREL_ATB_data.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "capex_costs.csv",
+    run:
+        from energy_planning.scripts.D_extract_capex_data import (
+            app as extract_capex_data,
+        )
+
+        extract_capex_data.run(
+            defs={
+                "NREL_DATA": input[0],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
+
+rule compute_capacity_factors:
+    """Use the hourly generation data to create capacity factors by fuel type."""
+    input:
+        PROCESSED_INPUT_DIR / "generators.parquet",
+        DOWNLOADS / "CATS_generation.csv",
+        CONSTANTS / "map_type_to_vcf_type.csv",
+    output:
+        PROCESSED_INPUT_DIR / "yearly_limits.parquet",
+        PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
+    run:
+        from energy_planning.scripts.E_compute_capacity_factors import (
+            app as compute_capacity_factors,
+        )
+
+        compute_capacity_factors.run(
+            defs={
+                "GENERATOR_DATA": input[0],
+                "HOURLY_GENERATION_DATA": input[1],
+                "TYPE_MAPPING": input[2],
+                "YEARLY_LIMIT_OUTPUT": output[0],
+                "VCF_OUTPUT": output[1],
+            }
+        )
+
+
+rule simplify_network:
+    input:
+        lines=PROCESSED_INPUT_DIR / "lines.parquet",
+        generators=PROCESSED_INPUT_DIR / "generators.parquet",
+        loads=PROCESSED_INPUT_DIR / "loads.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+    run:
+        from energy_planning.scripts.C1_simplify_network import main
+
+        main(
+            lines_path=input.lines,
+            gens_path=input.generators,
+            loads_path=input.loads,
+            output_path=output[0],
+        )
+
+
+rule compute_ptdf:
+    input:
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
+    run:
+        from energy_planning.scripts.C2_compute_power_transfer_dist_facts import (
+            app as compute_ptdf,
+        )
+
+        compute_ptdf.run(
+            defs={
+                "LINES_DATA": input[0],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
+
+rule compute_bodf:
+    input:
+        PROCESSED_INPUT_DIR / "lines_simplified.parquet",
+        PROCESSED_INPUT_DIR / "power_transfer_dist_facts.parquet",
+    output:
+        PROCESSED_INPUT_DIR / "branch_outage_dist_facts.parquet",
+    run:
+        from energy_planning.scripts.C3_compute_branch_outage_dist_facts import (
+            app as compute_bodf,
+        )
+
+        compute_bodf.run(
+            defs={
+                "LINES_DATA": input[0],
+                "PTDF_DATA": input[1],
+                "OUTPUT_PATH": output[0],
+            }
+        )
+
+
+rule analyze_supply_demand:
+    input:
+        gen=PROCESSED_INPUT_DIR / "generators.parquet",
+        vcf=PROCESSED_INPUT_DIR / "variable_capacity_factors.parquet",
+        loads=PROCESSED_INPUT_DIR / "loads.parquet",
+    output:
+        ANALYSIS_DIR / "supply_demand_analysis.parquet",
+    notebook:
+        str(SCRIPTS_DIR / "analyze_supply_demand.ipynb")

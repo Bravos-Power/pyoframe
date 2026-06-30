@@ -7,22 +7,20 @@ name: "Install optimizers on linux"
 inputs:
   GUROBI_WLS:
     description: "..."
-    required: true
+    required: false
   COPT_LICENSE_KEY:
     description: "..."
-    required: true
+    required: false
   COPT_LICENSE_DAT:
     description: "..."
-    required: true
+    required: false
   MOSEK_LICENSE:
     description: "..."
-    required: true
-  # GITHUB_TOKEN:
-  #   description: "..."
-  #   required: true
-  CHECK_LICENSE:
+    required: false
+  INSTALL_IPOPT:
     description: "..."
-    required: true
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -39,9 +37,9 @@ runs:
         path: ~/installers
         key: installers-${{ runner.os }}
 
-    - if: ${{ steps.cache-installers.outputs.cache-hit != 'true' }}
+    - name: Download Installers
+      if: ${{ steps.cache-installers.outputs.cache-hit != 'true' }}
       shell: bash
-      name: Download Installers
       run: |
         curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/12.0/gurobi12.0.2_linux64.tar.gz
         curl -L -o ~/installers/idaes-solvers.tar.gz https://github.com/IDAES/idaes-ext/releases/download/3.4.2/idaes-solvers-ubuntu2204-x86_64.tar.gz
@@ -49,6 +47,7 @@ runs:
         curl -L -o ~/installers/mosek.tar.bz2 https://download.mosek.com/stable/10.2.0/mosektoolslinux64x86.tar.bz2
 
     - name: Setup Gurobi Installation
+      if: ${{ inputs.GUROBI_WLS != '' }}
       shell: bash
       env:
         GUROBI_WLS: ${{ inputs.GUROBI_WLS }}
@@ -66,8 +65,8 @@ runs:
         echo "$GUROBI_WLS" > ~/gurobi.lic
         echo "GRB_LICENSE_FILE=${HOME}/gurobi.lic" >> $GITHUB_ENV
     - name: Test Gurobi
-      if: ${{ inputs.CHECK_LICENSE == 'true' }}
-      uses: nick-fields/retry@v3 # wait 30 seconds (5x) if all licenses are already in use
+      if: ${{ inputs.GUROBI_WLS != '' }}
+      uses: nick-fields/retry@v4 # wait 30 seconds (5x) if all licenses are already in use
       with:
         max_attempts: 5
         retry_wait_seconds: 30
@@ -75,6 +74,7 @@ runs:
         command: gurobi_cl
 
     - name: Setup COPT Installation
+      if: ${{ inputs.COPT_LICENSE_KEY != '' && inputs.COPT_LICENSE_DAT != '' }}
       shell: bash
       env:
         COPT_LICENSE_KEY: ${{ inputs.COPT_LICENSE_KEY }}
@@ -92,12 +92,13 @@ runs:
         echo "$COPT_LICENSE_DAT" > ${COPT_HOME}/license.dat
         echo "COPT_LICENSE_DIR=${COPT_HOME}" >> $GITHUB_ENV
     - name: Test COPT
-      if: ${{ inputs.CHECK_LICENSE == 'true' }}
+      if: ${{ inputs.COPT_LICENSE_KEY != '' && inputs.COPT_LICENSE_DAT != '' }}
       shell: bash
       run: |
         copt_cmd -c "quit"
 
     - name: Setup MOSEK Installation
+      if: ${{ inputs.MOSEK_LICENSE != '' }}
       shell: bash
       env:
         MOSEK_LICENSE: ${{ inputs.MOSEK_LICENSE }}
@@ -115,12 +116,13 @@ runs:
         echo "$MOSEK_LICENSE" > ~/mosek.lic
         echo "MOSEKLM_LICENSE_FILE=${HOME}/mosek.lic" >> $GITHUB_ENV
     - name: Test MOSEK
-      if: ${{ inputs.CHECK_LICENSE == 'true' }}
+      if: ${{ inputs.MOSEK_LICENSE != '' }}
       shell: bash
       run: |
         msktestlic
 
     - name: Setup IPOPT Installation
+      if: ${{ inputs.INSTALL_IPOPT == 'true' }}
       shell: bash
       run: |
         sudo apt-get install -y libopenblas-dev liblapack3 libgfortran5
@@ -130,6 +132,7 @@ runs:
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/ipopt" >> $GITHUB_ENV
         ls ~/ipopt
     - name: Test IPOPT
+      if: ${{ inputs.INSTALL_IPOPT == 'true' }}
       shell: bash
       run: |
         ipopt -v

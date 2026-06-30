@@ -85,6 +85,10 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "{docs,tests,scripts,benchmarks}/**" = ["D101", "D102", "D103", "D104"]
+"benchmarks/src/**" = [
+    "D100",  # allow missing docstrings since benchmarks are often one-off scripts
+    "E741"  # allow single letter variable names since they often represent mathematical variables
+]
 "conftest.py" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
