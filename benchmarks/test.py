@@ -6,33 +6,39 @@ from plot import plot_all
 from run import read_config, run_all_benchmarks
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
         "--reuse", action="store_true", help="Reuse past results if available."
     )
-    parser.add_argument(
+    argparser.add_argument(
         "-p",
         "--problem",
         default=None,
         help="Only run a specific problem (e.g., 'energy_planning').",
     )
-    parser.add_argument(
+    argparser.add_argument(
         "-l",
         "--library",
         default=None,
         help="Only run a specific library (e.g., 'pyoframe').",
     )
-    parser.add_argument(
+    argparser.add_argument(
+        "--config",
+        type=str,
+        default="config.test.yaml",
+        help="Path to config YAML file.",
+    )
+    argparser.add_argument(
         "--skip-building-inputs", action="store_true", help="Skip building input files."
     )
-    parser.add_argument(
+    argparser.add_argument(
         "--fail-on-error",
         action="store_true",
         help="Fail the script if any benchmark fails.",
     )
-    args = parser.parse_args()
+    args = argparser.parse_args()
 
-    config = read_config(name="config.test.yaml")
+    config = read_config(name=args.config)
 
     if args.problem is not None:
         if args.problem not in config["problems"]:
