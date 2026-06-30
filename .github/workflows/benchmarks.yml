@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "0 5 * * WED"  # Every Wed at 05:00
 
+# needed to allow julia-actions/cache to delete old caches that it has created
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   run:
     runs-on: ubuntu-latest
