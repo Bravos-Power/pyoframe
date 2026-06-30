@@ -2291,7 +2291,7 @@ class Constraint(BaseBlock):
                 rhs, on=dims, how="left", maintain_order="left", coalesce=True
             )
         else:
-            constr_str = pl.concat([str_table, rhs], how="horizontal")
+            constr_str = str_table.with_columns(rhs=pl.lit(rhs.item()))
         constr_str = constr_str.with_columns(
             pl.concat_str("constraint", pl.lit(f" {self.sense.value} "), "rhs")
         ).drop("rhs")
