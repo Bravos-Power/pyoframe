@@ -40,9 +40,7 @@ jobs:
       #     sudo apt-get install -y libsuitesparse-dev
       - name: Install dependencies
         run: |
-          pip install -e .
-          cd benchmarks
-          pip install -e .
+          pip install -e . ./benchmarks
       # TODO renable including in config
       # - name: Install and test AMPL
       #   run: |
