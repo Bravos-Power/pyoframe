@@ -57,4 +57,4 @@ jobs:
           snakemake --touch ./model_data/
       - name: Run benchmarks
         run: |
-          python benchmarks/test.py --fail-on-error
+          python benchmarks/test.py --fail-on-error --config=benchmarks/config.ci.yaml

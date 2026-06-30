@@ -1,0 +1,26 @@
+# Note: we don't allow timeouts
+name: CI Test
+problems:
+  facility_location:
+    size: [2]
+  simple_problem:
+    size: [10]
+    inputs:
+      - "input_10.parquet"
+  energy_all:
+    code_dir: energy_planning
+    inputs: "*"
+    size: [1]
+
+solvers:
+  - gurobi
+
+libraries:
+  - pyoframe
+  - pyomo
+  - cvxpy
+  - gurobipy
+  - jump
+  - linopy
+  - pyoptinterface
+  # - ampl # disable for now since licensing issues in CI
