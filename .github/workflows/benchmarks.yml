@@ -39,8 +39,8 @@ jobs:
           pip install -e .
       - name: Install AMPL
         run: |
-          python -m amplpy.modules install gurobi
           python -m amplpy.modules activate ${{ secrets.AMPL_LICENSE_UUID }}
+          python -m amplpy.modules install gurobi
       - name: Install Julia packages
         run: |
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
