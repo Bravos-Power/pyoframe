@@ -60,7 +60,9 @@ def _(YEARLY_LIMIT_OUTPUT, df, pl):
     max_energy_genearation = pl.DataFrame(
         {"type": ["Hydropower"], "limit": [df.get_column("large hydro").sum()]}
     )
-    max_energy_genearation.write_parquet(YEARLY_LIMIT_OUTPUT)
+    max_energy_genearation.sort(max_energy_genearation.columns).write_parquet(
+        YEARLY_LIMIT_OUTPUT
+    )
     max_energy_genearation
     return
 
@@ -152,7 +154,7 @@ def _(VCF_TYPES, df3):
 
 @app.cell
 def _(VCF_OUTPUT, df3):
-    df3.write_parquet(VCF_OUTPUT)
+    df3.sort(df3.columns).write_parquet(VCF_OUTPUT)
     df3
     return
 

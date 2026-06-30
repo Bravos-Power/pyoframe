@@ -47,7 +47,9 @@ class Benchmark:
     solver_args: dict | None
 
 
-def run_all_benchmarks(config, ignore_past_results=False, build_inputs=True):
+def run_all_benchmarks(
+    config, ignore_past_results=False, build_inputs=True, fail_on_error=False
+):
     base_dir = CWD / "results" / config["name"]
     base_dir.mkdir(parents=True, exist_ok=True)
 
@@ -110,7 +112,10 @@ def run_all_benchmarks(config, ignore_past_results=False, build_inputs=True):
                                 ),
                             )
                     except BenchmarkError as e:
-                        print(f"{name}: {e}")
+                        if fail_on_error:
+                            raise e
+                        else:
+                            print(f"{name}: {e}")
 
                 past_results_df = past_results.read(
                     problem=name, size=size, ignore_past_results=False

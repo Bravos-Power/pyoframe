@@ -271,7 +271,7 @@ def main(
         f"Simplified network has {lines.height} lines and {num_buses_simplified} buses."
     )
 
-    lines.write_parquet(output_path)
+    lines.sort(lines.columns).write_parquet(output_path)
 
 
 if __name__ == "__main__":

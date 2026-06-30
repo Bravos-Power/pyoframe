@@ -377,7 +377,7 @@ def _(df_clean6):
 
 @app.cell
 def _(OUTPUT_PATH, df_clean6):
-    df_clean6.write_parquet(OUTPUT_PATH)
+    df_clean6.sort(df_clean6.columns).write_parquet(OUTPUT_PATH)
     return
 
 

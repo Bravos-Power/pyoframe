@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.23.9"
 app = marimo.App()
 
 
@@ -215,7 +215,7 @@ def _(df_joined):
 
 @app.cell
 def _(LINE_DATA_OUT, df_final):
-    df_final.write_parquet(LINE_DATA_OUT)
+    df_final.sort(df_final.columns).write_parquet(LINE_DATA_OUT)
     return
 
 

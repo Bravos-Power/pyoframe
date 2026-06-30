@@ -212,7 +212,9 @@ def _(bus_map, lines_map, power_flow_df_1):
 
 @app.cell
 def _(OUTPUT_PATH, power_flow_df_unmapped):
-    power_flow_df_unmapped.write_parquet(OUTPUT_PATH)
+    power_flow_df_unmapped.sort(power_flow_df_unmapped.columns).write_parquet(
+        OUTPUT_PATH
+    )
     return
 
 

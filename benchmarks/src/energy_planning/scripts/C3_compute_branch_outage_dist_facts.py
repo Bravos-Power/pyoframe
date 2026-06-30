@@ -175,7 +175,7 @@ def _(DF_PERC_CUTOFF, bodf_1, pl):
 
 @app.cell
 def _(OUTPUT_PATH, bodf_2):
-    bodf_2.write_parquet(OUTPUT_PATH)
+    bodf_2.sort(bodf_2.columns).write_parquet(OUTPUT_PATH)
     return
 
 

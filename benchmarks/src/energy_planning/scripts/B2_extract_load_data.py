@@ -131,7 +131,7 @@ def _(DEBUG, load_ca, pl):
 @app.cell
 def _(LOAD_DATA_OUT, df5):
     # Save processed data
-    df5.sink_parquet(LOAD_DATA_OUT)
+    df5.sort(df5.collect_schema().names()).sink_parquet(LOAD_DATA_OUT)
     return
 
 

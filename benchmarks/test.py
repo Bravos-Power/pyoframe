@@ -25,6 +25,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--skip-building-inputs", action="store_true", help="Skip building input files."
     )
+    parser.add_argument(
+        "--fail-on-error",
+        action="store_true",
+        help="Fail the script if any benchmark fails.",
+    )
     args = parser.parse_args()
 
     config = read_config(name="config.test.yaml")
@@ -49,6 +54,7 @@ if __name__ == "__main__":
         config,
         ignore_past_results=not args.reuse,
         build_inputs=not args.skip_building_inputs,
+        fail_on_error=args.fail_on_error,
     )
 
     plot_all(config_name="config.test.yaml")

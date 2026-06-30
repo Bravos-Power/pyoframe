@@ -99,7 +99,7 @@ def _(df_clean, pl):
 
 @app.cell
 def _(OUTPUT_PATH, df_final):
-    df_final.write_csv(OUTPUT_PATH)
+    df_final.sort(df_final.columns).write_csv(OUTPUT_PATH)
     return
 
 

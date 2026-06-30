@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.23.9"
 app = marimo.App()
 
 
@@ -137,9 +137,9 @@ def _(
     bus_1,
     gen_merged_1,
 ):
-    bus_1.write_parquet(BUS_OUTPUT_PATH)
-    branch_1.write_parquet(BRANCH_OUTPUT_PATH)
-    gen_merged_1.write_parquet(GEN_OUTPUT_PATH)
+    bus_1.sort(bus_1.columns).write_parquet(BUS_OUTPUT_PATH)
+    branch_1.write_parquet(BRANCH_OUTPUT_PATH)  # Do not sort, order is important
+    gen_merged_1.sort(gen_merged_1.columns).write_parquet(GEN_OUTPUT_PATH)
     return
 
 

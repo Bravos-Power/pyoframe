@@ -46,4 +46,4 @@ jobs:
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
       - name: Run benchmarks
         run: |
-          python benchmarks/test.py --skip-building-inputs
+          python benchmarks/test.py --skip-building-inputs --fail-on-error
