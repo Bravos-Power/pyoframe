@@ -48,7 +48,7 @@ jobs:
       - name: Touch inputs to not regenerate
         run: |
           cd benchmarks/src/energy_planning
-          snakemake --touch ./model_data
+          snakemake --touch ./model_data/
       - name: Run benchmarks
         run: |
           python benchmarks/test.py --fail-on-error

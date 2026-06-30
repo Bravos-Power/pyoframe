@@ -163,12 +163,12 @@ function main(
 		AFF = bodf.affected_line_id
 		FAC = bodf.factor
 
-		@constraint(model, Power_Flow_ub[i in eachindex(OUT), t in T],
+		@constraint(model, Power_Flow_ub[i in 1:length(OUT), t in T],
 			Power_Flow[AFF[i], t] + FAC[i]*Power_Flow[OUT[i], t]
 			<=
 			line_rating[AFF[i]])
 
-		@constraint(model, Power_Flow_lb[i in eachindex(OUT), t in T],
+		@constraint(model, Power_Flow_lb[i in 1:length(OUT), t in T],
 			Power_Flow[AFF[i], t] + FAC[i]*Power_Flow[OUT[i], t]
 			>=
 			-line_rating[AFF[i]])
@@ -250,4 +250,4 @@ end
 Benchmark.run(@__DIR__, main)
 
 # To test run from the benchmarks directory:
-# julia --project=. src/energy_planning/bm_jump.jl solver=gurobi problem_size=1000 results_dir=src/energy_planning/results_jump
+# julia --project=. src/energy_planning/bm_jump.jl solver=gurobi problem_size=2 results_dir=src/energy_planning/results_jump capacity_expansion=false security_constrained=true yearly_limits=false variable_capacity_factors=false
