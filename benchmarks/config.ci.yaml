@@ -1,5 +1,5 @@
 # Note: we don't allow timeouts
-name: CI Test
+name: test
 julia_trace_compile: true
 problems:
   facility_location:
