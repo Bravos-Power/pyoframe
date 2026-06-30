@@ -42,4 +42,4 @@ libraries:
   - jump
   - linopy
   - pyoptinterface
-  - ampl
+  # - ampl # disable for now since licensing issues in CI
