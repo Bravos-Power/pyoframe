@@ -37,13 +37,14 @@ jobs:
           pip install -e .
           cd benchmarks
           pip install -e .
-      - name: Install AMPL
+      - name: Install and test AMPL
         run: |
-          python -m amplpy.modules install gurobi
+          python -m amplpy.modules install gurobi --upgrade
           python -m amplpy.modules activate ${{ secrets.AMPL_LICENSE_UUID }}
+          python -c "from amplpy import AMPL; model = AMPL()"
       - name: Install Julia packages
         run: |
           julia --project=benchmarks -e 'using Pkg; Pkg.instantiate()'
       - name: Run benchmarks
         run: |
-          python benchmarks/test.py --skip-building-inputs --fail-on-error
+          python benchmarks/test.py --fail-on-error

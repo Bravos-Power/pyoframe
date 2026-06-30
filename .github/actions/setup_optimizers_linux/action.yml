@@ -62,7 +62,7 @@ runs:
         echo "GRB_LICENSE_FILE=${HOME}/gurobi.lic" >> $GITHUB_ENV
     - name: Test Gurobi
       if: ${{ inputs.GUROBI_WLS != '' }}
-      uses: nick-fields/retry@v3 # wait 30 seconds (5x) if all licenses are already in use
+      uses: nick-fields/retry@v4 # wait 30 seconds (5x) if all licenses are already in use
       with:
         max_attempts: 5
         retry_wait_seconds: 30
