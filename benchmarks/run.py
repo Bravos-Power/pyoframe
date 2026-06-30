@@ -396,7 +396,9 @@ def run_benchmark(
 
         if return_code != 0:
             save_result(total_time=total_time, error="ERROR")
-            raise BenchmarkError("Benchmark failed")
+            raise BenchmarkError(
+                f"Benchmark failed: {benchmark.name} ({benchmark.library}, {benchmark.solver})"
+            )
 
         result = max_memory_queue.get(timeout=10)
         memory_thread.join(timeout=10)
