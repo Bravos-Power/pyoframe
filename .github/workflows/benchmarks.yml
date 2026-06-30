@@ -3,6 +3,7 @@ on:
   # TODO remove pull_request once it's consistent.
   pull_request:
     branches: ["*"]
+  workflow_dispatch:
   schedule:
     - cron: "0 5 * * WED"  # Every Wed at 05:00
 
@@ -26,10 +27,6 @@ jobs:
         uses: ./.github/actions/setup_optimizers_linux
         with:
           GUROBI_WLS: ${{ secrets.GUROBI_WLS }}
-          COPT_LICENSE_KEY: ${{ secrets.COPT_LICENSE_KEY }}
-          COPT_LICENSE_DAT: ${{ secrets.COPT_LICENSE_DAT }}
-          MOSEK_LICENSE: ${{ secrets.MOSEK_LIC_FILE }}
-          CHECK_LICENSE: true
       # Should not be necessary since we shouldn't recompute input files!
       # - name: Install scikit-sparse dependencies
       #   run: |
