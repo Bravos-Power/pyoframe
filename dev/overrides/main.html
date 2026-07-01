@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extrahead %}
+  <script data-goatcounter="https://pyoframe.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+{% endblock %}
+
 <! -- https://github.com/squidfunk/mkdocs-material/discussions/5803 -->
 {% block announce %}
   {%- if config.extra.pre_release -%}
