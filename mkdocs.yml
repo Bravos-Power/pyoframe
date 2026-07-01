@@ -8,6 +8,8 @@ theme:
   name: material
   icon:
     repo: fontawesome/brands/github
+  logo: assets/images/pyoframe_logo.png
+  favicon: assets/images/favicon.png
   language: en
   custom_dir: docs/overrides
   font:
