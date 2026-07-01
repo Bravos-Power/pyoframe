@@ -60,6 +60,12 @@ For core developers:
 
 - If you use `.unique`, `.join`, `.sort`, or `.group_by` on a Polars dataframe, make sure to set the `maintain_order` parameter appropriately (typically, `maintain_order=Config.maintain_order`).
 
-For repository maintainers:
+## Updating solver licenses (for maintainers only)
 
-- Our CI pipeline on Github Actions requires a Gurobi and COPT license to run. If the Gurobi license expires, generate a new one and copy the contents of the `guorbi.lic` file into the `GUROBI_WLS` Github secret (Settings -> Secrets and variables -> actions). Similarly, if the COPT license expires, request a new academic license (or email COPT sales for a free one) and copy the contents of both license files to the matching Github secrets.
+Our Github Actions CI pipeline requires a Gurobi, COPT, and Mosek license to run. Occasionally, these licenses must be renewed.
+
+- For Gurobi, the license can typically be [extended](https://license.gurobi.com/manager/licenses). Otherwise, [request](https://portal.gurobi.com/iam/licenses/list) a new 90-day WLS Compute Server license and copy the contents of the `guorbi.lic` file into the `GUROBI_WLS` Github secret (Settings -> Secrets and variables -> actions).
+
+- For COPT, [request a new license](https://www.cardopt.com/copt) (or email COPT sales) and copt the content of both the `.dat` and `.lic` files into the corresponding Github secrets. Note that the license should be requested for a Linux computer with usernname `runner`. Also note that the COPT version used in the Github CI actions will need to be updated (in 3 places) to match the license version.
+
+- For Mosek, a license can be [requested](https://www.mosek.com/products/academic-licenses/) and the contents of the `.lic` file added to the Github secret.
