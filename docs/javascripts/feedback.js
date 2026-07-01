@@ -13,7 +13,8 @@ document$.subscribe(function () {
       return;
     }
 
-    const vote = value === 0 ? "sad" : "happy";
+    // Must use == not ===
+    const vote = value == 0 ? "sad" : "happy";
 
     window.goatcounter.count({
       path: function(p) { return 'feedback-' + vote + '-' + p },
@@ -30,6 +31,7 @@ document$.subscribe(function () {
     const data = ev.submitter.getAttribute("data-md-value");
     recordFeedback(data);
 
+    // Must use == not ===
     if (data == 0) {
       const commentElement = document.getElementById("comments");
       commentElement.style.display = "block";
