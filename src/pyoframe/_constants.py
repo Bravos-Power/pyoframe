@@ -115,7 +115,7 @@ class ConfigDefaults:
         default_factory=lambda: pl.Config(
             tbl_hide_column_data_types=True,
             tbl_hide_dataframe_shape=True,
-            fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
+            fmt_str_lengths=400,  # Set to a large value to avoid truncation since we truncate using print_max_terms instead.
             apply_on_context_enter=True,
         )
     )
