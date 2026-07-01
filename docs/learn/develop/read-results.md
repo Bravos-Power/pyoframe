@@ -1,11 +1,54 @@
-# Read results
+# Access results
 
-Use [`.solution`][pyoframe.Variable.solution] to read the optimal values of Variables after optimization (e.g. `m.Hours_Worked.solution`). For dimensioned variables, `.solution` returns a polars DataFrame.
+## Access variable solutions
 
-Similarly, use [`.dual`][pyoframe.Constraint.dual] to read the dual values (aka. shadow prices) of Constraints (e.g. `m.Con_Max_Weekly_Hours.dual`).
+Access a variable's solution using the [`.solution`][pyoframe.Variable.solution] property.
 
-You can also output your model problem or solution using [`.write(…)`][pyoframe.Model.write].
+<!-- invisible-code-block: python
+import pyoframe as pf
 
-!!! info "Returning Pandas DataFrames"
+m = pf.Model()
+m.Hours_Worked = pf.Variable({"day": ["Mon", "Tue", "Wed", "Thu", "Fri"]}, lb=8, ub=8)
+m.optimize()
 
-    Pyoframe currently always returns Polars DataFrames but you can easily convert them to Pandas using [`.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas). In the future, we plan to add support for automatically returning Pandas DataFrames. [Upvote the issue](https://github.com/Bravos-Power/pyoframe/issues/47) if you'd like this feature.
+-->
+
+```pycon
+>>> m.Hours_Worked.solution
+┌─────┬──────────┐
+│ day ┆ solution │
+│ --- ┆ ---      │
+│ str ┆ f64      │
+╞═════╪══════════╡
+│ Mon ┆ 8.0      │
+│ Tue ┆ 8.0      │
+│ Wed ┆ 8.0      │
+│ Thu ┆ 8.0      │
+│ Fri ┆ 8.0      │
+└─────┴──────────┘
+
+```
+
+If the Variable is dimensioned, a DataFrame is returned. Otherwise, a `float` (or `int` for integer variables) is returned.
+
+!!! warning "Pandas users"
+    By default, Polars DataFrames are returned since that is what Pyoframe uses internally. Users who prefer Pandas can either convert the Polars DataFrame to Pandas using [`.to_pandas()`](https://docs.pola.rs/api/python/stable/reference/dataframe/api/polars.DataFrame.to_pandas.html#polars.DataFrame.to_pandas) or can set [Config.output_pandas][pyoframe._Config.output_pandas] to `True` so that this conversion is performed automatically.
+
+## Access dual values
+
+Access the dual values (i.e., shadow prices) of a constraint using the [`Constraint.dual`][pyoframe.Constraint.dual] property in the same way that one [accesses a variable's solution](#access-variable-solutions).
+
+## Evaluate an expression
+
+Evaluate an expression using [.evaluate()][pyoframe.Expression.evaluate].
+
+```pycon
+>>> total_hours_expr = m.Hours_Worked.sum()
+>>> total_hours_expr.evaluate()
+40.0
+
+```
+
+## Output results to a file
+
+Output your entire model problem or solution to a file using [`.write(…)`][pyoframe.Model.write].
