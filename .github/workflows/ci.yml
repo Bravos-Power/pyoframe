@@ -93,7 +93,7 @@ jobs:
       - name: Run tests and collect coverage
         run: pytest --cov
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4-beta
+        uses: codecov/codecov-action@v7
         with:
           name: coverage-python-${{ matrix.python-version }}
           flags: smart-tests
