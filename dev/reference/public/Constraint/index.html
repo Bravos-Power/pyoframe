@@ -3212,15 +3212,15 @@ make them negative for maximization problems.</p>
 </span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="go">│        ┆ V[4,4] … &gt;= 3                                                                           │</span>
 </span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="go">│ …      ┆ …                                                                                       │</span>
 </span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="go">│ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="go">│        ┆ V[3,995] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="go">│        ┆ V[3,995] +2 V[4,995] * V[4,995] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="go">│ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="go">│        ┆ V[3,996] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="go">│        ┆ V[3,996] +2 V[4,996] * V[4,996] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="go">│ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="go">│        ┆ V[3,997] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="go">│        ┆ V[3,997] +2 V[4,997] * V[4,997] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="go">│ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="go">│        ┆ V[3,998] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="go">│        ┆ V[3,998] +2 V[4,998] * V[4,998] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="go">│ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="go">│        ┆ V[3,999] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="go">│        ┆ V[3,999] +2 V[4,999] * V[4,999] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="go">└────────┴─────────────────────────────────────────────────────────────────────────────────────────┘</span>
 </span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
 </span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">((</span><span class="n">expr</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_str</span><span class="p">())</span>
@@ -3374,15 +3374,15 @@ make them negative for maximization problems.</p>
 </span><span id="__span-0-2262"><a id="__codelineno-0-2262" name="__codelineno-0-2262"></a><span class="sd">        │        ┆ V[4,4] … &gt;= 3                                                                           │</span>
 </span><span id="__span-0-2263"><a id="__codelineno-0-2263" name="__codelineno-0-2263"></a><span class="sd">        │ …      ┆ …                                                                                       │</span>
 </span><span id="__span-0-2264"><a id="__codelineno-0-2264" name="__codelineno-0-2264"></a><span class="sd">        │ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │</span>
-</span><span id="__span-0-2265"><a id="__codelineno-0-2265" name="__codelineno-0-2265"></a><span class="sd">        │        ┆ V[3,995] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2265"><a id="__codelineno-0-2265" name="__codelineno-0-2265"></a><span class="sd">        │        ┆ V[3,995] +2 V[4,995] * V[4,995] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-2266"><a id="__codelineno-0-2266" name="__codelineno-0-2266"></a><span class="sd">        │ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │</span>
-</span><span id="__span-0-2267"><a id="__codelineno-0-2267" name="__codelineno-0-2267"></a><span class="sd">        │        ┆ V[3,996] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2267"><a id="__codelineno-0-2267" name="__codelineno-0-2267"></a><span class="sd">        │        ┆ V[3,996] +2 V[4,996] * V[4,996] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-2268"><a id="__codelineno-0-2268" name="__codelineno-0-2268"></a><span class="sd">        │ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │</span>
-</span><span id="__span-0-2269"><a id="__codelineno-0-2269" name="__codelineno-0-2269"></a><span class="sd">        │        ┆ V[3,997] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2269"><a id="__codelineno-0-2269" name="__codelineno-0-2269"></a><span class="sd">        │        ┆ V[3,997] +2 V[4,997] * V[4,997] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-2270"><a id="__codelineno-0-2270" name="__codelineno-0-2270"></a><span class="sd">        │ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │</span>
-</span><span id="__span-0-2271"><a id="__codelineno-0-2271" name="__codelineno-0-2271"></a><span class="sd">        │        ┆ V[3,998] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2271"><a id="__codelineno-0-2271" name="__codelineno-0-2271"></a><span class="sd">        │        ┆ V[3,998] +2 V[4,998] * V[4,998] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-2272"><a id="__codelineno-0-2272" name="__codelineno-0-2272"></a><span class="sd">        │ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │</span>
-</span><span id="__span-0-2273"><a id="__codelineno-0-2273" name="__codelineno-0-2273"></a><span class="sd">        │        ┆ V[3,999] +2 V[4,99…                                                                     │</span>
+</span><span id="__span-0-2273"><a id="__codelineno-0-2273" name="__codelineno-0-2273"></a><span class="sd">        │        ┆ V[3,999] +2 V[4,999] * V[4,999] … &gt;= 3                                                  │</span>
 </span><span id="__span-0-2274"><a id="__codelineno-0-2274" name="__codelineno-0-2274"></a><span class="sd">        └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘</span>
 </span><span id="__span-0-2275"><a id="__codelineno-0-2275" name="__codelineno-0-2275"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum(&quot;y&quot;)</span>
 </span><span id="__span-0-2276"><a id="__codelineno-0-2276" name="__codelineno-0-2276"></a><span class="sd">        &gt;&gt;&gt; print((expr == 3).to_str())</span>
@@ -3452,7 +3452,7 @@ make them negative for maximization problems.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 1, 2026 19:52:39 UTC">July 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 1, 2026 20:20:00 UTC">July 1, 2026</span>
   </span>
 
     
@@ -3462,7 +3462,7 @@ make them negative for maximization problems.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 1, 2026 19:52:39 UTC">July 1, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 1, 2026 20:20:00 UTC">July 1, 2026</span>
   </span>
 
     
