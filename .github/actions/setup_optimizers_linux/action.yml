@@ -81,9 +81,9 @@ runs:
         COPT_LICENSE_DAT: ${{ inputs.COPT_LICENSE_DAT }}
       run: |
         tar xfz ~/installers/copt.tar.gz -C ~/
-        ls ~/copt72
+        ls ~/copt80
         # set environment variables
-        export COPT_HOME="${HOME}/copt72"
+        export COPT_HOME="${HOME}/copt80"
         echo "COPT_HOME=${COPT_HOME}" >> $GITHUB_ENV
         echo "PATH=${PATH}:${COPT_HOME}/bin" >> $GITHUB_ENV
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${COPT_HOME}/lib" >> $GITHUB_ENV
