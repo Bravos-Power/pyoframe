@@ -542,7 +542,7 @@ class Model:
 
         Parameters:
             if_infeasible_write_iis_to_file:
-                For Gurobi only: If not `None` and the model is infeasible, a warning will be emitted and the Irreducible Infeasible Set (IIS) will be computed and written to the specified file.
+                For Gurobi only: If not `None` and the model is infeasible, a warning will be emitted and the Irreducible Inconsistent Subsystem (IIS) will be computed and written to the specified file.
                 The model must have been instantiated with `solver_uses_variable_names=True` and the file extension must be `.ilp`.
         """
         self.poi.optimize()
@@ -567,12 +567,14 @@ class Model:
                 poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
             ):
                 warnings.warn(
-                    "Model is infeasible or unbounded. Attempting to compute Irreducible Infeasible Set (IIS)..."
+                    "Model is infeasible or unbounded. Attempting to compute Irreducible Inconsistent Subsystem (IIS)..."
                 )
                 try:
                     self.compute_IIS()
                 except RuntimeError:
-                    warnings.warn("Could not compute IIS. Model is likely unbounded.")
+                    warnings.warn(
+                        "Could not compute IIS. Model is likely feasible but unbounded."
+                    )
                 else:
                     self.write(if_infeasible_write_iis_to_file)
                     print(f"Wrote IIS to {if_infeasible_write_iis_to_file}.")

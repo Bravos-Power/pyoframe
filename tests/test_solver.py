@@ -343,7 +343,7 @@ def test_write_ilp(solver):
 
         with pytest.warns(
             UserWarning,
-            match="Could not compute IIS. Model is likely unbounded.",
+            match="Could not compute IIS. Model is likely feasible but unbounded.",
         ):
             with pytest.warns(
                 UserWarning,
