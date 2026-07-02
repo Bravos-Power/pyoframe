@@ -3,17 +3,28 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import pandas as pd
 import polars as pl
 
 from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
 from pyoframe._core import Expression
+from pyoframe._utils import isinstance_pandas
+
+if TYPE_CHECKING:  # pragma: no cover
+    from typing import Union
+
+    try:
+        import pandas
+    except ImportError:
+        pass
+
+    ParamInput = Union[
+        pl.DataFrame, "pandas.DataFrame", "pandas.Series", dict, str, Path
+    ]
 
 
-def Param(
-    data: pl.DataFrame | pd.DataFrame | pd.Series | dict | str | Path,
-) -> Expression:
+def Param(data: ParamInput) -> Expression:
     """Creates a model parameter, i.e. an [Expression][pyoframe.Expression] that doesn't involve any variables.
 
     A Parameter can be created from a DataFrame, CSV file, Parquet file, data dictionary, or a Pandas Series.
@@ -70,9 +81,9 @@ def Param(
         │ B     ┆ 1560       │
         └───────┴────────────┘
     """
-    if isinstance(data, pd.Series):
+    if isinstance_pandas(data, "Series"):
         data = data.to_frame().reset_index()
-    if isinstance(data, pd.DataFrame):
+    if isinstance_pandas(data, "DataFrame"):
         data = pl.from_pandas(data)
 
     if isinstance(data, (str, Path)):

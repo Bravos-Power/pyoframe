@@ -6,7 +6,6 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
@@ -21,13 +20,21 @@ from pyoframe._constants import (
     VType,
     _Solver,
 )
-from pyoframe._core import Constraint, Operable, Variable
+from pyoframe._core import Constraint, Variable
 from pyoframe._model_element import BaseBlock
 from pyoframe._objective import Objective
-from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
+from pyoframe._utils import (
+    Container,
+    NamedVariableMapper,
+    for_solvers,
+    get_obj_repr,
+    isinstance_pandas,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
+
+    from pyoframe._core import Operable
 
 
 class Model:
@@ -412,8 +419,10 @@ class Model:
         self.objective = value
 
     def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name not in Model._reserved_attributes and not isinstance(
-            __value, (BaseBlock, pl.DataFrame, pd.DataFrame)
+        if (
+            __name not in Model._reserved_attributes
+            and not isinstance(__value, (BaseBlock, pl.DataFrame))
+            and not isinstance_pandas(__value, "DataFrame")
         ):
             raise PyoframeError(
                 f"Cannot set attribute '{__name}' on the model because it isn't a subtype of BaseBlock (e.g. Variable, Constraint, ...)"

@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Callable
 
-import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
@@ -73,19 +72,10 @@ def parse_inputs_as_iterable(
 
 def _is_iterable(input: Any | Iterable[Any]) -> bool:
     # Inspired from the polars library, TODO: Consider using opposite check, i.e. equals list or tuple
-    return isinstance(input, Iterable) and not isinstance(
-        input,
-        (
-            str,
-            bytes,
-            pl.DataFrame,
-            pl.Series,
-            pd.DataFrame,
-            pd.Series,
-            pd.Index,
-            dict,
-            range,
-        ),
+    return (
+        isinstance(input, Iterable)
+        and not isinstance(input, (str, bytes, pl.DataFrame, pl.Series, dict, range))
+        and not isinstance_pandas(input, ("DataFrame", "Series", "Index"))
     )
 
 
@@ -434,3 +424,16 @@ def return_new(func: Callable[..., pl.DataFrame]) -> Callable[..., BaseOperableB
         return self._new(result, name=f"{self.name}.{func.__name__}(…)")
 
     return wrapper
+
+
+def isinstance_pandas(obj, class_name: str | list[str] | tuple[str, ...]) -> bool:
+    """Checks if an object is an instance of a pandas class by name.
+
+    This is useful to avoid importing pandas in the main codebase.
+    """
+    if isinstance(class_name, (list, tuple)):
+        return any(isinstance_pandas(obj, c) for c in class_name)
+    return any(
+        base.__module__.startswith("pandas") and base.__name__ == class_name
+        for base in type(obj).__mro__
+    )
