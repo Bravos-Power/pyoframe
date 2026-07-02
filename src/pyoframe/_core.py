@@ -7,7 +7,6 @@ from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING, Literal, Union, overload
 
-import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
@@ -42,6 +41,7 @@ from pyoframe._utils import (
     concat_dimensions,
     failed_attr_error,
     get_obj_repr,
+    isinstance_pandas,
     pairwise,
     parse_inputs_as_iterable,
     return_new,
@@ -51,8 +51,28 @@ from pyoframe._utils import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
-Operable = Union["BaseOperableBlock", pl.DataFrame, pd.DataFrame, pd.Series, int, float]
-"""Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
+    try:
+        import pandas as pd
+    except ImportError:
+        OperablePandas = ()
+        SetTypesPandas = ()
+    else:
+        OperablePandas = pd.DataFrame | pd.Series
+        SetTypesPandas = pd.DataFrame | pd.Index
+
+    Operable = Union["BaseOperableBlock", pl.DataFrame, int, float] | OperablePandas
+    """Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
+
+    SetTypes = (
+        Union[
+            pl.DataFrame,
+            "BaseOperableBlock",
+            Mapping[str, Sequence[object]],
+            "Set",
+            "Constraint",
+        ]
+        | SetTypesPandas
+    )
 
 
 class BaseOperableBlock(BaseBlock):
@@ -427,17 +447,6 @@ class BaseOperableBlock(BaseBlock):
         return Constraint(self - value, ConstraintSense.EQ)
 
 
-SetTypes = Union[
-    pl.DataFrame,
-    pd.Index,
-    pd.DataFrame,
-    BaseOperableBlock,
-    Mapping[str, Sequence[object]],
-    "Set",
-    "Constraint",
-]
-
-
 class Set(BaseOperableBlock):
     """A set which can then be used to index variables.
 
@@ -621,15 +630,17 @@ class Set(BaseOperableBlock):
                 .data.drop(RESERVED_COL_KEYS, strict=False)
                 .unique(maintain_order=Config.maintain_order)
             )
-        elif isinstance(set, pd.Index):
+        elif isinstance_pandas(set, "Index"):
+            import pandas as pd
+
             df = pl.from_pandas(pd.DataFrame(index=set).reset_index())
-        elif isinstance(set, pd.DataFrame):
+        elif isinstance_pandas(set, "DataFrame"):
             df = pl.from_pandas(set)
         elif isinstance(set, pl.DataFrame):
             df = set
         elif isinstance(set, pl.Series):
             df = set.to_frame()
-        elif isinstance(set, pd.Series):
+        elif isinstance_pandas(set, "Series"):
             if not set.name:
                 raise ValueError("Cannot convert an unnamed Pandas Series to a Set.")
             df = pl.from_pandas(set).to_frame()
@@ -1069,10 +1080,9 @@ class Expression(BaseOperableBlock):
         only if self.data contain the QUAD_VAR_KEY column.
 
         Examples:
-            >>> import pandas as pd
             >>> m = pf.Model()
             >>> m.v = Variable()
-            >>> expr = pd.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}) * m.v
+            >>> expr = pl.DataFrame({"dim1": [1, 2, 3], "value": [1, 2, 3]}) * m.v
             >>> expr *= m.v
             >>> expr.is_quadratic
             True
@@ -1145,7 +1155,7 @@ class Expression(BaseOperableBlock):
             │ 3    ┆ 32 + v[3]  │
             └──────┴────────────┘
 
-            >>> m.v + pd.DataFrame({"dim1": [1, 2], "add": [10, 20]})
+            >>> m.v + pl.DataFrame({"dim1": [1, 2], "add": [10, 20]})
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
@@ -2744,9 +2754,8 @@ class Variable(BaseOperableBlock):
                 If `True`, the last label in the dimension is connected to the first label.
 
         Examples:
-            >>> import pandas as pd
-            >>> time_dim = pd.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
-            >>> space_dim = pd.DataFrame({"city": ["Toronto", "Berlin"]})
+            >>> time_dim = pl.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})
+            >>> space_dim = pl.DataFrame({"city": ["Toronto", "Berlin"]})
             >>> m = pf.Model()
             >>> m.bat_charge = pf.Variable(time_dim, space_dim)
             >>> m.bat_flow = pf.Variable(time_dim, space_dim)
