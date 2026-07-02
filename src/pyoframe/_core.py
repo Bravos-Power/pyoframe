@@ -52,27 +52,29 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
     try:
-        import pandas as pd
+        import pandas
     except ImportError:
-        OperablePandas = ()
-        SetTypesPandas = ()
-    else:
-        OperablePandas = pd.DataFrame | pd.Series
-        SetTypesPandas = pd.DataFrame | pd.Index
+        pass
 
-    Operable = Union["BaseOperableBlock", pl.DataFrame, int, float] | OperablePandas
+    Operable = Union[
+        "BaseOperableBlock",
+        pl.DataFrame,
+        int,
+        float,
+        "pandas.DataFrame",
+        "pandas.Series",
+    ]
     """Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
 
-    SetTypes = (
-        Union[
-            pl.DataFrame,
-            "BaseOperableBlock",
-            Mapping[str, Sequence[object]],
-            "Set",
-            "Constraint",
-        ]
-        | SetTypesPandas
-    )
+    SetTypes = Union[
+        pl.DataFrame,
+        "BaseOperableBlock",
+        Mapping[str, Sequence[object]],
+        "Set",
+        "Constraint",
+        "pandas.DataFrame",
+        "pandas.Index",
+    ]
 
 
 class BaseOperableBlock(BaseBlock):

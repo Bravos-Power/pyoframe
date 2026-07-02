@@ -15,13 +15,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from typing import Union
 
     try:
-        import pandas as pd
+        import pandas
     except ImportError:
-        PandasParamInput = ()
-    else:
-        PandasParamInput = Union[pd.DataFrame, pd.Series]
+        pass
 
-    ParamInput = Union[pl.DataFrame, PandasParamInput, dict, str, Path]
+    ParamInput = Union[
+        pl.DataFrame, "pandas.DataFrame", "pandas.Series", dict, str, Path
+    ]
 
 
 def Param(data: ParamInput) -> Expression:
