@@ -60,7 +60,9 @@ For core developers:
 
 - If you use `.unique`, `.join`, `.sort`, or `.group_by` on a Polars dataframe, make sure to set the `maintain_order` parameter appropriately (typically, `maintain_order=Config.maintain_order`).
 
-## Updating solver licenses (for maintainers only)
+## Details for Pyoframe maintainers
+
+Documentation site analytics are available via [GoatCounter](https://pyoframe.goatcounter.com/).
 
 Our Github Actions CI pipeline requires a Gurobi, COPT, and Mosek license to run. Occasionally, these licenses must be renewed.
 
