@@ -5,7 +5,7 @@ To run your optimization model call,
 <!-- invisible-code-block: python
 import pyoframe as pf
 
-m = pf.Model("gurobi")
+m = pf.Model("gurobi", solver_uses_variable_names=True)
 -->
 
 ```python
@@ -21,6 +21,8 @@ Recall that you chose your solver upon [creating your model](./create-a-model.md
     ```python
     m.optimize(if_infeasible_write_iis_to_file="infeasible_model.ilp")
     ```
+
+    Note that `solver_uses_variable_names` must have been set to `True` when initializing the Model for this option to be available.
 
 
 
