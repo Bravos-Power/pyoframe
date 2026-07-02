@@ -1,5 +1,8 @@
 """Tests related to interacting with solvers."""
 
+import tempfile
+from pathlib import Path
+
 import polars as pl
 import pyoptinterface as poi
 import pytest
@@ -317,3 +320,21 @@ def test_quadratic_objective(solver, mixed: bool):
     assert m.X.solution == approx(1.0, **get_tol(solver)), (
         f"Failed with status code: {m.attr.TerminationStatus}"
     )
+
+
+def test_write_ilp(solver):
+    if not solver.supports_ilp_files:
+        pytest.skip(f"{solver.name} does not support writing ILP files")
+
+    m = pf.Model(solver, solver_uses_variable_names=True)
+    m.X = pf.Variable(lb=1, ub=10)
+    m.constr = m.X >= 20
+    m.minimize = m.X
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with pytest.warns(
+            UserWarning,
+            match="Model is infeasible or unbounded.",
+        ):
+            m.optimize(if_infeasible_write_iis_to_file=Path(tmpdir) / "model.ilp")
+        assert (Path(tmpdir) / "model.ilp").exists()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -536,9 +537,39 @@ class Model:
             kwargs["pretty"] = pretty
         self.poi.write(str(file_path), **kwargs)
 
-    def optimize(self):
-        """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
+    def optimize(self, if_infeasible_write_iis_to_file: Path | str | None = None):
+        """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS).
+
+        Parameters:
+            if_infeasible_write_iis_to_file:
+                For Gurobi only: If not `None` and the model is infeasible, a warning will be emitted and the Irreducible Infeasible Set (IIS) will be computed and written to the specified file.
+                The model must have been instantiated with `solver_uses_variable_names=True` and the file extension must be `.ilp`.
+        """
         self.poi.optimize()
+
+        if if_infeasible_write_iis_to_file is not None:
+            if_infeasible_write_iis_to_file = Path(if_infeasible_write_iis_to_file)
+            assert if_infeasible_write_iis_to_file.suffix.lower() == ".ilp", (
+                "if_infeasible_write_iis_to_file must have a .ilp extension"
+            )
+            assert self.solver.supports_ilp_files, (
+                f"{self.solver.name} does not support writing ILP files."
+            )
+            assert (
+                self.solver_uses_variable_names
+                or not self.solver.accelerate_with_repeat_names
+            ), (
+                f"if_infeasible_write_iis_to_file requires solver_uses_variable_names=True when using {self.solver.name}"
+            )
+            if self.attr.TerminationStatus in (
+                poi.TerminationStatusCode.INFEASIBLE,
+                poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
+            ):
+                warnings.warn(
+                    f"Model is infeasible or unbounded. Computing Irreducible Infeasible Set (IIS) and writing it to {if_infeasible_write_iis_to_file}."
+                )
+                self.compute_IIS()
+                self.write(if_infeasible_write_iis_to_file)
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:

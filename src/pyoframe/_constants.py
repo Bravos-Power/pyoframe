@@ -30,6 +30,7 @@ class _Solver:
     supports_unbounded: bool = True
     supports_square_brackets_in_lp_files: bool = True
     supports_deletion: bool = True
+    supports_ilp_files: bool = False
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -55,7 +56,7 @@ class _Solver:
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi", accelerate_with_repeat_names=True),
+    _Solver("gurobi", accelerate_with_repeat_names=True, supports_ilp_files=True),
     _Solver(
         "highs",
         supports_quadratic_constraints=False,
