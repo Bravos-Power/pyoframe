@@ -12,6 +12,9 @@ from pyoframe._param import Param
 
 
 def _patch_class(cls):
+    if hasattr(cls, "__pyoframe_patched__") and cls.__pyoframe_patched__:
+        return
+
     def _patch_method(func):
         @wraps(func)
         def wrapper(self, other):
@@ -28,6 +31,7 @@ def _patch_class(cls):
     cls.__ge__ = _patch_method(cls.__ge__)
     cls.__lt__ = _patch_method(cls.__lt__)
     cls.__gt__ = _patch_method(cls.__gt__)
+    cls.__pyoframe_patched__ = True
 
 
 def _patch_polars():
@@ -42,7 +46,7 @@ def _patch_pandas(pd):
     pd.Series.to_expr = lambda self: Param(self)  # type: ignore
 
 
-class PandasFinderInterceptor(importlib.abc.MetaPathFinder):
+class _PandasFinderInterceptor(importlib.abc.MetaPathFinder):
     class PandasLoaderWrapper(importlib.abc.Loader):
         def __init__(self, original_loader):
             self.original_loader = original_loader
@@ -69,4 +73,7 @@ def patch_dataframe_libraries():
 
         _patch_pandas(pd)
     else:
-        sys.meta_path.insert(0, PandasFinderInterceptor())
+        if not any(
+            isinstance(finder, _PandasFinderInterceptor) for finder in sys.meta_path
+        ):
+            sys.meta_path.insert(0, _PandasFinderInterceptor())
