@@ -464,6 +464,29 @@ class Set(BaseOperableBlock):
         │ 1   ┆ 1   │
         │ 1   ┆ 2   │
         └─────┴─────┘
+
+        Sets also accept polars DataFrames, pandas DataFrames, and pandas Indexes as input.
+        >>> import pandas as pd
+        >>> df = pd.DataFrame({"x": [0, 0], "y": [0, 1]})
+        >>> pf.Set(df)
+        <Set 'unnamed' height=2>
+        ┌─────┬─────┐
+        │ x   ┆ y   │
+        │ (1) ┆ (2) │
+        ╞═════╪═════╡
+        │ 0   ┆ 0   │
+        │ 0   ┆ 1   │
+        └─────┴─────┘
+        >>> pf.Set(df["y"])
+        <Set 'unnamed' height=2>
+        ┌─────┐
+        │ y   │
+        │ (2) │
+        ╞═════╡
+        │ 0   │
+        │ 1   │
+        └─────┘
+
     """
 
     def __init__(self, *data: SetTypes | Iterable[SetTypes], **named_data):
