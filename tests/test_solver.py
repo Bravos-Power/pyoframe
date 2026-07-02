@@ -327,7 +327,7 @@ def test_write_ilp(solver):
         pytest.skip(f"{solver.name} does not support writing ILP files")
 
     m = pf.Model(solver, solver_uses_variable_names=True)
-    m.X = pf.Variable(lb=1, ub=10)
+    m.X = pf.Variable(ub=10)
     m.constr = m.X >= 20
     m.minimize = m.X
 
@@ -338,3 +338,15 @@ def test_write_ilp(solver):
         ):
             m.optimize(if_infeasible_write_iis_to_file=Path(tmpdir) / "model.ilp")
         assert (Path(tmpdir) / "model.ilp").exists()
+
+        del m.constr  # now its unbounded
+
+        with pytest.warns(
+            UserWarning,
+            match="Could not compute IIS. Model is likely unbounded.",
+        ):
+            with pytest.warns(
+                UserWarning,
+                match="Model is infeasible or unbounded.",
+            ):
+                m.optimize(if_infeasible_write_iis_to_file=Path(tmpdir) / "model2.ilp")

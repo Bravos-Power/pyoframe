@@ -14,6 +14,12 @@ m.optimize()
 
 Recall that you chose your solver upon [creating your model](./create-a-model.md#specify-a-solver).
 
+!!! tip "Auto-compute IIS with Gurobi"
+
+    Infeasible models are often hard to debug. When using Pyoframe with Gurobi, you can have infeasible models automatically compute
+    
+
+
 ## Configure solver parameters
 
 Every solver has a set of parameters that you can read or set using `model.params.<your-param>`.

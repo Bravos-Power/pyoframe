@@ -563,13 +563,19 @@ class Model:
             )
             if self.attr.TerminationStatus in (
                 poi.TerminationStatusCode.INFEASIBLE,
+                poi.TerminationStatusCode.DUAL_INFEASIBLE,
                 poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
             ):
                 warnings.warn(
-                    f"Model is infeasible or unbounded. Computing Irreducible Infeasible Set (IIS) and writing it to {if_infeasible_write_iis_to_file}."
+                    "Model is infeasible or unbounded. Attempting to compute Irreducible Infeasible Set (IIS)..."
                 )
-                self.compute_IIS()
-                self.write(if_infeasible_write_iis_to_file)
+                try:
+                    self.compute_IIS()
+                except RuntimeError:
+                    warnings.warn("Could not compute IIS. Model is likely unbounded.")
+                else:
+                    self.write(if_infeasible_write_iis_to_file)
+                    print(f"Wrote IIS to {if_infeasible_write_iis_to_file}.")
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
