@@ -272,8 +272,11 @@ def unwrap_single_values(func) -> pl.DataFrame | Any:
     @wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
-        if isinstance(result, pl.DataFrame) and result.shape == (1, 1):
-            return result.item()
+        if isinstance(result, pl.DataFrame):
+            if result.shape == (1, 1):
+                return result.item()
+            if Config.output_pandas:
+                return result.to_pandas(use_pyarrow_extension_array=True)
         return result
 
     return wrapper
