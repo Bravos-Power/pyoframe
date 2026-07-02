@@ -32,6 +32,16 @@ def test_pandas_patching_works():
     assert hasattr(pd.DataFrame, "__pyoframe_patched__")
 
 
+def test_pyoframe_does_not_import_pandas():
+    reset_imports(["pandas", "pyoframe", "polars"])
+
+    assert "pandas" not in sys.modules
+
+    import pyoframe  # noqa: F401, F811
+
+    assert "pandas" not in sys.modules
+
+
 def reset_imports(modules: list[str]):
     for name in list(sys.modules.keys()):
         if any(name == mod or name.startswith(mod + ".") for mod in modules):
