@@ -46,6 +46,22 @@ def test_pyoframe_does_not_import_pandas():
     assert "pandas" in sys.modules
 
 
+def test_no_double_patch():
+    reset_imports(["pandas", "pyoframe", "polars"])
+
+    base_length = len(sys.meta_path)
+
+    from pyoframe._monkey_patch import patch_dataframe_libraries
+
+    assert len(sys.meta_path) == base_length + 1
+
+    patch_dataframe_libraries()
+    patch_dataframe_libraries()
+    patch_dataframe_libraries()
+
+    assert len(sys.meta_path) == base_length + 1
+
+
 def reset_imports(modules: list[str]):
     for name in list(sys.modules.keys()):
         if any(name == mod or name.startswith(mod + ".") for mod in modules):
