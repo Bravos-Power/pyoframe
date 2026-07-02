@@ -41,6 +41,10 @@ def test_pyoframe_does_not_import_pandas():
 
     assert "pandas" not in sys.modules
 
+    import pandas  # noqa: F401, F811
+
+    assert "pandas" in sys.modules
+
 
 def reset_imports(modules: list[str]):
     for name in list(sys.modules.keys()):
