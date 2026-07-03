@@ -2,3 +2,11 @@
   background-color: var(--md-warning-bg-color);
   color: var(--md-warning-fg-color);
 }
+
+:root>* {
+  --md-primary-fg-color: #DC2626;
+  --md-primary-fg-color--light: #F87171;
+  --md-primary-fg-color--dark: #991B1B;
+  --md-accent-fg-color: #FB7185;
+  --md-accent-fg-color--transparent: rgba(251, 113, 133, 0.15);
+}

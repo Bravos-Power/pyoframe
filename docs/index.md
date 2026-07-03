@@ -5,8 +5,14 @@ hide:
   - actions
   - footer
   - feedback
+  - title
 ---
-# Pyoframe: A loved alternative to GAMS, Pyomo, and Linopy
+
+![Pyoframe](./assets/images/pyoframe_banner.png)
+
+# Fast and Modeler-Friendly Optimization Framework
+
+## Key features
 
 - Builds linear, non-linear, quadratic, continuous and mixed-integer optimization problems.
 - Seamlessly integrates with pandas thanks to its dataframe-centric design.

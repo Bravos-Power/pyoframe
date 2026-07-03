@@ -8,15 +8,16 @@ theme:
   name: material
   icon:
     repo: fontawesome/brands/github
-  logo: assets/images/pyoframe_logo.png
-  favicon: assets/images/favicon.png
+  logo: assets/images/logo.svg
+  favicon: assets/images/logo.svg
   language: en
   custom_dir: docs/overrides
   font:
     text: Roboto
     code: monospace # Because the Google CDN has issues that make Polars display incorrectly https://github.com/google/fonts/issues/4235
   palette:
-    - primary: red
+    - primary: custom
+    - accent: custom
     # Palette toggle for light mode
     - scheme: default
       toggle:
