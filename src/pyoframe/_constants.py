@@ -30,6 +30,7 @@ class _Solver:
     supports_unbounded: bool = True
     supports_square_brackets_in_lp_files: bool = True
     supports_deletion: bool = True
+    supports_ilp_files: bool = False
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -55,7 +56,7 @@ class _Solver:
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi", accelerate_with_repeat_names=True),
+    _Solver("gurobi", accelerate_with_repeat_names=True, supports_ilp_files=True),
     _Solver(
         "highs",
         supports_quadratic_constraints=False,
@@ -106,6 +107,7 @@ RESERVED_COL_KEYS = (
 @dataclass
 class ConfigDefaults:
     default_solver: SUPPORTED_SOLVER_TYPES | _Solver | Literal["raise", "auto"] = "auto"
+    output_pandas: bool = False
     disable_extras_checks: bool = False
     enable_is_duplicated_expression_safety_check: bool = False
     integer_tolerance: float = 1e-4
@@ -114,7 +116,7 @@ class ConfigDefaults:
         default_factory=lambda: pl.Config(
             tbl_hide_column_data_types=True,
             tbl_hide_dataframe_shape=True,
-            fmt_str_lengths=100,  # Set to a large value to avoid truncation (within reason)
+            fmt_str_lengths=400,  # Set to a large value to avoid truncation since we truncate using print_max_terms instead.
             apply_on_context_enter=True,
         )
     )
@@ -149,6 +151,34 @@ class _Config:
     @default_solver.setter
     def default_solver(self, value):
         self._settings.default_solver = value
+
+    @property
+    def output_pandas(self) -> bool:
+        """When `True`, Pyoframe will convert outputted DataFrames to Pandas.
+
+        This setting is conveninent for users who prefer using Pandas instead of Polars as it avoids the need to manually call `.to_pandas()`.
+
+        DataFrames that are converted to Pandas include those returned by [Variable.solution][pyoframe.Variable.solution],
+        [Constraint.dual][pyoframe.Constraint.dual], and [Expression.evaluate][pyoframe.Expression.evaluate],
+        as well as those returned via [Variable.attr][pyoframe.Variable.attr] or [Constraint.attr][pyoframe.Constraint.attr].
+
+        Examples:
+            >>> import pandas as pd
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(pf.Set(x=range(3)))
+            >>> m.constraint = m.X == 1
+            >>> m.optimize()
+            >>> isinstance(m.X.solution, pd.DataFrame)
+            False
+            >>> pf.Config.output_pandas = True
+            >>> isinstance(m.X.solution, pd.DataFrame)
+            True
+        """
+        return self._settings.output_pandas
+
+    @output_pandas.setter
+    def output_pandas(self, value: bool):
+        self._settings.output_pandas = value
 
     @property
     def disable_extras_checks(self) -> bool:

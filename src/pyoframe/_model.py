@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import time
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import pandas as pd
 import polars as pl
 import pyoptinterface as poi
 
@@ -21,13 +21,21 @@ from pyoframe._constants import (
     VType,
     _Solver,
 )
-from pyoframe._core import Constraint, Operable, Variable
+from pyoframe._core import Constraint, Variable
 from pyoframe._model_element import BaseBlock
 from pyoframe._objective import Objective
-from pyoframe._utils import Container, NamedVariableMapper, for_solvers, get_obj_repr
+from pyoframe._utils import (
+    Container,
+    NamedVariableMapper,
+    for_solvers,
+    get_obj_repr,
+    isinstance_pandas,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from collections.abc import Generator
+
+    from pyoframe._core import Operable
 
 
 class Model:
@@ -412,8 +420,10 @@ class Model:
         self.objective = value
 
     def __setattr__(self, __name: str, __value: Any) -> None:
-        if __name not in Model._reserved_attributes and not isinstance(
-            __value, (BaseBlock, pl.DataFrame, pd.DataFrame)
+        if (
+            __name not in Model._reserved_attributes
+            and not isinstance(__value, (BaseBlock, pl.DataFrame))
+            and not isinstance_pandas(__value, "DataFrame")
         ):
             raise PyoframeError(
                 f"Cannot set attribute '{__name}' on the model because it isn't a subtype of BaseBlock (e.g. Variable, Constraint, ...)"
@@ -527,9 +537,47 @@ class Model:
             kwargs["pretty"] = pretty
         self.poi.write(str(file_path), **kwargs)
 
-    def optimize(self):
-        """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS)."""
+    def optimize(self, if_infeasible_write_iis_to_file: Path | str | None = None):
+        """Optimizes the model using your selected solver (e.g. Gurobi, HiGHS).
+
+        Parameters:
+            if_infeasible_write_iis_to_file:
+                For Gurobi only: If not `None` and the model is infeasible, a warning will be emitted and the Irreducible Inconsistent Subsystem (IIS) will be computed and written to the specified file.
+                The model must have been instantiated with `solver_uses_variable_names=True` and the file extension must be `.ilp`.
+        """
         self.poi.optimize()
+
+        if if_infeasible_write_iis_to_file is not None:
+            if_infeasible_write_iis_to_file = Path(if_infeasible_write_iis_to_file)
+            assert if_infeasible_write_iis_to_file.suffix.lower() == ".ilp", (
+                "if_infeasible_write_iis_to_file must have a .ilp extension"
+            )
+            assert self.solver.supports_ilp_files, (
+                f"{self.solver.name} does not support writing ILP files."
+            )
+            assert (
+                self.solver_uses_variable_names
+                or not self.solver.accelerate_with_repeat_names
+            ), (
+                f"if_infeasible_write_iis_to_file requires solver_uses_variable_names=True when using {self.solver.name}"
+            )
+            if self.attr.TerminationStatus in (
+                poi.TerminationStatusCode.INFEASIBLE,
+                poi.TerminationStatusCode.DUAL_INFEASIBLE,
+                poi.TerminationStatusCode.INFEASIBLE_OR_UNBOUNDED,
+            ):
+                warnings.warn(
+                    "Model is infeasible or unbounded. Attempting to compute Irreducible Inconsistent Subsystem (IIS)..."
+                )
+                try:
+                    self.compute_IIS()
+                except RuntimeError:
+                    warnings.warn(
+                        "Could not compute IIS. Model is likely feasible but unbounded."
+                    )
+                else:
+                    self.write(if_infeasible_write_iis_to_file)
+                    print(f"Wrote IIS to {if_infeasible_write_iis_to_file}.")
 
     @for_solvers("gurobi")
     def convert_to_fixed(self) -> None:
