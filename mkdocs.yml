@@ -8,8 +8,8 @@ theme:
   name: material
   icon:
     repo: fontawesome/brands/github
-  logo: assets/images/logo.svg
-  favicon: assets/images/logo.svg
+  logo: assets/images/logo.png
+  favicon: assets/images/logo.png
   language: en
   custom_dir: docs/overrides
   font:

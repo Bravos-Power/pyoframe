@@ -10,7 +10,7 @@ hide:
 
 ![Pyoframe](./assets/images/pyoframe_banner.png)
 
-# Fast and Modeler-Friendly Optimization Framework
+# A Fast and Modeler-Friendly Optimization Framework
 
 ## Key features
 

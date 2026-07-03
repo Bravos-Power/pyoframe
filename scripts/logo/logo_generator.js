@@ -1,10 +1,10 @@
 const tableConfig = {
   rows: 4,
   columns: 3,
-  width: 280,
-  height: 260,
-  marginBottomTop: 5,
-  marginLeftRight: 40,
+  width: 200,
+  height: 200,
+  marginBottomTop: 30,
+  marginLeftRight: 35,
   cornerRadius: 5,
   strokeWidth: 5,
 };
@@ -14,17 +14,17 @@ const squareColor = '#FB7185';
 const speedLineColor = '#DC2626';
 const logoSeed = 19770303;
 const slantAngleDegrees = -15;
-const pixelSquareSize = 10;
-const pixelSquareGap = 3;
+const pixelSquareSize = 7;
+const pixelSquareGap = 2
 const outerBoundaryStrokeWidth = 12;
 const dividerStrokeWidth = 5;
 const speedLineYBase = 20;
 const minSquareOpacity = 0.3;
-const maxSquareOpacity = 0.9;
+const maxSquareOpacity = 0.95;
 const speedLineConfig = [
-  { x: 24, yOffset: 48, length: 56, width: 8, drawAfterTable: true },
-  { x: 10, yOffset: 72, length: 42, width: 8, drawAfterTable: false },
-  { x: 18, yOffset: 96, length: 27, width: 8, drawAfterTable: false },
+  { x: 24, yOffset: 32, length: 50, width: 8, drawAfterTable: true },
+  { x: 10, yOffset: 50, length: 33, width: 8, drawAfterTable: false },
+  { x: 18, yOffset: 66, length: 20, width: 8, drawAfterTable: false },
 ];
 const noiseOpacityGamma = 2.2;
 
