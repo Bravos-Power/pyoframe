@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pyoptinterface as poi
 
 from pyoframe._constants import ObjSense
-from pyoframe._core import Expression, Operable
+from pyoframe._core import Expression
 from pyoframe._utils import failed_attr_error
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyoframe._core import Operable
 
 
 # TODO don't subclass Expression to avoid a bunch of unnecessary functions being available.

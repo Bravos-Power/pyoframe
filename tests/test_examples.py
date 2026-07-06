@@ -17,7 +17,7 @@ from polars.testing import assert_frame_equal
 
 import pyoframe as pf
 from pyoframe._constants import SUPPORTED_SOLVERS, _Solver
-from tests.util import get_tol_pl
+from tests.util import get_tol, get_tol_pl
 
 
 @dataclass
@@ -94,7 +94,7 @@ def compare_results_dir(expected_dir, test_dir, solver):
 
         expected = expected_dir / file.name
         if file.suffix == ".sol":
-            check_sol_equal(expected, file)
+            check_sol_equal(expected, file, solver)
         elif file.suffix == ".lp":
             if pf.Config.maintain_order:
                 check_lp_equal(expected, file)
@@ -130,19 +130,18 @@ def check_integer_solutions_only(sol_file):
         assert value.is_integer(), f"Variable {name} has non-integer value {value}"
 
 
-def check_sol_equal(expected_sol_file, actual_sol_file):
+def check_sol_equal(expected_sol_file, actual_sol_file, solver):
     # Remove comments and empty lines
     expected_result = parse_sol(expected_sol_file)
     actual_result = parse_sol(actual_sol_file)
 
-    tol = 1e-8 if pf.Config.maintain_order else 1e-6
     for (expected_name, expected_value), (actual_name, actual_value) in zip(
         expected_result, actual_result
     ):
         assert expected_name == actual_name, (
             f"Variable names do not match: {expected_name} != {actual_name}\n{expected_result}\n\n{actual_result}"
         )
-        assert expected_value - tol <= actual_value <= expected_value + tol, (
+        assert actual_value == pytest.approx(expected_value, **get_tol(solver)), (
             f"Variable {actual_name} in solution file ({actual_value}) does not match expected value ({expected_value})"
         )
 

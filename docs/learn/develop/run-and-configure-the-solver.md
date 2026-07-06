@@ -5,7 +5,7 @@ To run your optimization model call,
 <!-- invisible-code-block: python
 import pyoframe as pf
 
-m = pf.Model()
+m = pf.Model("gurobi", solver_uses_variable_names=True)
 -->
 
 ```python
@@ -13,6 +13,18 @@ m.optimize()
 ```
 
 Recall that you chose your solver upon [creating your model](./create-a-model.md#specify-a-solver).
+
+!!! tip "Auto-generate IIS with Gurobi"
+
+    Infeasible models are often hard to debug. Pyoframe offers Gurobi users the option to automatically compute and save the [Irreducible Inconsistent Subsystem](https://docs.gurobi.com/projects/optimizer/en/current/reference/python/model.html#Model.computeIIS) (IIS) whenever a model is infeasible. The IIS is the smallest possible model that is still infeasible, making it significantly easier to discover which constraints are causing the infeasibility. To enable this option, simply specify the file where the IIS should be save (filename must end in `.ilp`):
+
+    ```python
+    m.optimize(if_infeasible_write_iis_to_file="infeasible_model.ilp")
+    ```
+
+    Note that `solver_uses_variable_names` must have been set to `True` when initializing the Model for this option to be available.
+
+
 
 ## Configure solver parameters
 
