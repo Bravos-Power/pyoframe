@@ -361,14 +361,10 @@ def run_benchmark(
     mem_log_dir = past_results.base_dir / benchmark.name / "mem_log"
     mem_log_dir.mkdir(parents=True, exist_ok=True)
 
-    # See paper for explanation
-    env = os.environ.copy()
-    env["_RJEM_MALLOC_CONF"] = "muzzy_decay_ms:1000"
-
     start_time = time.time()
 
     with subprocess.Popen(
-        cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE, text=True, bufsize=1, env=env
+        cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE, text=True, bufsize=1
     ) as benchmark_proc:
         memory_thread = threading.Thread(
             target=monitor_benchmark,
