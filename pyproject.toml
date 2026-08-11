@@ -89,6 +89,7 @@ ignore = [
     "D100",  # allow missing docstrings since benchmarks are often one-off scripts
     "E741"  # allow single letter variable names since they often represent mathematical variables
 ]
+"docs/learn/practice/dispatch_challenge/starter_code/main.py" = ["F841", "D100"]
 "conftest.py" = ["D"]
 
 [tool.ruff.lint.pydocstyle]
