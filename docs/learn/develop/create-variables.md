@@ -1,6 +1,6 @@
 # Create variables
 
-To create a variable, attach it to a `Model`:
+To create a variable, attach it to a `Model` as an attribute:
 
 ```python
 import pyoframe as pf
@@ -10,7 +10,7 @@ m = pf.Model()
 m.Var_Name = pf.Variable()
 ```
 
-The variable can later be accessed via the model attribute,
+The variable can later be retrieved via the model attribute,
 
 ```pycon
 >>> m.Var_Name
@@ -42,9 +42,9 @@ By default, variables are unbounded. To set a lower or upper bound, use the `lb`
 m.Positive_Var = pf.Variable(lb=0)
 ```
 
-!!! tip "Bounds can be expressions"
+!!! tip "Bounds need not be constant"
 
-    `lb` and `ub` accepts fully formed [Pyoframe expressions](./create-expressions.md), not only constants.
+    `lb` and `ub` accept non-constant bounds such as DataFrames and even [Pyoframe expressions](./create-expressions.md). Non-constant bounds will automatically be broadcasted to match the variable's dimensions, and a constraint (e.g., `m.Positive_Var_lb`) will be added to the model to enforce the bound. See, for example, the [diet problem](../../examples/diet.md#model) where a non-constant upper bound is used to create the `Buy` variable.
 
 ## Set domain
 
