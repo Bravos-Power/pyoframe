@@ -18,7 +18,7 @@ Install Pyoframe using your preferred package manager:
 
 ## Step 2: Choose a solver
 
-Pyoframe makes it easy to _build_ models, but a separate solver is needed to _solve_ the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, choose HiGHS. Note that both Gurobi and COPT offer free licenses for academics.
+Pyoframe makes it easy to _build_ models, but a separate solver is needed to _solve_ the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, choose HiGHS. Note that both Gurobi and COPT offer free licenses for academics. If you don't see your preferred solver [leave us a comment](https://github.com/Bravos-Power/pyoframe/issues/144) and we can consider adding support for it.
 
 | Compatibility table                                           | HiGHS (free) | Gurobi (paid) | COPT (paid) | Ipopt (free) | Mosek (paid) |
 | ------------------------------------------------------------- | ------------ | ------------- | ----------- | ------------ | ------------ |
@@ -29,9 +29,6 @@ Pyoframe makes it easy to _build_ models, but a separate solver is needed to _so
 | Quadratic constraints (convex)                                | ❌           | ✅           | ✅          | ✅           | ✅          |
 | Quadratic constraints (non-convex)                            | ❌           | ✅           | ❌          | ✅           | ❌          |
 | *Integer variables cannot be used with quadratic objectives.  |
-
-!!! tip "Don't see your preferred solver?"
-    Don't hesitate to [request another solver](https://github.com/Bravos-Power/pyoframe/issues/144). We would gladly consider adding support for other solvers, particularly Mosek which would be easy to support given sufficient interest.
 
 ## Step 3: Install the solver
 
