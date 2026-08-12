@@ -22,7 +22,7 @@ This coding challenge was developed for the PowerUp 2026 conference in Boulder, 
 
 2. Download and unzip the data and starter code for this challenge.
 
-    [:material-folder-download: Download data and starter code](#){.md-button}
+    [:material-folder-download: Download data and starter code](https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code_for_dispatch_challenge.zip){.md-button}
 
 3. Run `main.py`. It shouldn't produce any errors and should print:
 
