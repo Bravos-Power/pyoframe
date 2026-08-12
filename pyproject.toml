@@ -20,9 +20,7 @@ classifiers = [
     "Natural Language :: English",
 ]
 dependencies = [
-    "polars~=1.0",
-    "pyarrow",
-    "pandas<3",
+    "polars[pandas]~=1.0",
     "pyoptinterface==0.6.1", # Due to Pyoframe close integration with pyoptinterface, we need to pin to a specific version.
 ]
 
