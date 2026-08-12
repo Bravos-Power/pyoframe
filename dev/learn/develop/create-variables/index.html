@@ -483,6 +483,8 @@
       
         
       
+        
+      
     
     
     
@@ -1204,7 +1206,7 @@
   
   
   <span class="md-ellipsis">
-    Migrate
+    Practice
     
   </span>
   
@@ -1214,6 +1216,87 @@
         
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Practice
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../practice/dispatch_challenge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Coding challenge: Build an electrical dispatch model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Migrate
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
             <span class="md-nav__icon md-icon"></span>
             Migrate
           </label>
@@ -2205,14 +2288,14 @@
 
 
 <h1 id="create-variables">Create variables</h1>
-<p>To create a variable, attach it to a <code>Model</code>:</p>
+<p>To create a variable, attach it to a <code>Model</code> as an attribute:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">m</span><span class="o">.</span><span class="n">Var_Name</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">()</span>
 </span></code></pre></div>
-<p>The variable can later be accessed via the model attribute,</p>
+<p>The variable can later be retrieved via the model attribute,</p>
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Var_Name</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="go">&lt;Variable &#39;Var_Name&#39; &gt;</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="go">Var_Name</span>
@@ -2231,8 +2314,8 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">m</span><span class="o">.</span><span class="n">Positive_Var</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </span></code></pre></div>
 <div class="admonition tip">
-<p class="admonition-title">Bounds can be expressions</p>
-<p><code>lb</code> and <code>ub</code> accepts fully formed <a href="../create-expressions/">Pyoframe expressions</a>, not only constants.</p>
+<p class="admonition-title">Bounds need not be constant</p>
+<p><code>lb</code> and <code>ub</code> accept non-constant bounds such as DataFrames and even <a href="../create-expressions/">Pyoframe expressions</a>. Non-constant bounds will automatically be broadcasted to match the variable's dimensions, and a constraint (e.g., <code>m.Positive_Var_lb</code>) will be added to the model to enforce the bound. See, for example, the <a href="../../../examples/diet/#model">diet problem</a> where a non-constant upper bound is used to create the <code>Buy</code> variable.</p>
 </div>
 <h2 id="set-domain">Set domain</h2>
 <p>By default, variables are continuous. To create a binary or integer variable use the <code>vtype</code> argument:</p>
@@ -2398,7 +2481,7 @@ for con in [
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 16:36:12 UTC">June 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 12, 2026 17:29:01 UTC">August 12, 2026</span>
   </span>
 
     
