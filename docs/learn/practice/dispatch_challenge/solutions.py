@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import altair as alt
 import pandas as pd
 
 import pyoframe as pf
@@ -38,6 +37,7 @@ def plot_results(dispatch_results, save_to="energy_mix.png"):
     save_to : str, optional
         The path to save the plot to.
     """
+    import altair as alt
     import polars as pl
 
     COLORS = {
