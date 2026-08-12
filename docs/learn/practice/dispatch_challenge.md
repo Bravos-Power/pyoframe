@@ -1,53 +1,55 @@
 # Coding challenge: Build an electrical dispatch model
 
-In this coding challenge, you will build a simplified electrical dispatch model. Dispatch models are used by electrical grid operators to determine which power plants should run when.
+In this coding challenge, you will build a simple electrical dispatch model. Dispatch models are used by electrical grid operators to determine which power plants should run when.
 
-This coding challenge was developed for the PowerUp 2026 conference in Boulder, Colorado and uses data from the California Test System[^1].
+This coding challenge was developed for the PowerUp 2026 conference in Boulder, Colorado and uses data from the California Test System.[^1]
 
 [^1]: Taylor, S. et al. California Test System (CATS): A Geographically Accurate Test System Based on the California Grid. Policy and Regulation IEEE Transactions on Energy Markets 2, 107–118 (2024).
 
 !!! tip "Use agentic AI judiciously"
 
-    Agentic AI tools like Claude Code can certainly "solve" this coding challenge for you. But, you might learn more (and have more fun!) if you avoid such tools for this challenge. The concepts taught in this challenge continue to be useful to serious modelers that wish to better understand how modeling frameworks work, how to effectively guide AI agents, and how to improve the performance of their code. Remember, the point is to learn, not to solve my made-up and meaningless coding challenge!
+    Agentic AI tools like Claude Code can certainly "solve" this coding challenge for you, but you will best learn the concepts taught here if you limit your use of such tools. Why bother learning what an AI agent can do? I find that modelers with a solid grasp of _the concepts_ behind modeling frameworks like Pyoframe are more effective at guiding AI agents and building complex, cutting-edge models. 
     
-## A. Set up project
+## A. Set up the project
 
-1. Run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas.
+1. Run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our [installation instructions](../get-started/installation.md).
 
     ```bash
     pip install pyoframe[highs] altair[save] pandas
     ```
-
-    If you prefer using another solver like Gurobi, refer to our [installation instructions](../get-started/installation.md). Also note that we will use pandas since that is what most people are comfortable with, but Pyoframe works equally well with polars if you prefer (in fact, under-the-hood, Pyoframe uses Polars for everything).
 
 2. Download and unzip the data and starter code for this challenge.
 
     [:material-folder-download: Download data and starter code](https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code_for_dispatch_challenge.zip){.md-button}
 
 
-3. Run `main.py`. It shouldn't produce any errors and should print:
+3. Run `main.py`. The file should produce no errors and should output,
 
     ```bash
     No results to plot.
     ```
 
-## B. Get familiar with the data
+!!! info "Pandas or Polars"
 
-The `input_data` folder contains several files. For now, you only need to inspect the following two files:
+    The provided starter code uses pandas since that is what most people are familiar with. However, if you're feeling adventurous, we recommend you try using polars instead. Polars is a much faster alternative to Pandas with a more consistent, readable, and powerful syntax. Pyoframe uses Polars internally but works just fine with Pandas.
 
-1. **`generators.parquet`**: a table containing one row per power generator. For now, you will only need the following columns:
+## B. Discover the data
+
+Like most real optimization problems, we will be integrating external data into our model! Take a look at the `input_data` folder and inspect the following two files:
+
+1. **`generators.parquet`**: a list of power generator and their characteristics. For now, you will only need the following columns:
 
     - `gen_id`, a unique ID for each generator
     
     - `Pmax`, the maximum power the generator can output (in MW)
     
-    - `cost_per_MWh_linear`, the (linearized) cost of producing one MWh of energy 
+    - `cost_per_MWh_linear`, the cost of per MWh of producing energy 
     
-2. **`loads.parquet`**: a table for the electrical demand at every hour and electrical bus
+2. **`loads.parquet`**: the electrical demand at every hour and every electrical bus
 
-!!! tip "Parquet files"
+!!! info "Parquet files"
 
-    Parquet files are a modern, machine-readable alternative to .csv files. You can inspect them using the [Data Wrangler extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler) in VSCode, or by simply adding a line in `main.py` to print the corresponding DataFrame. 
+    Parquet files are a modern, compact, and machine-friendly alternative to CSV files. You can inspect `.parquet` files using the [Data Wrangler extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.datawrangler) in VSCode, or you can read them with Pandas (as is done in `main.py`) and inspect them using regular Pandas commands (e.g., [`DataFrame.info()`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.info.html)).
 
 ## C. Build a single-timestep, copper-plate model
 
