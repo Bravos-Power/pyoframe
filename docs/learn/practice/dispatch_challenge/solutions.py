@@ -20,10 +20,6 @@ def starter_code():  # WHEN COPYING RENAME TO MAIN
     MIDDAY_LOAD = df_loads[df_loads["datetime"].dt.hour == 12]["active_load"].item()
 
     ### YOUR CODE GOES HERE
-    # For example
-    print("Generators DataFrame:")
-    print(df_generators)
-    print(f"Total load at mid-day: {MIDDAY_LOAD} MW")
 
 
 def plot_results(dispatch_results, save_to="energy_mix.png"):
