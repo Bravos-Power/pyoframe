@@ -55,7 +55,7 @@ class Objective(Expression):
         >>> m.maximize = m.dimensioned_variable
         Traceback (most recent call last):
         ...
-        ValueError: Objective cannot be created from a dimensioned expression. Did you forget to use .sum()?
+        ValueError: The objective function must be a single (non-dimensioned) expression, but the provided expression has dimensions ['city']. Did you forget to use .sum() to sum across dimensions?
 
         Objectives cannot be overwritten.
 
@@ -78,7 +78,7 @@ class Objective(Expression):
         self._model = expr._model
         if self.dimensions is not None:
             raise ValueError(
-                "Objective cannot be created from a dimensioned expression. Did you forget to use .sum()?"
+                f"The objective function must be a single (non-dimensioned) expression, but the provided expression has dimensions {self.dimensions}. Did you forget to use .sum() to sum across dimensions?"
             )
 
     @property
