@@ -12,18 +12,19 @@ This coding challenge was developed for the PowerUp 2026 conference in Boulder, 
     
 ## A. Set up the project
 
-1. Run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our [installation instructions](../get-started/installation.md).
+1. Ensure you have Python installed (version 3.10 or more).
+
+2. Download and unzip the starter code and data for this challenge.
+
+    [:material-folder-download: Download starter code and data](https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code.zip){.md-button}
+
+3. In the created folder, run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our [installation instructions](../get-started/installation.md).
 
     ```bash
     pip install pyoframe[highs] altair[save] pandas
     ```
 
-2. Download and unzip the data and starter code for this challenge.
-
-    [:material-folder-download: Download data and starter code](https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code_for_dispatch_challenge.zip){.md-button}
-
-
-3. Run `main.py`. The file should produce no errors and should output,
+4. Run `main.py`. The file should produce no errors and the log should end with,
 
     ```bash
     No results to plot.
