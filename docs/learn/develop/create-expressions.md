@@ -35,7 +35,7 @@ m.hours_remaining = 24 - m.Hours_Worked - m.Hours_Sleep
 
     Pyoframe always performs operations label-by-label. For example, Pyoframe subtracted `m.Hours_Sleep` from `m.Hours_Worked` using the labels; the fact that the days were listed in reverse order in `m.Hours_Sleep` (see above) does not matter.
 
-    When the left- and/or right-hand side expressions have labels not present in the other, it may be necessary to use `.keep_extras()` or `.drop_extras()` to specify how these extra labels should be handled. Similarly, if one of the two operands is missing a dimension, it may be necessary to use `.over` to force broadcasting. Read [Addition and its quirks](../concepts/addition.md) to learn more.
+    When the left- and/or right-hand side expressions have labels not present in the other, it may be necessary to use `.keep_extras()` or `.drop_extras()` to specify how these extra labels should be handled. Similarly, if one of the two operands is missing a dimension, it may be necessary to use `.over` to force broadcasting. Read [Join Modifiers](../concepts/join_modifiers.md) to learn more.
 
 
 

@@ -1,18 +1,16 @@
-# Addition and its quirks
+# Join modifiers
 
-In Pyoframe, [`Expression`][pyoframe.Expression] objects can be added using the `+` operator, as you might expect.
+Pyoframe operators that join expressions (e.g. `a + b`) typically work just fine. However, sometimes two expressions cannot be joined because their is something ambiguous about the operation. In these situations, Pyoframe forces you to use _join modifiers_ to specify exactly how you'd like the join to be performed. This safety feature helps prevent and quickly fix mistakes in your model.
 
-However, sometimes an addition is ambiguous or indicative of a potential mistake in your model. In these situations, Pyoframe forces you to use _addition modifiers_ to specify exactly how you'd like the addition to be performed. This safety feature helps prevent and quickly fix mistakes in your model.
+There are three common join modifiers in Pyoframe: [`.over(…)`][pyoframe.Expression.over], [`.keep_extras()`][pyoframe.Expression.keep_extras], and [`.drop_extras()`][pyoframe.Expression.drop_extras]. We'll discuss each of these as well as how the bitwise OR operator (`|`) can be used as a convenient shortcut.
 
-There are three common addition modifiers in Pyoframe: [`.over(…)`][pyoframe.Expression.over], [`.keep_extras()`][pyoframe.Expression.keep_extras], and [`.drop_extras()`][pyoframe.Expression.drop_extras]. We'll discuss each of these as well as how the bitwise OR operator (`|`) can be used as a shortcut.
+!!! warning "Join modifiers only apply when adding, subtracting, or forming a constraint"
 
-!!! warning "Addition modifiers also apply to subtraction and constraint creation"
-
-    Please note that **the addition rules described here also apply to subtraction as well as the `<=` and `>=` operators used to create constraints**. This is because subtraction is actually computed as an addition (`a - b` is computed as `a + (-b)`). Similarly, creating a constraint with the `<=` or `>=` operators involves combining the left and right hand sides using addition (`a <= b` becomes `a + (-b) <= 0`). So, although I may only mention addition from now on, please remember that this page also applies to subtraction and to constraint creation.
-
+    Join modifiers and the information on this page is only applicable to the addition (`+`), subtraction (`-`), and constraint formation (`<=`, `>=`, `==`) operators. Join modifiers do not apply to multiplication (`*`) and division (`/`) since these operators broadcast dimensions and drop extra labels by default (since this is almost always desired) making join modifiers redundant.
+    
 ## `.over(…)`
 
-To help catch mistakes, adding expressions with differing dimensions is disallowed by default. [`.over(…)`][pyoframe.Expression.over] overrides this default and **indicates that an addition should be performed by "broadcasting" the differing dimensions.**
+To help catch mistakes, joining expressions with differing dimensions is disallowed by default. [`.over(…)`][pyoframe.Expression.over] overrides this default and **indicates that a join should be performed by "broadcasting" the differing dimensions.**
 
 The following examples help illustrate when `.over(…)` should and shouldn't be used.
 
@@ -43,7 +41,7 @@ pyoframe._constants.PyoframeError: Cannot add the two expressions below because 
 Expression 1:  air_emissions
 Expression 2:  ground_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-  https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition/#adding-expressions-with-differing-dimensions-using-over
+  https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over
 
 ```
 
@@ -73,7 +71,7 @@ pyoframe._constants.PyoframeError: Cannot subtract the two expressions below bec
 Expression 1:  E_max
 Expression 2:  flight_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition/#adding-expressions-with-differing-dimensions-using-over
+    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over
 
 ```
 
@@ -110,9 +108,9 @@ Notice how applying `.over("flight_no")` added a dimension `flight_no` with valu
 
 ## `.keep_extras()` / `.drop_extras()`
 
-Addition is performed by pairing the labels in the left `Expression` with those in the right `Expression`. But, what happens when the left and right labels differ?
+Joining is performed by pairing the labels in the left `Expression` with those in the right `Expression`. But, what happens when the left and right labels differ?
 
-If one of the two expressions in an addition has extras labels not present in the other, [`.keep_extras()`][pyoframe.Expression.keep_extras] or [`.drop_extras()`][pyoframe.Expression.drop_extras] must be used to indicate how the extra labels should be handled.
+If one of the two expressions in a join has extras labels not present in the other, [`.keep_extras()`][pyoframe.Expression.keep_extras] or [`.drop_extras()`][pyoframe.Expression.drop_extras] must be used to indicate how the extra labels should be handled.
 
 ### Example 3: Deciding how to handle extra labels
 
@@ -151,7 +149,7 @@ Extra labels in expression 1:
 │ D1206     │
 └───────────┘
 Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
 
 ```
 
@@ -181,7 +179,7 @@ Extra labels in expression 2:
 │ B3420     │
 └───────────┘
 Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
 
 ```
 
@@ -236,13 +234,13 @@ a | -b
 
 ## Note on order of operations
 
-When an operation creates a new [Expression][pyoframe.Expression], any previously applied addition modifiers are discarded to prevent unexpected behaviors. As such, **addition modifiers only work if they're applied _right before_ an addition**. For example, `a.drop_extras().sum("time") + b` won't work but `a.sum("time").drop_extras() + b` will.
+When an operation creates a new [Expression][pyoframe.Expression], any previously applied join modifiers are discarded to prevent unexpected behaviors. As such, **join modifiers only work if they're applied _right before_ a join**. For example, `a.drop_extras().sum("time") + b` won't work but `a.sum("time").drop_extras() + b` will.
 
 There are two exceptions to this rule:
 
-1. _Negation_. Negation preserves addition modifiers. If it weren't for this exception, `-my_obj.drop_extras()` wouldn't work as expected; you would have to write `(-my_obj).drop_extras()` which is unintuitive!
+1. _Negation_. Negation preserves join modifiers. If it weren't for this exception, `-my_obj.drop_extras()` wouldn't work as expected; you would have to write `(-my_obj).drop_extras()` which is unintuitive!
 
-2. _Addition/subtraction_. A `.keep_extras()` or `.drop_extras()` in the left and/or right side of an addition or subtraction is preserved in the result because this allows you to write
+2. _Addition/subtraction_. A `.keep_extras()` or `.drop_extras()` in the left and/or right side of a join is preserved in the result because this allows you to write
     ```
     a.keep_extras() + b.keep_extras() + c.keep_extras()
     ```
@@ -250,4 +248,4 @@ There are two exceptions to this rule:
     ```
     (a.keep_extras() + b.keep_extras()).keep_extras() + c.keep_extras()
     ```
-    (If the left and right sides have conflicting addition modifiers, e.g., `a.keep_extras() + b.drop_extras()`, no addition modifiers are preserved. Also, if you'd like an addition or subtraction _not_ to preserve addition modifiers, you can force the result back to the default of raising errors whenever there are extra labels by using [`.raise_extras()`][pyoframe.Expression.raise_extras].)
+    (If the left and right sides have conflicting join modifiers, e.g., `a.keep_extras() + b.drop_extras()`, no join modifiers are preserved. Also, if you'd like a join _not_ to preserve join modifiers, you can force the result back to the default of raising errors whenever there are extra labels by using [`.raise_extras()`][pyoframe.Expression.raise_extras].)
