@@ -1,7 +1,7 @@
 """Tests related to the addition of Expressions in Pyoframe.
 
-Particular attention is paid to addition modifiers. See:
-bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+Particular attention is paid to join modifiers. See:
+bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
 """
 
 import re

@@ -95,9 +95,9 @@ class BaseOperableBlock(BaseBlock):
         self._allowed_new_dims = other._allowed_new_dims.copy()
 
     def keep_extras(self):
-        """Indicates that labels not present in the other expression should be kept during addition, subtraction, or constraint creation.
+        """Indicates that labels not present in the other expression should be kept during joins.
 
-        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
+        [Learn more](../../learn/concepts/join_modifiers.md) about join modifiers.
 
         See Also:
             [`drop_extras`][pyoframe.Expression.drop_extras].
@@ -110,9 +110,9 @@ class BaseOperableBlock(BaseBlock):
         return new
 
     def drop_extras(self):
-        """Indicates that labels not present in the other expression should be discarded during addition, subtraction, or constraint creation.
+        """Indicates that labels not present in the other expression should be discarded during joins.
 
-        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
+        [Learn more](../../learn/concepts/join_modifiers.md) about join modifiers.
 
         See Also:
             [`keep_extras`][pyoframe.Expression.keep_extras].
@@ -141,11 +141,11 @@ class BaseOperableBlock(BaseBlock):
         return self.drop_extras()
 
     def raise_extras(self):
-        """Indicates that labels not present in the other expression should raise an error during addition, subtraction, or constraint creation.
+        """Indicates that labels not present in the other expression should raise an error during joins.
 
-        This is the default behavior and, as such, this addition modifier should only be used in the rare cases where you want to override a previous use of `keep_extras()` or `drop_extras()`.
+        This is the default behavior and, as such, this join modifier should only be used in the rare cases where you want to override a previous use of `keep_extras()` or `drop_extras()`.
 
-        [Learn more](../../learn/concepts/addition.md) about addition modifiers.
+        [Learn more](../../learn/concepts/join_modifiers.md) about join modifiers.
 
         See Also:
             [`keep_extras`][pyoframe.Expression.keep_extras] and [`drop_extras`][pyoframe.Expression.drop_extras].
@@ -1193,7 +1193,7 @@ class Expression(BaseOperableBlock):
             │ 3    │
             └──────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression (linear) terms=2>
@@ -2359,7 +2359,7 @@ class Variable(BaseOperableBlock):
     """A decision variable for an optimization model.
 
     !!! tip
-        If `lb` or `ub` are a dimensioned object (e.g. an [Expression][pyoframe.Expression]), they will automatically be [broadcasted](../../learn/concepts/addition.md#over) to match the variable's dimensions.
+        If `lb` or `ub` are a dimensioned object (e.g. an [Expression][pyoframe.Expression]), they will automatically be [broadcasted](../../learn/concepts/join_modifiers.md#over) to match the variable's dimensions.
 
     Parameters:
         *indexing_sets:
@@ -2799,7 +2799,7 @@ class Variable(BaseOperableBlock):
             │ 18:00 ┆ Berlin  │
             └───────┴─────────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
 
             >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
             <Constraint 'unnamed' (linear) height=6 terms=18>

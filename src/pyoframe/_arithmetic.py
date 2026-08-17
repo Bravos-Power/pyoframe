@@ -217,7 +217,7 @@ def add(*expressions: Expression) -> Expression:
                     left,
                     right,
                     f"their\n\tdimensions are different ({left_dims} != {right_dims})",
-                    "If this is intentional, use .over(…) to broadcast. Learn more at\n\thttps://bravos-power.github.io/pyoframe/latest/learn/concepts/addition/#adding-expressions-with-differing-dimensions-using-over",
+                    "If this is intentional, use .over(…) to broadcast. Learn more at\n\thttps://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over",
                 )
 
             left_old = left
@@ -373,7 +373,7 @@ def _raise_extras_error(
             left,
             right,
             f"expression {expression_num} has extra labels",
-            f"Extra labels in expression {expression_num}:\n{extra_labels}\nUse .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at\n\thttps://bravos-power.github.io/pyoframe/latest/learn/concepts/addition",
+            f"Extra labels in expression {expression_num}:\n{extra_labels}\nUse .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at\n\thttps://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers",
         )
 
 
@@ -385,13 +385,11 @@ def _raise_addition_error(
     if right_name[0] == "-":
         op = "subtract"
         right_name = right_name[1:]
-    raise PyoframeError(
-        f"""Cannot {op} the two expressions below because {reason}.
+    raise PyoframeError(f"""Cannot {op} the two expressions below because {reason}.
 Expression 1:\t{left.name}
 Expression 2:\t{right_name}
 {postfix}
-"""
-    )
+""")
 
 
 # TODO consider returning a dataframe instead of an expression to simplify code (e.g. avoid copy_flags)
