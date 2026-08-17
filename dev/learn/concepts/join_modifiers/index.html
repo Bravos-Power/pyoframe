@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/concepts/addition/">
+        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/concepts/join_modifiers/">
       
       
         <link rel="prev" href="../../develop/read-results/">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Addition and its quirks - Pyoframe</title>
+        <title>Join modifiers - Pyoframe</title>
       
     
     
@@ -87,7 +87,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#addition-and-its-quirks" class="md-skip">
+        <a href="#join-modifiers" class="md-skip">
           Skip to content
         </a>
       
@@ -141,7 +141,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Addition and its quirks
+              Join modifiers
             
           </span>
         </div>
@@ -967,7 +967,7 @@
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Join modifiers
     
   </span>
   
@@ -980,7 +980,7 @@
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Join modifiers
     
   </span>
   
@@ -2300,7 +2300,7 @@
 
   
       
-        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/concepts/addition.md" title="Edit this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/edit/main/docs/learn/concepts/join_modifiers.md" title="Edit this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
         </a>
@@ -2309,7 +2309,7 @@
         
           
         
-        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/concepts/addition.md" title="View source of this page" class="md-content__button md-icon">
+        <a href="https://github.com/Bravos-Power/pyoframe/raw/main/docs/learn/concepts/join_modifiers.md" title="View source of this page" class="md-content__button md-icon">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
         </a>
@@ -2317,16 +2317,15 @@
   
 
 
-<h1 id="addition-and-its-quirks">Addition and its quirks</h1>
-<p>In Pyoframe, <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression"><code>Expression</code></a> objects can be added using the <code>+</code> operator, as you might expect.</p>
-<p>However, sometimes an addition is ambiguous or indicative of a potential mistake in your model. In these situations, Pyoframe forces you to use <em>addition modifiers</em> to specify exactly how you'd like the addition to be performed. This safety feature helps prevent and quickly fix mistakes in your model.</p>
-<p>There are three common addition modifiers in Pyoframe: <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a>, and <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a>. We'll discuss each of these as well as how the bitwise OR operator (<code>|</code>) can be used as a shortcut.</p>
+<h1 id="join-modifiers">Join modifiers</h1>
+<p>Pyoframe operators that join expressions (e.g. <code>a + b</code>) typically work just fine. However, sometimes two expressions cannot be joined because their is something ambiguous about the operation. In these situations, Pyoframe forces you to use <em>join modifiers</em> to specify exactly how you'd like the join to be performed. This safety feature helps prevent and quickly fix mistakes in your model.</p>
+<p>There are three common join modifiers in Pyoframe: <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a>, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a>, and <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a>. We'll discuss each of these as well as how the bitwise OR operator (<code>|</code>) can be used as a convenient shortcut.</p>
 <div class="admonition warning">
-<p class="admonition-title">Addition modifiers also apply to subtraction and constraint creation</p>
-<p>Please note that <strong>the addition rules described here also apply to subtraction as well as the <code>&lt;=</code> and <code>&gt;=</code> operators used to create constraints</strong>. This is because subtraction is actually computed as an addition (<code>a - b</code> is computed as <code>a + (-b)</code>). Similarly, creating a constraint with the <code>&lt;=</code> or <code>&gt;=</code> operators involves combining the left and right hand sides using addition (<code>a &lt;= b</code> becomes <code>a + (-b) &lt;= 0</code>). So, although I may only mention addition from now on, please remember that this page also applies to subtraction and to constraint creation.</p>
+<p class="admonition-title">Join modifiers only apply when adding, subtracting, or forming a constraint</p>
+<p>Join modifiers and the information on this page is only applicable to the addition (<code>+</code>), subtraction (<code>-</code>), and constraint formation (<code>&lt;=</code>, <code>&gt;=</code>, <code>==</code>) operators. Join modifiers do not apply to multiplication (<code>*</code>) and division (<code>/</code>) since these operators broadcast dimensions and drop extra labels by default (since this is almost always desired) making join modifiers redundant.</p>
 </div>
 <h2 id="over"><code>.over(…)</code></h2>
-<p>To help catch mistakes, adding expressions with differing dimensions is disallowed by default. <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a> overrides this default and <strong>indicates that an addition should be performed by "broadcasting" the differing dimensions.</strong></p>
+<p>To help catch mistakes, joining expressions with differing dimensions is disallowed by default. <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;over&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dims&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.over"><code>.over(…)</code></a> overrides this default and <strong>indicates that a join should be performed by "broadcasting" the differing dimensions.</strong></p>
 <p>The following examples help illustrate when <code>.over(…)</code> should and shouldn't be used.</p>
 <h3 id="example-1-catching-a-mistake">Example 1: Catching a mistake</h3>
 <p>Say you're developing an optimization model to study aviation emissions. You'd like to express the sum of in-flight emissions and on-the-ground (<a href="https://en.wikipedia.org/wiki/Taxiing">taxiing</a>) emissions, <em>for each flight</em>, but when you try to add both <code>Expression</code> objects, you get an error:</p>
@@ -2348,14 +2347,14 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gt">Traceback (most recent call last):</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c">...</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gr">pyoframe._constants.PyoframeError</span>: <span class="n">Cannot add the two expressions below because their</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="x">  dimensions are different ([&#39;flight_no&#39;] != [&#39;flight_number&#39;]).</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="x">  dimensions are different (['flight_no'] != ['flight_number']).</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="x">Expression 1:  air_emissions</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="x">Expression 2:  ground_emissions</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="x">If this is intentional, use .over(…) to broadcast. Learn more at</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="x">  https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition/#adding-expressions-with-differing-dimensions-using-over</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="x">  https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over</span>
 </span></code></pre></div>
 <p>Do you understand what happened? The error informs us that <code>model.air_emissions</code> has dimension <em><code>flight_no</code></em>, but <code>model.ground_emissions</code> has dimension <em><code>flight_number</code></em>. Oops, the two datasets use slightly different spellings! You can use <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;rename&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.rename"><code>.rename(…)</code></a> to correct for the <code>Expression</code> objects having differing dimension names.</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">flight_emissions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">air_emissions</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ground_emissions</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">&quot;flight_number&quot;</span><span class="p">:</span> <span class="s2">&quot;flight_no&quot;</span><span class="p">})</span>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">flight_emissions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">air_emissions</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ground_emissions</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"flight_number"</span><span class="p">:</span> <span class="s2">"flight_no"</span><span class="p">})</span>
 </span></code></pre></div>
 <p>Benign mistakes like these are relatively common and Pyoframe's error messages help you detect them early. Now, let's examine a case where <code>.over(…)</code> is needed.</p>
 <h3 id="example-2-broadcasting">Example 2: Broadcasting</h3>
@@ -2367,15 +2366,15 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="gt">Traceback (most recent call last):</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c">...</span>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="gr">pyoframe._constants.PyoframeError</span>: <span class="n">Cannot subtract the two expressions below because their</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="x">    dimensions are different ([] != [&#39;flight_no&#39;]).</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="x">    dimensions are different ([] != ['flight_no']).</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="x">Expression 1:  E_max</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="x">Expression 2:  flight_emissions</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="x">If this is intentional, use .over(…) to broadcast. Learn more at</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition/#adding-expressions-with-differing-dimensions-using-over</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over</span>
 </span></code></pre></div>
 <p>The error indicates that <code>E_max</code> has no dimensions but <code>flight_emissions</code> has dimensions <code>flight_no</code>. The error is raised because, by default, combining terms with differing dimensions is not allowed (as explained in <a href="#example-1-catching-a-mistake">example 1</a>).</p>
 <p>What we'd like to do is effectively 'copy' (aka. 'broadcast') <code>E_max</code> <em>over</em> every flight number. <code>E_max.over("flight_no")</code> does just this:</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">E_max</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">&quot;flight_no&quot;</span><span class="p">)</span>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">E_max</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">"flight_no"</span><span class="p">)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="go">&lt;Expression (linear) terms=1&gt;</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="go">┌───────────┬────────────┐</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="go">│ flight_no ┆ expression │</span>
@@ -2384,9 +2383,9 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="go">└───────────┴────────────┘</span>
 </span></code></pre></div>
 <p>Notice how applying <code>.over("flight_no")</code> added a dimension <code>flight_no</code> with value <code>*</code>. The asterix (<code>*</code>) indicates that <code>flight_no</code> will take the shape of whichever expression <code>E_max</code> is later combined with. Since <code>E_max</code> is being combined with <code>flight_emissions</code>, <code>*</code> will be replaced with an entry for every flight number in <code>flight_emissions</code>. Now creating our constraint works properly:</p>
-<div class="language-pycon highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">emission_constraint</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">E_max</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">&quot;flight_no&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">model</span><span class="o">.</span><span class="n">flight_emissions</span>
+<div class="language-pycon highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">emission_constraint</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">E_max</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">"flight_no"</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">model</span><span class="o">.</span><span class="n">flight_emissions</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">emission_constraint</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="go">&lt;Constraint &#39;emission_constraint&#39; (linear) height=2 terms=6&gt;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="go">&lt;Constraint 'emission_constraint' (linear) height=2 terms=6&gt;</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="go">┌───────────┬───────────────────────────────┐</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="go">│ flight_no ┆ constraint                    │</span>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="go">│ (2)       ┆                               │</span>
@@ -2396,8 +2395,8 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="go">└───────────┴───────────────────────────────┘</span>
 </span></code></pre></div>
 <h2 id="keep_extras-drop_extras"><code>.keep_extras()</code> / <code>.drop_extras()</code></h2>
-<p>Addition is performed by pairing the labels in the left <code>Expression</code> with those in the right <code>Expression</code>. But, what happens when the left and right labels differ?</p>
-<p>If one of the two expressions in an addition has extras labels not present in the other, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a> or <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a> must be used to indicate how the extra labels should be handled.</p>
+<p>Joining is performed by pairing the labels in the left <code>Expression</code> with those in the right <code>Expression</code>. But, what happens when the left and right labels differ?</p>
+<p>If one of the two expressions in a join has extras labels not present in the other, <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;keep_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.keep_extras"><code>.keep_extras()</code></a> or <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;drop_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.drop_extras"><code>.drop_extras()</code></a> must be used to indicate how the extra labels should be handled.</p>
 <h3 id="example-3-deciding-how-to-handle-extra-labels">Example 3: Deciding how to handle extra labels</h3>
 <!-- invisible-code-block: python
 import pyoframe as pf
@@ -2432,7 +2431,7 @@ Let's say that you fixed the error in example 1, but when you try the addition a
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="x">│ D1206     │</span>
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="x">└───────────┘</span>
 </span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="x">Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
 </span></code></pre></div>
 <p>Do you understand what happened? The error explains that <code>air_emissions</code> contains flight numbers that are not present in <code>ground_emissions</code> (specifically flight numbers <code>D2082</code>, <code>D8432</code>, and <code>D1206</code>). Your ground emissions dataset is missing some flights!</p>
 <p>Pyoframe raised an error because it is unclear how you'd like the addition to be performed. In fact, you have three options:</p>
@@ -2456,7 +2455,7 @@ Let's say that you fixed the error in example 1, but when you try the addition a
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="x">│ B3420     │</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="x">└───────────┘</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="x">Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
 </span></code></pre></div>
 <p>Argh, another error! Do you understand what happened? This time <code>ground_emissions</code> has extra labels: flight <code>B3420</code> is present in <code>ground_emissions</code> but not <code>air_emissions</code>. Again, Pyoframe raised an error because it is unclear what should be done:</p>
 <ol>
@@ -2495,20 +2494,20 @@ you can simply write</p>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">a</span> <span class="o">|</span> <span class="o">-</span><span class="n">b</span>
 </span></code></pre></div>
 <h2 id="note-on-order-of-operations">Note on order of operations</h2>
-<p>When an operation creates a new <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expression</a>, any previously applied addition modifiers are discarded to prevent unexpected behaviors. As such, <strong>addition modifiers only work if they're applied <em>right before</em> an addition</strong>. For example, <code>a.drop_extras().sum("time") + b</code> won't work but <code>a.sum("time").drop_extras() + b</code> will.</p>
+<p>When an operation creates a new <a class="autorefs autorefs-internal" href="../../../reference/public/Expression/#pyoframe.Expression">Expression</a>, any previously applied join modifiers are discarded to prevent unexpected behaviors. As such, <strong>join modifiers only work if they're applied <em>right before</em> a join</strong>. For example, <code>a.drop_extras().sum("time") + b</code> won't work but <code>a.sum("time").drop_extras() + b</code> will.</p>
 <p>There are two exceptions to this rule:</p>
 <ol>
 <li>
-<p><em>Negation</em>. Negation preserves addition modifiers. If it weren't for this exception, <code>-my_obj.drop_extras()</code> wouldn't work as expected; you would have to write <code>(-my_obj).drop_extras()</code> which is unintuitive!</p>
+<p><em>Negation</em>. Negation preserves join modifiers. If it weren't for this exception, <code>-my_obj.drop_extras()</code> wouldn't work as expected; you would have to write <code>(-my_obj).drop_extras()</code> which is unintuitive!</p>
 </li>
 <li>
-<p><em>Addition/subtraction</em>. A <code>.keep_extras()</code> or <code>.drop_extras()</code> in the left and/or right side of an addition or subtraction is preserved in the result because this allows you to write
+<p><em>Addition/subtraction</em>. A <code>.keep_extras()</code> or <code>.drop_extras()</code> in the left and/or right side of a join is preserved in the result because this allows you to write
     <div class="language-text highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>a.keep_extras() + b.keep_extras() + c.keep_extras()
 </span></code></pre></div>
     instead of the annoyingly verbose,
     <div class="language-text highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>(a.keep_extras() + b.keep_extras()).keep_extras() + c.keep_extras()
 </span></code></pre></div>
-    (If the left and right sides have conflicting addition modifiers, e.g., <code>a.keep_extras() + b.drop_extras()</code>, no addition modifiers are preserved. Also, if you'd like an addition or subtraction <em>not</em> to preserve addition modifiers, you can force the result back to the default of raising errors whenever there are extra labels by using <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;raise_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.raise_extras"><code>.raise_extras()</code></a>.)</p>
+    (If the left and right sides have conflicting join modifiers, e.g., <code>a.keep_extras() + b.drop_extras()</code>, no join modifiers are preserved. Also, if you'd like a join <em>not</em> to preserve join modifiers, you can force the result back to the default of raising errors whenever there are extra labels by using <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;raise_extras&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.raise_extras"><code>.raise_extras()</code></a>.)</p>
 </li>
 </ol>
 
@@ -2533,7 +2532,7 @@ you can simply write</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 12, 2026 22:44:29 UTC">January 12, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 20:00:51 UTC">August 17, 2026</span>
   </span>
 
     

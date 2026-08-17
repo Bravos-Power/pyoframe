@@ -963,12 +963,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/addition/" class="md-nav__link">
+      <a href="../../../concepts/join_modifiers/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Join modifiers
     
   </span>
   
@@ -2148,8 +2148,8 @@ of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># You can buy tofu or chickpeas</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>  <span class="c1"># (1)!</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">&quot;integer&quot;</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">"integer"</span><span class="p">)</span>  <span class="c1"># (1)!</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vtype</span><span class="o">=</span><span class="s2">"integer"</span><span class="p">)</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># You want to minimize your cost</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">m</span><span class="o">.</span><span class="n">minimize</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span>  <span class="c1"># (2)!</span>
@@ -2159,8 +2159,8 @@ of tofu ($4 each, 18g of protein) and cans of chickpeas ($3 each, 15g of protein
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>  <span class="c1"># (4)!</span>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tofu blocks:&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Chickpea cans:&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Tofu blocks:"</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">tofu_blocks</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="nb">print</span><span class="p">(</span><span class="s2">"Chickpea cans:"</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">chickpea_cans</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </span></code></pre></div>
 <!-- invisible-code-block: python
 assert m.tofu_blocks.solution == 2

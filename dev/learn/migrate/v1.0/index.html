@@ -951,12 +951,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/addition/" class="md-nav__link">
+      <a href="../../concepts/join_modifiers/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Join modifiers
     
   </span>
   
@@ -2294,7 +2294,7 @@
 <li><strong>Bug fixes:</strong> notably with <code>Variable(equals=…)</code> not properly parsing DataFrames.</li>
 <li><strong>Improved performance</strong> after rewriting internal functions based on extensive benchmarking.</li>
 <li><strong>Smoother developer experience</strong>, notably error messages explain the mathematical operations that led to an error and Pyoframe objects now print as legible tables.</li>
-<li><strong>Improved documentation</strong> including a revamped <a href="../../../reference/">API page</a>, an <a href="../../../examples/">examples page</a>, new explanations of functions like <a href="../../concepts/addition/#over"><code>.over(…)</code></a>, and the ability to view previous versions of the documentation.</li>
+<li><strong>Improved documentation</strong> including a revamped <a href="../../../reference/">API page</a>, an <a href="../../../examples/">examples page</a>, new explanations of functions like <a href="../../concepts/join_modifiers/#over"><code>.over(…)</code></a>, and the ability to view previous versions of the documentation.</li>
 <li><strong>More readable syntax</strong> like our decision to rename <code>add_dim</code> to <code>over</code> and the changes to <code>.sum()</code> (see below).</li>
 </ul>
 <p>Unfortunately, these improvements involve some breaking changes. This page will guide you in migrating your code to v1.0.</p>
@@ -2329,8 +2329,8 @@
 <p>Please update all calls to <code>pf.Model(…)</code> accordingly.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pyoframe</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pf</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">&quot;my-model&quot;</span><span class="p">)</span>  <span class="c1"># before</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;my-model&quot;</span><span class="p">)</span>  <span class="c1"># after</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="s2">"my-model"</span><span class="p">)</span>  <span class="c1"># before</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"my-model"</span><span class="p">)</span>  <span class="c1"># after</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">use_var_names</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># before</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">solver_uses_variable_names</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># after</span>
@@ -2340,17 +2340,17 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># before</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>  <span class="c1"># after</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="s2">&quot;hour&quot;</span><span class="p">],</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># before</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">&quot;day&quot;</span><span class="p">,</span> <span class="s2">&quot;hour&quot;</span><span class="p">)</span>  <span class="c1"># after</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">pf</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="s2">"day"</span><span class="p">,</span> <span class="s2">"hour"</span><span class="p">],</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># before</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">"day"</span><span class="p">,</span> <span class="s2">"hour"</span><span class="p">)</span>  <span class="c1"># after</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">pf</span><span class="o">.</span><span class="n">sum_by</span><span class="p">(</span><span class="s2">&quot;city&quot;</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># before</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum_by</span><span class="p">(</span><span class="s2">&quot;city&quot;</span><span class="p">)</span>  <span class="c1"># after</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">pf</span><span class="o">.</span><span class="n">sum_by</span><span class="p">(</span><span class="s2">"city"</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="p">)</span>  <span class="c1"># before</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum_by</span><span class="p">(</span><span class="s2">"city"</span><span class="p">)</span>  <span class="c1"># after</span>
 </span></code></pre></div>
 <p>Please update all uses of <code>pf.sum</code> and <code>pf.sum_by</code> accordingly.</p>
 <h3 id="3-rename-add_dim-to-over">3. Rename <code>.add_dim(…)</code> to <code>.over(…)</code></h3>
-<p>For clarity, <code>.add_dim(…)</code> was renamed to <a href="../../concepts/addition/#over"><code>.over(…)</code></a>. Please update your code accordingly.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">add_dim</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>  <span class="c1"># before</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>  <span class="c1"># after</span>
+<p>For clarity, <code>.add_dim(…)</code> was renamed to <a href="../../concepts/join_modifiers/#over"><code>.over(…)</code></a>. Please update your code accordingly.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">add_dim</span><span class="p">(</span><span class="s2">"time"</span><span class="p">)</span>  <span class="c1"># before</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="s2">"time"</span><span class="p">)</span>  <span class="c1"># after</span>
 </span></code></pre></div>
 <h3 id="4-rename-keep_unmatched-and-drop_unmatched-with-keep_extras-and-drop_extras">4. Rename <code>.keep_unmatched()</code> and <code>.drop_unmatched()</code> with <code>.keep_extras()</code> and <code>.drop_extras()</code></h3>
 <p>For clarity, <code>.keep_unmatched()</code> and <code>.drop_unmatched()</code> were renamed to <code>.keep_extras()</code> and <code>.drop_extras()</code>, respectively.
@@ -2372,7 +2372,7 @@ some additional breaking changes that you are less likely to encounter.</p>
 <p>If you try to read <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;objective&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Objective&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Model/#pyoframe.Model.objective"><code>model.objective</code></a> before having defined an objective, an error will be raised. Prior to v1.0 <code>None</code> was returned.</p>
 </li>
 <li>
-<p><code>.over(…)</code>, <code>.keep_extras()</code>, and <code>.drop_extras()</code> now have a well-defined "order of operations." They must be applied <em>after</em> all other transforms. For example, <code>my_obj.drop_extras().sum("time")</code> no longer works because <code>my_obj.sum("time").drop_extras()</code> should be used instead. <a href="../../concepts/addition/">Learn more</a>.</p>
+<p><code>.over(…)</code>, <code>.keep_extras()</code>, and <code>.drop_extras()</code> now have a well-defined "order of operations." They must be applied <em>after</em> all other transforms. For example, <code>my_obj.drop_extras().sum("time")</code> no longer works because <code>my_obj.sum("time").drop_extras()</code> should be used instead. <a href="../../concepts/join_modifiers/">Learn more</a>.</p>
 </li>
 <li>
 <p><code>pf.Config.print_max_set_elements</code>, <code>pf.Config.print_max_line_length</code>, and <code>pf.Config.print_max_lines</code> no longer exist. Use <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;print_max_terms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;int&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Config/#pyoframe._constants._Config.print_max_terms"><code>pf.Config.print_max_terms</code></a> <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;print_polars_config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pl&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Config/#pyoframe._constants._Config.print_polars_config"><code>pf.Config.print_polars_config</code></a> instead.</p>
@@ -2425,7 +2425,7 @@ some additional breaking changes that you are less likely to encounter.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 12, 2026 22:44:29 UTC">January 12, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 20:00:51 UTC">August 17, 2026</span>
   </span>
 
     

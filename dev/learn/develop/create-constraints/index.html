@@ -1022,12 +1022,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/addition/" class="md-nav__link">
+      <a href="../../concepts/join_modifiers/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Join modifiers
     
   </span>
   
@@ -2243,7 +2243,7 @@ m.Hours_Worked = pf.Variable({"day": ["Mon", "Tue", "Wed", "Thu", "Fri"]})
 </span></code></pre></div>
 <p>Note that the ipopt solver <a href="https://metab0t.github.io/PyOptInterface/ipopt.html">does not support deletion</a> due to its API design. Also, constraint deletion is disabled for Mosek until <a href="https://github.com/metab0t/PyOptInterface/issues/103">this PyOptInterface issue</a> is resolved.</p>
 <h2 id="handle-extra-labels">Handle extra labels</h2>
-<p>When creating constraints, Pyoframe always merges the left- and right-hand side expressions into a single expression (e.g. <code>a &lt;= b</code> becomes <code>(a - b) &lt;= 0</code>). Thus, if the left- and/or right-hand sides have labels not present in the other side, you will need to handle these extra labels using <code>drop_extras()</code> or <code>keep_extras()</code>. Read <a href="../../concepts/addition/">Addition and its quirks</a> to learn more or see the <a href="../../../examples/diet/">diet problem</a> for an example.</p>
+<p>When creating constraints, Pyoframe always merges the left- and right-hand side expressions into a single expression (e.g. <code>a &lt;= b</code> becomes <code>(a - b) &lt;= 0</code>). Thus, if the left- and/or right-hand sides have labels not present in the other side, you will need to handle these extra labels using <code>drop_extras()</code> or <code>keep_extras()</code>. Read <a href="../../concepts/join_modifiers/">Join modifiers</a> to learn more or see the <a href="../../../examples/diet/">diet problem</a> for an example.</p>
 <h2 id="relax-a-constraint">Relax a constraint</h2>
 <p>Refer to the API documentation for <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;relax&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cost&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Operable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Operable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Constraint&lt;/span&gt;&lt;/code&gt;" href="../../../reference/public/Constraint/#pyoframe.Constraint.relax"><code>.relax()</code></a>.</p>
 
@@ -2268,7 +2268,7 @@ m.Hours_Worked = pf.Variable({"day": ["Mon", "Tue", "Wed", "Thu", "Fri"]})
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 26, 2026 16:36:12 UTC">June 26, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 20:00:51 UTC">August 17, 2026</span>
   </span>
 
     

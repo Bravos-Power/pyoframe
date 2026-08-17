@@ -1013,12 +1013,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/addition/" class="md-nav__link">
+      <a href="../../concepts/join_modifiers/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Addition and its quirks
+    Join modifiers
     
   </span>
   
@@ -2230,7 +2230,7 @@ operating_costs = pf.Expression.constant(3)
 </span></code></pre></div>
 <h2 id="alternative-approach">Alternative approach</h2>
 <p>Alternatively, rather than use <code>.minimize</code> or <code>.maximize</code>, you can use <code>.objective</code> and define the direction using the <code>sense</code> argument during model creation:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">sense</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">sense</span><span class="o">=</span><span class="s2">"min"</span><span class="p">)</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">m</span><span class="o">.</span><span class="n">objective</span> <span class="o">=</span> <span class="n">capital_costs</span> <span class="o">+</span> <span class="n">operating_costs</span>
 </span></code></pre></div>
 
