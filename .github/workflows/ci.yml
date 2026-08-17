@@ -97,6 +97,7 @@ jobs:
       - name: Run tests and collect coverage
         run: |
           gdb -batch \
+            -ex "set print thread-events off" \
             -ex run \
             -ex "thread apply all bt full" \
             --args python -m pytest --cov
