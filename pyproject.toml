@@ -20,9 +20,7 @@ classifiers = [
     "Natural Language :: English",
 ]
 dependencies = [
-    "polars~=1.0",
-    "pyarrow",
-    "pandas<3",
+    "polars[pandas]~=1.0",
     "pyoptinterface==0.6.1", # Due to Pyoframe close integration with pyoptinterface, we need to pin to a specific version.
 ]
 
@@ -30,7 +28,7 @@ dependencies = [
 highs = ["highsbox<=1.13.1"]
 ipopt = [
     "pyoptinterface[nlp]",
-    "llvmlite<=0.48.0",    # Capped to prevent breaking changes in pyoptinterface. See https://github.com/metab0t/PyOptInterface/issues/56
+    "llvmlite<=0.49.0",    # Capped to prevent breaking changes in pyoptinterface. See https://github.com/metab0t/PyOptInterface/issues/56
 ]
 dev = [
     "ruff==0.12.11",        # code formatter
@@ -89,6 +87,7 @@ ignore = [
     "D100",  # allow missing docstrings since benchmarks are often one-off scripts
     "E741"  # allow single letter variable names since they often represent mathematical variables
 ]
+"docs/learn/practice/dispatch_challenge/**" = ["F841"]  # allow unused variables in the starter code
 "conftest.py" = ["D"]
 
 [tool.ruff.lint.pydocstyle]

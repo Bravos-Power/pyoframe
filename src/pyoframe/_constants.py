@@ -190,7 +190,7 @@ class _Config:
 
         !!! warning
             This might improve performance, but it will suppress the errors that alert you of unexpected
-            behaviors ([learn more](../../learn/concepts/addition.md)).
+            behaviors ([learn more](../../learn/concepts/join_modifiers.md)).
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:
@@ -221,7 +221,7 @@ class _Config:
             │ Montreal │
             └──────────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
 
             But if `Config.disable_extras_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
             >>> pf.Config.disable_extras_checks = True
