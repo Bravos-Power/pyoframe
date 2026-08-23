@@ -25,6 +25,11 @@ import psutil
 import tomllib
 import yaml
 
+_windows = os.name == "nt"
+
+if not _windows:
+    import pty
+
 POLL_MIN_S, POLL_MAX_S, POLL_TRANSITION_S = 0.01, 1, 30
 LOG_AFTER_S = 0
 MIN_DATAPOINTS_FOR_GUROBI_MEMORY = 2
@@ -239,11 +244,11 @@ def precompile_julia_benchmarks(
         "julia",
         f"--project={CWD}",
         "-e",
-        f'''using PackageCompiler; create_sysimage(
+        f"""using PackageCompiler; create_sysimage(
             [{dependencies_str}],
             sysimage_path="{image_path}",
             precompile_statements_file="{trace_compile_path}",
-        )''',
+        )""",
     ]
 
     subprocess.run(cmd, check=True)
@@ -361,16 +366,25 @@ def run_benchmark(
     mem_log_dir = past_results.base_dir / benchmark.name / "mem_log"
     mem_log_dir.mkdir(parents=True, exist_ok=True)
 
-    start_time = time.time()
+    if _windows:
+        kwargs = dict(stdout=subprocess.PIPE, bufsize=1, text=True)
+    else:
+        # simulates a real terminal, otherwise Gurobi's stdout seems to lag!
+        master_fd, slave_fd = pty.openpty()
+        kwargs = dict(stdout=slave_fd)
+        stdout = os.fdopen(master_fd, "r", buffering=1)
 
-    with subprocess.Popen(
-        cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE, text=True, bufsize=1
-    ) as benchmark_proc:
+    start_time = time.monotonic()
+
+    with subprocess.Popen(cmd, preexec_fn=os.setsid, **kwargs) as benchmark_proc:
+        if _windows:
+            stdout = benchmark_proc.stdout
         memory_thread = threading.Thread(
             target=monitor_benchmark,
             args=(
                 start_time,
                 benchmark_proc,
+                stdout,
                 max_memory_queue,
                 mem_log_dir
                 / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}.parquet",
@@ -381,7 +395,7 @@ def run_benchmark(
 
         try:
             return_code = benchmark_proc.wait(timeout=timeout)
-            total_time = time.time() - start_time
+            total_time = time.monotonic() - start_time
         except subprocess.TimeoutExpired:
             kill_process(benchmark_proc, using_julia)
             save_result(total_time=timeout, error="TIMEOUT")
@@ -430,13 +444,14 @@ class Markers(enum.Enum):
     GUROBI_END = "4_GUROBI_END"
 
 
-def monitor_benchmark(start_time, proc, result_queue, output_file, construct_only):
+def monitor_benchmark(
+    start_time, proc, stdout, result_queue, output_file, construct_only
+):
     pid = proc.pid
     ps_proc = psutil.Process(pid)
 
     memory_data = []
     process_names = {pid: "main"}
-    stdout = proc.stdout
 
     result = MonitorResult()
 
@@ -446,7 +461,7 @@ def monitor_benchmark(start_time, proc, result_queue, output_file, construct_onl
     os.set_blocking(stdout.fileno(), False)  # Requires Python 3.12 for windows
 
     while keep_checking:
-        curr_time = time.time()
+        curr_time = time.monotonic()
         elapsed_time = curr_time - start_time
 
         uss, rss, vms, num_threads = None, None, None, None
