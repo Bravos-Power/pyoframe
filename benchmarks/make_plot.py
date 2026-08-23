@@ -10,21 +10,22 @@ app = marimo.App()
 def _():
     import matplotlib.pyplot as plt
     import polars as pl
+    from matplotlib.patches import Patch
 
-    return pl, plt
+    return Patch, pl, plt
 
 
 @app.cell
 def _():
     RESULTS_FOLDER = "results/main"
     BENCHMARK_PROBLEMS = {
-        ("facility_location", 128): "Facility\nLocation\nProblem*",
         ("simple_problem", 10_000_000): "Trivial\nData\nProblem",
         ("energy_planning_capacity_expansion", 168): "Capacity\nExpansion\nProblem",
         (
             "energy_planning_security_constrained_dispatch",
             48,
         ): "Electricity\nDispatch\nProblem",
+        ("facility_location", 128): "Facility\nLocation\nProblem*",
     }
     return BENCHMARK_PROBLEMS, RESULTS_FOLDER
 
@@ -52,9 +53,11 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, pl):
         )
     )
 
-    # TODO REMOVE
-    # ignore AMPL for now
-    # latest_runs = latest_runs.filter(pl.col("library") != "ampl")
+    # Convert to GB
+    latest_runs = latest_runs.with_columns(
+        (pl.col("max_memory_uss_mb") / 1024).alias("max_memory_uss_gb"),
+        (pl.col("max_solver_memory_uss_mb") / 1024).alias("max_solver_memory_uss_gb"),
+    )
 
     latest_runs
     return (latest_runs,)
@@ -175,7 +178,7 @@ def _(RESULTS_FOLDER, latest_runs, pl):
 
 
 @app.cell
-def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, data, pl, plt):
+def _(BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, latest_runs, pl, plt):
     LIBRARY_LABELS = {
         "pyoframe": "Pyoframe",
         "pyoptinterface": "PyOptInterface",
@@ -218,7 +221,7 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, data, pl, plt):
     )
 
     ax_time = axes[0]
-    # ax_memory = axes[1]
+    ax_memory = axes[1]
 
     EXTRA_SPACING = 4
     PROBLEM_SPACING = 6
@@ -226,14 +229,35 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, data, pl, plt):
     HEIGHT = 4
     BAR_TEXT_OFFSET = 0.12
 
+    bar_kwargs = dict(
+        height=HEIGHT,
+        edgecolor="black",
+        zorder=2,
+        linewidth=0.5,
+    )
+
+    def label_kwargs(lib):
+        return dict(
+            va="center",
+            ha="left",
+            fontsize=6,
+            color="#DC2626" if lib == "pyoframe" else "black",
+            fontweight="bold" if lib == "pyoframe" else "normal",
+        )
+
     _y = PADDING
     for (problem, _), problem_label in reversed(BENCHMARK_PROBLEMS.items()):
         _y_start = _y
         df_problem = data.filter(problem=problem)
+
+        # Plot time
         df_problem = df_problem.sort(
             pl.col("elapsed").sum().over("library"), descending=True
         )
-        for (library,), bar in df_problem.group_by("library", maintain_order=True):
+        for i, ((library,), bar) in enumerate(
+            df_problem.group_by("library", maintain_order=True)
+        ):
+            _y_time = _y + i * (PROBLEM_SPACING)
             bar = bar.sort(pl.col("description").replace_strict(order))
             _base = 0
             _total_time = bar.get_column("elapsed").sum()
@@ -245,14 +269,10 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, data, pl, plt):
             ).iter_rows():
                 ax_time.barh(
                     width=elapsed,
-                    y=_y,
-                    height=HEIGHT,
+                    y=_y_time,
                     left=_base,
-                    label=library,
                     color=COLORS[description],
-                    edgecolor="black",
-                    zorder=2,
-                    linewidth=0.5,
+                    **bar_kwargs,
                 )
                 _base += elapsed
 
@@ -267,20 +287,59 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, data, pl, plt):
                 _total_time_str = ""
             ax_time.text(
                 _total_time_normalized + BAR_TEXT_OFFSET,
-                _y,
+                _y_time,
                 LIBRARY_LABELS[library]
                 + f" ({_total_time_normalized:.1f}x{_total_time_str})",
-                va="center",
-                ha="left",
-                fontsize=6,
-                color="#DC2626" if library == "pyoframe" else "black",
-                fontweight="bold" if library == "pyoframe" else "normal",
+                **label_kwargs(library),
                 zorder=3,
                 # backgroundcolor="white",
                 # remove padding around text
                 # bbox=dict(facecolor="white", edgecolor="none", pad=0.0)
             )
-            _y += PROBLEM_SPACING
+            # _y += PROBLEM_SPACING
+
+        # plot memory
+        df_memory = latest_runs.filter(problem=problem)
+        df_memory = df_memory.sort(pl.col("max_memory_uss_gb"), descending=True)
+        pyoframe_max = (
+            df_memory.filter(library="pyoframe").get_column("max_memory_uss_gb").item()
+        )
+        for i, ((library,), bar) in enumerate(
+            df_memory.group_by("library", maintain_order=True)
+        ):
+            y_memory = _y + i * (PROBLEM_SPACING)
+            total_memory = bar.get_column("max_memory_uss_gb").item()
+            memory_normalized = total_memory / pyoframe_max
+            solver_memory_normalized = (
+                bar.get_column("max_solver_memory_uss_gb").fill_null(0).item()
+                / pyoframe_max
+            )
+            build_memory = memory_normalized - solver_memory_normalized
+
+            ax_memory.barh(
+                width=solver_memory_normalized, y=y_memory, color="white", **bar_kwargs
+            )
+            ax_memory.barh(
+                width=build_memory,
+                y=y_memory,
+                left=solver_memory_normalized,
+                color=COLORS["build"],
+                **bar_kwargs,
+            )
+            if library == "pyoframe":
+                _total_mem_str = f"{int(total_memory)}GB"
+                _total_mem_str = ", " + _total_mem_str
+            else:
+                _total_mem_str = ""
+            ax_memory.text(
+                memory_normalized + BAR_TEXT_OFFSET,
+                y_memory,
+                LIBRARY_LABELS[library]
+                + f" ({memory_normalized:.1f}x{_total_mem_str})",
+                **label_kwargs(library),
+            )
+
+        _y += PROBLEM_SPACING * (i + 1)
         num_variables_mil = round(
             df_problem.get_column("num_variables").mode().mean() / 1e6, 1
         )
@@ -294,19 +353,40 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, data, pl, plt):
         )
         _y += EXTRA_SPACING
     _y -= EXTRA_SPACING + PROBLEM_SPACING
-    ax_time.set_ylim(0, _y + PADDING)
-    ax_time.set_xlabel("End-to-End Execution Time\n(normalized to Pyoframe)")
-
+    ax_time.set_xlabel("End-to-End Execution Time\n(relative to Pyoframe)")
+    ax_memory.set_xlabel("Peak Memory Usage\n(relative to Pyoframe)")
     for ax in axes:
-        # remove y labels
         ax.set_yticks([])
-        # make x axis gap size 1
-        ax.set_xticks(range(0, int(ax.get_xlim()[1]) + 1, 1))
-        # remove right and top spines
+        ax.set_xticks(range(0, int(ax.get_xlim()[1]) + 1))
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
-        # add vertical gridlines
-        # ax.grid(axis="x", color="gray", linewidth=0.5, alpha=0.5, zorder=0)
+        ax.set_ylim(0, _y + PADDING)
+
+    LEGEND_HANDLES_TIME = [
+        (COLORS["solve"], "Gurobi"),
+        (COLORS["convert_to_gurobi"], "Overhead (conversions)"),
+        (COLORS["build"], "Overhead (modeling code)"),
+    ]
+    LEGEND_HANDLES_MEMORY = [
+        (COLORS["solve"], "Gurobi"),
+        (COLORS["build"], "Overhead (modeling framework)"),
+    ]
+
+    for ax, LEGEND_HANDLES, x_offset in zip(
+        axes, [LEGEND_HANDLES_TIME, LEGEND_HANDLES_MEMORY], [1.15, 1.3]
+    ):
+        ax.legend(
+            handles=[
+                Patch(
+                    facecolor=color, edgecolor="black", label=description, linewidth=0.5
+                )
+                for color, description in LEGEND_HANDLES
+            ],
+            loc="upper right",
+            frameon=True,
+            bbox_to_anchor=(x_offset, 1),
+            fontsize=6,
+        )
 
     fig.savefig(
         f"{RESULTS_FOLDER}/benchmark_results_plot.png", bbox_inches="tight", dpi=300
