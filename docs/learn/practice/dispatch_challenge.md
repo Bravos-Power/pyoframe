@@ -12,13 +12,16 @@ This coding challenge was developed for the PowerUp 2026 conference in Boulder, 
     
 ## A. Set up the project
 
-1. Ensure you have Python installed (version 3.10 or more).
+1. [Install Python](https://www.python.org/downloads/) if you haven't already (version 3.10 or above).
 
 2. Download and unzip the starter code and data for this challenge.
 
     [:material-folder-download: Download starter code and data](https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code.zip){.md-button}
 
-3. In the created folder, run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our [installation instructions](../get-started/installation.md).
+3. Optional: In the downloaded folder, [create and active a virtual environment](https://realpython.com/python-virtual-environments-a-primer/) to prevent dependency conflicts.
+
+
+3. In the downloaded folder, run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our [installation instructions](../get-started/installation.md).
 
     ```bash
     pip install pyoframe[highs] altair[save] pandas
@@ -29,6 +32,8 @@ This coding challenge was developed for the PowerUp 2026 conference in Boulder, 
     ```bash
     No results to plot.
     ```
+
+    If you encounter errors, [let us know](https://github.com/Bravos-Power/pyoframe/issues/new).
 
 !!! info "Pandas or Polars"
 
@@ -74,7 +79,7 @@ Build the model in `main.py` using the two previously mentioned data files. You 
 
     Building this model will require understanding two important Pyoframe concepts
 
-    1. Pyoframe objects including variables, expressions, and constraints can be either dimensionless (e.g., a single constraint) or dimensioned (e.g., several constraints indexed over a dimension). For example, the `Dispatch` will need to be dimensioned over the `gen_id` dimension since we want one variable for every generator.
+    1. Pyoframe objects including variables, expressions, and constraints can be either dimensionless (i.e., a single constraint) or dimensioned (i.e., a family of constraints indexed over the same dimensions). For example, the `Dispatch` will need to be a dimensioned variable and will need to have the `gen_id` dimension since we want one variable for every generator.
 
     2. Pyoframe will automatically convert DataFrames into Pyoframe expressions according to a convenient rule: the last column is assumed to be the expression's value while all previous columns become the expressions' dimensions. So, if you'd like to create a dimensioned Expression for the cost of a generator, you'll need to select two columns `df_generators[["gen_id", "cost_per_MWh_linear"]]`.
 
@@ -84,7 +89,7 @@ If successful, running your code should result in the following plot!
 
 ## D. Add time to your model
 
-The above model only model power generation at noon. Let's extend it to all 24 hours of our data.
+Our code only models power generation at noon. Let's extend it to all 24 hours of our data!
 
 Update your power balance constraint to use the full load timeseries (`df_load`) instead of just the load at mid-day (`MIDDAY_LOAD`). Note that you'll need to change your `Dispatch` variable since we now want one variable for every generator _and every hour_.
 
@@ -100,7 +105,7 @@ After your modifications, your code should produce the following plot.
 
 ## E. Integrate Variable Capacity Factors
 
-Notice anything weird in the previous plot? Solar power is being produced at night! This is because the only constraint on solar generation is the total capacity of the solar farm, unrelated to the sunlight at that time of day.
+Notice anything weird in the previous plot? Solar power is being produced at night! This is because the only constraint on solar generation is the total capacity of the solar farm, unrelated to the sunlight at that time of day. Let's fix this.
 
 Add one additional constraint to limit the `Dispatch` of variable generators (like Solar and Wind) using the variable capacity factors in the `variable_capacity_factors.parquet` file. Variable capacity factors are ratios (e.g., `0.6`) that indicate the fraction of the generators' `Pmax` that can be produced at a given time based on historical conditions.
 
