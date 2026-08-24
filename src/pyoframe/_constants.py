@@ -458,10 +458,8 @@ class ConstraintSense(Enum):
             return ConstraintSense.GE
         elif self == ConstraintSense.GE:
             return ConstraintSense.LE
-        else:
-            raise ValueError(
-                f"Cannot flip constraint of type: {self}"
-            )  # pragma: no cover
+        else:  # pragma: no cover
+            raise ValueError(f"Cannot flip constraint of type: {self}")
 
 
 class ObjSense(Enum):
