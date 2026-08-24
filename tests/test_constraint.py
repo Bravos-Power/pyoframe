@@ -112,6 +112,22 @@ def test_update_dimensionless_full(solver, update_base_model):
     )
 
 
+def test_update_dimensionless_full_flip(solver, update_base_model):
+    if not solver.supports_updating_coefficients:
+        pytest.skip(f"Solver '{solver.name}' does not support updating coefficients.")
+    m = update_base_model
+    m.optimize()
+    y_coef = pl.DataFrame({"i": [1, 2], "coef": [2.0, 3.0]})
+    new_constr = -(y_coef * m.Y).sum() >= -10
+    print(new_constr.sense)
+    m.Dimensionless.update(new_constr)
+    solve_and_check_base_model_solution(m, [10, 10], [3.5, 1])
+    assert_frame_equal(
+        m.Dimensionless.lhs.data.sort(VAR_KEY), (-new_constr.lhs).data.sort(VAR_KEY)
+    )
+    assert m.Dimensionless.sense._flip() == new_constr.sense
+
+
 def test_update_dimensionless_partial(solver, update_base_model):
     if not solver.supports_updating_coefficients:
         pytest.skip(f"Solver '{solver.name}' does not support updating coefficients.")

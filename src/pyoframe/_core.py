@@ -2224,7 +2224,13 @@ class Constraint(BaseBlock):
         return Constraint(-self.lhs, self.sense._flip())
 
     def update(self, new_constraint: Constraint) -> None:
-        """Updates the coefficients of existing constraints in the model with the coefficients of `new_constraint`.
+        """Updates the existing constraint(s) to match the constraint(s) in `new_constraint`.
+
+        `new_constraint` must have the same dimensions as the existing constraint. An equality constraint cannot be updated with an inequality constraint and vice versa.
+
+        !!! tip "Conflicting labels (dimensioned constraints only)"
+            An error will be raised if `new_constraint` tries to introduce labels that were not already present in the constraint.
+            If the constraint has labels that are not present in `new_constraint`, those labels and their associated constraints will be left untouched.
 
         Parameters:
             new_constraint:
