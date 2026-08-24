@@ -48,6 +48,13 @@ def plot_results(dispatch_results, save_to="energy_mix.png"):
     }
 
     if dispatch_results is None:
+        # Make sure everything is installed properly
+        m = pf.Model()
+        m.attr.Silent = True
+        m.X = pf.Variable(lb=1, ub=2)
+        m.optimize()
+        assert m.X.solution == 1, "Something went wrong!"
+
         print("No results to plot.")
         return
 
@@ -223,7 +230,7 @@ def basic_model_with_time_vcf_transmission():
 
 
 if __name__ == "__main__":
-    # plot_results(starter_code(), "starter_code.png")
+    plot_results(starter_code(), "starter_code.png")
     plot_results(basic_model(), "basic_model.png")
     # plot_results(basic_model_with_time(), "basic_model_with_time.png")
     # plot_results(basic_model_with_time_and_vcf(), "basic_model_with_time_and_vcf.png")

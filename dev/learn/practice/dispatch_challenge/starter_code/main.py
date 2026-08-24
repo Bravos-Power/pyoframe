@@ -4,8 +4,10 @@ from pathlib import Path
 
 import pandas as pd
 
+import pyoframe as pf
+
 # Modify if the input_data folder is located elsewhere
-INPUT_DIR = Path(__file__).parent / "starter_code" / "input_data"
+INPUT_DIR = Path(__file__).parent / "input_data"
 
 
 def main():
@@ -16,6 +18,8 @@ def main():
     # Compute the total load at mid-day (12:00)
     df_loads = df_loads.drop(columns="bus").groupby("datetime", as_index=False).sum()
     MIDDAY_LOAD = df_loads[df_loads["datetime"].dt.hour == 12]["active_load"].item()
+
+    ### YOUR CODE GOES HERE
 
 
 def plot_results(dispatch_results, save_to="energy_mix.png"):
@@ -44,6 +48,13 @@ def plot_results(dispatch_results, save_to="energy_mix.png"):
     }
 
     if dispatch_results is None:
+        # Make sure everything is installed properly
+        m = pf.Model()
+        m.attr.Silent = True
+        m.X = pf.Variable(lb=1, ub=2)
+        m.optimize()
+        assert m.X.solution == 1, "Something went wrong!"
+
         print("No results to plot.")
         return
 
@@ -94,5 +105,4 @@ def plot_results(dispatch_results, save_to="energy_mix.png"):
 
 
 if __name__ == "__main__":
-    dispatch_results = main()
-    plot_results(dispatch_results)
+    plot_results(main())

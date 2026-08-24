@@ -2285,18 +2285,25 @@
 <h2 id="a-set-up-the-project">A. Set up the project</h2>
 <ol>
 <li>
-<p>Run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our <a href="../../get-started/installation/">installation instructions</a>.</p>
+<p><a href="https://www.python.org/downloads/">Install Python</a> if you haven't already (version 3.10 or above).</p>
+</li>
+<li>
+<p>Download and unzip the starter code and data for this challenge.</p>
+<p><a class="md-button" href="https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code.zip"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.11.89-2 2-2h6l2 2zm-.75 7H16V9h-2v4h-3.25L15 17.25"/></svg></span> Download starter code and data</a></p>
+</li>
+<li>
+<p>Optional: In the downloaded folder, <a href="https://realpython.com/python-virtual-environments-a-primer/">create and active a virtual environment</a> to prevent dependency conflicts.</p>
+</li>
+<li>
+<p>In the downloaded folder, run the following command to install Pyoframe, HiGHS (a free solver), Altair (a plotting library), and pandas. If you prefer using another solver like Gurobi, refer to our <a href="../../get-started/installation/">installation instructions</a>.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>pyoframe<span class="o">[</span>highs<span class="o">]</span><span class="w"> </span>altair<span class="o">[</span>save<span class="o">]</span><span class="w"> </span>pandas
 </span></code></pre></div>
 </li>
 <li>
-<p>Download and unzip the data and starter code for this challenge.</p>
-<p><a class="md-button" href="https://github.com/Bravos-Power/pyoframe/raw/refs/heads/main/docs/learn/practice/dispatch_challenge/starter_code_for_dispatch_challenge.zip"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.11.89-2 2-2h6l2 2zm-.75 7H16V9h-2v4h-3.25L15 17.25"/></svg></span> Download data and starter code</a></p>
-</li>
-<li>
-<p>Run <code>main.py</code>. The file should produce no errors and should output,</p>
+<p>Run <code>main.py</code>. The file should produce no errors and the log should end with,</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>No<span class="w"> </span>results<span class="w"> </span>to<span class="w"> </span>plot.
 </span></code></pre></div>
+<p>If you encounter errors, <a href="https://github.com/Bravos-Power/pyoframe/issues/new">let us know</a>.</p>
 </li>
 </ol>
 <div class="admonition info">
@@ -2356,7 +2363,7 @@
 <p>Building this model will require understanding two important Pyoframe concepts</p>
 <ol>
 <li>
-<p>Pyoframe objects including variables, expressions, and constraints can be either dimensionless (e.g., a single constraint) or dimensioned (e.g., several constraints indexed over a dimension). For example, the <code>Dispatch</code> will need to be dimensioned over the <code>gen_id</code> dimension since we want one variable for every generator.</p>
+<p>Pyoframe objects including variables, expressions, and constraints can be either dimensionless (i.e., a single constraint) or dimensioned (i.e., a family of constraints indexed over the same dimensions). For example, the <code>Dispatch</code> will need to be a dimensioned variable and will need to have the <code>gen_id</code> dimension since we want one variable for every generator.</p>
 </li>
 <li>
 <p>Pyoframe will automatically convert DataFrames into Pyoframe expressions according to a convenient rule: the last column is assumed to be the expression's value while all previous columns become the expressions' dimensions. So, if you'd like to create a dimensioned Expression for the cost of a generator, you'll need to select two columns <code>df_generators[["gen_id", "cost_per_MWh_linear"]]</code>.</p>
@@ -2366,7 +2373,7 @@
 <p>If successful, running your code should result in the following plot!</p>
 <p><img alt="Plot for single-timestep, copper-plate model" src="basic_model.png" /></p>
 <h2 id="d-add-time-to-your-model">D. Add time to your model</h2>
-<p>The above model only model power generation at noon. Let's extend it to all 24 hours of our data.</p>
+<p>Our code only models power generation at noon. Let's extend it to all 24 hours of our data!</p>
 <p>Update your power balance constraint to use the full load timeseries (<code>df_load</code>) instead of just the load at mid-day (<code>MIDDAY_LOAD</code>). Note that you'll need to change your <code>Dispatch</code> variable since we now want one variable for every generator <em>and every hour</em>.</p>
 <div class="admonition tip">
 <p class="admonition-title">Conflicting dimensions and <code>.sum_by</code></p>
@@ -2382,7 +2389,7 @@
 <p>After your modifications, your code should produce the following plot.</p>
 <p><img alt="Plot for copper-plate model" src="basic_model_with_time.png" /></p>
 <h2 id="e-integrate-variable-capacity-factors">E. Integrate Variable Capacity Factors</h2>
-<p>Notice anything weird in the previous plot? Solar power is being produced at night! This is because the only constraint on solar generation is the total capacity of the solar farm, unrelated to the sunlight at that time of day.</p>
+<p>Notice anything weird in the previous plot? Solar power is being produced at night! This is because the only constraint on solar generation is the total capacity of the solar farm, unrelated to the sunlight at that time of day. Let's fix this.</p>
 <p>Add one additional constraint to limit the <code>Dispatch</code> of variable generators (like Solar and Wind) using the variable capacity factors in the <code>variable_capacity_factors.parquet</code> file. Variable capacity factors are ratios (e.g., <code>0.6</code>) that indicate the fraction of the generators' <code>Pmax</code> that can be produced at a given time based on historical conditions.</p>
 <div class="admonition tip">
 <p class="admonition-title">Hints</p>
@@ -2429,7 +2436,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 20:00:51 UTC">August 17, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 24, 2026 02:22:01 UTC">August 24, 2026</span>
   </span>
 
     
