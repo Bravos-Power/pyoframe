@@ -31,6 +31,7 @@ class _Solver:
     supports_square_brackets_in_lp_files: bool = True
     supports_deletion: bool = True
     supports_ilp_files: bool = False
+    supports_updating_coefficients: bool = True
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -71,6 +72,7 @@ SUPPORTED_SOLVERS = [
         # ipopt just returns large numbers instead of "unbounded"
         supports_unbounded=False,
         supports_deletion=False,
+        supports_updating_coefficients=False,
     ),
     _Solver(
         "copt",
@@ -190,7 +192,7 @@ class _Config:
 
         !!! warning
             This might improve performance, but it will suppress the errors that alert you of unexpected
-            behaviors ([learn more](../../learn/concepts/addition.md)).
+            behaviors ([learn more](../../learn/concepts/join_modifiers.md)).
             Only consider enabling after you have thoroughly tested your code.
 
         Examples:
@@ -221,7 +223,7 @@ class _Config:
             │ Montreal │
             └──────────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/addition
+                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
 
             But if `Config.disable_extras_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
             >>> pf.Config.disable_extras_checks = True
@@ -449,6 +451,15 @@ class ConstraintSense(Enum):
             return poi.ConstraintSense.GreaterEqual
         else:
             raise ValueError(f"Invalid constraint type: {self}")  # pragma: no cover
+
+    def _flip(self):
+        """Flips the constraint sense (e.g., LE becomes GE)."""
+        if self == ConstraintSense.LE:
+            return ConstraintSense.GE
+        elif self == ConstraintSense.GE:
+            return ConstraintSense.LE
+        else:  # pragma: no cover
+            raise ValueError(f"Cannot flip constraint of type: {self}")
 
 
 class ObjSense(Enum):
