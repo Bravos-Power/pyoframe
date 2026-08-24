@@ -1735,6 +1735,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pyoframe.Constraint.update" class="md-nav__link">
+    <span class="md-ellipsis">
+      update
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2305,6 +2314,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#pyoframe.Constraint.update" class="md-nav__link">
+    <span class="md-ellipsis">
+      update
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2445,6 +2463,14 @@ This way, the right-hand side is always zero, and constraints only need to manag
                 </div>
               </td>
             </tr>
+            <tr class="doc-section-item">
+              <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;update&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;new_constraint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Constraint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;None&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;pyoframe.Constraint.update&lt;/code&gt;)" href="#pyoframe.Constraint.update">update</a></code></td>
+              <td>
+                <div class="doc-md-description">
+                  <p>Updates the existing constraint(s) to match the constraint(s) in <code>new_constraint</code>.</p>
+                </div>
+              </td>
+            </tr>
       </tbody>
     </table>
 
@@ -2520,9 +2546,7 @@ This way, the right-hand side is always zero, and constraints only need to manag
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>pyoframe/_core.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1789">1789</a></span>
-<span class="normal"><a href="#__codelineno-0-1790">1790</a></span>
-<span class="normal"><a href="#__codelineno-0-1791">1791</a></span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1791">1791</a></span>
 <span class="normal"><a href="#__codelineno-0-1792">1792</a></span>
 <span class="normal"><a href="#__codelineno-0-1793">1793</a></span>
 <span class="normal"><a href="#__codelineno-0-1794">1794</a></span>
@@ -2534,21 +2558,23 @@ This way, the right-hand side is always zero, and constraints only need to manag
 <span class="normal"><a href="#__codelineno-0-1800">1800</a></span>
 <span class="normal"><a href="#__codelineno-0-1801">1801</a></span>
 <span class="normal"><a href="#__codelineno-0-1802">1802</a></span>
-<span class="normal"><a href="#__codelineno-0-1803">1803</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1789"><a id="__codelineno-0-1789" name="__codelineno-0-1789"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">ConstraintSense</span><span class="p">):</span>
-</span><span id="__span-0-1790"><a id="__codelineno-0-1790" name="__codelineno-0-1790"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">lhs</span>
-</span><span id="__span-0-1791"><a id="__codelineno-0-1791" name="__codelineno-0-1791"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">_model</span>
-</span><span id="__span-0-1792"><a id="__codelineno-0-1792" name="__codelineno-0-1792"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">=</span> <span class="n">sense</span>
-</span><span id="__span-0-1793"><a id="__codelineno-0-1793" name="__codelineno-0-1793"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_to_relax</span><span class="p">:</span> <span class="n">FuncArgs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-1794"><a id="__codelineno-0-1794" name="__codelineno-0-1794"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_attribute</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">)</span>
-</span><span id="__span-0-1795"><a id="__codelineno-0-1795" name="__codelineno-0-1795"></a>
-</span><span id="__span-0-1796"><a id="__codelineno-0-1796" name="__codelineno-0-1796"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">dimensions</span>
-</span><span id="__span-0-1797"><a id="__codelineno-0-1797" name="__codelineno-0-1797"></a>    <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-1798"><a id="__codelineno-0-1798" name="__codelineno-0-1798"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-</span><span id="__span-0-1799"><a id="__codelineno-0-1799" name="__codelineno-0-1799"></a>        <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span>
-</span><span id="__span-0-1800"><a id="__codelineno-0-1800" name="__codelineno-0-1800"></a>        <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
-</span><span id="__span-0-1801"><a id="__codelineno-0-1801" name="__codelineno-0-1801"></a>    <span class="p">)</span>
-</span><span id="__span-0-1802"><a id="__codelineno-0-1802" name="__codelineno-0-1802"></a>
-</span><span id="__span-0-1803"><a id="__codelineno-0-1803" name="__codelineno-0-1803"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-1803">1803</a></span>
+<span class="normal"><a href="#__codelineno-0-1804">1804</a></span>
+<span class="normal"><a href="#__codelineno-0-1805">1805</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1791"><a id="__codelineno-0-1791" name="__codelineno-0-1791"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span><span class="p">,</span> <span class="n">sense</span><span class="p">:</span> <span class="n">ConstraintSense</span><span class="p">):</span>
+</span><span id="__span-0-1792"><a id="__codelineno-0-1792" name="__codelineno-0-1792"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">lhs</span>
+</span><span id="__span-0-1793"><a id="__codelineno-0-1793" name="__codelineno-0-1793"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">_model</span>
+</span><span id="__span-0-1794"><a id="__codelineno-0-1794" name="__codelineno-0-1794"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">=</span> <span class="n">sense</span>
+</span><span id="__span-0-1795"><a id="__codelineno-0-1795" name="__codelineno-0-1795"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_to_relax</span><span class="p">:</span> <span class="n">FuncArgs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-1796"><a id="__codelineno-0-1796" name="__codelineno-0-1796"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_attribute</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">)</span>
+</span><span id="__span-0-1797"><a id="__codelineno-0-1797" name="__codelineno-0-1797"></a>
+</span><span id="__span-0-1798"><a id="__codelineno-0-1798" name="__codelineno-0-1798"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">dimensions</span>
+</span><span id="__span-0-1799"><a id="__codelineno-0-1799" name="__codelineno-0-1799"></a>    <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-1800"><a id="__codelineno-0-1800" name="__codelineno-0-1800"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+</span><span id="__span-0-1801"><a id="__codelineno-0-1801" name="__codelineno-0-1801"></a>        <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span id="__span-0-1802"><a id="__codelineno-0-1802" name="__codelineno-0-1802"></a>        <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
+</span><span id="__span-0-1803"><a id="__codelineno-0-1803" name="__codelineno-0-1803"></a>    <span class="p">)</span>
+</span><span id="__span-0-1804"><a id="__codelineno-0-1804" name="__codelineno-0-1804"></a>
+</span><span id="__span-0-1805"><a id="__codelineno-0-1805" name="__codelineno-0-1805"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
                   </details>
 
@@ -2701,45 +2727,45 @@ For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2222">2222</a></span>
-<span class="normal"><a href="#__codelineno-0-2223">2223</a></span>
-<span class="normal"><a href="#__codelineno-0-2224">2224</a></span>
-<span class="normal"><a href="#__codelineno-0-2225">2225</a></span>
-<span class="normal"><a href="#__codelineno-0-2226">2226</a></span>
-<span class="normal"><a href="#__codelineno-0-2227">2227</a></span>
-<span class="normal"><a href="#__codelineno-0-2228">2228</a></span>
-<span class="normal"><a href="#__codelineno-0-2229">2229</a></span>
-<span class="normal"><a href="#__codelineno-0-2230">2230</a></span>
-<span class="normal"><a href="#__codelineno-0-2231">2231</a></span>
-<span class="normal"><a href="#__codelineno-0-2232">2232</a></span>
-<span class="normal"><a href="#__codelineno-0-2233">2233</a></span>
-<span class="normal"><a href="#__codelineno-0-2234">2234</a></span>
-<span class="normal"><a href="#__codelineno-0-2235">2235</a></span>
-<span class="normal"><a href="#__codelineno-0-2236">2236</a></span>
-<span class="normal"><a href="#__codelineno-0-2237">2237</a></span>
-<span class="normal"><a href="#__codelineno-0-2238">2238</a></span>
-<span class="normal"><a href="#__codelineno-0-2239">2239</a></span>
-<span class="normal"><a href="#__codelineno-0-2240">2240</a></span>
-<span class="normal"><a href="#__codelineno-0-2241">2241</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2222"><a id="__codelineno-0-2222" name="__codelineno-0-2222"></a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="__span-0-2223"><a id="__codelineno-0-2223" name="__codelineno-0-2223"></a><span class="w">    </span><span class="sd">"""Returns the estimated size of the constraint.</span>
-</span><span id="__span-0-2224"><a id="__codelineno-0-2224" name="__codelineno-0-2224"></a>
-</span><span id="__span-0-2225"><a id="__codelineno-0-2225" name="__codelineno-0-2225"></a><span class="sd">    Includes the size of the underlying expression (`Constraint.lhs`).</span>
-</span><span id="__span-0-2226"><a id="__codelineno-0-2226" name="__codelineno-0-2226"></a>
-</span><span id="__span-0-2227"><a id="__codelineno-0-2227" name="__codelineno-0-2227"></a><span class="sd">    See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details on signature and behavior.</span>
-</span><span id="__span-0-2228"><a id="__codelineno-0-2228" name="__codelineno-0-2228"></a>
-</span><span id="__span-0-2229"><a id="__codelineno-0-2229" name="__codelineno-0-2229"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-2230"><a id="__codelineno-0-2230" name="__codelineno-0-2230"></a><span class="sd">        An dimensionless constraint has contains a 32 bit constraint id and, for each term, a 64 bit coefficient with a 32 bit variable id.</span>
-</span><span id="__span-0-2231"><a id="__codelineno-0-2231" name="__codelineno-0-2231"></a><span class="sd">        For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</span>
-</span><span id="__span-0-2232"><a id="__codelineno-0-2232" name="__codelineno-0-2232"></a>
-</span><span id="__span-0-2233"><a id="__codelineno-0-2233" name="__codelineno-0-2233"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-2234"><a id="__codelineno-0-2234" name="__codelineno-0-2234"></a><span class="sd">        &gt;&gt;&gt; m.x = pf.Variable()</span>
-</span><span id="__span-0-2235"><a id="__codelineno-0-2235" name="__codelineno-0-2235"></a><span class="sd">        &gt;&gt;&gt; m.con = m.x &lt;= 4</span>
-</span><span id="__span-0-2236"><a id="__codelineno-0-2236" name="__codelineno-0-2236"></a><span class="sd">        &gt;&gt;&gt; m.con.estimated_size()</span>
-</span><span id="__span-0-2237"><a id="__codelineno-0-2237" name="__codelineno-0-2237"></a><span class="sd">        28</span>
-</span><span id="__span-0-2238"><a id="__codelineno-0-2238" name="__codelineno-0-2238"></a><span class="sd">    """</span>
-</span><span id="__span-0-2239"><a id="__codelineno-0-2239" name="__codelineno-0-2239"></a>    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span>
-</span><span id="__span-0-2240"><a id="__codelineno-0-2240" name="__codelineno-0-2240"></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-</span><span id="__span-0-2241"><a id="__codelineno-0-2241" name="__codelineno-0-2241"></a>    <span class="p">)</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2393">2393</a></span>
+<span class="normal"><a href="#__codelineno-0-2394">2394</a></span>
+<span class="normal"><a href="#__codelineno-0-2395">2395</a></span>
+<span class="normal"><a href="#__codelineno-0-2396">2396</a></span>
+<span class="normal"><a href="#__codelineno-0-2397">2397</a></span>
+<span class="normal"><a href="#__codelineno-0-2398">2398</a></span>
+<span class="normal"><a href="#__codelineno-0-2399">2399</a></span>
+<span class="normal"><a href="#__codelineno-0-2400">2400</a></span>
+<span class="normal"><a href="#__codelineno-0-2401">2401</a></span>
+<span class="normal"><a href="#__codelineno-0-2402">2402</a></span>
+<span class="normal"><a href="#__codelineno-0-2403">2403</a></span>
+<span class="normal"><a href="#__codelineno-0-2404">2404</a></span>
+<span class="normal"><a href="#__codelineno-0-2405">2405</a></span>
+<span class="normal"><a href="#__codelineno-0-2406">2406</a></span>
+<span class="normal"><a href="#__codelineno-0-2407">2407</a></span>
+<span class="normal"><a href="#__codelineno-0-2408">2408</a></span>
+<span class="normal"><a href="#__codelineno-0-2409">2409</a></span>
+<span class="normal"><a href="#__codelineno-0-2410">2410</a></span>
+<span class="normal"><a href="#__codelineno-0-2411">2411</a></span>
+<span class="normal"><a href="#__codelineno-0-2412">2412</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2393"><a id="__codelineno-0-2393" name="__codelineno-0-2393"></a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="__span-0-2394"><a id="__codelineno-0-2394" name="__codelineno-0-2394"></a><span class="w">    </span><span class="sd">"""Returns the estimated size of the constraint.</span>
+</span><span id="__span-0-2395"><a id="__codelineno-0-2395" name="__codelineno-0-2395"></a>
+</span><span id="__span-0-2396"><a id="__codelineno-0-2396" name="__codelineno-0-2396"></a><span class="sd">    Includes the size of the underlying expression (`Constraint.lhs`).</span>
+</span><span id="__span-0-2397"><a id="__codelineno-0-2397" name="__codelineno-0-2397"></a>
+</span><span id="__span-0-2398"><a id="__codelineno-0-2398" name="__codelineno-0-2398"></a><span class="sd">    See [`Expression.estimated_size`][pyoframe.Expression.estimated_size] for details on signature and behavior.</span>
+</span><span id="__span-0-2399"><a id="__codelineno-0-2399" name="__codelineno-0-2399"></a>
+</span><span id="__span-0-2400"><a id="__codelineno-0-2400" name="__codelineno-0-2400"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2401"><a id="__codelineno-0-2401" name="__codelineno-0-2401"></a><span class="sd">        An dimensionless constraint has contains a 32 bit constraint id and, for each term, a 64 bit coefficient with a 32 bit variable id.</span>
+</span><span id="__span-0-2402"><a id="__codelineno-0-2402" name="__codelineno-0-2402"></a><span class="sd">        For a two-term expression that is: (32 + 2 * (64 + 32)) = 224 bits = 28 bytes.</span>
+</span><span id="__span-0-2403"><a id="__codelineno-0-2403" name="__codelineno-0-2403"></a>
+</span><span id="__span-0-2404"><a id="__codelineno-0-2404" name="__codelineno-0-2404"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2405"><a id="__codelineno-0-2405" name="__codelineno-0-2405"></a><span class="sd">        &gt;&gt;&gt; m.x = pf.Variable()</span>
+</span><span id="__span-0-2406"><a id="__codelineno-0-2406" name="__codelineno-0-2406"></a><span class="sd">        &gt;&gt;&gt; m.con = m.x &lt;= 4</span>
+</span><span id="__span-0-2407"><a id="__codelineno-0-2407" name="__codelineno-0-2407"></a><span class="sd">        &gt;&gt;&gt; m.con.estimated_size()</span>
+</span><span id="__span-0-2408"><a id="__codelineno-0-2408" name="__codelineno-0-2408"></a><span class="sd">        28</span>
+</span><span id="__span-0-2409"><a id="__codelineno-0-2409" name="__codelineno-0-2409"></a><span class="sd">    """</span>
+</span><span id="__span-0-2410"><a id="__codelineno-0-2410" name="__codelineno-0-2410"></a>    <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">estimated_size</span><span class="p">(</span>
+</span><span id="__span-0-2411"><a id="__codelineno-0-2411" name="__codelineno-0-2411"></a>        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+</span><span id="__span-0-2412"><a id="__codelineno-0-2412" name="__codelineno-0-2412"></a>    <span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3314,7 +3340,307 @@ make them negative for maximization problems.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2249">2249</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2420">2420</a></span>
+<span class="normal"><a href="#__codelineno-0-2421">2421</a></span>
+<span class="normal"><a href="#__codelineno-0-2422">2422</a></span>
+<span class="normal"><a href="#__codelineno-0-2423">2423</a></span>
+<span class="normal"><a href="#__codelineno-0-2424">2424</a></span>
+<span class="normal"><a href="#__codelineno-0-2425">2425</a></span>
+<span class="normal"><a href="#__codelineno-0-2426">2426</a></span>
+<span class="normal"><a href="#__codelineno-0-2427">2427</a></span>
+<span class="normal"><a href="#__codelineno-0-2428">2428</a></span>
+<span class="normal"><a href="#__codelineno-0-2429">2429</a></span>
+<span class="normal"><a href="#__codelineno-0-2430">2430</a></span>
+<span class="normal"><a href="#__codelineno-0-2431">2431</a></span>
+<span class="normal"><a href="#__codelineno-0-2432">2432</a></span>
+<span class="normal"><a href="#__codelineno-0-2433">2433</a></span>
+<span class="normal"><a href="#__codelineno-0-2434">2434</a></span>
+<span class="normal"><a href="#__codelineno-0-2435">2435</a></span>
+<span class="normal"><a href="#__codelineno-0-2436">2436</a></span>
+<span class="normal"><a href="#__codelineno-0-2437">2437</a></span>
+<span class="normal"><a href="#__codelineno-0-2438">2438</a></span>
+<span class="normal"><a href="#__codelineno-0-2439">2439</a></span>
+<span class="normal"><a href="#__codelineno-0-2440">2440</a></span>
+<span class="normal"><a href="#__codelineno-0-2441">2441</a></span>
+<span class="normal"><a href="#__codelineno-0-2442">2442</a></span>
+<span class="normal"><a href="#__codelineno-0-2443">2443</a></span>
+<span class="normal"><a href="#__codelineno-0-2444">2444</a></span>
+<span class="normal"><a href="#__codelineno-0-2445">2445</a></span>
+<span class="normal"><a href="#__codelineno-0-2446">2446</a></span>
+<span class="normal"><a href="#__codelineno-0-2447">2447</a></span>
+<span class="normal"><a href="#__codelineno-0-2448">2448</a></span>
+<span class="normal"><a href="#__codelineno-0-2449">2449</a></span>
+<span class="normal"><a href="#__codelineno-0-2450">2450</a></span>
+<span class="normal"><a href="#__codelineno-0-2451">2451</a></span>
+<span class="normal"><a href="#__codelineno-0-2452">2452</a></span>
+<span class="normal"><a href="#__codelineno-0-2453">2453</a></span>
+<span class="normal"><a href="#__codelineno-0-2454">2454</a></span>
+<span class="normal"><a href="#__codelineno-0-2455">2455</a></span>
+<span class="normal"><a href="#__codelineno-0-2456">2456</a></span>
+<span class="normal"><a href="#__codelineno-0-2457">2457</a></span>
+<span class="normal"><a href="#__codelineno-0-2458">2458</a></span>
+<span class="normal"><a href="#__codelineno-0-2459">2459</a></span>
+<span class="normal"><a href="#__codelineno-0-2460">2460</a></span>
+<span class="normal"><a href="#__codelineno-0-2461">2461</a></span>
+<span class="normal"><a href="#__codelineno-0-2462">2462</a></span>
+<span class="normal"><a href="#__codelineno-0-2463">2463</a></span>
+<span class="normal"><a href="#__codelineno-0-2464">2464</a></span>
+<span class="normal"><a href="#__codelineno-0-2465">2465</a></span>
+<span class="normal"><a href="#__codelineno-0-2466">2466</a></span>
+<span class="normal"><a href="#__codelineno-0-2467">2467</a></span>
+<span class="normal"><a href="#__codelineno-0-2468">2468</a></span>
+<span class="normal"><a href="#__codelineno-0-2469">2469</a></span>
+<span class="normal"><a href="#__codelineno-0-2470">2470</a></span>
+<span class="normal"><a href="#__codelineno-0-2471">2471</a></span>
+<span class="normal"><a href="#__codelineno-0-2472">2472</a></span>
+<span class="normal"><a href="#__codelineno-0-2473">2473</a></span>
+<span class="normal"><a href="#__codelineno-0-2474">2474</a></span>
+<span class="normal"><a href="#__codelineno-0-2475">2475</a></span>
+<span class="normal"><a href="#__codelineno-0-2476">2476</a></span>
+<span class="normal"><a href="#__codelineno-0-2477">2477</a></span>
+<span class="normal"><a href="#__codelineno-0-2478">2478</a></span>
+<span class="normal"><a href="#__codelineno-0-2479">2479</a></span>
+<span class="normal"><a href="#__codelineno-0-2480">2480</a></span>
+<span class="normal"><a href="#__codelineno-0-2481">2481</a></span>
+<span class="normal"><a href="#__codelineno-0-2482">2482</a></span>
+<span class="normal"><a href="#__codelineno-0-2483">2483</a></span>
+<span class="normal"><a href="#__codelineno-0-2484">2484</a></span>
+<span class="normal"><a href="#__codelineno-0-2485">2485</a></span>
+<span class="normal"><a href="#__codelineno-0-2486">2486</a></span>
+<span class="normal"><a href="#__codelineno-0-2487">2487</a></span>
+<span class="normal"><a href="#__codelineno-0-2488">2488</a></span>
+<span class="normal"><a href="#__codelineno-0-2489">2489</a></span>
+<span class="normal"><a href="#__codelineno-0-2490">2490</a></span>
+<span class="normal"><a href="#__codelineno-0-2491">2491</a></span>
+<span class="normal"><a href="#__codelineno-0-2492">2492</a></span>
+<span class="normal"><a href="#__codelineno-0-2493">2493</a></span>
+<span class="normal"><a href="#__codelineno-0-2494">2494</a></span>
+<span class="normal"><a href="#__codelineno-0-2495">2495</a></span>
+<span class="normal"><a href="#__codelineno-0-2496">2496</a></span>
+<span class="normal"><a href="#__codelineno-0-2497">2497</a></span>
+<span class="normal"><a href="#__codelineno-0-2498">2498</a></span>
+<span class="normal"><a href="#__codelineno-0-2499">2499</a></span>
+<span class="normal"><a href="#__codelineno-0-2500">2500</a></span>
+<span class="normal"><a href="#__codelineno-0-2501">2501</a></span>
+<span class="normal"><a href="#__codelineno-0-2502">2502</a></span>
+<span class="normal"><a href="#__codelineno-0-2503">2503</a></span>
+<span class="normal"><a href="#__codelineno-0-2504">2504</a></span>
+<span class="normal"><a href="#__codelineno-0-2505">2505</a></span>
+<span class="normal"><a href="#__codelineno-0-2506">2506</a></span>
+<span class="normal"><a href="#__codelineno-0-2507">2507</a></span>
+<span class="normal"><a href="#__codelineno-0-2508">2508</a></span>
+<span class="normal"><a href="#__codelineno-0-2509">2509</a></span>
+<span class="normal"><a href="#__codelineno-0-2510">2510</a></span>
+<span class="normal"><a href="#__codelineno-0-2511">2511</a></span>
+<span class="normal"><a href="#__codelineno-0-2512">2512</a></span>
+<span class="normal"><a href="#__codelineno-0-2513">2513</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2420"><a id="__codelineno-0-2420" name="__codelineno-0-2420"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_df</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+</span><span id="__span-0-2421"><a id="__codelineno-0-2421" name="__codelineno-0-2421"></a><span class="w">    </span><span class="sd">"""Converts the constraint to a human-readable string, or several arranged in a table.</span>
+</span><span id="__span-0-2422"><a id="__codelineno-0-2422" name="__codelineno-0-2422"></a>
+</span><span id="__span-0-2423"><a id="__codelineno-0-2423" name="__codelineno-0-2423"></a><span class="sd">    Long expressions are truncated according to [`Config.print_max_terms`][pyoframe._Config.print_max_terms] and [`Config.print_polars_config`][pyoframe._Config.print_polars_config].</span>
+</span><span id="__span-0-2424"><a id="__codelineno-0-2424" name="__codelineno-0-2424"></a>
+</span><span id="__span-0-2425"><a id="__codelineno-0-2425" name="__codelineno-0-2425"></a><span class="sd">    Parameters:</span>
+</span><span id="__span-0-2426"><a id="__codelineno-0-2426" name="__codelineno-0-2426"></a><span class="sd">        return_df:</span>
+</span><span id="__span-0-2427"><a id="__codelineno-0-2427" name="__codelineno-0-2427"></a><span class="sd">            If `True`, returns a DataFrame containing strings instead of the string representation of the DataFrame.</span>
+</span><span id="__span-0-2428"><a id="__codelineno-0-2428" name="__codelineno-0-2428"></a>
+</span><span id="__span-0-2429"><a id="__codelineno-0-2429" name="__codelineno-0-2429"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2430"><a id="__codelineno-0-2430" name="__codelineno-0-2430"></a><span class="sd">        &gt;&gt;&gt; import polars as pl</span>
+</span><span id="__span-0-2431"><a id="__codelineno-0-2431" name="__codelineno-0-2431"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2432"><a id="__codelineno-0-2432" name="__codelineno-0-2432"></a><span class="sd">        &gt;&gt;&gt; x = pf.Set(x=range(1000))</span>
+</span><span id="__span-0-2433"><a id="__codelineno-0-2433" name="__codelineno-0-2433"></a><span class="sd">        &gt;&gt;&gt; y = pf.Set(y=range(1000))</span>
+</span><span id="__span-0-2434"><a id="__codelineno-0-2434" name="__codelineno-0-2434"></a><span class="sd">        &gt;&gt;&gt; m.V = pf.Variable(x, y)</span>
+</span><span id="__span-0-2435"><a id="__codelineno-0-2435" name="__codelineno-0-2435"></a><span class="sd">        &gt;&gt;&gt; expr = 2 * m.V * m.V</span>
+</span><span id="__span-0-2436"><a id="__codelineno-0-2436" name="__codelineno-0-2436"></a><span class="sd">        &gt;&gt;&gt; print((expr &lt;= 3).to_str())</span>
+</span><span id="__span-0-2437"><a id="__codelineno-0-2437" name="__codelineno-0-2437"></a><span class="sd">        ┌────────┬────────┬────────────────────────────────┐</span>
+</span><span id="__span-0-2438"><a id="__codelineno-0-2438" name="__codelineno-0-2438"></a><span class="sd">        │ x      ┆ y      ┆ constraint                     │</span>
+</span><span id="__span-0-2439"><a id="__codelineno-0-2439" name="__codelineno-0-2439"></a><span class="sd">        │ (1000) ┆ (1000) ┆                                │</span>
+</span><span id="__span-0-2440"><a id="__codelineno-0-2440" name="__codelineno-0-2440"></a><span class="sd">        ╞════════╪════════╪════════════════════════════════╡</span>
+</span><span id="__span-0-2441"><a id="__codelineno-0-2441" name="__codelineno-0-2441"></a><span class="sd">        │ 0      ┆ 0      ┆ 2 V[0,0] * V[0,0] &lt;= 3         │</span>
+</span><span id="__span-0-2442"><a id="__codelineno-0-2442" name="__codelineno-0-2442"></a><span class="sd">        │ 0      ┆ 1      ┆ 2 V[0,1] * V[0,1] &lt;= 3         │</span>
+</span><span id="__span-0-2443"><a id="__codelineno-0-2443" name="__codelineno-0-2443"></a><span class="sd">        │ 0      ┆ 2      ┆ 2 V[0,2] * V[0,2] &lt;= 3         │</span>
+</span><span id="__span-0-2444"><a id="__codelineno-0-2444" name="__codelineno-0-2444"></a><span class="sd">        │ 0      ┆ 3      ┆ 2 V[0,3] * V[0,3] &lt;= 3         │</span>
+</span><span id="__span-0-2445"><a id="__codelineno-0-2445" name="__codelineno-0-2445"></a><span class="sd">        │ 0      ┆ 4      ┆ 2 V[0,4] * V[0,4] &lt;= 3         │</span>
+</span><span id="__span-0-2446"><a id="__codelineno-0-2446" name="__codelineno-0-2446"></a><span class="sd">        │ …      ┆ …      ┆ …                              │</span>
+</span><span id="__span-0-2447"><a id="__codelineno-0-2447" name="__codelineno-0-2447"></a><span class="sd">        │ 999    ┆ 995    ┆ 2 V[999,995] * V[999,995] &lt;= 3 │</span>
+</span><span id="__span-0-2448"><a id="__codelineno-0-2448" name="__codelineno-0-2448"></a><span class="sd">        │ 999    ┆ 996    ┆ 2 V[999,996] * V[999,996] &lt;= 3 │</span>
+</span><span id="__span-0-2449"><a id="__codelineno-0-2449" name="__codelineno-0-2449"></a><span class="sd">        │ 999    ┆ 997    ┆ 2 V[999,997] * V[999,997] &lt;= 3 │</span>
+</span><span id="__span-0-2450"><a id="__codelineno-0-2450" name="__codelineno-0-2450"></a><span class="sd">        │ 999    ┆ 998    ┆ 2 V[999,998] * V[999,998] &lt;= 3 │</span>
+</span><span id="__span-0-2451"><a id="__codelineno-0-2451" name="__codelineno-0-2451"></a><span class="sd">        │ 999    ┆ 999    ┆ 2 V[999,999] * V[999,999] &lt;= 3 │</span>
+</span><span id="__span-0-2452"><a id="__codelineno-0-2452" name="__codelineno-0-2452"></a><span class="sd">        └────────┴────────┴────────────────────────────────┘</span>
+</span><span id="__span-0-2453"><a id="__codelineno-0-2453" name="__codelineno-0-2453"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum("x")</span>
+</span><span id="__span-0-2454"><a id="__codelineno-0-2454" name="__codelineno-0-2454"></a><span class="sd">        &gt;&gt;&gt; print((expr &gt;= 3).to_str())</span>
+</span><span id="__span-0-2455"><a id="__codelineno-0-2455" name="__codelineno-0-2455"></a><span class="sd">        ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐</span>
+</span><span id="__span-0-2456"><a id="__codelineno-0-2456" name="__codelineno-0-2456"></a><span class="sd">        │ y      ┆ constraint                                                                              │</span>
+</span><span id="__span-0-2457"><a id="__codelineno-0-2457" name="__codelineno-0-2457"></a><span class="sd">        │ (1000) ┆                                                                                         │</span>
+</span><span id="__span-0-2458"><a id="__codelineno-0-2458" name="__codelineno-0-2458"></a><span class="sd">        ╞════════╪═════════════════════════════════════════════════════════════════════════════════════════╡</span>
+</span><span id="__span-0-2459"><a id="__codelineno-0-2459" name="__codelineno-0-2459"></a><span class="sd">        │ 0      ┆ 2 V[0,0] * V[0,0] +2 V[1,0] * V[1,0] +2 V[2,0] * V[2,0] +2 V[3,0] * V[3,0] +2 V[4,0] *  │</span>
+</span><span id="__span-0-2460"><a id="__codelineno-0-2460" name="__codelineno-0-2460"></a><span class="sd">        │        ┆ V[4,0] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2461"><a id="__codelineno-0-2461" name="__codelineno-0-2461"></a><span class="sd">        │ 1      ┆ 2 V[0,1] * V[0,1] +2 V[1,1] * V[1,1] +2 V[2,1] * V[2,1] +2 V[3,1] * V[3,1] +2 V[4,1] *  │</span>
+</span><span id="__span-0-2462"><a id="__codelineno-0-2462" name="__codelineno-0-2462"></a><span class="sd">        │        ┆ V[4,1] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2463"><a id="__codelineno-0-2463" name="__codelineno-0-2463"></a><span class="sd">        │ 2      ┆ 2 V[0,2] * V[0,2] +2 V[1,2] * V[1,2] +2 V[2,2] * V[2,2] +2 V[3,2] * V[3,2] +2 V[4,2] *  │</span>
+</span><span id="__span-0-2464"><a id="__codelineno-0-2464" name="__codelineno-0-2464"></a><span class="sd">        │        ┆ V[4,2] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2465"><a id="__codelineno-0-2465" name="__codelineno-0-2465"></a><span class="sd">        │ 3      ┆ 2 V[0,3] * V[0,3] +2 V[1,3] * V[1,3] +2 V[2,3] * V[2,3] +2 V[3,3] * V[3,3] +2 V[4,3] *  │</span>
+</span><span id="__span-0-2466"><a id="__codelineno-0-2466" name="__codelineno-0-2466"></a><span class="sd">        │        ┆ V[4,3] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2467"><a id="__codelineno-0-2467" name="__codelineno-0-2467"></a><span class="sd">        │ 4      ┆ 2 V[0,4] * V[0,4] +2 V[1,4] * V[1,4] +2 V[2,4] * V[2,4] +2 V[3,4] * V[3,4] +2 V[4,4] *  │</span>
+</span><span id="__span-0-2468"><a id="__codelineno-0-2468" name="__codelineno-0-2468"></a><span class="sd">        │        ┆ V[4,4] … &gt;= 3                                                                           │</span>
+</span><span id="__span-0-2469"><a id="__codelineno-0-2469" name="__codelineno-0-2469"></a><span class="sd">        │ …      ┆ …                                                                                       │</span>
+</span><span id="__span-0-2470"><a id="__codelineno-0-2470" name="__codelineno-0-2470"></a><span class="sd">        │ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │</span>
+</span><span id="__span-0-2471"><a id="__codelineno-0-2471" name="__codelineno-0-2471"></a><span class="sd">        │        ┆ V[3,995] +2 V[4,995] * V[4,995] … &gt;= 3                                                  │</span>
+</span><span id="__span-0-2472"><a id="__codelineno-0-2472" name="__codelineno-0-2472"></a><span class="sd">        │ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │</span>
+</span><span id="__span-0-2473"><a id="__codelineno-0-2473" name="__codelineno-0-2473"></a><span class="sd">        │        ┆ V[3,996] +2 V[4,996] * V[4,996] … &gt;= 3                                                  │</span>
+</span><span id="__span-0-2474"><a id="__codelineno-0-2474" name="__codelineno-0-2474"></a><span class="sd">        │ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │</span>
+</span><span id="__span-0-2475"><a id="__codelineno-0-2475" name="__codelineno-0-2475"></a><span class="sd">        │        ┆ V[3,997] +2 V[4,997] * V[4,997] … &gt;= 3                                                  │</span>
+</span><span id="__span-0-2476"><a id="__codelineno-0-2476" name="__codelineno-0-2476"></a><span class="sd">        │ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │</span>
+</span><span id="__span-0-2477"><a id="__codelineno-0-2477" name="__codelineno-0-2477"></a><span class="sd">        │        ┆ V[3,998] +2 V[4,998] * V[4,998] … &gt;= 3                                                  │</span>
+</span><span id="__span-0-2478"><a id="__codelineno-0-2478" name="__codelineno-0-2478"></a><span class="sd">        │ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │</span>
+</span><span id="__span-0-2479"><a id="__codelineno-0-2479" name="__codelineno-0-2479"></a><span class="sd">        │        ┆ V[3,999] +2 V[4,999] * V[4,999] … &gt;= 3                                                  │</span>
+</span><span id="__span-0-2480"><a id="__codelineno-0-2480" name="__codelineno-0-2480"></a><span class="sd">        └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘</span>
+</span><span id="__span-0-2481"><a id="__codelineno-0-2481" name="__codelineno-0-2481"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum("y")</span>
+</span><span id="__span-0-2482"><a id="__codelineno-0-2482" name="__codelineno-0-2482"></a><span class="sd">        &gt;&gt;&gt; print((expr == 3).to_str())</span>
+</span><span id="__span-0-2483"><a id="__codelineno-0-2483" name="__codelineno-0-2483"></a><span class="sd">        2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] +2 V[0,4] * V[0,4] … = 3</span>
+</span><span id="__span-0-2484"><a id="__codelineno-0-2484" name="__codelineno-0-2484"></a><span class="sd">    """</span>
+</span><span id="__span-0-2485"><a id="__codelineno-0-2485" name="__codelineno-0-2485"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span>
+</span><span id="__span-0-2486"><a id="__codelineno-0-2486" name="__codelineno-0-2486"></a>    <span class="n">str_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">to_str</span><span class="p">(</span>
+</span><span id="__span-0-2487"><a id="__codelineno-0-2487" name="__codelineno-0-2487"></a>        <span class="n">include_const_term</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-0-2488"><a id="__codelineno-0-2488" name="__codelineno-0-2488"></a>        <span class="n">return_df</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-2489"><a id="__codelineno-0-2489" name="__codelineno-0-2489"></a>        <span class="n">str_col_name</span><span class="o">=</span><span class="s2">"constraint"</span><span class="p">,</span>
+</span><span id="__span-0-2490"><a id="__codelineno-0-2490" name="__codelineno-0-2490"></a>        <span class="n">_compute_all_rows</span><span class="o">=</span><span class="n">return_df</span><span class="p">,</span>
+</span><span id="__span-0-2491"><a id="__codelineno-0-2491" name="__codelineno-0-2491"></a>    <span class="p">)</span>
+</span><span id="__span-0-2492"><a id="__codelineno-0-2492" name="__codelineno-0-2492"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">constant_terms</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-0-2493"><a id="__codelineno-0-2493" name="__codelineno-0-2493"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">cast_coef_to_string</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">drop_ones</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">always_show_sign</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-0-2494"><a id="__codelineno-0-2494" name="__codelineno-0-2494"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="s2">"rhs"</span><span class="p">})</span>
+</span><span id="__span-0-2495"><a id="__codelineno-0-2495" name="__codelineno-0-2495"></a>    <span class="k">if</span> <span class="n">dims</span><span class="p">:</span>
+</span><span id="__span-0-2496"><a id="__codelineno-0-2496" name="__codelineno-0-2496"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">str_table</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-2497"><a id="__codelineno-0-2497" name="__codelineno-0-2497"></a>            <span class="n">rhs</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">coalesce</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-0-2498"><a id="__codelineno-0-2498" name="__codelineno-0-2498"></a>        <span class="p">)</span>
+</span><span id="__span-0-2499"><a id="__codelineno-0-2499" name="__codelineno-0-2499"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2500"><a id="__codelineno-0-2500" name="__codelineno-0-2500"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">str_table</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">rhs</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
+</span><span id="__span-0-2501"><a id="__codelineno-0-2501" name="__codelineno-0-2501"></a>    <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
+</span><span id="__span-0-2502"><a id="__codelineno-0-2502" name="__codelineno-0-2502"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">concat_str</span><span class="p">(</span><span class="s2">"constraint"</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> "</span><span class="p">),</span> <span class="s2">"rhs"</span><span class="p">)</span>
+</span><span id="__span-0-2503"><a id="__codelineno-0-2503" name="__codelineno-0-2503"></a>    <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">"rhs"</span><span class="p">)</span>
+</span><span id="__span-0-2504"><a id="__codelineno-0-2504" name="__codelineno-0-2504"></a>
+</span><span id="__span-0-2505"><a id="__codelineno-0-2505" name="__codelineno-0-2505"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_df</span><span class="p">:</span>
+</span><span id="__span-0-2506"><a id="__codelineno-0-2506" name="__codelineno-0-2506"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2507"><a id="__codelineno-0-2507" name="__codelineno-0-2507"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span id="__span-0-2508"><a id="__codelineno-0-2508" name="__codelineno-0-2508"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2509"><a id="__codelineno-0-2509" name="__codelineno-0-2509"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_shape_to_columns</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
+</span><span id="__span-0-2510"><a id="__codelineno-0-2510" name="__codelineno-0-2510"></a>            <span class="k">with</span> <span class="n">Config</span><span class="o">.</span><span class="n">print_polars_config</span><span class="p">:</span>
+</span><span id="__span-0-2511"><a id="__codelineno-0-2511" name="__codelineno-0-2511"></a>                <span class="n">constr_str</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
+</span><span id="__span-0-2512"><a id="__codelineno-0-2512" name="__codelineno-0-2512"></a>
+</span><span id="__span-0-2513"><a id="__codelineno-0-2513" name="__codelineno-0-2513"></a>    <span class="k">return</span> <span class="n">constr_str</span>
+</span></code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="pyoframe.Constraint.update" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">update</span><span class="p">(</span><span class="n">new_constraint</span><span class="p">:</span> <span class="n">Constraint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Updates the existing constraint(s) to match the constraint(s) in <code>new_constraint</code>.</p>
+<p><code>new_constraint</code> must have the same dimensions as the existing constraint. An equality constraint cannot be updated with an inequality constraint and vice versa.</p>
+<div class="admonition tip">
+<p class="admonition-title">Conflicting labels (dimensioned constraints only)</p>
+<p>An error will be raised if <code>new_constraint</code> tries to introduce labels that were not already present in the constraint.
+If the constraint has labels that are not present in <code>new_constraint</code>, those labels and their associated constraints will be left untouched.</p>
+</div>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>new_constraint</code>
+            </td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="&lt;code&gt;pyoframe._core.Constraint&lt;/code&gt;" href="#pyoframe.Constraint">Constraint</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A constraint with the same dimensions and sense as the existing constraint in the model.
+The coefficients of this constraint will replace the coefficients of the existing constraint.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <p>Dimensionless constraints can be updated with new coefficients:</p>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ub</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Y</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ub</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">maximize</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">Y</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Con</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">Y</span> <span class="o">&lt;=</span> <span class="mi">4</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">solution</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">solution</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="go">(4.0, 0.0)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Con</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">&lt;=</span> <span class="mi">6</span><span class="p">)</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">solution</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">Y</span><span class="o">.</span><span class="n">solution</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="go">(6.0, 10.0)</span>
+</span></code></pre></div>
+    <p>Dimensioned constraints can also be updated:</p>
+    <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">Variable</span><span class="p">({</span><span class="s2">"i"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]},</span> <span class="n">lb</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ub</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">maximize</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Con</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">X</span> <span class="o">&lt;=</span> <span class="mi">4</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">value</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="go">12.0</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">Con</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">objective</span><span class="o">.</span><span class="n">value</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="go">13.0</span>
+</span></code></pre></div>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>pyoframe/_core.py</code></summary>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2226">2226</a></span>
+<span class="normal"><a href="#__codelineno-0-2227">2227</a></span>
+<span class="normal"><a href="#__codelineno-0-2228">2228</a></span>
+<span class="normal"><a href="#__codelineno-0-2229">2229</a></span>
+<span class="normal"><a href="#__codelineno-0-2230">2230</a></span>
+<span class="normal"><a href="#__codelineno-0-2231">2231</a></span>
+<span class="normal"><a href="#__codelineno-0-2232">2232</a></span>
+<span class="normal"><a href="#__codelineno-0-2233">2233</a></span>
+<span class="normal"><a href="#__codelineno-0-2234">2234</a></span>
+<span class="normal"><a href="#__codelineno-0-2235">2235</a></span>
+<span class="normal"><a href="#__codelineno-0-2236">2236</a></span>
+<span class="normal"><a href="#__codelineno-0-2237">2237</a></span>
+<span class="normal"><a href="#__codelineno-0-2238">2238</a></span>
+<span class="normal"><a href="#__codelineno-0-2239">2239</a></span>
+<span class="normal"><a href="#__codelineno-0-2240">2240</a></span>
+<span class="normal"><a href="#__codelineno-0-2241">2241</a></span>
+<span class="normal"><a href="#__codelineno-0-2242">2242</a></span>
+<span class="normal"><a href="#__codelineno-0-2243">2243</a></span>
+<span class="normal"><a href="#__codelineno-0-2244">2244</a></span>
+<span class="normal"><a href="#__codelineno-0-2245">2245</a></span>
+<span class="normal"><a href="#__codelineno-0-2246">2246</a></span>
+<span class="normal"><a href="#__codelineno-0-2247">2247</a></span>
+<span class="normal"><a href="#__codelineno-0-2248">2248</a></span>
+<span class="normal"><a href="#__codelineno-0-2249">2249</a></span>
 <span class="normal"><a href="#__codelineno-0-2250">2250</a></span>
 <span class="normal"><a href="#__codelineno-0-2251">2251</a></span>
 <span class="normal"><a href="#__codelineno-0-2252">2252</a></span>
@@ -3407,100 +3733,221 @@ make them negative for maximization problems.</p>
 <span class="normal"><a href="#__codelineno-0-2339">2339</a></span>
 <span class="normal"><a href="#__codelineno-0-2340">2340</a></span>
 <span class="normal"><a href="#__codelineno-0-2341">2341</a></span>
-<span class="normal"><a href="#__codelineno-0-2342">2342</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2249"><a id="__codelineno-0-2249" name="__codelineno-0-2249"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_df</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-</span><span id="__span-0-2250"><a id="__codelineno-0-2250" name="__codelineno-0-2250"></a><span class="w">    </span><span class="sd">"""Converts the constraint to a human-readable string, or several arranged in a table.</span>
-</span><span id="__span-0-2251"><a id="__codelineno-0-2251" name="__codelineno-0-2251"></a>
-</span><span id="__span-0-2252"><a id="__codelineno-0-2252" name="__codelineno-0-2252"></a><span class="sd">    Long expressions are truncated according to [`Config.print_max_terms`][pyoframe._Config.print_max_terms] and [`Config.print_polars_config`][pyoframe._Config.print_polars_config].</span>
-</span><span id="__span-0-2253"><a id="__codelineno-0-2253" name="__codelineno-0-2253"></a>
-</span><span id="__span-0-2254"><a id="__codelineno-0-2254" name="__codelineno-0-2254"></a><span class="sd">    Parameters:</span>
-</span><span id="__span-0-2255"><a id="__codelineno-0-2255" name="__codelineno-0-2255"></a><span class="sd">        return_df:</span>
-</span><span id="__span-0-2256"><a id="__codelineno-0-2256" name="__codelineno-0-2256"></a><span class="sd">            If `True`, returns a DataFrame containing strings instead of the string representation of the DataFrame.</span>
-</span><span id="__span-0-2257"><a id="__codelineno-0-2257" name="__codelineno-0-2257"></a>
-</span><span id="__span-0-2258"><a id="__codelineno-0-2258" name="__codelineno-0-2258"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-2259"><a id="__codelineno-0-2259" name="__codelineno-0-2259"></a><span class="sd">        &gt;&gt;&gt; import polars as pl</span>
-</span><span id="__span-0-2260"><a id="__codelineno-0-2260" name="__codelineno-0-2260"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-2261"><a id="__codelineno-0-2261" name="__codelineno-0-2261"></a><span class="sd">        &gt;&gt;&gt; x = pf.Set(x=range(1000))</span>
-</span><span id="__span-0-2262"><a id="__codelineno-0-2262" name="__codelineno-0-2262"></a><span class="sd">        &gt;&gt;&gt; y = pf.Set(y=range(1000))</span>
-</span><span id="__span-0-2263"><a id="__codelineno-0-2263" name="__codelineno-0-2263"></a><span class="sd">        &gt;&gt;&gt; m.V = pf.Variable(x, y)</span>
-</span><span id="__span-0-2264"><a id="__codelineno-0-2264" name="__codelineno-0-2264"></a><span class="sd">        &gt;&gt;&gt; expr = 2 * m.V * m.V</span>
-</span><span id="__span-0-2265"><a id="__codelineno-0-2265" name="__codelineno-0-2265"></a><span class="sd">        &gt;&gt;&gt; print((expr &lt;= 3).to_str())</span>
-</span><span id="__span-0-2266"><a id="__codelineno-0-2266" name="__codelineno-0-2266"></a><span class="sd">        ┌────────┬────────┬────────────────────────────────┐</span>
-</span><span id="__span-0-2267"><a id="__codelineno-0-2267" name="__codelineno-0-2267"></a><span class="sd">        │ x      ┆ y      ┆ constraint                     │</span>
-</span><span id="__span-0-2268"><a id="__codelineno-0-2268" name="__codelineno-0-2268"></a><span class="sd">        │ (1000) ┆ (1000) ┆                                │</span>
-</span><span id="__span-0-2269"><a id="__codelineno-0-2269" name="__codelineno-0-2269"></a><span class="sd">        ╞════════╪════════╪════════════════════════════════╡</span>
-</span><span id="__span-0-2270"><a id="__codelineno-0-2270" name="__codelineno-0-2270"></a><span class="sd">        │ 0      ┆ 0      ┆ 2 V[0,0] * V[0,0] &lt;= 3         │</span>
-</span><span id="__span-0-2271"><a id="__codelineno-0-2271" name="__codelineno-0-2271"></a><span class="sd">        │ 0      ┆ 1      ┆ 2 V[0,1] * V[0,1] &lt;= 3         │</span>
-</span><span id="__span-0-2272"><a id="__codelineno-0-2272" name="__codelineno-0-2272"></a><span class="sd">        │ 0      ┆ 2      ┆ 2 V[0,2] * V[0,2] &lt;= 3         │</span>
-</span><span id="__span-0-2273"><a id="__codelineno-0-2273" name="__codelineno-0-2273"></a><span class="sd">        │ 0      ┆ 3      ┆ 2 V[0,3] * V[0,3] &lt;= 3         │</span>
-</span><span id="__span-0-2274"><a id="__codelineno-0-2274" name="__codelineno-0-2274"></a><span class="sd">        │ 0      ┆ 4      ┆ 2 V[0,4] * V[0,4] &lt;= 3         │</span>
-</span><span id="__span-0-2275"><a id="__codelineno-0-2275" name="__codelineno-0-2275"></a><span class="sd">        │ …      ┆ …      ┆ …                              │</span>
-</span><span id="__span-0-2276"><a id="__codelineno-0-2276" name="__codelineno-0-2276"></a><span class="sd">        │ 999    ┆ 995    ┆ 2 V[999,995] * V[999,995] &lt;= 3 │</span>
-</span><span id="__span-0-2277"><a id="__codelineno-0-2277" name="__codelineno-0-2277"></a><span class="sd">        │ 999    ┆ 996    ┆ 2 V[999,996] * V[999,996] &lt;= 3 │</span>
-</span><span id="__span-0-2278"><a id="__codelineno-0-2278" name="__codelineno-0-2278"></a><span class="sd">        │ 999    ┆ 997    ┆ 2 V[999,997] * V[999,997] &lt;= 3 │</span>
-</span><span id="__span-0-2279"><a id="__codelineno-0-2279" name="__codelineno-0-2279"></a><span class="sd">        │ 999    ┆ 998    ┆ 2 V[999,998] * V[999,998] &lt;= 3 │</span>
-</span><span id="__span-0-2280"><a id="__codelineno-0-2280" name="__codelineno-0-2280"></a><span class="sd">        │ 999    ┆ 999    ┆ 2 V[999,999] * V[999,999] &lt;= 3 │</span>
-</span><span id="__span-0-2281"><a id="__codelineno-0-2281" name="__codelineno-0-2281"></a><span class="sd">        └────────┴────────┴────────────────────────────────┘</span>
-</span><span id="__span-0-2282"><a id="__codelineno-0-2282" name="__codelineno-0-2282"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum("x")</span>
-</span><span id="__span-0-2283"><a id="__codelineno-0-2283" name="__codelineno-0-2283"></a><span class="sd">        &gt;&gt;&gt; print((expr &gt;= 3).to_str())</span>
-</span><span id="__span-0-2284"><a id="__codelineno-0-2284" name="__codelineno-0-2284"></a><span class="sd">        ┌────────┬─────────────────────────────────────────────────────────────────────────────────────────┐</span>
-</span><span id="__span-0-2285"><a id="__codelineno-0-2285" name="__codelineno-0-2285"></a><span class="sd">        │ y      ┆ constraint                                                                              │</span>
-</span><span id="__span-0-2286"><a id="__codelineno-0-2286" name="__codelineno-0-2286"></a><span class="sd">        │ (1000) ┆                                                                                         │</span>
-</span><span id="__span-0-2287"><a id="__codelineno-0-2287" name="__codelineno-0-2287"></a><span class="sd">        ╞════════╪═════════════════════════════════════════════════════════════════════════════════════════╡</span>
-</span><span id="__span-0-2288"><a id="__codelineno-0-2288" name="__codelineno-0-2288"></a><span class="sd">        │ 0      ┆ 2 V[0,0] * V[0,0] +2 V[1,0] * V[1,0] +2 V[2,0] * V[2,0] +2 V[3,0] * V[3,0] +2 V[4,0] *  │</span>
-</span><span id="__span-0-2289"><a id="__codelineno-0-2289" name="__codelineno-0-2289"></a><span class="sd">        │        ┆ V[4,0] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2290"><a id="__codelineno-0-2290" name="__codelineno-0-2290"></a><span class="sd">        │ 1      ┆ 2 V[0,1] * V[0,1] +2 V[1,1] * V[1,1] +2 V[2,1] * V[2,1] +2 V[3,1] * V[3,1] +2 V[4,1] *  │</span>
-</span><span id="__span-0-2291"><a id="__codelineno-0-2291" name="__codelineno-0-2291"></a><span class="sd">        │        ┆ V[4,1] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2292"><a id="__codelineno-0-2292" name="__codelineno-0-2292"></a><span class="sd">        │ 2      ┆ 2 V[0,2] * V[0,2] +2 V[1,2] * V[1,2] +2 V[2,2] * V[2,2] +2 V[3,2] * V[3,2] +2 V[4,2] *  │</span>
-</span><span id="__span-0-2293"><a id="__codelineno-0-2293" name="__codelineno-0-2293"></a><span class="sd">        │        ┆ V[4,2] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2294"><a id="__codelineno-0-2294" name="__codelineno-0-2294"></a><span class="sd">        │ 3      ┆ 2 V[0,3] * V[0,3] +2 V[1,3] * V[1,3] +2 V[2,3] * V[2,3] +2 V[3,3] * V[3,3] +2 V[4,3] *  │</span>
-</span><span id="__span-0-2295"><a id="__codelineno-0-2295" name="__codelineno-0-2295"></a><span class="sd">        │        ┆ V[4,3] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2296"><a id="__codelineno-0-2296" name="__codelineno-0-2296"></a><span class="sd">        │ 4      ┆ 2 V[0,4] * V[0,4] +2 V[1,4] * V[1,4] +2 V[2,4] * V[2,4] +2 V[3,4] * V[3,4] +2 V[4,4] *  │</span>
-</span><span id="__span-0-2297"><a id="__codelineno-0-2297" name="__codelineno-0-2297"></a><span class="sd">        │        ┆ V[4,4] … &gt;= 3                                                                           │</span>
-</span><span id="__span-0-2298"><a id="__codelineno-0-2298" name="__codelineno-0-2298"></a><span class="sd">        │ …      ┆ …                                                                                       │</span>
-</span><span id="__span-0-2299"><a id="__codelineno-0-2299" name="__codelineno-0-2299"></a><span class="sd">        │ 995    ┆ 2 V[0,995] * V[0,995] +2 V[1,995] * V[1,995] +2 V[2,995] * V[2,995] +2 V[3,995] *       │</span>
-</span><span id="__span-0-2300"><a id="__codelineno-0-2300" name="__codelineno-0-2300"></a><span class="sd">        │        ┆ V[3,995] +2 V[4,995] * V[4,995] … &gt;= 3                                                  │</span>
-</span><span id="__span-0-2301"><a id="__codelineno-0-2301" name="__codelineno-0-2301"></a><span class="sd">        │ 996    ┆ 2 V[0,996] * V[0,996] +2 V[1,996] * V[1,996] +2 V[2,996] * V[2,996] +2 V[3,996] *       │</span>
-</span><span id="__span-0-2302"><a id="__codelineno-0-2302" name="__codelineno-0-2302"></a><span class="sd">        │        ┆ V[3,996] +2 V[4,996] * V[4,996] … &gt;= 3                                                  │</span>
-</span><span id="__span-0-2303"><a id="__codelineno-0-2303" name="__codelineno-0-2303"></a><span class="sd">        │ 997    ┆ 2 V[0,997] * V[0,997] +2 V[1,997] * V[1,997] +2 V[2,997] * V[2,997] +2 V[3,997] *       │</span>
-</span><span id="__span-0-2304"><a id="__codelineno-0-2304" name="__codelineno-0-2304"></a><span class="sd">        │        ┆ V[3,997] +2 V[4,997] * V[4,997] … &gt;= 3                                                  │</span>
-</span><span id="__span-0-2305"><a id="__codelineno-0-2305" name="__codelineno-0-2305"></a><span class="sd">        │ 998    ┆ 2 V[0,998] * V[0,998] +2 V[1,998] * V[1,998] +2 V[2,998] * V[2,998] +2 V[3,998] *       │</span>
-</span><span id="__span-0-2306"><a id="__codelineno-0-2306" name="__codelineno-0-2306"></a><span class="sd">        │        ┆ V[3,998] +2 V[4,998] * V[4,998] … &gt;= 3                                                  │</span>
-</span><span id="__span-0-2307"><a id="__codelineno-0-2307" name="__codelineno-0-2307"></a><span class="sd">        │ 999    ┆ 2 V[0,999] * V[0,999] +2 V[1,999] * V[1,999] +2 V[2,999] * V[2,999] +2 V[3,999] *       │</span>
-</span><span id="__span-0-2308"><a id="__codelineno-0-2308" name="__codelineno-0-2308"></a><span class="sd">        │        ┆ V[3,999] +2 V[4,999] * V[4,999] … &gt;= 3                                                  │</span>
-</span><span id="__span-0-2309"><a id="__codelineno-0-2309" name="__codelineno-0-2309"></a><span class="sd">        └────────┴─────────────────────────────────────────────────────────────────────────────────────────┘</span>
-</span><span id="__span-0-2310"><a id="__codelineno-0-2310" name="__codelineno-0-2310"></a><span class="sd">        &gt;&gt;&gt; expr = expr.sum("y")</span>
-</span><span id="__span-0-2311"><a id="__codelineno-0-2311" name="__codelineno-0-2311"></a><span class="sd">        &gt;&gt;&gt; print((expr == 3).to_str())</span>
-</span><span id="__span-0-2312"><a id="__codelineno-0-2312" name="__codelineno-0-2312"></a><span class="sd">        2 V[0,0] * V[0,0] +2 V[0,1] * V[0,1] +2 V[0,2] * V[0,2] +2 V[0,3] * V[0,3] +2 V[0,4] * V[0,4] … = 3</span>
-</span><span id="__span-0-2313"><a id="__codelineno-0-2313" name="__codelineno-0-2313"></a><span class="sd">    """</span>
-</span><span id="__span-0-2314"><a id="__codelineno-0-2314" name="__codelineno-0-2314"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span>
-</span><span id="__span-0-2315"><a id="__codelineno-0-2315" name="__codelineno-0-2315"></a>    <span class="n">str_table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">to_str</span><span class="p">(</span>
-</span><span id="__span-0-2316"><a id="__codelineno-0-2316" name="__codelineno-0-2316"></a>        <span class="n">include_const_term</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="__span-0-2317"><a id="__codelineno-0-2317" name="__codelineno-0-2317"></a>        <span class="n">return_df</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="__span-0-2318"><a id="__codelineno-0-2318" name="__codelineno-0-2318"></a>        <span class="n">str_col_name</span><span class="o">=</span><span class="s2">"constraint"</span><span class="p">,</span>
-</span><span id="__span-0-2319"><a id="__codelineno-0-2319" name="__codelineno-0-2319"></a>        <span class="n">_compute_all_rows</span><span class="o">=</span><span class="n">return_df</span><span class="p">,</span>
-</span><span id="__span-0-2320"><a id="__codelineno-0-2320" name="__codelineno-0-2320"></a>    <span class="p">)</span>
-</span><span id="__span-0-2321"><a id="__codelineno-0-2321" name="__codelineno-0-2321"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">constant_terms</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-0-2322"><a id="__codelineno-0-2322" name="__codelineno-0-2322"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">cast_coef_to_string</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">drop_ones</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">always_show_sign</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="__span-0-2323"><a id="__codelineno-0-2323" name="__codelineno-0-2323"></a>    <span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="s2">"rhs"</span><span class="p">})</span>
-</span><span id="__span-0-2324"><a id="__codelineno-0-2324" name="__codelineno-0-2324"></a>    <span class="k">if</span> <span class="n">dims</span><span class="p">:</span>
-</span><span id="__span-0-2325"><a id="__codelineno-0-2325" name="__codelineno-0-2325"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">str_table</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span id="__span-0-2326"><a id="__codelineno-0-2326" name="__codelineno-0-2326"></a>            <span class="n">rhs</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span> <span class="n">coalesce</span><span class="o">=</span><span class="kc">True</span>
-</span><span id="__span-0-2327"><a id="__codelineno-0-2327" name="__codelineno-0-2327"></a>        <span class="p">)</span>
-</span><span id="__span-0-2328"><a id="__codelineno-0-2328" name="__codelineno-0-2328"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2329"><a id="__codelineno-0-2329" name="__codelineno-0-2329"></a>        <span class="n">constr_str</span> <span class="o">=</span> <span class="n">str_table</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">rhs</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
-</span><span id="__span-0-2330"><a id="__codelineno-0-2330" name="__codelineno-0-2330"></a>    <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
-</span><span id="__span-0-2331"><a id="__codelineno-0-2331" name="__codelineno-0-2331"></a>        <span class="n">pl</span><span class="o">.</span><span class="n">concat_str</span><span class="p">(</span><span class="s2">"constraint"</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="sa">f</span><span class="s2">" </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sense</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> "</span><span class="p">),</span> <span class="s2">"rhs"</span><span class="p">)</span>
-</span><span id="__span-0-2332"><a id="__codelineno-0-2332" name="__codelineno-0-2332"></a>    <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">"rhs"</span><span class="p">)</span>
-</span><span id="__span-0-2333"><a id="__codelineno-0-2333" name="__codelineno-0-2333"></a>
-</span><span id="__span-0-2334"><a id="__codelineno-0-2334" name="__codelineno-0-2334"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_df</span><span class="p">:</span>
-</span><span id="__span-0-2335"><a id="__codelineno-0-2335" name="__codelineno-0-2335"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-2336"><a id="__codelineno-0-2336" name="__codelineno-0-2336"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="n">constr_str</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-</span><span id="__span-0-2337"><a id="__codelineno-0-2337" name="__codelineno-0-2337"></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2338"><a id="__codelineno-0-2338" name="__codelineno-0-2338"></a>            <span class="n">constr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_shape_to_columns</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
-</span><span id="__span-0-2339"><a id="__codelineno-0-2339" name="__codelineno-0-2339"></a>            <span class="k">with</span> <span class="n">Config</span><span class="o">.</span><span class="n">print_polars_config</span><span class="p">:</span>
-</span><span id="__span-0-2340"><a id="__codelineno-0-2340" name="__codelineno-0-2340"></a>                <span class="n">constr_str</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">constr_str</span><span class="p">)</span>
-</span><span id="__span-0-2341"><a id="__codelineno-0-2341" name="__codelineno-0-2341"></a>
-</span><span id="__span-0-2342"><a id="__codelineno-0-2342" name="__codelineno-0-2342"></a>    <span class="k">return</span> <span class="n">constr_str</span>
+<span class="normal"><a href="#__codelineno-0-2342">2342</a></span>
+<span class="normal"><a href="#__codelineno-0-2343">2343</a></span>
+<span class="normal"><a href="#__codelineno-0-2344">2344</a></span>
+<span class="normal"><a href="#__codelineno-0-2345">2345</a></span>
+<span class="normal"><a href="#__codelineno-0-2346">2346</a></span>
+<span class="normal"><a href="#__codelineno-0-2347">2347</a></span>
+<span class="normal"><a href="#__codelineno-0-2348">2348</a></span>
+<span class="normal"><a href="#__codelineno-0-2349">2349</a></span>
+<span class="normal"><a href="#__codelineno-0-2350">2350</a></span>
+<span class="normal"><a href="#__codelineno-0-2351">2351</a></span>
+<span class="normal"><a href="#__codelineno-0-2352">2352</a></span>
+<span class="normal"><a href="#__codelineno-0-2353">2353</a></span>
+<span class="normal"><a href="#__codelineno-0-2354">2354</a></span>
+<span class="normal"><a href="#__codelineno-0-2355">2355</a></span>
+<span class="normal"><a href="#__codelineno-0-2356">2356</a></span>
+<span class="normal"><a href="#__codelineno-0-2357">2357</a></span>
+<span class="normal"><a href="#__codelineno-0-2358">2358</a></span>
+<span class="normal"><a href="#__codelineno-0-2359">2359</a></span>
+<span class="normal"><a href="#__codelineno-0-2360">2360</a></span>
+<span class="normal"><a href="#__codelineno-0-2361">2361</a></span>
+<span class="normal"><a href="#__codelineno-0-2362">2362</a></span>
+<span class="normal"><a href="#__codelineno-0-2363">2363</a></span>
+<span class="normal"><a href="#__codelineno-0-2364">2364</a></span>
+<span class="normal"><a href="#__codelineno-0-2365">2365</a></span>
+<span class="normal"><a href="#__codelineno-0-2366">2366</a></span>
+<span class="normal"><a href="#__codelineno-0-2367">2367</a></span>
+<span class="normal"><a href="#__codelineno-0-2368">2368</a></span>
+<span class="normal"><a href="#__codelineno-0-2369">2369</a></span>
+<span class="normal"><a href="#__codelineno-0-2370">2370</a></span>
+<span class="normal"><a href="#__codelineno-0-2371">2371</a></span>
+<span class="normal"><a href="#__codelineno-0-2372">2372</a></span>
+<span class="normal"><a href="#__codelineno-0-2373">2373</a></span>
+<span class="normal"><a href="#__codelineno-0-2374">2374</a></span>
+<span class="normal"><a href="#__codelineno-0-2375">2375</a></span>
+<span class="normal"><a href="#__codelineno-0-2376">2376</a></span>
+<span class="normal"><a href="#__codelineno-0-2377">2377</a></span>
+<span class="normal"><a href="#__codelineno-0-2378">2378</a></span>
+<span class="normal"><a href="#__codelineno-0-2379">2379</a></span>
+<span class="normal"><a href="#__codelineno-0-2380">2380</a></span>
+<span class="normal"><a href="#__codelineno-0-2381">2381</a></span>
+<span class="normal"><a href="#__codelineno-0-2382">2382</a></span>
+<span class="normal"><a href="#__codelineno-0-2383">2383</a></span>
+<span class="normal"><a href="#__codelineno-0-2384">2384</a></span>
+<span class="normal"><a href="#__codelineno-0-2385">2385</a></span>
+<span class="normal"><a href="#__codelineno-0-2386">2386</a></span>
+<span class="normal"><a href="#__codelineno-0-2387">2387</a></span>
+<span class="normal"><a href="#__codelineno-0-2388">2388</a></span>
+<span class="normal"><a href="#__codelineno-0-2389">2389</a></span>
+<span class="normal"><a href="#__codelineno-0-2390">2390</a></span>
+<span class="normal"><a href="#__codelineno-0-2391">2391</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2226"><a id="__codelineno-0-2226" name="__codelineno-0-2226"></a><span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_constraint</span><span class="p">:</span> <span class="n">Constraint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2227"><a id="__codelineno-0-2227" name="__codelineno-0-2227"></a><span class="w">    </span><span class="sd">"""Updates the existing constraint(s) to match the constraint(s) in `new_constraint`.</span>
+</span><span id="__span-0-2228"><a id="__codelineno-0-2228" name="__codelineno-0-2228"></a>
+</span><span id="__span-0-2229"><a id="__codelineno-0-2229" name="__codelineno-0-2229"></a><span class="sd">    `new_constraint` must have the same dimensions as the existing constraint. An equality constraint cannot be updated with an inequality constraint and vice versa.</span>
+</span><span id="__span-0-2230"><a id="__codelineno-0-2230" name="__codelineno-0-2230"></a>
+</span><span id="__span-0-2231"><a id="__codelineno-0-2231" name="__codelineno-0-2231"></a><span class="sd">    !!! tip "Conflicting labels (dimensioned constraints only)"</span>
+</span><span id="__span-0-2232"><a id="__codelineno-0-2232" name="__codelineno-0-2232"></a><span class="sd">        An error will be raised if `new_constraint` tries to introduce labels that were not already present in the constraint.</span>
+</span><span id="__span-0-2233"><a id="__codelineno-0-2233" name="__codelineno-0-2233"></a><span class="sd">        If the constraint has labels that are not present in `new_constraint`, those labels and their associated constraints will be left untouched.</span>
+</span><span id="__span-0-2234"><a id="__codelineno-0-2234" name="__codelineno-0-2234"></a>
+</span><span id="__span-0-2235"><a id="__codelineno-0-2235" name="__codelineno-0-2235"></a><span class="sd">    Parameters:</span>
+</span><span id="__span-0-2236"><a id="__codelineno-0-2236" name="__codelineno-0-2236"></a><span class="sd">        new_constraint:</span>
+</span><span id="__span-0-2237"><a id="__codelineno-0-2237" name="__codelineno-0-2237"></a><span class="sd">            A constraint with the same dimensions and sense as the existing constraint in the model.</span>
+</span><span id="__span-0-2238"><a id="__codelineno-0-2238" name="__codelineno-0-2238"></a><span class="sd">            The coefficients of this constraint will replace the coefficients of the existing constraint.</span>
+</span><span id="__span-0-2239"><a id="__codelineno-0-2239" name="__codelineno-0-2239"></a>
+</span><span id="__span-0-2240"><a id="__codelineno-0-2240" name="__codelineno-0-2240"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2241"><a id="__codelineno-0-2241" name="__codelineno-0-2241"></a><span class="sd">        Dimensionless constraints can be updated with new coefficients:</span>
+</span><span id="__span-0-2242"><a id="__codelineno-0-2242" name="__codelineno-0-2242"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2243"><a id="__codelineno-0-2243" name="__codelineno-0-2243"></a><span class="sd">        &gt;&gt;&gt; m.X = pf.Variable(lb=0, ub=10)</span>
+</span><span id="__span-0-2244"><a id="__codelineno-0-2244" name="__codelineno-0-2244"></a><span class="sd">        &gt;&gt;&gt; m.Y = pf.Variable(lb=0, ub=10)</span>
+</span><span id="__span-0-2245"><a id="__codelineno-0-2245" name="__codelineno-0-2245"></a><span class="sd">        &gt;&gt;&gt; m.maximize = m.X + m.Y</span>
+</span><span id="__span-0-2246"><a id="__codelineno-0-2246" name="__codelineno-0-2246"></a><span class="sd">        &gt;&gt;&gt; m.Con = m.X + 2 * m.Y &lt;= 4</span>
+</span><span id="__span-0-2247"><a id="__codelineno-0-2247" name="__codelineno-0-2247"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-2248"><a id="__codelineno-0-2248" name="__codelineno-0-2248"></a><span class="sd">        &gt;&gt;&gt; m.X.solution, m.Y.solution</span>
+</span><span id="__span-0-2249"><a id="__codelineno-0-2249" name="__codelineno-0-2249"></a><span class="sd">        (4.0, 0.0)</span>
+</span><span id="__span-0-2250"><a id="__codelineno-0-2250" name="__codelineno-0-2250"></a><span class="sd">        &gt;&gt;&gt; m.Con.update(m.X &lt;= 6)</span>
+</span><span id="__span-0-2251"><a id="__codelineno-0-2251" name="__codelineno-0-2251"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-2252"><a id="__codelineno-0-2252" name="__codelineno-0-2252"></a><span class="sd">        &gt;&gt;&gt; m.X.solution, m.Y.solution</span>
+</span><span id="__span-0-2253"><a id="__codelineno-0-2253" name="__codelineno-0-2253"></a><span class="sd">        (6.0, 10.0)</span>
+</span><span id="__span-0-2254"><a id="__codelineno-0-2254" name="__codelineno-0-2254"></a>
+</span><span id="__span-0-2255"><a id="__codelineno-0-2255" name="__codelineno-0-2255"></a><span class="sd">        Dimensioned constraints can also be updated:</span>
+</span><span id="__span-0-2256"><a id="__codelineno-0-2256" name="__codelineno-0-2256"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2257"><a id="__codelineno-0-2257" name="__codelineno-0-2257"></a><span class="sd">        &gt;&gt;&gt; m.X = pf.Variable({"i": [1, 2, 3]}, lb=0, ub=10)</span>
+</span><span id="__span-0-2258"><a id="__codelineno-0-2258" name="__codelineno-0-2258"></a><span class="sd">        &gt;&gt;&gt; m.maximize = m.X.sum()</span>
+</span><span id="__span-0-2259"><a id="__codelineno-0-2259" name="__codelineno-0-2259"></a><span class="sd">        &gt;&gt;&gt; m.Con = m.X &lt;= 4</span>
+</span><span id="__span-0-2260"><a id="__codelineno-0-2260" name="__codelineno-0-2260"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-2261"><a id="__codelineno-0-2261" name="__codelineno-0-2261"></a><span class="sd">        &gt;&gt;&gt; m.objective.value</span>
+</span><span id="__span-0-2262"><a id="__codelineno-0-2262" name="__codelineno-0-2262"></a><span class="sd">        12.0</span>
+</span><span id="__span-0-2263"><a id="__codelineno-0-2263" name="__codelineno-0-2263"></a><span class="sd">        &gt;&gt;&gt; m.Con.update(m.X.filter(i=1) &lt;= 5)</span>
+</span><span id="__span-0-2264"><a id="__codelineno-0-2264" name="__codelineno-0-2264"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-2265"><a id="__codelineno-0-2265" name="__codelineno-0-2265"></a><span class="sd">        &gt;&gt;&gt; m.objective.value</span>
+</span><span id="__span-0-2266"><a id="__codelineno-0-2266" name="__codelineno-0-2266"></a><span class="sd">        13.0</span>
+</span><span id="__span-0-2267"><a id="__codelineno-0-2267" name="__codelineno-0-2267"></a><span class="sd">    """</span>
+</span><span id="__span-0-2268"><a id="__codelineno-0-2268" name="__codelineno-0-2268"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+</span><span id="__span-0-2269"><a id="__codelineno-0-2269" name="__codelineno-0-2269"></a>        <span class="s2">"Constraint must be added to a model before it can be updated."</span>
+</span><span id="__span-0-2270"><a id="__codelineno-0-2270" name="__codelineno-0-2270"></a>    <span class="p">)</span>
+</span><span id="__span-0-2271"><a id="__codelineno-0-2271" name="__codelineno-0-2271"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">supports_updating_coefficients</span><span class="p">:</span>
+</span><span id="__span-0-2272"><a id="__codelineno-0-2272" name="__codelineno-0-2272"></a>        <span class="k">raise</span> <span class="n">PyoframeError</span><span class="p">(</span>
+</span><span id="__span-0-2273"><a id="__codelineno-0-2273" name="__codelineno-0-2273"></a>            <span class="sa">f</span><span class="s2">"Solver '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">solver_name</span><span class="si">}</span><span class="s2">' does not support updating constraint."</span>
+</span><span id="__span-0-2274"><a id="__codelineno-0-2274" name="__codelineno-0-2274"></a>        <span class="p">)</span>
+</span><span id="__span-0-2275"><a id="__codelineno-0-2275" name="__codelineno-0-2275"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_quadratic</span> <span class="ow">or</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">is_quadratic</span><span class="p">:</span>
+</span><span id="__span-0-2276"><a id="__codelineno-0-2276" name="__codelineno-0-2276"></a>        <span class="c1"># Note to self: we probably shouldn't support changing the type during an update even if we do support quadratics</span>
+</span><span id="__span-0-2277"><a id="__codelineno-0-2277" name="__codelineno-0-2277"></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+</span><span id="__span-0-2278"><a id="__codelineno-0-2278" name="__codelineno-0-2278"></a>            <span class="sa">f</span><span class="s2">"Cannot update constraint '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' because updating with quadratic constraints is not yet supported."</span>
+</span><span id="__span-0-2279"><a id="__codelineno-0-2279" name="__codelineno-0-2279"></a>        <span class="p">)</span>
+</span><span id="__span-0-2280"><a id="__codelineno-0-2280" name="__codelineno-0-2280"></a>    <span class="k">if</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">_has_ids</span><span class="p">:</span>
+</span><span id="__span-0-2281"><a id="__codelineno-0-2281" name="__codelineno-0-2281"></a>        <span class="k">raise</span> <span class="n">PyoframeError</span><span class="p">(</span>
+</span><span id="__span-0-2282"><a id="__codelineno-0-2282" name="__codelineno-0-2282"></a>            <span class="sa">f</span><span class="s2">"Cannot update constraint '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' because the new constraint was already added to the model."</span>
+</span><span id="__span-0-2283"><a id="__codelineno-0-2283" name="__codelineno-0-2283"></a>        <span class="p">)</span>
+</span><span id="__span-0-2284"><a id="__codelineno-0-2284" name="__codelineno-0-2284"></a>
+</span><span id="__span-0-2285"><a id="__codelineno-0-2285" name="__codelineno-0-2285"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">!=</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">sense</span><span class="p">:</span>
+</span><span id="__span-0-2286"><a id="__codelineno-0-2286" name="__codelineno-0-2286"></a>        <span class="k">if</span> <span class="p">(</span>
+</span><span id="__span-0-2287"><a id="__codelineno-0-2287" name="__codelineno-0-2287"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">EQ</span>
+</span><span id="__span-0-2288"><a id="__codelineno-0-2288" name="__codelineno-0-2288"></a>            <span class="ow">or</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">EQ</span>
+</span><span id="__span-0-2289"><a id="__codelineno-0-2289" name="__codelineno-0-2289"></a>        <span class="p">):</span>
+</span><span id="__span-0-2290"><a id="__codelineno-0-2290" name="__codelineno-0-2290"></a>            <span class="n">self_type</span><span class="p">,</span> <span class="n">other_type</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-2291"><a id="__codelineno-0-2291" name="__codelineno-0-2291"></a>                <span class="p">(</span><span class="s2">"equality"</span><span class="p">,</span> <span class="s2">"inequality"</span><span class="p">)</span>
+</span><span id="__span-0-2292"><a id="__codelineno-0-2292" name="__codelineno-0-2292"></a>                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">ConstraintSense</span><span class="o">.</span><span class="n">EQ</span>
+</span><span id="__span-0-2293"><a id="__codelineno-0-2293" name="__codelineno-0-2293"></a>                <span class="k">else</span> <span class="p">(</span><span class="s2">"inequality"</span><span class="p">,</span> <span class="s2">"equality"</span><span class="p">)</span>
+</span><span id="__span-0-2294"><a id="__codelineno-0-2294" name="__codelineno-0-2294"></a>            <span class="p">)</span>
+</span><span id="__span-0-2295"><a id="__codelineno-0-2295" name="__codelineno-0-2295"></a>            <span class="k">raise</span> <span class="n">PyoframeError</span><span class="p">(</span>
+</span><span id="__span-0-2296"><a id="__codelineno-0-2296" name="__codelineno-0-2296"></a>                <span class="sa">f</span><span class="s2">"Cannot update </span><span class="si">{</span><span class="n">self_type</span><span class="si">}</span><span class="s2"> constraint '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' with </span><span class="si">{</span><span class="n">other_type</span><span class="si">}</span><span class="s2"> constraint (</span><span class="si">{</span><span class="n">new_constraint</span><span class="o">.</span><span class="n">sense</span><span class="si">}</span><span class="s2">)."</span>
+</span><span id="__span-0-2297"><a id="__codelineno-0-2297" name="__codelineno-0-2297"></a>            <span class="p">)</span>
+</span><span id="__span-0-2298"><a id="__codelineno-0-2298" name="__codelineno-0-2298"></a>        <span class="n">new_constraint</span> <span class="o">=</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">_flip</span><span class="p">()</span>
+</span><span id="__span-0-2299"><a id="__codelineno-0-2299" name="__codelineno-0-2299"></a>        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">sense</span> <span class="o">==</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">sense</span><span class="p">,</span> <span class="p">(</span>
+</span><span id="__span-0-2300"><a id="__codelineno-0-2300" name="__codelineno-0-2300"></a>            <span class="s2">"Unexpected: Constraint senses don't match (</span><span class="si">{self.sense}</span><span class="s2">!=</span><span class="si">{new_constraint.sense}</span><span class="s2">)."</span>
+</span><span id="__span-0-2301"><a id="__codelineno-0-2301" name="__codelineno-0-2301"></a>        <span class="p">)</span>
+</span><span id="__span-0-2302"><a id="__codelineno-0-2302" name="__codelineno-0-2302"></a>
+</span><span id="__span-0-2303"><a id="__codelineno-0-2303" name="__codelineno-0-2303"></a>    <span class="n">dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dimensions_unsafe</span>
+</span><span id="__span-0-2304"><a id="__codelineno-0-2304" name="__codelineno-0-2304"></a>
+</span><span id="__span-0-2305"><a id="__codelineno-0-2305" name="__codelineno-0-2305"></a>    <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">new_constraint</span><span class="o">.</span><span class="n">_dimensions_unsafe</span><span class="p">):</span>
+</span><span id="__span-0-2306"><a id="__codelineno-0-2306" name="__codelineno-0-2306"></a>        <span class="k">raise</span> <span class="n">PyoframeError</span><span class="p">(</span>
+</span><span id="__span-0-2307"><a id="__codelineno-0-2307" name="__codelineno-0-2307"></a>            <span class="sa">f</span><span class="s2">"Cannot update constraint '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (dimensions: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="si">}</span><span class="s2">) because new_constraint has different dimensions (</span><span class="si">{</span><span class="n">new_constraint</span><span class="o">.</span><span class="n">dimensions</span><span class="si">}</span><span class="s2">)."</span>
+</span><span id="__span-0-2308"><a id="__codelineno-0-2308" name="__codelineno-0-2308"></a>        <span class="p">)</span>
+</span><span id="__span-0-2309"><a id="__codelineno-0-2309" name="__codelineno-0-2309"></a>
+</span><span id="__span-0-2310"><a id="__codelineno-0-2310" name="__codelineno-0-2310"></a>    <span class="n">new_data</span> <span class="o">=</span> <span class="n">new_constraint</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span>
+</span><span id="__span-0-2311"><a id="__codelineno-0-2311" name="__codelineno-0-2311"></a>
+</span><span id="__span-0-2312"><a id="__codelineno-0-2312" name="__codelineno-0-2312"></a>    <span class="n">COEF_KEY_OLD</span> <span class="o">=</span> <span class="n">COEF_KEY</span> <span class="o">+</span> <span class="s2">"_old"</span>
+</span><span id="__span-0-2313"><a id="__codelineno-0-2313" name="__codelineno-0-2313"></a>    <span class="n">old_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="n">COEF_KEY_OLD</span><span class="p">})</span>
+</span><span id="__span-0-2314"><a id="__codelineno-0-2314" name="__codelineno-0-2314"></a>
+</span><span id="__span-0-2315"><a id="__codelineno-0-2315" name="__codelineno-0-2315"></a>    <span class="k">if</span> <span class="n">dims</span><span class="p">:</span>
+</span><span id="__span-0-2316"><a id="__codelineno-0-2316" name="__codelineno-0-2316"></a>        <span class="c1"># only update constraints with the same labels</span>
+</span><span id="__span-0-2317"><a id="__codelineno-0-2317" name="__codelineno-0-2317"></a>        <span class="n">old_data</span> <span class="o">=</span> <span class="n">old_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-2318"><a id="__codelineno-0-2318" name="__codelineno-0-2318"></a>            <span class="n">new_data</span><span class="p">,</span>
+</span><span id="__span-0-2319"><a id="__codelineno-0-2319" name="__codelineno-0-2319"></a>            <span class="n">on</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span>
+</span><span id="__span-0-2320"><a id="__codelineno-0-2320" name="__codelineno-0-2320"></a>            <span class="n">how</span><span class="o">=</span><span class="s2">"semi"</span><span class="p">,</span>
+</span><span id="__span-0-2321"><a id="__codelineno-0-2321" name="__codelineno-0-2321"></a>            <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"left_right"</span> <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2322"><a id="__codelineno-0-2322" name="__codelineno-0-2322"></a>        <span class="p">)</span>
+</span><span id="__span-0-2323"><a id="__codelineno-0-2323" name="__codelineno-0-2323"></a>
+</span><span id="__span-0-2324"><a id="__codelineno-0-2324" name="__codelineno-0-2324"></a>    <span class="c1"># identify which coefficients need to be updated</span>
+</span><span id="__span-0-2325"><a id="__codelineno-0-2325" name="__codelineno-0-2325"></a>    <span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-2326"><a id="__codelineno-0-2326" name="__codelineno-0-2326"></a>        <span class="n">old_data</span><span class="p">,</span>
+</span><span id="__span-0-2327"><a id="__codelineno-0-2327" name="__codelineno-0-2327"></a>        <span class="n">on</span><span class="o">=</span><span class="n">dims</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">_variable_columns</span><span class="p">,</span>
+</span><span id="__span-0-2328"><a id="__codelineno-0-2328" name="__codelineno-0-2328"></a>        <span class="n">how</span><span class="o">=</span><span class="s2">"full"</span><span class="p">,</span>
+</span><span id="__span-0-2329"><a id="__codelineno-0-2329" name="__codelineno-0-2329"></a>        <span class="n">coalesce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-2330"><a id="__codelineno-0-2330" name="__codelineno-0-2330"></a>        <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"left_right"</span> <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2331"><a id="__codelineno-0-2331" name="__codelineno-0-2331"></a>    <span class="p">)</span>
+</span><span id="__span-0-2332"><a id="__codelineno-0-2332" name="__codelineno-0-2332"></a>    <span class="c1"># missing entries could just mean the coefficient was zero</span>
+</span><span id="__span-0-2333"><a id="__codelineno-0-2333" name="__codelineno-0-2333"></a>    <span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">,</span> <span class="n">COEF_KEY_OLD</span><span class="p">)</span><span class="o">.</span><span class="n">fill_null</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</span><span id="__span-0-2334"><a id="__codelineno-0-2334" name="__codelineno-0-2334"></a>    <span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span> <span class="o">!=</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY_OLD</span><span class="p">))</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span>
+</span><span id="__span-0-2335"><a id="__codelineno-0-2335" name="__codelineno-0-2335"></a>        <span class="n">COEF_KEY_OLD</span>
+</span><span id="__span-0-2336"><a id="__codelineno-0-2336" name="__codelineno-0-2336"></a>    <span class="p">)</span>
+</span><span id="__span-0-2337"><a id="__codelineno-0-2337" name="__codelineno-0-2337"></a>
+</span><span id="__span-0-2338"><a id="__codelineno-0-2338" name="__codelineno-0-2338"></a>    <span class="c1"># Get the constraint IDs</span>
+</span><span id="__span-0-2339"><a id="__codelineno-0-2339" name="__codelineno-0-2339"></a>    <span class="n">id_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+</span><span id="__span-0-2340"><a id="__codelineno-0-2340" name="__codelineno-0-2340"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
+</span><span id="__span-0-2341"><a id="__codelineno-0-2341" name="__codelineno-0-2341"></a>        <span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
+</span><span id="__span-0-2342"><a id="__codelineno-0-2342" name="__codelineno-0-2342"></a>            <span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">id_data</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">CONSTRAINT_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">())</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="n">CONSTRAINT_KEY</span><span class="p">)</span>
+</span><span id="__span-0-2343"><a id="__codelineno-0-2343" name="__codelineno-0-2343"></a>        <span class="p">)</span>
+</span><span id="__span-0-2344"><a id="__codelineno-0-2344" name="__codelineno-0-2344"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2345"><a id="__codelineno-0-2345" name="__codelineno-0-2345"></a>        <span class="n">new_data</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-2346"><a id="__codelineno-0-2346" name="__codelineno-0-2346"></a>            <span class="n">id_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span> <span class="o">+</span> <span class="p">[</span><span class="n">CONSTRAINT_KEY</span><span class="p">]),</span>
+</span><span id="__span-0-2347"><a id="__codelineno-0-2347" name="__codelineno-0-2347"></a>            <span class="n">on</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span>
+</span><span id="__span-0-2348"><a id="__codelineno-0-2348" name="__codelineno-0-2348"></a>            <span class="n">how</span><span class="o">=</span><span class="s2">"left"</span><span class="p">,</span>
+</span><span id="__span-0-2349"><a id="__codelineno-0-2349" name="__codelineno-0-2349"></a>            <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"left_right"</span> <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2350"><a id="__codelineno-0-2350" name="__codelineno-0-2350"></a>        <span class="p">)</span>
+</span><span id="__span-0-2351"><a id="__codelineno-0-2351" name="__codelineno-0-2351"></a>        <span class="k">if</span> <span class="n">new_data</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">CONSTRAINT_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">null_count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-0-2352"><a id="__codelineno-0-2352" name="__codelineno-0-2352"></a>            <span class="n">extra_labels</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-2353"><a id="__codelineno-0-2353" name="__codelineno-0-2353"></a>                <span class="n">new_data</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">CONSTRAINT_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">is_null</span><span class="p">())</span>
+</span><span id="__span-0-2354"><a id="__codelineno-0-2354" name="__codelineno-0-2354"></a>                <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+</span><span id="__span-0-2355"><a id="__codelineno-0-2355" name="__codelineno-0-2355"></a>                <span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
+</span><span id="__span-0-2356"><a id="__codelineno-0-2356" name="__codelineno-0-2356"></a>            <span class="p">)</span>
+</span><span id="__span-0-2357"><a id="__codelineno-0-2357" name="__codelineno-0-2357"></a>            <span class="k">raise</span> <span class="n">PyoframeError</span><span class="p">(</span>
+</span><span id="__span-0-2358"><a id="__codelineno-0-2358" name="__codelineno-0-2358"></a>                <span class="sa">f</span><span class="s2">"Could not update constraint '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' because new_constraint contains labels that do not exist in the existing constraint:</span><span class="se">\n</span><span class="si">{</span><span class="n">extra_labels</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="__span-0-2359"><a id="__codelineno-0-2359" name="__codelineno-0-2359"></a>            <span class="p">)</span>
+</span><span id="__span-0-2360"><a id="__codelineno-0-2360" name="__codelineno-0-2360"></a>
+</span><span id="__span-0-2361"><a id="__codelineno-0-2361" name="__codelineno-0-2361"></a>    <span class="c1"># update via pyoptinterface</span>
+</span><span id="__span-0-2362"><a id="__codelineno-0-2362" name="__codelineno-0-2362"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="__span-0-2363"><a id="__codelineno-0-2363" name="__codelineno-0-2363"></a>    <span class="n">update_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">poi</span><span class="o">.</span><span class="n">set_normalized_coefficient</span>
+</span><span id="__span-0-2364"><a id="__codelineno-0-2364" name="__codelineno-0-2364"></a>    <span class="n">variable_indexes</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">VAR_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+</span><span id="__span-0-2365"><a id="__codelineno-0-2365" name="__codelineno-0-2365"></a>    <span class="n">variable_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="n">poi</span><span class="o">.</span><span class="n">VariableIndex</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variable_indexes</span><span class="p">]</span>
+</span><span id="__span-0-2366"><a id="__codelineno-0-2366" name="__codelineno-0-2366"></a>    <span class="n">constraint_indexes</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">CONSTRAINT_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+</span><span id="__span-0-2367"><a id="__codelineno-0-2367" name="__codelineno-0-2367"></a>    <span class="n">_constraint_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_poi_constraint_type</span>
+</span><span id="__span-0-2368"><a id="__codelineno-0-2368" name="__codelineno-0-2368"></a>    <span class="n">constraint_indexes</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="__span-0-2369"><a id="__codelineno-0-2369" name="__codelineno-0-2369"></a>        <span class="n">poi</span><span class="o">.</span><span class="n">ConstraintIndex</span><span class="p">(</span><span class="n">_constraint_type</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">constraint_indexes</span>
+</span><span id="__span-0-2370"><a id="__codelineno-0-2370" name="__codelineno-0-2370"></a>    <span class="p">]</span>
+</span><span id="__span-0-2371"><a id="__codelineno-0-2371" name="__codelineno-0-2371"></a>    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">new_data</span><span class="o">.</span><span class="n">get_column</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+</span><span id="__span-0-2372"><a id="__codelineno-0-2372" name="__codelineno-0-2372"></a>
+</span><span id="__span-0-2373"><a id="__codelineno-0-2373" name="__codelineno-0-2373"></a>    <span class="k">for</span> <span class="n">con</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">constraint_indexes</span><span class="p">,</span> <span class="n">variable_indexes</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">):</span>
+</span><span id="__span-0-2374"><a id="__codelineno-0-2374" name="__codelineno-0-2374"></a>        <span class="n">update_func</span><span class="p">(</span><span class="n">con</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+</span><span id="__span-0-2375"><a id="__codelineno-0-2375" name="__codelineno-0-2375"></a>
+</span><span id="__span-0-2376"><a id="__codelineno-0-2376" name="__codelineno-0-2376"></a>    <span class="c1"># update Pyoframe data</span>
+</span><span id="__span-0-2377"><a id="__codelineno-0-2377" name="__codelineno-0-2377"></a>    <span class="n">updated_data</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-2378"><a id="__codelineno-0-2378" name="__codelineno-0-2378"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="n">COEF_KEY_OLD</span><span class="p">})</span>
+</span><span id="__span-0-2379"><a id="__codelineno-0-2379" name="__codelineno-0-2379"></a>        <span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-2380"><a id="__codelineno-0-2380" name="__codelineno-0-2380"></a>            <span class="n">new_data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dims</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">_variable_columns</span> <span class="o">+</span> <span class="p">[</span><span class="n">COEF_KEY</span><span class="p">]),</span>
+</span><span id="__span-0-2381"><a id="__codelineno-0-2381" name="__codelineno-0-2381"></a>            <span class="n">on</span><span class="o">=</span><span class="n">dims</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">_variable_columns</span><span class="p">,</span>
+</span><span id="__span-0-2382"><a id="__codelineno-0-2382" name="__codelineno-0-2382"></a>            <span class="n">how</span><span class="o">=</span><span class="s2">"full"</span><span class="p">,</span>
+</span><span id="__span-0-2383"><a id="__codelineno-0-2383" name="__codelineno-0-2383"></a>            <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"left_right"</span> <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2384"><a id="__codelineno-0-2384" name="__codelineno-0-2384"></a>            <span class="n">coalesce</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="__span-0-2385"><a id="__codelineno-0-2385" name="__codelineno-0-2385"></a>        <span class="p">)</span>
+</span><span id="__span-0-2386"><a id="__codelineno-0-2386" name="__codelineno-0-2386"></a>        <span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">fill_null</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY_OLD</span><span class="p">)))</span>
+</span><span id="__span-0-2387"><a id="__codelineno-0-2387" name="__codelineno-0-2387"></a>        <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">COEF_KEY_OLD</span><span class="p">)</span>
+</span><span id="__span-0-2388"><a id="__codelineno-0-2388" name="__codelineno-0-2388"></a>        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-2389"><a id="__codelineno-0-2389" name="__codelineno-0-2389"></a>        <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>  <span class="c1"># reorder to maintain consistency</span>
+</span><span id="__span-0-2390"><a id="__codelineno-0-2390" name="__codelineno-0-2390"></a>    <span class="p">)</span>
+</span><span id="__span-0-2391"><a id="__codelineno-0-2391" name="__codelineno-0-2391"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">updated_data</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3536,7 +3983,7 @@ make them negative for maximization problems.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 22:00:39 UTC">August 17, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 24, 2026 00:56:50 UTC">August 24, 2026</span>
   </span>
 
     
@@ -3546,7 +3993,7 @@ make them negative for maximization problems.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 22:00:39 UTC">August 17, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 24, 2026 00:56:50 UTC">August 24, 2026</span>
   </span>
 
     

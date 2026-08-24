@@ -2542,93 +2542,93 @@ Otherwise, a variable is created for each element in the Cartesian product of th
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>pyoframe/_core.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2441">2441</a></span>
-<span class="normal"><a href="#__codelineno-0-2442">2442</a></span>
-<span class="normal"><a href="#__codelineno-0-2443">2443</a></span>
-<span class="normal"><a href="#__codelineno-0-2444">2444</a></span>
-<span class="normal"><a href="#__codelineno-0-2445">2445</a></span>
-<span class="normal"><a href="#__codelineno-0-2446">2446</a></span>
-<span class="normal"><a href="#__codelineno-0-2447">2447</a></span>
-<span class="normal"><a href="#__codelineno-0-2448">2448</a></span>
-<span class="normal"><a href="#__codelineno-0-2449">2449</a></span>
-<span class="normal"><a href="#__codelineno-0-2450">2450</a></span>
-<span class="normal"><a href="#__codelineno-0-2451">2451</a></span>
-<span class="normal"><a href="#__codelineno-0-2452">2452</a></span>
-<span class="normal"><a href="#__codelineno-0-2453">2453</a></span>
-<span class="normal"><a href="#__codelineno-0-2454">2454</a></span>
-<span class="normal"><a href="#__codelineno-0-2455">2455</a></span>
-<span class="normal"><a href="#__codelineno-0-2456">2456</a></span>
-<span class="normal"><a href="#__codelineno-0-2457">2457</a></span>
-<span class="normal"><a href="#__codelineno-0-2458">2458</a></span>
-<span class="normal"><a href="#__codelineno-0-2459">2459</a></span>
-<span class="normal"><a href="#__codelineno-0-2460">2460</a></span>
-<span class="normal"><a href="#__codelineno-0-2461">2461</a></span>
-<span class="normal"><a href="#__codelineno-0-2462">2462</a></span>
-<span class="normal"><a href="#__codelineno-0-2463">2463</a></span>
-<span class="normal"><a href="#__codelineno-0-2464">2464</a></span>
-<span class="normal"><a href="#__codelineno-0-2465">2465</a></span>
-<span class="normal"><a href="#__codelineno-0-2466">2466</a></span>
-<span class="normal"><a href="#__codelineno-0-2467">2467</a></span>
-<span class="normal"><a href="#__codelineno-0-2468">2468</a></span>
-<span class="normal"><a href="#__codelineno-0-2469">2469</a></span>
-<span class="normal"><a href="#__codelineno-0-2470">2470</a></span>
-<span class="normal"><a href="#__codelineno-0-2471">2471</a></span>
-<span class="normal"><a href="#__codelineno-0-2472">2472</a></span>
-<span class="normal"><a href="#__codelineno-0-2473">2473</a></span>
-<span class="normal"><a href="#__codelineno-0-2474">2474</a></span>
-<span class="normal"><a href="#__codelineno-0-2475">2475</a></span>
-<span class="normal"><a href="#__codelineno-0-2476">2476</a></span>
-<span class="normal"><a href="#__codelineno-0-2477">2477</a></span>
-<span class="normal"><a href="#__codelineno-0-2478">2478</a></span>
-<span class="normal"><a href="#__codelineno-0-2479">2479</a></span>
-<span class="normal"><a href="#__codelineno-0-2480">2480</a></span>
-<span class="normal"><a href="#__codelineno-0-2481">2481</a></span>
-<span class="normal"><a href="#__codelineno-0-2482">2482</a></span>
-<span class="normal"><a href="#__codelineno-0-2483">2483</a></span>
-<span class="normal"><a href="#__codelineno-0-2484">2484</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2441"><a id="__codelineno-0-2441" name="__codelineno-0-2441"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span id="__span-0-2442"><a id="__codelineno-0-2442" name="__codelineno-0-2442"></a>    <span class="bp">self</span><span class="p">,</span>
-</span><span id="__span-0-2443"><a id="__codelineno-0-2443" name="__codelineno-0-2443"></a>    <span class="o">*</span><span class="n">indexing_sets</span><span class="p">:</span> <span class="n">SetTypes</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SetTypes</span><span class="p">],</span>
-</span><span id="__span-0-2444"><a id="__codelineno-0-2444" name="__codelineno-0-2444"></a>    <span class="n">lb</span><span class="p">:</span> <span class="n">Operable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-2445"><a id="__codelineno-0-2445" name="__codelineno-0-2445"></a>    <span class="n">ub</span><span class="p">:</span> <span class="n">Operable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-2446"><a id="__codelineno-0-2446" name="__codelineno-0-2446"></a>    <span class="n">vtype</span><span class="p">:</span> <span class="n">VType</span> <span class="o">|</span> <span class="n">VTypeValue</span> <span class="o">=</span> <span class="n">VType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,</span>
-</span><span id="__span-0-2447"><a id="__codelineno-0-2447" name="__codelineno-0-2447"></a>    <span class="n">equals</span><span class="p">:</span> <span class="n">Operable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-2448"><a id="__codelineno-0-2448" name="__codelineno-0-2448"></a><span class="p">):</span>
-</span><span id="__span-0-2449"><a id="__codelineno-0-2449" name="__codelineno-0-2449"></a>    <span class="k">if</span> <span class="n">equals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-2450"><a id="__codelineno-0-2450" name="__codelineno-0-2450"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">equals</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-</span><span id="__span-0-2451"><a id="__codelineno-0-2451" name="__codelineno-0-2451"></a>            <span class="k">if</span> <span class="n">lb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-2452"><a id="__codelineno-0-2452" name="__codelineno-0-2452"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot specify 'lb' when 'equals' is a constant."</span><span class="p">)</span>
-</span><span id="__span-0-2453"><a id="__codelineno-0-2453" name="__codelineno-0-2453"></a>            <span class="k">if</span> <span class="n">ub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="__span-0-2454"><a id="__codelineno-0-2454" name="__codelineno-0-2454"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot specify 'ub' when 'equals' is a constant."</span><span class="p">)</span>
-</span><span id="__span-0-2455"><a id="__codelineno-0-2455" name="__codelineno-0-2455"></a>            <span class="n">lb</span> <span class="o">=</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">equals</span>
-</span><span id="__span-0-2456"><a id="__codelineno-0-2456" name="__codelineno-0-2456"></a>            <span class="n">equals</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-2457"><a id="__codelineno-0-2457" name="__codelineno-0-2457"></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2458"><a id="__codelineno-0-2458" name="__codelineno-0-2458"></a>            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">indexing_sets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
-</span><span id="__span-0-2459"><a id="__codelineno-0-2459" name="__codelineno-0-2459"></a>                <span class="s2">"Cannot specify both 'equals' and 'indexing_sets'"</span>
-</span><span id="__span-0-2460"><a id="__codelineno-0-2460" name="__codelineno-0-2460"></a>            <span class="p">)</span>
-</span><span id="__span-0-2461"><a id="__codelineno-0-2461" name="__codelineno-0-2461"></a>            <span class="n">equals</span> <span class="o">=</span> <span class="n">equals</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>  <span class="c1"># TODO don't rely on monkey patch</span>
-</span><span id="__span-0-2462"><a id="__codelineno-0-2462" name="__codelineno-0-2462"></a>            <span class="n">indexing_sets</span> <span class="o">=</span> <span class="p">(</span><span class="n">equals</span><span class="p">,)</span>
-</span><span id="__span-0-2463"><a id="__codelineno-0-2463" name="__codelineno-0-2463"></a>
-</span><span id="__span-0-2464"><a id="__codelineno-0-2464" name="__codelineno-0-2464"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">Set</span><span class="p">(</span><span class="o">*</span><span class="n">indexing_sets</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indexing_sets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-</span><span id="__span-0-2465"><a id="__codelineno-0-2465" name="__codelineno-0-2465"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="__span-0-2466"><a id="__codelineno-0-2466" name="__codelineno-0-2466"></a>
-</span><span id="__span-0-2467"><a id="__codelineno-0-2467" name="__codelineno-0-2467"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">vtype</span><span class="p">:</span> <span class="n">VType</span> <span class="o">=</span> <span class="n">VType</span><span class="p">(</span><span class="n">vtype</span><span class="p">)</span>
-</span><span id="__span-0-2468"><a id="__codelineno-0-2468" name="__codelineno-0-2468"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_attribute</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">)</span>
-</span><span id="__span-0-2469"><a id="__codelineno-0-2469" name="__codelineno-0-2469"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_equals</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">equals</span>
-</span><span id="__span-0-2470"><a id="__codelineno-0-2470" name="__codelineno-0-2470"></a>
-</span><span id="__span-0-2471"><a id="__codelineno-0-2471" name="__codelineno-0-2471"></a>    <span class="k">if</span> <span class="n">lb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-</span><span id="__span-0-2472"><a id="__codelineno-0-2472" name="__codelineno-0-2472"></a>        <span class="n">lb</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">lb</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>  <span class="c1"># TODO don't rely on monkey patch</span>
-</span><span id="__span-0-2473"><a id="__codelineno-0-2473" name="__codelineno-0-2473"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
-</span><span id="__span-0-2474"><a id="__codelineno-0-2474" name="__codelineno-0-2474"></a>            <span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
-</span><span id="__span-0-2475"><a id="__codelineno-0-2475" name="__codelineno-0-2475"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_lb_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span><span class="p">,</span> <span class="kc">None</span>
-</span><span id="__span-0-2476"><a id="__codelineno-0-2476" name="__codelineno-0-2476"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2477"><a id="__codelineno-0-2477" name="__codelineno-0-2477"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_lb_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lb</span>
-</span><span id="__span-0-2478"><a id="__codelineno-0-2478" name="__codelineno-0-2478"></a>    <span class="k">if</span> <span class="n">ub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ub</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
-</span><span id="__span-0-2479"><a id="__codelineno-0-2479" name="__codelineno-0-2479"></a>        <span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>  <span class="c1"># TODO don't rely on monkey patch</span>
-</span><span id="__span-0-2480"><a id="__codelineno-0-2480" name="__codelineno-0-2480"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
-</span><span id="__span-0-2481"><a id="__codelineno-0-2481" name="__codelineno-0-2481"></a>            <span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportOptionalIterable]</span>
-</span><span id="__span-0-2482"><a id="__codelineno-0-2482" name="__codelineno-0-2482"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_ub_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span><span class="p">,</span> <span class="kc">None</span>
-</span><span id="__span-0-2483"><a id="__codelineno-0-2483" name="__codelineno-0-2483"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2484"><a id="__codelineno-0-2484" name="__codelineno-0-2484"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_ub_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ub</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ub</span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2612">2612</a></span>
+<span class="normal"><a href="#__codelineno-0-2613">2613</a></span>
+<span class="normal"><a href="#__codelineno-0-2614">2614</a></span>
+<span class="normal"><a href="#__codelineno-0-2615">2615</a></span>
+<span class="normal"><a href="#__codelineno-0-2616">2616</a></span>
+<span class="normal"><a href="#__codelineno-0-2617">2617</a></span>
+<span class="normal"><a href="#__codelineno-0-2618">2618</a></span>
+<span class="normal"><a href="#__codelineno-0-2619">2619</a></span>
+<span class="normal"><a href="#__codelineno-0-2620">2620</a></span>
+<span class="normal"><a href="#__codelineno-0-2621">2621</a></span>
+<span class="normal"><a href="#__codelineno-0-2622">2622</a></span>
+<span class="normal"><a href="#__codelineno-0-2623">2623</a></span>
+<span class="normal"><a href="#__codelineno-0-2624">2624</a></span>
+<span class="normal"><a href="#__codelineno-0-2625">2625</a></span>
+<span class="normal"><a href="#__codelineno-0-2626">2626</a></span>
+<span class="normal"><a href="#__codelineno-0-2627">2627</a></span>
+<span class="normal"><a href="#__codelineno-0-2628">2628</a></span>
+<span class="normal"><a href="#__codelineno-0-2629">2629</a></span>
+<span class="normal"><a href="#__codelineno-0-2630">2630</a></span>
+<span class="normal"><a href="#__codelineno-0-2631">2631</a></span>
+<span class="normal"><a href="#__codelineno-0-2632">2632</a></span>
+<span class="normal"><a href="#__codelineno-0-2633">2633</a></span>
+<span class="normal"><a href="#__codelineno-0-2634">2634</a></span>
+<span class="normal"><a href="#__codelineno-0-2635">2635</a></span>
+<span class="normal"><a href="#__codelineno-0-2636">2636</a></span>
+<span class="normal"><a href="#__codelineno-0-2637">2637</a></span>
+<span class="normal"><a href="#__codelineno-0-2638">2638</a></span>
+<span class="normal"><a href="#__codelineno-0-2639">2639</a></span>
+<span class="normal"><a href="#__codelineno-0-2640">2640</a></span>
+<span class="normal"><a href="#__codelineno-0-2641">2641</a></span>
+<span class="normal"><a href="#__codelineno-0-2642">2642</a></span>
+<span class="normal"><a href="#__codelineno-0-2643">2643</a></span>
+<span class="normal"><a href="#__codelineno-0-2644">2644</a></span>
+<span class="normal"><a href="#__codelineno-0-2645">2645</a></span>
+<span class="normal"><a href="#__codelineno-0-2646">2646</a></span>
+<span class="normal"><a href="#__codelineno-0-2647">2647</a></span>
+<span class="normal"><a href="#__codelineno-0-2648">2648</a></span>
+<span class="normal"><a href="#__codelineno-0-2649">2649</a></span>
+<span class="normal"><a href="#__codelineno-0-2650">2650</a></span>
+<span class="normal"><a href="#__codelineno-0-2651">2651</a></span>
+<span class="normal"><a href="#__codelineno-0-2652">2652</a></span>
+<span class="normal"><a href="#__codelineno-0-2653">2653</a></span>
+<span class="normal"><a href="#__codelineno-0-2654">2654</a></span>
+<span class="normal"><a href="#__codelineno-0-2655">2655</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2612"><a id="__codelineno-0-2612" name="__codelineno-0-2612"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span id="__span-0-2613"><a id="__codelineno-0-2613" name="__codelineno-0-2613"></a>    <span class="bp">self</span><span class="p">,</span>
+</span><span id="__span-0-2614"><a id="__codelineno-0-2614" name="__codelineno-0-2614"></a>    <span class="o">*</span><span class="n">indexing_sets</span><span class="p">:</span> <span class="n">SetTypes</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SetTypes</span><span class="p">],</span>
+</span><span id="__span-0-2615"><a id="__codelineno-0-2615" name="__codelineno-0-2615"></a>    <span class="n">lb</span><span class="p">:</span> <span class="n">Operable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2616"><a id="__codelineno-0-2616" name="__codelineno-0-2616"></a>    <span class="n">ub</span><span class="p">:</span> <span class="n">Operable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2617"><a id="__codelineno-0-2617" name="__codelineno-0-2617"></a>    <span class="n">vtype</span><span class="p">:</span> <span class="n">VType</span> <span class="o">|</span> <span class="n">VTypeValue</span> <span class="o">=</span> <span class="n">VType</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,</span>
+</span><span id="__span-0-2618"><a id="__codelineno-0-2618" name="__codelineno-0-2618"></a>    <span class="n">equals</span><span class="p">:</span> <span class="n">Operable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-2619"><a id="__codelineno-0-2619" name="__codelineno-0-2619"></a><span class="p">):</span>
+</span><span id="__span-0-2620"><a id="__codelineno-0-2620" name="__codelineno-0-2620"></a>    <span class="k">if</span> <span class="n">equals</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2621"><a id="__codelineno-0-2621" name="__codelineno-0-2621"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">equals</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+</span><span id="__span-0-2622"><a id="__codelineno-0-2622" name="__codelineno-0-2622"></a>            <span class="k">if</span> <span class="n">lb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2623"><a id="__codelineno-0-2623" name="__codelineno-0-2623"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot specify 'lb' when 'equals' is a constant."</span><span class="p">)</span>
+</span><span id="__span-0-2624"><a id="__codelineno-0-2624" name="__codelineno-0-2624"></a>            <span class="k">if</span> <span class="n">ub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-0-2625"><a id="__codelineno-0-2625" name="__codelineno-0-2625"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot specify 'ub' when 'equals' is a constant."</span><span class="p">)</span>
+</span><span id="__span-0-2626"><a id="__codelineno-0-2626" name="__codelineno-0-2626"></a>            <span class="n">lb</span> <span class="o">=</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">equals</span>
+</span><span id="__span-0-2627"><a id="__codelineno-0-2627" name="__codelineno-0-2627"></a>            <span class="n">equals</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-2628"><a id="__codelineno-0-2628" name="__codelineno-0-2628"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2629"><a id="__codelineno-0-2629" name="__codelineno-0-2629"></a>            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">indexing_sets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="p">(</span>
+</span><span id="__span-0-2630"><a id="__codelineno-0-2630" name="__codelineno-0-2630"></a>                <span class="s2">"Cannot specify both 'equals' and 'indexing_sets'"</span>
+</span><span id="__span-0-2631"><a id="__codelineno-0-2631" name="__codelineno-0-2631"></a>            <span class="p">)</span>
+</span><span id="__span-0-2632"><a id="__codelineno-0-2632" name="__codelineno-0-2632"></a>            <span class="n">equals</span> <span class="o">=</span> <span class="n">equals</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>  <span class="c1"># TODO don't rely on monkey patch</span>
+</span><span id="__span-0-2633"><a id="__codelineno-0-2633" name="__codelineno-0-2633"></a>            <span class="n">indexing_sets</span> <span class="o">=</span> <span class="p">(</span><span class="n">equals</span><span class="p">,)</span>
+</span><span id="__span-0-2634"><a id="__codelineno-0-2634" name="__codelineno-0-2634"></a>
+</span><span id="__span-0-2635"><a id="__codelineno-0-2635" name="__codelineno-0-2635"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">Set</span><span class="p">(</span><span class="o">*</span><span class="n">indexing_sets</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indexing_sets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+</span><span id="__span-0-2636"><a id="__codelineno-0-2636" name="__codelineno-0-2636"></a>    <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="__span-0-2637"><a id="__codelineno-0-2637" name="__codelineno-0-2637"></a>
+</span><span id="__span-0-2638"><a id="__codelineno-0-2638" name="__codelineno-0-2638"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">vtype</span><span class="p">:</span> <span class="n">VType</span> <span class="o">=</span> <span class="n">VType</span><span class="p">(</span><span class="n">vtype</span><span class="p">)</span>
+</span><span id="__span-0-2639"><a id="__codelineno-0-2639" name="__codelineno-0-2639"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_attr</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_set_attribute</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_attribute</span><span class="p">)</span>
+</span><span id="__span-0-2640"><a id="__codelineno-0-2640" name="__codelineno-0-2640"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_equals</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">equals</span>
+</span><span id="__span-0-2641"><a id="__codelineno-0-2641" name="__codelineno-0-2641"></a>
+</span><span id="__span-0-2642"><a id="__codelineno-0-2642" name="__codelineno-0-2642"></a>    <span class="k">if</span> <span class="n">lb</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+</span><span id="__span-0-2643"><a id="__codelineno-0-2643" name="__codelineno-0-2643"></a>        <span class="n">lb</span><span class="p">:</span> <span class="n">Expression</span> <span class="o">=</span> <span class="n">lb</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>  <span class="c1"># TODO don't rely on monkey patch</span>
+</span><span id="__span-0-2644"><a id="__codelineno-0-2644" name="__codelineno-0-2644"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
+</span><span id="__span-0-2645"><a id="__codelineno-0-2645" name="__codelineno-0-2645"></a>            <span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+</span><span id="__span-0-2646"><a id="__codelineno-0-2646" name="__codelineno-0-2646"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_lb_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb</span> <span class="o">=</span> <span class="n">lb</span><span class="p">,</span> <span class="kc">None</span>
+</span><span id="__span-0-2647"><a id="__codelineno-0-2647" name="__codelineno-0-2647"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2648"><a id="__codelineno-0-2648" name="__codelineno-0-2648"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_lb_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">lb</span>
+</span><span id="__span-0-2649"><a id="__codelineno-0-2649" name="__codelineno-0-2649"></a>    <span class="k">if</span> <span class="n">ub</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ub</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+</span><span id="__span-0-2650"><a id="__codelineno-0-2650" name="__codelineno-0-2650"></a>        <span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>  <span class="c1"># TODO don't rely on monkey patch</span>
+</span><span id="__span-0-2651"><a id="__codelineno-0-2651" name="__codelineno-0-2651"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
+</span><span id="__span-0-2652"><a id="__codelineno-0-2652" name="__codelineno-0-2652"></a>            <span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span><span class="o">.</span><span class="n">over</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportOptionalIterable]</span>
+</span><span id="__span-0-2653"><a id="__codelineno-0-2653" name="__codelineno-0-2653"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_ub_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ub</span> <span class="o">=</span> <span class="n">ub</span><span class="p">,</span> <span class="kc">None</span>
+</span><span id="__span-0-2654"><a id="__codelineno-0-2654" name="__codelineno-0-2654"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2655"><a id="__codelineno-0-2655" name="__codelineno-0-2655"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_ub_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ub</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ub</span>
 </span></code></pre></div></td></tr></table></div>
                   </details>
 
@@ -2829,239 +2829,239 @@ If the rounding causes a change greater than <a class="autorefs autorefs-interna
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2621">2621</a></span>
-<span class="normal"><a href="#__codelineno-0-2622">2622</a></span>
-<span class="normal"><a href="#__codelineno-0-2623">2623</a></span>
-<span class="normal"><a href="#__codelineno-0-2624">2624</a></span>
-<span class="normal"><a href="#__codelineno-0-2625">2625</a></span>
-<span class="normal"><a href="#__codelineno-0-2626">2626</a></span>
-<span class="normal"><a href="#__codelineno-0-2627">2627</a></span>
-<span class="normal"><a href="#__codelineno-0-2628">2628</a></span>
-<span class="normal"><a href="#__codelineno-0-2629">2629</a></span>
-<span class="normal"><a href="#__codelineno-0-2630">2630</a></span>
-<span class="normal"><a href="#__codelineno-0-2631">2631</a></span>
-<span class="normal"><a href="#__codelineno-0-2632">2632</a></span>
-<span class="normal"><a href="#__codelineno-0-2633">2633</a></span>
-<span class="normal"><a href="#__codelineno-0-2634">2634</a></span>
-<span class="normal"><a href="#__codelineno-0-2635">2635</a></span>
-<span class="normal"><a href="#__codelineno-0-2636">2636</a></span>
-<span class="normal"><a href="#__codelineno-0-2637">2637</a></span>
-<span class="normal"><a href="#__codelineno-0-2638">2638</a></span>
-<span class="normal"><a href="#__codelineno-0-2639">2639</a></span>
-<span class="normal"><a href="#__codelineno-0-2640">2640</a></span>
-<span class="normal"><a href="#__codelineno-0-2641">2641</a></span>
-<span class="normal"><a href="#__codelineno-0-2642">2642</a></span>
-<span class="normal"><a href="#__codelineno-0-2643">2643</a></span>
-<span class="normal"><a href="#__codelineno-0-2644">2644</a></span>
-<span class="normal"><a href="#__codelineno-0-2645">2645</a></span>
-<span class="normal"><a href="#__codelineno-0-2646">2646</a></span>
-<span class="normal"><a href="#__codelineno-0-2647">2647</a></span>
-<span class="normal"><a href="#__codelineno-0-2648">2648</a></span>
-<span class="normal"><a href="#__codelineno-0-2649">2649</a></span>
-<span class="normal"><a href="#__codelineno-0-2650">2650</a></span>
-<span class="normal"><a href="#__codelineno-0-2651">2651</a></span>
-<span class="normal"><a href="#__codelineno-0-2652">2652</a></span>
-<span class="normal"><a href="#__codelineno-0-2653">2653</a></span>
-<span class="normal"><a href="#__codelineno-0-2654">2654</a></span>
-<span class="normal"><a href="#__codelineno-0-2655">2655</a></span>
-<span class="normal"><a href="#__codelineno-0-2656">2656</a></span>
-<span class="normal"><a href="#__codelineno-0-2657">2657</a></span>
-<span class="normal"><a href="#__codelineno-0-2658">2658</a></span>
-<span class="normal"><a href="#__codelineno-0-2659">2659</a></span>
-<span class="normal"><a href="#__codelineno-0-2660">2660</a></span>
-<span class="normal"><a href="#__codelineno-0-2661">2661</a></span>
-<span class="normal"><a href="#__codelineno-0-2662">2662</a></span>
-<span class="normal"><a href="#__codelineno-0-2663">2663</a></span>
-<span class="normal"><a href="#__codelineno-0-2664">2664</a></span>
-<span class="normal"><a href="#__codelineno-0-2665">2665</a></span>
-<span class="normal"><a href="#__codelineno-0-2666">2666</a></span>
-<span class="normal"><a href="#__codelineno-0-2667">2667</a></span>
-<span class="normal"><a href="#__codelineno-0-2668">2668</a></span>
-<span class="normal"><a href="#__codelineno-0-2669">2669</a></span>
-<span class="normal"><a href="#__codelineno-0-2670">2670</a></span>
-<span class="normal"><a href="#__codelineno-0-2671">2671</a></span>
-<span class="normal"><a href="#__codelineno-0-2672">2672</a></span>
-<span class="normal"><a href="#__codelineno-0-2673">2673</a></span>
-<span class="normal"><a href="#__codelineno-0-2674">2674</a></span>
-<span class="normal"><a href="#__codelineno-0-2675">2675</a></span>
-<span class="normal"><a href="#__codelineno-0-2676">2676</a></span>
-<span class="normal"><a href="#__codelineno-0-2677">2677</a></span>
-<span class="normal"><a href="#__codelineno-0-2678">2678</a></span>
-<span class="normal"><a href="#__codelineno-0-2679">2679</a></span>
-<span class="normal"><a href="#__codelineno-0-2680">2680</a></span>
-<span class="normal"><a href="#__codelineno-0-2681">2681</a></span>
-<span class="normal"><a href="#__codelineno-0-2682">2682</a></span>
-<span class="normal"><a href="#__codelineno-0-2683">2683</a></span>
-<span class="normal"><a href="#__codelineno-0-2684">2684</a></span>
-<span class="normal"><a href="#__codelineno-0-2685">2685</a></span>
-<span class="normal"><a href="#__codelineno-0-2686">2686</a></span>
-<span class="normal"><a href="#__codelineno-0-2687">2687</a></span>
-<span class="normal"><a href="#__codelineno-0-2688">2688</a></span>
-<span class="normal"><a href="#__codelineno-0-2689">2689</a></span>
-<span class="normal"><a href="#__codelineno-0-2690">2690</a></span>
-<span class="normal"><a href="#__codelineno-0-2691">2691</a></span>
-<span class="normal"><a href="#__codelineno-0-2692">2692</a></span>
-<span class="normal"><a href="#__codelineno-0-2693">2693</a></span>
-<span class="normal"><a href="#__codelineno-0-2694">2694</a></span>
-<span class="normal"><a href="#__codelineno-0-2695">2695</a></span>
-<span class="normal"><a href="#__codelineno-0-2696">2696</a></span>
-<span class="normal"><a href="#__codelineno-0-2697">2697</a></span>
-<span class="normal"><a href="#__codelineno-0-2698">2698</a></span>
-<span class="normal"><a href="#__codelineno-0-2699">2699</a></span>
-<span class="normal"><a href="#__codelineno-0-2700">2700</a></span>
-<span class="normal"><a href="#__codelineno-0-2701">2701</a></span>
-<span class="normal"><a href="#__codelineno-0-2702">2702</a></span>
-<span class="normal"><a href="#__codelineno-0-2703">2703</a></span>
-<span class="normal"><a href="#__codelineno-0-2704">2704</a></span>
-<span class="normal"><a href="#__codelineno-0-2705">2705</a></span>
-<span class="normal"><a href="#__codelineno-0-2706">2706</a></span>
-<span class="normal"><a href="#__codelineno-0-2707">2707</a></span>
-<span class="normal"><a href="#__codelineno-0-2708">2708</a></span>
-<span class="normal"><a href="#__codelineno-0-2709">2709</a></span>
-<span class="normal"><a href="#__codelineno-0-2710">2710</a></span>
-<span class="normal"><a href="#__codelineno-0-2711">2711</a></span>
-<span class="normal"><a href="#__codelineno-0-2712">2712</a></span>
-<span class="normal"><a href="#__codelineno-0-2713">2713</a></span>
-<span class="normal"><a href="#__codelineno-0-2714">2714</a></span>
-<span class="normal"><a href="#__codelineno-0-2715">2715</a></span>
-<span class="normal"><a href="#__codelineno-0-2716">2716</a></span>
-<span class="normal"><a href="#__codelineno-0-2717">2717</a></span>
-<span class="normal"><a href="#__codelineno-0-2718">2718</a></span>
-<span class="normal"><a href="#__codelineno-0-2719">2719</a></span>
-<span class="normal"><a href="#__codelineno-0-2720">2720</a></span>
-<span class="normal"><a href="#__codelineno-0-2721">2721</a></span>
-<span class="normal"><a href="#__codelineno-0-2722">2722</a></span>
-<span class="normal"><a href="#__codelineno-0-2723">2723</a></span>
-<span class="normal"><a href="#__codelineno-0-2724">2724</a></span>
-<span class="normal"><a href="#__codelineno-0-2725">2725</a></span>
-<span class="normal"><a href="#__codelineno-0-2726">2726</a></span>
-<span class="normal"><a href="#__codelineno-0-2727">2727</a></span>
-<span class="normal"><a href="#__codelineno-0-2728">2728</a></span>
-<span class="normal"><a href="#__codelineno-0-2729">2729</a></span>
-<span class="normal"><a href="#__codelineno-0-2730">2730</a></span>
-<span class="normal"><a href="#__codelineno-0-2731">2731</a></span>
-<span class="normal"><a href="#__codelineno-0-2732">2732</a></span>
-<span class="normal"><a href="#__codelineno-0-2733">2733</a></span>
-<span class="normal"><a href="#__codelineno-0-2734">2734</a></span>
-<span class="normal"><a href="#__codelineno-0-2735">2735</a></span>
-<span class="normal"><a href="#__codelineno-0-2736">2736</a></span>
-<span class="normal"><a href="#__codelineno-0-2737">2737</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2621"><a id="__codelineno-0-2621" name="__codelineno-0-2621"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_integers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="__span-0-2622"><a id="__codelineno-0-2622" name="__codelineno-0-2622"></a><span class="w">    </span><span class="sd">"""Retrieves a variable's optimal value after the model has been solved.</span>
-</span><span id="__span-0-2623"><a id="__codelineno-0-2623" name="__codelineno-0-2623"></a>
-</span><span id="__span-0-2624"><a id="__codelineno-0-2624" name="__codelineno-0-2624"></a><span class="sd">    Returns:</span>
-</span><span id="__span-0-2625"><a id="__codelineno-0-2625" name="__codelineno-0-2625"></a><span class="sd">        A DataFrame if the variable has dimensions and a `float` or `int` otherwise.</span>
-</span><span id="__span-0-2626"><a id="__codelineno-0-2626" name="__codelineno-0-2626"></a>
-</span><span id="__span-0-2627"><a id="__codelineno-0-2627" name="__codelineno-0-2627"></a><span class="sd">    Raises:</span>
-</span><span id="__span-0-2628"><a id="__codelineno-0-2628" name="__codelineno-0-2628"></a><span class="sd">        RuntimeError:</span>
-</span><span id="__span-0-2629"><a id="__codelineno-0-2629" name="__codelineno-0-2629"></a><span class="sd">            If the model has not been solved or the solver failed to find an optimal solution.</span>
-</span><span id="__span-0-2630"><a id="__codelineno-0-2630" name="__codelineno-0-2630"></a>
-</span><span id="__span-0-2631"><a id="__codelineno-0-2631" name="__codelineno-0-2631"></a><span class="sd">    Parameters:</span>
-</span><span id="__span-0-2632"><a id="__codelineno-0-2632" name="__codelineno-0-2632"></a><span class="sd">        return_integers:</span>
-</span><span id="__span-0-2633"><a id="__codelineno-0-2633" name="__codelineno-0-2633"></a><span class="sd">            When `True`, the solution to binary and integer variables are returned as integers instead of floats.</span>
-</span><span id="__span-0-2634"><a id="__codelineno-0-2634" name="__codelineno-0-2634"></a><span class="sd">            Integers are obtained by rounding floats to the nearest integer.</span>
-</span><span id="__span-0-2635"><a id="__codelineno-0-2635" name="__codelineno-0-2635"></a><span class="sd">            If the rounding causes a change greater than [`Config.integer_tolerance`][pyoframe._Config.integer_tolerance], rounding is canceled, a warning is emitted, and floats are returned.</span>
-</span><span id="__span-0-2636"><a id="__codelineno-0-2636" name="__codelineno-0-2636"></a>
-</span><span id="__span-0-2637"><a id="__codelineno-0-2637" name="__codelineno-0-2637"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-2638"><a id="__codelineno-0-2638" name="__codelineno-0-2638"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-2639"><a id="__codelineno-0-2639" name="__codelineno-0-2639"></a><span class="sd">        &gt;&gt;&gt; m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)</span>
-</span><span id="__span-0-2640"><a id="__codelineno-0-2640" name="__codelineno-0-2640"></a><span class="sd">        &gt;&gt;&gt; m.var_integer = pf.Variable(</span>
-</span><span id="__span-0-2641"><a id="__codelineno-0-2641" name="__codelineno-0-2641"></a><span class="sd">        ...     {"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=pf.VType.INTEGER</span>
-</span><span id="__span-0-2642"><a id="__codelineno-0-2642" name="__codelineno-0-2642"></a><span class="sd">        ... )</span>
-</span><span id="__span-0-2643"><a id="__codelineno-0-2643" name="__codelineno-0-2643"></a><span class="sd">        &gt;&gt;&gt; m.var_dimensionless = pf.Variable(</span>
-</span><span id="__span-0-2644"><a id="__codelineno-0-2644" name="__codelineno-0-2644"></a><span class="sd">        ...     lb=4.5, ub=5.5, vtype=pf.VType.INTEGER</span>
-</span><span id="__span-0-2645"><a id="__codelineno-0-2645" name="__codelineno-0-2645"></a><span class="sd">        ... )</span>
-</span><span id="__span-0-2646"><a id="__codelineno-0-2646" name="__codelineno-0-2646"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
-</span><span id="__span-0-2647"><a id="__codelineno-0-2647" name="__codelineno-0-2647"></a><span class="sd">        &gt;&gt;&gt; m.var_continuous.solution</span>
-</span><span id="__span-0-2648"><a id="__codelineno-0-2648" name="__codelineno-0-2648"></a><span class="sd">        shape: (3, 2)</span>
-</span><span id="__span-0-2649"><a id="__codelineno-0-2649" name="__codelineno-0-2649"></a><span class="sd">        ┌──────┬──────────┐</span>
-</span><span id="__span-0-2650"><a id="__codelineno-0-2650" name="__codelineno-0-2650"></a><span class="sd">        │ dim1 ┆ solution │</span>
-</span><span id="__span-0-2651"><a id="__codelineno-0-2651" name="__codelineno-0-2651"></a><span class="sd">        │ ---  ┆ ---      │</span>
-</span><span id="__span-0-2652"><a id="__codelineno-0-2652" name="__codelineno-0-2652"></a><span class="sd">        │ i64  ┆ f64      │</span>
-</span><span id="__span-0-2653"><a id="__codelineno-0-2653" name="__codelineno-0-2653"></a><span class="sd">        ╞══════╪══════════╡</span>
-</span><span id="__span-0-2654"><a id="__codelineno-0-2654" name="__codelineno-0-2654"></a><span class="sd">        │ 1    ┆ 5.0      │</span>
-</span><span id="__span-0-2655"><a id="__codelineno-0-2655" name="__codelineno-0-2655"></a><span class="sd">        │ 2    ┆ 5.0      │</span>
-</span><span id="__span-0-2656"><a id="__codelineno-0-2656" name="__codelineno-0-2656"></a><span class="sd">        │ 3    ┆ 5.0      │</span>
-</span><span id="__span-0-2657"><a id="__codelineno-0-2657" name="__codelineno-0-2657"></a><span class="sd">        └──────┴──────────┘</span>
-</span><span id="__span-0-2658"><a id="__codelineno-0-2658" name="__codelineno-0-2658"></a><span class="sd">        &gt;&gt;&gt; m.var_integer.solution</span>
-</span><span id="__span-0-2659"><a id="__codelineno-0-2659" name="__codelineno-0-2659"></a><span class="sd">        shape: (3, 2)</span>
-</span><span id="__span-0-2660"><a id="__codelineno-0-2660" name="__codelineno-0-2660"></a><span class="sd">        ┌──────┬──────────┐</span>
-</span><span id="__span-0-2661"><a id="__codelineno-0-2661" name="__codelineno-0-2661"></a><span class="sd">        │ dim1 ┆ solution │</span>
-</span><span id="__span-0-2662"><a id="__codelineno-0-2662" name="__codelineno-0-2662"></a><span class="sd">        │ ---  ┆ ---      │</span>
-</span><span id="__span-0-2663"><a id="__codelineno-0-2663" name="__codelineno-0-2663"></a><span class="sd">        │ i64  ┆ i64      │</span>
-</span><span id="__span-0-2664"><a id="__codelineno-0-2664" name="__codelineno-0-2664"></a><span class="sd">        ╞══════╪══════════╡</span>
-</span><span id="__span-0-2665"><a id="__codelineno-0-2665" name="__codelineno-0-2665"></a><span class="sd">        │ 1    ┆ 5        │</span>
-</span><span id="__span-0-2666"><a id="__codelineno-0-2666" name="__codelineno-0-2666"></a><span class="sd">        │ 2    ┆ 5        │</span>
-</span><span id="__span-0-2667"><a id="__codelineno-0-2667" name="__codelineno-0-2667"></a><span class="sd">        │ 3    ┆ 5        │</span>
-</span><span id="__span-0-2668"><a id="__codelineno-0-2668" name="__codelineno-0-2668"></a><span class="sd">        └──────┴──────────┘</span>
-</span><span id="__span-0-2669"><a id="__codelineno-0-2669" name="__codelineno-0-2669"></a><span class="sd">        &gt;&gt;&gt; m.var_dimensionless.solution</span>
-</span><span id="__span-0-2670"><a id="__codelineno-0-2670" name="__codelineno-0-2670"></a><span class="sd">        5</span>
-</span><span id="__span-0-2671"><a id="__codelineno-0-2671" name="__codelineno-0-2671"></a><span class="sd">    """</span>
-</span><span id="__span-0-2672"><a id="__codelineno-0-2672" name="__codelineno-0-2672"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
-</span><span id="__span-0-2673"><a id="__codelineno-0-2673" name="__codelineno-0-2673"></a>        <span class="s2">"Cannot retrieve the variable's solution because the variable has not been added to a model."</span>
-</span><span id="__span-0-2674"><a id="__codelineno-0-2674" name="__codelineno-0-2674"></a>    <span class="p">)</span>
-</span><span id="__span-0-2675"><a id="__codelineno-0-2675" name="__codelineno-0-2675"></a>
-</span><span id="__span-0-2676"><a id="__codelineno-0-2676" name="__codelineno-0-2676"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">check_termination_status_when_retrieving_solution</span><span class="p">:</span>
-</span><span id="__span-0-2677"><a id="__codelineno-0-2677" name="__codelineno-0-2677"></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-0-2678"><a id="__codelineno-0-2678" name="__codelineno-0-2678"></a>            <span class="n">termination_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">TerminationStatus</span>
-</span><span id="__span-0-2679"><a id="__codelineno-0-2679" name="__codelineno-0-2679"></a>        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
-</span><span id="__span-0-2680"><a id="__codelineno-0-2680" name="__codelineno-0-2680"></a>            <span class="n">termination_status</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="__span-0-2681"><a id="__codelineno-0-2681" name="__codelineno-0-2681"></a>
-</span><span id="__span-0-2682"><a id="__codelineno-0-2682" name="__codelineno-0-2682"></a>        <span class="n">invalid_termination_codes</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-2683"><a id="__codelineno-0-2683" name="__codelineno-0-2683"></a>            <span class="n">poi</span><span class="o">.</span><span class="n">TerminationStatusCode</span><span class="o">.</span><span class="n">INFEASIBLE</span><span class="p">,</span>
-</span><span id="__span-0-2684"><a id="__codelineno-0-2684" name="__codelineno-0-2684"></a>            <span class="n">poi</span><span class="o">.</span><span class="n">TerminationStatusCode</span><span class="o">.</span><span class="n">INFEASIBLE_OR_UNBOUNDED</span><span class="p">,</span>
-</span><span id="__span-0-2685"><a id="__codelineno-0-2685" name="__codelineno-0-2685"></a>            <span class="n">poi</span><span class="o">.</span><span class="n">TerminationStatusCode</span><span class="o">.</span><span class="n">DUAL_INFEASIBLE</span><span class="p">,</span>
-</span><span id="__span-0-2686"><a id="__codelineno-0-2686" name="__codelineno-0-2686"></a>        <span class="p">)</span>
-</span><span id="__span-0-2687"><a id="__codelineno-0-2687" name="__codelineno-0-2687"></a>
-</span><span id="__span-0-2688"><a id="__codelineno-0-2688" name="__codelineno-0-2688"></a>        <span class="k">if</span> <span class="n">termination_status</span> <span class="ow">in</span> <span class="n">invalid_termination_codes</span><span class="p">:</span>
-</span><span id="__span-0-2689"><a id="__codelineno-0-2689" name="__codelineno-0-2689"></a>            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-</span><span id="__span-0-2690"><a id="__codelineno-0-2690" name="__codelineno-0-2690"></a>                <span class="sa">f</span><span class="s2">"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '</span><span class="si">{</span><span class="n">termination_status</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">')."</span>
-</span><span id="__span-0-2691"><a id="__codelineno-0-2691" name="__codelineno-0-2691"></a>            <span class="p">)</span>
-</span><span id="__span-0-2692"><a id="__codelineno-0-2692" name="__codelineno-0-2692"></a>
-</span><span id="__span-0-2693"><a id="__codelineno-0-2693" name="__codelineno-0-2693"></a>    <span class="k">try</span><span class="p">:</span>
-</span><span id="__span-0-2694"><a id="__codelineno-0-2694" name="__codelineno-0-2694"></a>        <span class="n">solution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">Value</span>
-</span><span id="__span-0-2695"><a id="__codelineno-0-2695" name="__codelineno-0-2695"></a>    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="__span-0-2696"><a id="__codelineno-0-2696" name="__codelineno-0-2696"></a>        <span class="k">raise</span> <span class="n">failed_attr_error</span><span class="p">(</span>
-</span><span id="__span-0-2697"><a id="__codelineno-0-2697" name="__codelineno-0-2697"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="s2">"Failed to retrieve the variable's solution."</span>
-</span><span id="__span-0-2698"><a id="__codelineno-0-2698" name="__codelineno-0-2698"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-</span><span id="__span-0-2699"><a id="__codelineno-0-2699" name="__codelineno-0-2699"></a>
-</span><span id="__span-0-2700"><a id="__codelineno-0-2700" name="__codelineno-0-2700"></a>    <span class="n">is_df</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
-</span><span id="__span-0-2701"><a id="__codelineno-0-2701" name="__codelineno-0-2701"></a>
-</span><span id="__span-0-2702"><a id="__codelineno-0-2702" name="__codelineno-0-2702"></a>    <span class="k">if</span> <span class="n">is_df</span><span class="p">:</span>
-</span><span id="__span-0-2703"><a id="__codelineno-0-2703" name="__codelineno-0-2703"></a>        <span class="n">solution</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"Value"</span><span class="p">:</span> <span class="n">SOLUTION_KEY</span><span class="p">})</span>
-</span><span id="__span-0-2704"><a id="__codelineno-0-2704" name="__codelineno-0-2704"></a>
-</span><span id="__span-0-2705"><a id="__codelineno-0-2705" name="__codelineno-0-2705"></a>    <span class="k">if</span> <span class="n">return_integers</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">vtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">VType</span><span class="o">.</span><span class="n">BINARY</span><span class="p">,</span> <span class="n">VType</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">]:</span>
-</span><span id="__span-0-2706"><a id="__codelineno-0-2706" name="__codelineno-0-2706"></a>        <span class="k">if</span> <span class="n">is_df</span><span class="p">:</span>
-</span><span id="__span-0-2707"><a id="__codelineno-0-2707" name="__codelineno-0-2707"></a>            <span class="n">solution</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
-</span><span id="__span-0-2708"><a id="__codelineno-0-2708" name="__codelineno-0-2708"></a>                <span class="n">_solution_int</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">Int64</span><span class="p">),</span>
-</span><span id="__span-0-2709"><a id="__codelineno-0-2709" name="__codelineno-0-2709"></a>            <span class="p">)</span>
-</span><span id="__span-0-2710"><a id="__codelineno-0-2710" name="__codelineno-0-2710"></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2711"><a id="__codelineno-0-2711" name="__codelineno-0-2711"></a>            <span class="n">solution_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">solution</span><span class="p">))</span>  <span class="c1"># type: ignore</span>
-</span><span id="__span-0-2712"><a id="__codelineno-0-2712" name="__codelineno-0-2712"></a>
-</span><span id="__span-0-2713"><a id="__codelineno-0-2713" name="__codelineno-0-2713"></a>        <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">integer_tolerance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="__span-0-2714"><a id="__codelineno-0-2714" name="__codelineno-0-2714"></a>            <span class="n">within_tolerance</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="__span-0-2715"><a id="__codelineno-0-2715" name="__codelineno-0-2715"></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2716"><a id="__codelineno-0-2716" name="__codelineno-0-2716"></a>            <span class="k">if</span> <span class="n">is_df</span><span class="p">:</span>
-</span><span id="__span-0-2717"><a id="__codelineno-0-2717" name="__codelineno-0-2717"></a>                <span class="n">within_tolerance</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
-</span><span id="__span-0-2718"><a id="__codelineno-0-2718" name="__codelineno-0-2718"></a>                    <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">)</span> <span class="o">-</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"_solution_int"</span><span class="p">))</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
-</span><span id="__span-0-2719"><a id="__codelineno-0-2719" name="__codelineno-0-2719"></a>                    <span class="o">&gt;</span> <span class="n">Config</span><span class="o">.</span><span class="n">integer_tolerance</span>
-</span><span id="__span-0-2720"><a id="__codelineno-0-2720" name="__codelineno-0-2720"></a>                <span class="p">)</span><span class="o">.</span><span class="n">is_empty</span><span class="p">()</span>
-</span><span id="__span-0-2721"><a id="__codelineno-0-2721" name="__codelineno-0-2721"></a>            <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2722"><a id="__codelineno-0-2722" name="__codelineno-0-2722"></a>                <span class="n">within_tolerance</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-2723"><a id="__codelineno-0-2723" name="__codelineno-0-2723"></a>                    <span class="nb">abs</span><span class="p">(</span><span class="n">solution</span> <span class="o">-</span> <span class="n">solution_int</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">Config</span><span class="o">.</span><span class="n">integer_tolerance</span>  <span class="c1"># type: ignore</span>
-</span><span id="__span-0-2724"><a id="__codelineno-0-2724" name="__codelineno-0-2724"></a>                <span class="p">)</span>
-</span><span id="__span-0-2725"><a id="__codelineno-0-2725" name="__codelineno-0-2725"></a>
-</span><span id="__span-0-2726"><a id="__codelineno-0-2726" name="__codelineno-0-2726"></a>        <span class="k">if</span> <span class="n">within_tolerance</span><span class="p">:</span>
-</span><span id="__span-0-2727"><a id="__codelineno-0-2727" name="__codelineno-0-2727"></a>            <span class="n">solution</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-2728"><a id="__codelineno-0-2728" name="__codelineno-0-2728"></a>                <span class="n">solution</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"_solution_int"</span><span class="p">:</span> <span class="n">SOLUTION_KEY</span><span class="p">})</span>
-</span><span id="__span-0-2729"><a id="__codelineno-0-2729" name="__codelineno-0-2729"></a>                <span class="k">if</span> <span class="n">is_df</span>
-</span><span id="__span-0-2730"><a id="__codelineno-0-2730" name="__codelineno-0-2730"></a>                <span class="k">else</span> <span class="n">solution_int</span>  <span class="c1"># type: ignore</span>
-</span><span id="__span-0-2731"><a id="__codelineno-0-2731" name="__codelineno-0-2731"></a>            <span class="p">)</span>
-</span><span id="__span-0-2732"><a id="__codelineno-0-2732" name="__codelineno-0-2732"></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2733"><a id="__codelineno-0-2733" name="__codelineno-0-2733"></a>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span id="__span-0-2734"><a id="__codelineno-0-2734" name="__codelineno-0-2734"></a>                <span class="sa">f</span><span class="s2">"Unable to convert solution for variable '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' from float to int. Consider loosening pf.Config.integer_tolerance."</span>
-</span><span id="__span-0-2735"><a id="__codelineno-0-2735" name="__codelineno-0-2735"></a>            <span class="p">)</span>
-</span><span id="__span-0-2736"><a id="__codelineno-0-2736" name="__codelineno-0-2736"></a>
-</span><span id="__span-0-2737"><a id="__codelineno-0-2737" name="__codelineno-0-2737"></a>    <span class="k">return</span> <span class="n">solution</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2792">2792</a></span>
+<span class="normal"><a href="#__codelineno-0-2793">2793</a></span>
+<span class="normal"><a href="#__codelineno-0-2794">2794</a></span>
+<span class="normal"><a href="#__codelineno-0-2795">2795</a></span>
+<span class="normal"><a href="#__codelineno-0-2796">2796</a></span>
+<span class="normal"><a href="#__codelineno-0-2797">2797</a></span>
+<span class="normal"><a href="#__codelineno-0-2798">2798</a></span>
+<span class="normal"><a href="#__codelineno-0-2799">2799</a></span>
+<span class="normal"><a href="#__codelineno-0-2800">2800</a></span>
+<span class="normal"><a href="#__codelineno-0-2801">2801</a></span>
+<span class="normal"><a href="#__codelineno-0-2802">2802</a></span>
+<span class="normal"><a href="#__codelineno-0-2803">2803</a></span>
+<span class="normal"><a href="#__codelineno-0-2804">2804</a></span>
+<span class="normal"><a href="#__codelineno-0-2805">2805</a></span>
+<span class="normal"><a href="#__codelineno-0-2806">2806</a></span>
+<span class="normal"><a href="#__codelineno-0-2807">2807</a></span>
+<span class="normal"><a href="#__codelineno-0-2808">2808</a></span>
+<span class="normal"><a href="#__codelineno-0-2809">2809</a></span>
+<span class="normal"><a href="#__codelineno-0-2810">2810</a></span>
+<span class="normal"><a href="#__codelineno-0-2811">2811</a></span>
+<span class="normal"><a href="#__codelineno-0-2812">2812</a></span>
+<span class="normal"><a href="#__codelineno-0-2813">2813</a></span>
+<span class="normal"><a href="#__codelineno-0-2814">2814</a></span>
+<span class="normal"><a href="#__codelineno-0-2815">2815</a></span>
+<span class="normal"><a href="#__codelineno-0-2816">2816</a></span>
+<span class="normal"><a href="#__codelineno-0-2817">2817</a></span>
+<span class="normal"><a href="#__codelineno-0-2818">2818</a></span>
+<span class="normal"><a href="#__codelineno-0-2819">2819</a></span>
+<span class="normal"><a href="#__codelineno-0-2820">2820</a></span>
+<span class="normal"><a href="#__codelineno-0-2821">2821</a></span>
+<span class="normal"><a href="#__codelineno-0-2822">2822</a></span>
+<span class="normal"><a href="#__codelineno-0-2823">2823</a></span>
+<span class="normal"><a href="#__codelineno-0-2824">2824</a></span>
+<span class="normal"><a href="#__codelineno-0-2825">2825</a></span>
+<span class="normal"><a href="#__codelineno-0-2826">2826</a></span>
+<span class="normal"><a href="#__codelineno-0-2827">2827</a></span>
+<span class="normal"><a href="#__codelineno-0-2828">2828</a></span>
+<span class="normal"><a href="#__codelineno-0-2829">2829</a></span>
+<span class="normal"><a href="#__codelineno-0-2830">2830</a></span>
+<span class="normal"><a href="#__codelineno-0-2831">2831</a></span>
+<span class="normal"><a href="#__codelineno-0-2832">2832</a></span>
+<span class="normal"><a href="#__codelineno-0-2833">2833</a></span>
+<span class="normal"><a href="#__codelineno-0-2834">2834</a></span>
+<span class="normal"><a href="#__codelineno-0-2835">2835</a></span>
+<span class="normal"><a href="#__codelineno-0-2836">2836</a></span>
+<span class="normal"><a href="#__codelineno-0-2837">2837</a></span>
+<span class="normal"><a href="#__codelineno-0-2838">2838</a></span>
+<span class="normal"><a href="#__codelineno-0-2839">2839</a></span>
+<span class="normal"><a href="#__codelineno-0-2840">2840</a></span>
+<span class="normal"><a href="#__codelineno-0-2841">2841</a></span>
+<span class="normal"><a href="#__codelineno-0-2842">2842</a></span>
+<span class="normal"><a href="#__codelineno-0-2843">2843</a></span>
+<span class="normal"><a href="#__codelineno-0-2844">2844</a></span>
+<span class="normal"><a href="#__codelineno-0-2845">2845</a></span>
+<span class="normal"><a href="#__codelineno-0-2846">2846</a></span>
+<span class="normal"><a href="#__codelineno-0-2847">2847</a></span>
+<span class="normal"><a href="#__codelineno-0-2848">2848</a></span>
+<span class="normal"><a href="#__codelineno-0-2849">2849</a></span>
+<span class="normal"><a href="#__codelineno-0-2850">2850</a></span>
+<span class="normal"><a href="#__codelineno-0-2851">2851</a></span>
+<span class="normal"><a href="#__codelineno-0-2852">2852</a></span>
+<span class="normal"><a href="#__codelineno-0-2853">2853</a></span>
+<span class="normal"><a href="#__codelineno-0-2854">2854</a></span>
+<span class="normal"><a href="#__codelineno-0-2855">2855</a></span>
+<span class="normal"><a href="#__codelineno-0-2856">2856</a></span>
+<span class="normal"><a href="#__codelineno-0-2857">2857</a></span>
+<span class="normal"><a href="#__codelineno-0-2858">2858</a></span>
+<span class="normal"><a href="#__codelineno-0-2859">2859</a></span>
+<span class="normal"><a href="#__codelineno-0-2860">2860</a></span>
+<span class="normal"><a href="#__codelineno-0-2861">2861</a></span>
+<span class="normal"><a href="#__codelineno-0-2862">2862</a></span>
+<span class="normal"><a href="#__codelineno-0-2863">2863</a></span>
+<span class="normal"><a href="#__codelineno-0-2864">2864</a></span>
+<span class="normal"><a href="#__codelineno-0-2865">2865</a></span>
+<span class="normal"><a href="#__codelineno-0-2866">2866</a></span>
+<span class="normal"><a href="#__codelineno-0-2867">2867</a></span>
+<span class="normal"><a href="#__codelineno-0-2868">2868</a></span>
+<span class="normal"><a href="#__codelineno-0-2869">2869</a></span>
+<span class="normal"><a href="#__codelineno-0-2870">2870</a></span>
+<span class="normal"><a href="#__codelineno-0-2871">2871</a></span>
+<span class="normal"><a href="#__codelineno-0-2872">2872</a></span>
+<span class="normal"><a href="#__codelineno-0-2873">2873</a></span>
+<span class="normal"><a href="#__codelineno-0-2874">2874</a></span>
+<span class="normal"><a href="#__codelineno-0-2875">2875</a></span>
+<span class="normal"><a href="#__codelineno-0-2876">2876</a></span>
+<span class="normal"><a href="#__codelineno-0-2877">2877</a></span>
+<span class="normal"><a href="#__codelineno-0-2878">2878</a></span>
+<span class="normal"><a href="#__codelineno-0-2879">2879</a></span>
+<span class="normal"><a href="#__codelineno-0-2880">2880</a></span>
+<span class="normal"><a href="#__codelineno-0-2881">2881</a></span>
+<span class="normal"><a href="#__codelineno-0-2882">2882</a></span>
+<span class="normal"><a href="#__codelineno-0-2883">2883</a></span>
+<span class="normal"><a href="#__codelineno-0-2884">2884</a></span>
+<span class="normal"><a href="#__codelineno-0-2885">2885</a></span>
+<span class="normal"><a href="#__codelineno-0-2886">2886</a></span>
+<span class="normal"><a href="#__codelineno-0-2887">2887</a></span>
+<span class="normal"><a href="#__codelineno-0-2888">2888</a></span>
+<span class="normal"><a href="#__codelineno-0-2889">2889</a></span>
+<span class="normal"><a href="#__codelineno-0-2890">2890</a></span>
+<span class="normal"><a href="#__codelineno-0-2891">2891</a></span>
+<span class="normal"><a href="#__codelineno-0-2892">2892</a></span>
+<span class="normal"><a href="#__codelineno-0-2893">2893</a></span>
+<span class="normal"><a href="#__codelineno-0-2894">2894</a></span>
+<span class="normal"><a href="#__codelineno-0-2895">2895</a></span>
+<span class="normal"><a href="#__codelineno-0-2896">2896</a></span>
+<span class="normal"><a href="#__codelineno-0-2897">2897</a></span>
+<span class="normal"><a href="#__codelineno-0-2898">2898</a></span>
+<span class="normal"><a href="#__codelineno-0-2899">2899</a></span>
+<span class="normal"><a href="#__codelineno-0-2900">2900</a></span>
+<span class="normal"><a href="#__codelineno-0-2901">2901</a></span>
+<span class="normal"><a href="#__codelineno-0-2902">2902</a></span>
+<span class="normal"><a href="#__codelineno-0-2903">2903</a></span>
+<span class="normal"><a href="#__codelineno-0-2904">2904</a></span>
+<span class="normal"><a href="#__codelineno-0-2905">2905</a></span>
+<span class="normal"><a href="#__codelineno-0-2906">2906</a></span>
+<span class="normal"><a href="#__codelineno-0-2907">2907</a></span>
+<span class="normal"><a href="#__codelineno-0-2908">2908</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2792"><a id="__codelineno-0-2792" name="__codelineno-0-2792"></a><span class="k">def</span><span class="w"> </span><span class="nf">get_solution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_integers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="__span-0-2793"><a id="__codelineno-0-2793" name="__codelineno-0-2793"></a><span class="w">    </span><span class="sd">"""Retrieves a variable's optimal value after the model has been solved.</span>
+</span><span id="__span-0-2794"><a id="__codelineno-0-2794" name="__codelineno-0-2794"></a>
+</span><span id="__span-0-2795"><a id="__codelineno-0-2795" name="__codelineno-0-2795"></a><span class="sd">    Returns:</span>
+</span><span id="__span-0-2796"><a id="__codelineno-0-2796" name="__codelineno-0-2796"></a><span class="sd">        A DataFrame if the variable has dimensions and a `float` or `int` otherwise.</span>
+</span><span id="__span-0-2797"><a id="__codelineno-0-2797" name="__codelineno-0-2797"></a>
+</span><span id="__span-0-2798"><a id="__codelineno-0-2798" name="__codelineno-0-2798"></a><span class="sd">    Raises:</span>
+</span><span id="__span-0-2799"><a id="__codelineno-0-2799" name="__codelineno-0-2799"></a><span class="sd">        RuntimeError:</span>
+</span><span id="__span-0-2800"><a id="__codelineno-0-2800" name="__codelineno-0-2800"></a><span class="sd">            If the model has not been solved or the solver failed to find an optimal solution.</span>
+</span><span id="__span-0-2801"><a id="__codelineno-0-2801" name="__codelineno-0-2801"></a>
+</span><span id="__span-0-2802"><a id="__codelineno-0-2802" name="__codelineno-0-2802"></a><span class="sd">    Parameters:</span>
+</span><span id="__span-0-2803"><a id="__codelineno-0-2803" name="__codelineno-0-2803"></a><span class="sd">        return_integers:</span>
+</span><span id="__span-0-2804"><a id="__codelineno-0-2804" name="__codelineno-0-2804"></a><span class="sd">            When `True`, the solution to binary and integer variables are returned as integers instead of floats.</span>
+</span><span id="__span-0-2805"><a id="__codelineno-0-2805" name="__codelineno-0-2805"></a><span class="sd">            Integers are obtained by rounding floats to the nearest integer.</span>
+</span><span id="__span-0-2806"><a id="__codelineno-0-2806" name="__codelineno-0-2806"></a><span class="sd">            If the rounding causes a change greater than [`Config.integer_tolerance`][pyoframe._Config.integer_tolerance], rounding is canceled, a warning is emitted, and floats are returned.</span>
+</span><span id="__span-0-2807"><a id="__codelineno-0-2807" name="__codelineno-0-2807"></a>
+</span><span id="__span-0-2808"><a id="__codelineno-0-2808" name="__codelineno-0-2808"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2809"><a id="__codelineno-0-2809" name="__codelineno-0-2809"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2810"><a id="__codelineno-0-2810" name="__codelineno-0-2810"></a><span class="sd">        &gt;&gt;&gt; m.var_continuous = pf.Variable({"dim1": [1, 2, 3]}, lb=5, ub=5)</span>
+</span><span id="__span-0-2811"><a id="__codelineno-0-2811" name="__codelineno-0-2811"></a><span class="sd">        &gt;&gt;&gt; m.var_integer = pf.Variable(</span>
+</span><span id="__span-0-2812"><a id="__codelineno-0-2812" name="__codelineno-0-2812"></a><span class="sd">        ...     {"dim1": [1, 2, 3]}, lb=4.5, ub=5.5, vtype=pf.VType.INTEGER</span>
+</span><span id="__span-0-2813"><a id="__codelineno-0-2813" name="__codelineno-0-2813"></a><span class="sd">        ... )</span>
+</span><span id="__span-0-2814"><a id="__codelineno-0-2814" name="__codelineno-0-2814"></a><span class="sd">        &gt;&gt;&gt; m.var_dimensionless = pf.Variable(</span>
+</span><span id="__span-0-2815"><a id="__codelineno-0-2815" name="__codelineno-0-2815"></a><span class="sd">        ...     lb=4.5, ub=5.5, vtype=pf.VType.INTEGER</span>
+</span><span id="__span-0-2816"><a id="__codelineno-0-2816" name="__codelineno-0-2816"></a><span class="sd">        ... )</span>
+</span><span id="__span-0-2817"><a id="__codelineno-0-2817" name="__codelineno-0-2817"></a><span class="sd">        &gt;&gt;&gt; m.optimize()</span>
+</span><span id="__span-0-2818"><a id="__codelineno-0-2818" name="__codelineno-0-2818"></a><span class="sd">        &gt;&gt;&gt; m.var_continuous.solution</span>
+</span><span id="__span-0-2819"><a id="__codelineno-0-2819" name="__codelineno-0-2819"></a><span class="sd">        shape: (3, 2)</span>
+</span><span id="__span-0-2820"><a id="__codelineno-0-2820" name="__codelineno-0-2820"></a><span class="sd">        ┌──────┬──────────┐</span>
+</span><span id="__span-0-2821"><a id="__codelineno-0-2821" name="__codelineno-0-2821"></a><span class="sd">        │ dim1 ┆ solution │</span>
+</span><span id="__span-0-2822"><a id="__codelineno-0-2822" name="__codelineno-0-2822"></a><span class="sd">        │ ---  ┆ ---      │</span>
+</span><span id="__span-0-2823"><a id="__codelineno-0-2823" name="__codelineno-0-2823"></a><span class="sd">        │ i64  ┆ f64      │</span>
+</span><span id="__span-0-2824"><a id="__codelineno-0-2824" name="__codelineno-0-2824"></a><span class="sd">        ╞══════╪══════════╡</span>
+</span><span id="__span-0-2825"><a id="__codelineno-0-2825" name="__codelineno-0-2825"></a><span class="sd">        │ 1    ┆ 5.0      │</span>
+</span><span id="__span-0-2826"><a id="__codelineno-0-2826" name="__codelineno-0-2826"></a><span class="sd">        │ 2    ┆ 5.0      │</span>
+</span><span id="__span-0-2827"><a id="__codelineno-0-2827" name="__codelineno-0-2827"></a><span class="sd">        │ 3    ┆ 5.0      │</span>
+</span><span id="__span-0-2828"><a id="__codelineno-0-2828" name="__codelineno-0-2828"></a><span class="sd">        └──────┴──────────┘</span>
+</span><span id="__span-0-2829"><a id="__codelineno-0-2829" name="__codelineno-0-2829"></a><span class="sd">        &gt;&gt;&gt; m.var_integer.solution</span>
+</span><span id="__span-0-2830"><a id="__codelineno-0-2830" name="__codelineno-0-2830"></a><span class="sd">        shape: (3, 2)</span>
+</span><span id="__span-0-2831"><a id="__codelineno-0-2831" name="__codelineno-0-2831"></a><span class="sd">        ┌──────┬──────────┐</span>
+</span><span id="__span-0-2832"><a id="__codelineno-0-2832" name="__codelineno-0-2832"></a><span class="sd">        │ dim1 ┆ solution │</span>
+</span><span id="__span-0-2833"><a id="__codelineno-0-2833" name="__codelineno-0-2833"></a><span class="sd">        │ ---  ┆ ---      │</span>
+</span><span id="__span-0-2834"><a id="__codelineno-0-2834" name="__codelineno-0-2834"></a><span class="sd">        │ i64  ┆ i64      │</span>
+</span><span id="__span-0-2835"><a id="__codelineno-0-2835" name="__codelineno-0-2835"></a><span class="sd">        ╞══════╪══════════╡</span>
+</span><span id="__span-0-2836"><a id="__codelineno-0-2836" name="__codelineno-0-2836"></a><span class="sd">        │ 1    ┆ 5        │</span>
+</span><span id="__span-0-2837"><a id="__codelineno-0-2837" name="__codelineno-0-2837"></a><span class="sd">        │ 2    ┆ 5        │</span>
+</span><span id="__span-0-2838"><a id="__codelineno-0-2838" name="__codelineno-0-2838"></a><span class="sd">        │ 3    ┆ 5        │</span>
+</span><span id="__span-0-2839"><a id="__codelineno-0-2839" name="__codelineno-0-2839"></a><span class="sd">        └──────┴──────────┘</span>
+</span><span id="__span-0-2840"><a id="__codelineno-0-2840" name="__codelineno-0-2840"></a><span class="sd">        &gt;&gt;&gt; m.var_dimensionless.solution</span>
+</span><span id="__span-0-2841"><a id="__codelineno-0-2841" name="__codelineno-0-2841"></a><span class="sd">        5</span>
+</span><span id="__span-0-2842"><a id="__codelineno-0-2842" name="__codelineno-0-2842"></a><span class="sd">    """</span>
+</span><span id="__span-0-2843"><a id="__codelineno-0-2843" name="__codelineno-0-2843"></a>    <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span>
+</span><span id="__span-0-2844"><a id="__codelineno-0-2844" name="__codelineno-0-2844"></a>        <span class="s2">"Cannot retrieve the variable's solution because the variable has not been added to a model."</span>
+</span><span id="__span-0-2845"><a id="__codelineno-0-2845" name="__codelineno-0-2845"></a>    <span class="p">)</span>
+</span><span id="__span-0-2846"><a id="__codelineno-0-2846" name="__codelineno-0-2846"></a>
+</span><span id="__span-0-2847"><a id="__codelineno-0-2847" name="__codelineno-0-2847"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">check_termination_status_when_retrieving_solution</span><span class="p">:</span>
+</span><span id="__span-0-2848"><a id="__codelineno-0-2848" name="__codelineno-0-2848"></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-0-2849"><a id="__codelineno-0-2849" name="__codelineno-0-2849"></a>            <span class="n">termination_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">TerminationStatus</span>
+</span><span id="__span-0-2850"><a id="__codelineno-0-2850" name="__codelineno-0-2850"></a>        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+</span><span id="__span-0-2851"><a id="__codelineno-0-2851" name="__codelineno-0-2851"></a>            <span class="n">termination_status</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-2852"><a id="__codelineno-0-2852" name="__codelineno-0-2852"></a>
+</span><span id="__span-0-2853"><a id="__codelineno-0-2853" name="__codelineno-0-2853"></a>        <span class="n">invalid_termination_codes</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-2854"><a id="__codelineno-0-2854" name="__codelineno-0-2854"></a>            <span class="n">poi</span><span class="o">.</span><span class="n">TerminationStatusCode</span><span class="o">.</span><span class="n">INFEASIBLE</span><span class="p">,</span>
+</span><span id="__span-0-2855"><a id="__codelineno-0-2855" name="__codelineno-0-2855"></a>            <span class="n">poi</span><span class="o">.</span><span class="n">TerminationStatusCode</span><span class="o">.</span><span class="n">INFEASIBLE_OR_UNBOUNDED</span><span class="p">,</span>
+</span><span id="__span-0-2856"><a id="__codelineno-0-2856" name="__codelineno-0-2856"></a>            <span class="n">poi</span><span class="o">.</span><span class="n">TerminationStatusCode</span><span class="o">.</span><span class="n">DUAL_INFEASIBLE</span><span class="p">,</span>
+</span><span id="__span-0-2857"><a id="__codelineno-0-2857" name="__codelineno-0-2857"></a>        <span class="p">)</span>
+</span><span id="__span-0-2858"><a id="__codelineno-0-2858" name="__codelineno-0-2858"></a>
+</span><span id="__span-0-2859"><a id="__codelineno-0-2859" name="__codelineno-0-2859"></a>        <span class="k">if</span> <span class="n">termination_status</span> <span class="ow">in</span> <span class="n">invalid_termination_codes</span><span class="p">:</span>
+</span><span id="__span-0-2860"><a id="__codelineno-0-2860" name="__codelineno-0-2860"></a>            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+</span><span id="__span-0-2861"><a id="__codelineno-0-2861" name="__codelineno-0-2861"></a>                <span class="sa">f</span><span class="s2">"Cannot retrieve the variable's solution because the solver did not find an optimal solution (its termination status is '</span><span class="si">{</span><span class="n">termination_status</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">')."</span>
+</span><span id="__span-0-2862"><a id="__codelineno-0-2862" name="__codelineno-0-2862"></a>            <span class="p">)</span>
+</span><span id="__span-0-2863"><a id="__codelineno-0-2863" name="__codelineno-0-2863"></a>
+</span><span id="__span-0-2864"><a id="__codelineno-0-2864" name="__codelineno-0-2864"></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-0-2865"><a id="__codelineno-0-2865" name="__codelineno-0-2865"></a>        <span class="n">solution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">Value</span>
+</span><span id="__span-0-2866"><a id="__codelineno-0-2866" name="__codelineno-0-2866"></a>    <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-0-2867"><a id="__codelineno-0-2867" name="__codelineno-0-2867"></a>        <span class="k">raise</span> <span class="n">failed_attr_error</span><span class="p">(</span>
+</span><span id="__span-0-2868"><a id="__codelineno-0-2868" name="__codelineno-0-2868"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="s2">"Failed to retrieve the variable's solution."</span>
+</span><span id="__span-0-2869"><a id="__codelineno-0-2869" name="__codelineno-0-2869"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</span><span id="__span-0-2870"><a id="__codelineno-0-2870" name="__codelineno-0-2870"></a>
+</span><span id="__span-0-2871"><a id="__codelineno-0-2871" name="__codelineno-0-2871"></a>    <span class="n">is_df</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="n">pl</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span>
+</span><span id="__span-0-2872"><a id="__codelineno-0-2872" name="__codelineno-0-2872"></a>
+</span><span id="__span-0-2873"><a id="__codelineno-0-2873" name="__codelineno-0-2873"></a>    <span class="k">if</span> <span class="n">is_df</span><span class="p">:</span>
+</span><span id="__span-0-2874"><a id="__codelineno-0-2874" name="__codelineno-0-2874"></a>        <span class="n">solution</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"Value"</span><span class="p">:</span> <span class="n">SOLUTION_KEY</span><span class="p">})</span>
+</span><span id="__span-0-2875"><a id="__codelineno-0-2875" name="__codelineno-0-2875"></a>
+</span><span id="__span-0-2876"><a id="__codelineno-0-2876" name="__codelineno-0-2876"></a>    <span class="k">if</span> <span class="n">return_integers</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">vtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">VType</span><span class="o">.</span><span class="n">BINARY</span><span class="p">,</span> <span class="n">VType</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">]:</span>
+</span><span id="__span-0-2877"><a id="__codelineno-0-2877" name="__codelineno-0-2877"></a>        <span class="k">if</span> <span class="n">is_df</span><span class="p">:</span>
+</span><span id="__span-0-2878"><a id="__codelineno-0-2878" name="__codelineno-0-2878"></a>            <span class="n">solution</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span>
+</span><span id="__span-0-2879"><a id="__codelineno-0-2879" name="__codelineno-0-2879"></a>                <span class="n">_solution_int</span><span class="o">=</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">Int64</span><span class="p">),</span>
+</span><span id="__span-0-2880"><a id="__codelineno-0-2880" name="__codelineno-0-2880"></a>            <span class="p">)</span>
+</span><span id="__span-0-2881"><a id="__codelineno-0-2881" name="__codelineno-0-2881"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2882"><a id="__codelineno-0-2882" name="__codelineno-0-2882"></a>            <span class="n">solution_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">solution</span><span class="p">))</span>  <span class="c1"># type: ignore</span>
+</span><span id="__span-0-2883"><a id="__codelineno-0-2883" name="__codelineno-0-2883"></a>
+</span><span id="__span-0-2884"><a id="__codelineno-0-2884" name="__codelineno-0-2884"></a>        <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">integer_tolerance</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="__span-0-2885"><a id="__codelineno-0-2885" name="__codelineno-0-2885"></a>            <span class="n">within_tolerance</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-0-2886"><a id="__codelineno-0-2886" name="__codelineno-0-2886"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2887"><a id="__codelineno-0-2887" name="__codelineno-0-2887"></a>            <span class="k">if</span> <span class="n">is_df</span><span class="p">:</span>
+</span><span id="__span-0-2888"><a id="__codelineno-0-2888" name="__codelineno-0-2888"></a>                <span class="n">within_tolerance</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+</span><span id="__span-0-2889"><a id="__codelineno-0-2889" name="__codelineno-0-2889"></a>                    <span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">)</span> <span class="o">-</span> <span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"_solution_int"</span><span class="p">))</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span>
+</span><span id="__span-0-2890"><a id="__codelineno-0-2890" name="__codelineno-0-2890"></a>                    <span class="o">&gt;</span> <span class="n">Config</span><span class="o">.</span><span class="n">integer_tolerance</span>
+</span><span id="__span-0-2891"><a id="__codelineno-0-2891" name="__codelineno-0-2891"></a>                <span class="p">)</span><span class="o">.</span><span class="n">is_empty</span><span class="p">()</span>
+</span><span id="__span-0-2892"><a id="__codelineno-0-2892" name="__codelineno-0-2892"></a>            <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2893"><a id="__codelineno-0-2893" name="__codelineno-0-2893"></a>                <span class="n">within_tolerance</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-2894"><a id="__codelineno-0-2894" name="__codelineno-0-2894"></a>                    <span class="nb">abs</span><span class="p">(</span><span class="n">solution</span> <span class="o">-</span> <span class="n">solution_int</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">Config</span><span class="o">.</span><span class="n">integer_tolerance</span>  <span class="c1"># type: ignore</span>
+</span><span id="__span-0-2895"><a id="__codelineno-0-2895" name="__codelineno-0-2895"></a>                <span class="p">)</span>
+</span><span id="__span-0-2896"><a id="__codelineno-0-2896" name="__codelineno-0-2896"></a>
+</span><span id="__span-0-2897"><a id="__codelineno-0-2897" name="__codelineno-0-2897"></a>        <span class="k">if</span> <span class="n">within_tolerance</span><span class="p">:</span>
+</span><span id="__span-0-2898"><a id="__codelineno-0-2898" name="__codelineno-0-2898"></a>            <span class="n">solution</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-2899"><a id="__codelineno-0-2899" name="__codelineno-0-2899"></a>                <span class="n">solution</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"_solution_int"</span><span class="p">:</span> <span class="n">SOLUTION_KEY</span><span class="p">})</span>
+</span><span id="__span-0-2900"><a id="__codelineno-0-2900" name="__codelineno-0-2900"></a>                <span class="k">if</span> <span class="n">is_df</span>
+</span><span id="__span-0-2901"><a id="__codelineno-0-2901" name="__codelineno-0-2901"></a>                <span class="k">else</span> <span class="n">solution_int</span>  <span class="c1"># type: ignore</span>
+</span><span id="__span-0-2902"><a id="__codelineno-0-2902" name="__codelineno-0-2902"></a>            <span class="p">)</span>
+</span><span id="__span-0-2903"><a id="__codelineno-0-2903" name="__codelineno-0-2903"></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-2904"><a id="__codelineno-0-2904" name="__codelineno-0-2904"></a>            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span id="__span-0-2905"><a id="__codelineno-0-2905" name="__codelineno-0-2905"></a>                <span class="sa">f</span><span class="s2">"Unable to convert solution for variable '</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' from float to int. Consider loosening pf.Config.integer_tolerance."</span>
+</span><span id="__span-0-2906"><a id="__codelineno-0-2906" name="__codelineno-0-2906"></a>            <span class="p">)</span>
+</span><span id="__span-0-2907"><a id="__codelineno-0-2907" name="__codelineno-0-2907"></a>
+</span><span id="__span-0-2908"><a id="__codelineno-0-2908" name="__codelineno-0-2908"></a>    <span class="k">return</span> <span class="n">solution</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3202,211 +3202,211 @@ If the rounding causes a change greater than <a class="autorefs autorefs-interna
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2771">2771</a></span>
-<span class="normal"><a href="#__codelineno-0-2772">2772</a></span>
-<span class="normal"><a href="#__codelineno-0-2773">2773</a></span>
-<span class="normal"><a href="#__codelineno-0-2774">2774</a></span>
-<span class="normal"><a href="#__codelineno-0-2775">2775</a></span>
-<span class="normal"><a href="#__codelineno-0-2776">2776</a></span>
-<span class="normal"><a href="#__codelineno-0-2777">2777</a></span>
-<span class="normal"><a href="#__codelineno-0-2778">2778</a></span>
-<span class="normal"><a href="#__codelineno-0-2779">2779</a></span>
-<span class="normal"><a href="#__codelineno-0-2780">2780</a></span>
-<span class="normal"><a href="#__codelineno-0-2781">2781</a></span>
-<span class="normal"><a href="#__codelineno-0-2782">2782</a></span>
-<span class="normal"><a href="#__codelineno-0-2783">2783</a></span>
-<span class="normal"><a href="#__codelineno-0-2784">2784</a></span>
-<span class="normal"><a href="#__codelineno-0-2785">2785</a></span>
-<span class="normal"><a href="#__codelineno-0-2786">2786</a></span>
-<span class="normal"><a href="#__codelineno-0-2787">2787</a></span>
-<span class="normal"><a href="#__codelineno-0-2788">2788</a></span>
-<span class="normal"><a href="#__codelineno-0-2789">2789</a></span>
-<span class="normal"><a href="#__codelineno-0-2790">2790</a></span>
-<span class="normal"><a href="#__codelineno-0-2791">2791</a></span>
-<span class="normal"><a href="#__codelineno-0-2792">2792</a></span>
-<span class="normal"><a href="#__codelineno-0-2793">2793</a></span>
-<span class="normal"><a href="#__codelineno-0-2794">2794</a></span>
-<span class="normal"><a href="#__codelineno-0-2795">2795</a></span>
-<span class="normal"><a href="#__codelineno-0-2796">2796</a></span>
-<span class="normal"><a href="#__codelineno-0-2797">2797</a></span>
-<span class="normal"><a href="#__codelineno-0-2798">2798</a></span>
-<span class="normal"><a href="#__codelineno-0-2799">2799</a></span>
-<span class="normal"><a href="#__codelineno-0-2800">2800</a></span>
-<span class="normal"><a href="#__codelineno-0-2801">2801</a></span>
-<span class="normal"><a href="#__codelineno-0-2802">2802</a></span>
-<span class="normal"><a href="#__codelineno-0-2803">2803</a></span>
-<span class="normal"><a href="#__codelineno-0-2804">2804</a></span>
-<span class="normal"><a href="#__codelineno-0-2805">2805</a></span>
-<span class="normal"><a href="#__codelineno-0-2806">2806</a></span>
-<span class="normal"><a href="#__codelineno-0-2807">2807</a></span>
-<span class="normal"><a href="#__codelineno-0-2808">2808</a></span>
-<span class="normal"><a href="#__codelineno-0-2809">2809</a></span>
-<span class="normal"><a href="#__codelineno-0-2810">2810</a></span>
-<span class="normal"><a href="#__codelineno-0-2811">2811</a></span>
-<span class="normal"><a href="#__codelineno-0-2812">2812</a></span>
-<span class="normal"><a href="#__codelineno-0-2813">2813</a></span>
-<span class="normal"><a href="#__codelineno-0-2814">2814</a></span>
-<span class="normal"><a href="#__codelineno-0-2815">2815</a></span>
-<span class="normal"><a href="#__codelineno-0-2816">2816</a></span>
-<span class="normal"><a href="#__codelineno-0-2817">2817</a></span>
-<span class="normal"><a href="#__codelineno-0-2818">2818</a></span>
-<span class="normal"><a href="#__codelineno-0-2819">2819</a></span>
-<span class="normal"><a href="#__codelineno-0-2820">2820</a></span>
-<span class="normal"><a href="#__codelineno-0-2821">2821</a></span>
-<span class="normal"><a href="#__codelineno-0-2822">2822</a></span>
-<span class="normal"><a href="#__codelineno-0-2823">2823</a></span>
-<span class="normal"><a href="#__codelineno-0-2824">2824</a></span>
-<span class="normal"><a href="#__codelineno-0-2825">2825</a></span>
-<span class="normal"><a href="#__codelineno-0-2826">2826</a></span>
-<span class="normal"><a href="#__codelineno-0-2827">2827</a></span>
-<span class="normal"><a href="#__codelineno-0-2828">2828</a></span>
-<span class="normal"><a href="#__codelineno-0-2829">2829</a></span>
-<span class="normal"><a href="#__codelineno-0-2830">2830</a></span>
-<span class="normal"><a href="#__codelineno-0-2831">2831</a></span>
-<span class="normal"><a href="#__codelineno-0-2832">2832</a></span>
-<span class="normal"><a href="#__codelineno-0-2833">2833</a></span>
-<span class="normal"><a href="#__codelineno-0-2834">2834</a></span>
-<span class="normal"><a href="#__codelineno-0-2835">2835</a></span>
-<span class="normal"><a href="#__codelineno-0-2836">2836</a></span>
-<span class="normal"><a href="#__codelineno-0-2837">2837</a></span>
-<span class="normal"><a href="#__codelineno-0-2838">2838</a></span>
-<span class="normal"><a href="#__codelineno-0-2839">2839</a></span>
-<span class="normal"><a href="#__codelineno-0-2840">2840</a></span>
-<span class="normal"><a href="#__codelineno-0-2841">2841</a></span>
-<span class="normal"><a href="#__codelineno-0-2842">2842</a></span>
-<span class="normal"><a href="#__codelineno-0-2843">2843</a></span>
-<span class="normal"><a href="#__codelineno-0-2844">2844</a></span>
-<span class="normal"><a href="#__codelineno-0-2845">2845</a></span>
-<span class="normal"><a href="#__codelineno-0-2846">2846</a></span>
-<span class="normal"><a href="#__codelineno-0-2847">2847</a></span>
-<span class="normal"><a href="#__codelineno-0-2848">2848</a></span>
-<span class="normal"><a href="#__codelineno-0-2849">2849</a></span>
-<span class="normal"><a href="#__codelineno-0-2850">2850</a></span>
-<span class="normal"><a href="#__codelineno-0-2851">2851</a></span>
-<span class="normal"><a href="#__codelineno-0-2852">2852</a></span>
-<span class="normal"><a href="#__codelineno-0-2853">2853</a></span>
-<span class="normal"><a href="#__codelineno-0-2854">2854</a></span>
-<span class="normal"><a href="#__codelineno-0-2855">2855</a></span>
-<span class="normal"><a href="#__codelineno-0-2856">2856</a></span>
-<span class="normal"><a href="#__codelineno-0-2857">2857</a></span>
-<span class="normal"><a href="#__codelineno-0-2858">2858</a></span>
-<span class="normal"><a href="#__codelineno-0-2859">2859</a></span>
-<span class="normal"><a href="#__codelineno-0-2860">2860</a></span>
-<span class="normal"><a href="#__codelineno-0-2861">2861</a></span>
-<span class="normal"><a href="#__codelineno-0-2862">2862</a></span>
-<span class="normal"><a href="#__codelineno-0-2863">2863</a></span>
-<span class="normal"><a href="#__codelineno-0-2864">2864</a></span>
-<span class="normal"><a href="#__codelineno-0-2865">2865</a></span>
-<span class="normal"><a href="#__codelineno-0-2866">2866</a></span>
-<span class="normal"><a href="#__codelineno-0-2867">2867</a></span>
-<span class="normal"><a href="#__codelineno-0-2868">2868</a></span>
-<span class="normal"><a href="#__codelineno-0-2869">2869</a></span>
-<span class="normal"><a href="#__codelineno-0-2870">2870</a></span>
-<span class="normal"><a href="#__codelineno-0-2871">2871</a></span>
-<span class="normal"><a href="#__codelineno-0-2872">2872</a></span>
-<span class="normal"><a href="#__codelineno-0-2873">2873</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2771"><a id="__codelineno-0-2771" name="__codelineno-0-2771"></a><span class="nd">@return_new</span>
-</span><span id="__span-0-2772"><a id="__codelineno-0-2772" name="__codelineno-0-2772"></a><span class="k">def</span><span class="w"> </span><span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wrap_around</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-</span><span id="__span-0-2773"><a id="__codelineno-0-2773" name="__codelineno-0-2773"></a><span class="w">    </span><span class="sd">"""Creates an expression where the variable at each label is the next variable in the specified dimension.</span>
-</span><span id="__span-0-2774"><a id="__codelineno-0-2774" name="__codelineno-0-2774"></a>
-</span><span id="__span-0-2775"><a id="__codelineno-0-2775" name="__codelineno-0-2775"></a><span class="sd">    Parameters:</span>
-</span><span id="__span-0-2776"><a id="__codelineno-0-2776" name="__codelineno-0-2776"></a><span class="sd">        dim:</span>
-</span><span id="__span-0-2777"><a id="__codelineno-0-2777" name="__codelineno-0-2777"></a><span class="sd">            The dimension over which to shift the variable.</span>
-</span><span id="__span-0-2778"><a id="__codelineno-0-2778" name="__codelineno-0-2778"></a><span class="sd">        wrap_around:</span>
-</span><span id="__span-0-2779"><a id="__codelineno-0-2779" name="__codelineno-0-2779"></a><span class="sd">            If `True`, the last label in the dimension is connected to the first label.</span>
-</span><span id="__span-0-2780"><a id="__codelineno-0-2780" name="__codelineno-0-2780"></a>
-</span><span id="__span-0-2781"><a id="__codelineno-0-2781" name="__codelineno-0-2781"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-2782"><a id="__codelineno-0-2782" name="__codelineno-0-2782"></a><span class="sd">        &gt;&gt;&gt; time_dim = pl.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})</span>
-</span><span id="__span-0-2783"><a id="__codelineno-0-2783" name="__codelineno-0-2783"></a><span class="sd">        &gt;&gt;&gt; space_dim = pl.DataFrame({"city": ["Toronto", "Berlin"]})</span>
-</span><span id="__span-0-2784"><a id="__codelineno-0-2784" name="__codelineno-0-2784"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
-</span><span id="__span-0-2785"><a id="__codelineno-0-2785" name="__codelineno-0-2785"></a><span class="sd">        &gt;&gt;&gt; m.bat_charge = pf.Variable(time_dim, space_dim)</span>
-</span><span id="__span-0-2786"><a id="__codelineno-0-2786" name="__codelineno-0-2786"></a><span class="sd">        &gt;&gt;&gt; m.bat_flow = pf.Variable(time_dim, space_dim)</span>
-</span><span id="__span-0-2787"><a id="__codelineno-0-2787" name="__codelineno-0-2787"></a><span class="sd">        &gt;&gt;&gt; # Fails because the dimensions are not the same</span>
-</span><span id="__span-0-2788"><a id="__codelineno-0-2788" name="__codelineno-0-2788"></a><span class="sd">        &gt;&gt;&gt; m.bat_charge + m.bat_flow == m.bat_charge.next("time")</span>
-</span><span id="__span-0-2789"><a id="__codelineno-0-2789" name="__codelineno-0-2789"></a><span class="sd">        Traceback (most recent call last):</span>
-</span><span id="__span-0-2790"><a id="__codelineno-0-2790" name="__codelineno-0-2790"></a><span class="sd">        ...</span>
-</span><span id="__span-0-2791"><a id="__codelineno-0-2791" name="__codelineno-0-2791"></a><span class="sd">        pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because expression 1 has extra labels.</span>
-</span><span id="__span-0-2792"><a id="__codelineno-0-2792" name="__codelineno-0-2792"></a><span class="sd">        Expression 1:	(bat_charge + bat_flow)</span>
-</span><span id="__span-0-2793"><a id="__codelineno-0-2793" name="__codelineno-0-2793"></a><span class="sd">        Expression 2:	bat_charge.next(…)</span>
-</span><span id="__span-0-2794"><a id="__codelineno-0-2794" name="__codelineno-0-2794"></a><span class="sd">        Extra labels in expression 1:</span>
-</span><span id="__span-0-2795"><a id="__codelineno-0-2795" name="__codelineno-0-2795"></a><span class="sd">        ┌───────┬─────────┐</span>
-</span><span id="__span-0-2796"><a id="__codelineno-0-2796" name="__codelineno-0-2796"></a><span class="sd">        │ time  ┆ city    │</span>
-</span><span id="__span-0-2797"><a id="__codelineno-0-2797" name="__codelineno-0-2797"></a><span class="sd">        ╞═══════╪═════════╡</span>
-</span><span id="__span-0-2798"><a id="__codelineno-0-2798" name="__codelineno-0-2798"></a><span class="sd">        │ 18:00 ┆ Toronto │</span>
-</span><span id="__span-0-2799"><a id="__codelineno-0-2799" name="__codelineno-0-2799"></a><span class="sd">        │ 18:00 ┆ Berlin  │</span>
-</span><span id="__span-0-2800"><a id="__codelineno-0-2800" name="__codelineno-0-2800"></a><span class="sd">        └───────┴─────────┘</span>
-</span><span id="__span-0-2801"><a id="__codelineno-0-2801" name="__codelineno-0-2801"></a><span class="sd">        Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
-</span><span id="__span-0-2802"><a id="__codelineno-0-2802" name="__codelineno-0-2802"></a><span class="sd">            https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
-</span><span id="__span-0-2803"><a id="__codelineno-0-2803" name="__codelineno-0-2803"></a>
-</span><span id="__span-0-2804"><a id="__codelineno-0-2804" name="__codelineno-0-2804"></a><span class="sd">        &gt;&gt;&gt; (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")</span>
-</span><span id="__span-0-2805"><a id="__codelineno-0-2805" name="__codelineno-0-2805"></a><span class="sd">        &lt;Constraint 'unnamed' (linear) height=6 terms=18&gt;</span>
-</span><span id="__span-0-2806"><a id="__codelineno-0-2806" name="__codelineno-0-2806"></a><span class="sd">        ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐</span>
-</span><span id="__span-0-2807"><a id="__codelineno-0-2807" name="__codelineno-0-2807"></a><span class="sd">        │ time  ┆ city    ┆ constraint                                                                     │</span>
-</span><span id="__span-0-2808"><a id="__codelineno-0-2808" name="__codelineno-0-2808"></a><span class="sd">        │ (3)   ┆ (2)     ┆                                                                                │</span>
-</span><span id="__span-0-2809"><a id="__codelineno-0-2809" name="__codelineno-0-2809"></a><span class="sd">        ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡</span>
-</span><span id="__span-0-2810"><a id="__codelineno-0-2810" name="__codelineno-0-2810"></a><span class="sd">        │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │</span>
-</span><span id="__span-0-2811"><a id="__codelineno-0-2811" name="__codelineno-0-2811"></a><span class="sd">        │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2812"><a id="__codelineno-0-2812" name="__codelineno-0-2812"></a><span class="sd">        │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │</span>
-</span><span id="__span-0-2813"><a id="__codelineno-0-2813" name="__codelineno-0-2813"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2814"><a id="__codelineno-0-2814" name="__codelineno-0-2814"></a><span class="sd">        │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │</span>
-</span><span id="__span-0-2815"><a id="__codelineno-0-2815" name="__codelineno-0-2815"></a><span class="sd">        │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2816"><a id="__codelineno-0-2816" name="__codelineno-0-2816"></a><span class="sd">        │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │</span>
-</span><span id="__span-0-2817"><a id="__codelineno-0-2817" name="__codelineno-0-2817"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2818"><a id="__codelineno-0-2818" name="__codelineno-0-2818"></a><span class="sd">        │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │</span>
-</span><span id="__span-0-2819"><a id="__codelineno-0-2819" name="__codelineno-0-2819"></a><span class="sd">        │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2820"><a id="__codelineno-0-2820" name="__codelineno-0-2820"></a><span class="sd">        │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │</span>
-</span><span id="__span-0-2821"><a id="__codelineno-0-2821" name="__codelineno-0-2821"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2822"><a id="__codelineno-0-2822" name="__codelineno-0-2822"></a><span class="sd">        └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘</span>
-</span><span id="__span-0-2823"><a id="__codelineno-0-2823" name="__codelineno-0-2823"></a>
-</span><span id="__span-0-2824"><a id="__codelineno-0-2824" name="__codelineno-0-2824"></a><span class="sd">        &gt;&gt;&gt; (m.bat_charge + m.bat_flow) == m.bat_charge.next(</span>
-</span><span id="__span-0-2825"><a id="__codelineno-0-2825" name="__codelineno-0-2825"></a><span class="sd">        ...     "time", wrap_around=True</span>
-</span><span id="__span-0-2826"><a id="__codelineno-0-2826" name="__codelineno-0-2826"></a><span class="sd">        ... )</span>
-</span><span id="__span-0-2827"><a id="__codelineno-0-2827" name="__codelineno-0-2827"></a><span class="sd">        &lt;Constraint 'unnamed' (linear) height=8 terms=24&gt;</span>
-</span><span id="__span-0-2828"><a id="__codelineno-0-2828" name="__codelineno-0-2828"></a><span class="sd">        ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐</span>
-</span><span id="__span-0-2829"><a id="__codelineno-0-2829" name="__codelineno-0-2829"></a><span class="sd">        │ time  ┆ city    ┆ constraint                                                                     │</span>
-</span><span id="__span-0-2830"><a id="__codelineno-0-2830" name="__codelineno-0-2830"></a><span class="sd">        │ (4)   ┆ (2)     ┆                                                                                │</span>
-</span><span id="__span-0-2831"><a id="__codelineno-0-2831" name="__codelineno-0-2831"></a><span class="sd">        ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡</span>
-</span><span id="__span-0-2832"><a id="__codelineno-0-2832" name="__codelineno-0-2832"></a><span class="sd">        │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │</span>
-</span><span id="__span-0-2833"><a id="__codelineno-0-2833" name="__codelineno-0-2833"></a><span class="sd">        │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2834"><a id="__codelineno-0-2834" name="__codelineno-0-2834"></a><span class="sd">        │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │</span>
-</span><span id="__span-0-2835"><a id="__codelineno-0-2835" name="__codelineno-0-2835"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2836"><a id="__codelineno-0-2836" name="__codelineno-0-2836"></a><span class="sd">        │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │</span>
-</span><span id="__span-0-2837"><a id="__codelineno-0-2837" name="__codelineno-0-2837"></a><span class="sd">        │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2838"><a id="__codelineno-0-2838" name="__codelineno-0-2838"></a><span class="sd">        │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │</span>
-</span><span id="__span-0-2839"><a id="__codelineno-0-2839" name="__codelineno-0-2839"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2840"><a id="__codelineno-0-2840" name="__codelineno-0-2840"></a><span class="sd">        │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │</span>
-</span><span id="__span-0-2841"><a id="__codelineno-0-2841" name="__codelineno-0-2841"></a><span class="sd">        │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2842"><a id="__codelineno-0-2842" name="__codelineno-0-2842"></a><span class="sd">        │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │</span>
-</span><span id="__span-0-2843"><a id="__codelineno-0-2843" name="__codelineno-0-2843"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2844"><a id="__codelineno-0-2844" name="__codelineno-0-2844"></a><span class="sd">        │ 18:00 ┆ Toronto ┆ bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto]                            │</span>
-</span><span id="__span-0-2845"><a id="__codelineno-0-2845" name="__codelineno-0-2845"></a><span class="sd">        │       ┆         ┆ - bat_charge[00:00,Toronto] = 0                                                │</span>
-</span><span id="__span-0-2846"><a id="__codelineno-0-2846" name="__codelineno-0-2846"></a><span class="sd">        │ 18:00 ┆ Berlin  ┆ bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin]   │</span>
-</span><span id="__span-0-2847"><a id="__codelineno-0-2847" name="__codelineno-0-2847"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
-</span><span id="__span-0-2848"><a id="__codelineno-0-2848" name="__codelineno-0-2848"></a><span class="sd">        └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘</span>
-</span><span id="__span-0-2849"><a id="__codelineno-0-2849" name="__codelineno-0-2849"></a>
-</span><span id="__span-0-2850"><a id="__codelineno-0-2850" name="__codelineno-0-2850"></a><span class="sd">    """</span>
-</span><span id="__span-0-2851"><a id="__codelineno-0-2851" name="__codelineno-0-2851"></a>    <span class="n">wrapped</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-0-2852"><a id="__codelineno-0-2852" name="__codelineno-0-2852"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-</span><span id="__span-0-2853"><a id="__codelineno-0-2853" name="__codelineno-0-2853"></a>        <span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
-</span><span id="__span-0-2854"><a id="__codelineno-0-2854" name="__codelineno-0-2854"></a>        <span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
-</span><span id="__span-0-2855"><a id="__codelineno-0-2855" name="__codelineno-0-2855"></a>    <span class="p">)</span>
-</span><span id="__span-0-2856"><a id="__codelineno-0-2856" name="__codelineno-0-2856"></a>    <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"__next"</span><span class="p">))</span>
-</span><span id="__span-0-2857"><a id="__codelineno-0-2857" name="__codelineno-0-2857"></a>    <span class="k">if</span> <span class="n">wrap_around</span><span class="p">:</span>
-</span><span id="__span-0-2858"><a id="__codelineno-0-2858" name="__codelineno-0-2858"></a>        <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"__next"</span><span class="p">)</span><span class="o">.</span><span class="n">fill_null</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">dim</span><span class="p">)))</span>
-</span><span id="__span-0-2859"><a id="__codelineno-0-2859" name="__codelineno-0-2859"></a>    <span class="k">else</span><span class="p">:</span>
-</span><span id="__span-0-2860"><a id="__codelineno-0-2860" name="__codelineno-0-2860"></a>        <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">drop_nulls</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
-</span><span id="__span-0-2861"><a id="__codelineno-0-2861" name="__codelineno-0-2861"></a>
-</span><span id="__span-0-2862"><a id="__codelineno-0-2862" name="__codelineno-0-2862"></a>    <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>
-</span><span id="__span-0-2863"><a id="__codelineno-0-2863" name="__codelineno-0-2863"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">dim</span><span class="p">:</span> <span class="s2">"__prev"</span><span class="p">})</span>
-</span><span id="__span-0-2864"><a id="__codelineno-0-2864" name="__codelineno-0-2864"></a>
-</span><span id="__span-0-2865"><a id="__codelineno-0-2865" name="__codelineno-0-2865"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-</span><span id="__span-0-2866"><a id="__codelineno-0-2866" name="__codelineno-0-2866"></a>        <span class="n">wrapped</span><span class="p">,</span>
-</span><span id="__span-0-2867"><a id="__codelineno-0-2867" name="__codelineno-0-2867"></a>        <span class="n">left_on</span><span class="o">=</span><span class="s2">"__prev"</span><span class="p">,</span>
-</span><span id="__span-0-2868"><a id="__codelineno-0-2868" name="__codelineno-0-2868"></a>        <span class="n">right_on</span><span class="o">=</span><span class="s2">"__next"</span><span class="p">,</span>
-</span><span id="__span-0-2869"><a id="__codelineno-0-2869" name="__codelineno-0-2869"></a>        <span class="c1"># We use "right" instead of "left" to maintain consistency with the behavior without maintain_order</span>
-</span><span id="__span-0-2870"><a id="__codelineno-0-2870" name="__codelineno-0-2870"></a>        <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"right"</span> <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-2871"><a id="__codelineno-0-2871" name="__codelineno-0-2871"></a>    <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">"__prev"</span><span class="p">,</span> <span class="s2">"__next"</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</span><span id="__span-0-2872"><a id="__codelineno-0-2872" name="__codelineno-0-2872"></a>
-</span><span id="__span-0-2873"><a id="__codelineno-0-2873" name="__codelineno-0-2873"></a>    <span class="k">return</span> <span class="n">data</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2942">2942</a></span>
+<span class="normal"><a href="#__codelineno-0-2943">2943</a></span>
+<span class="normal"><a href="#__codelineno-0-2944">2944</a></span>
+<span class="normal"><a href="#__codelineno-0-2945">2945</a></span>
+<span class="normal"><a href="#__codelineno-0-2946">2946</a></span>
+<span class="normal"><a href="#__codelineno-0-2947">2947</a></span>
+<span class="normal"><a href="#__codelineno-0-2948">2948</a></span>
+<span class="normal"><a href="#__codelineno-0-2949">2949</a></span>
+<span class="normal"><a href="#__codelineno-0-2950">2950</a></span>
+<span class="normal"><a href="#__codelineno-0-2951">2951</a></span>
+<span class="normal"><a href="#__codelineno-0-2952">2952</a></span>
+<span class="normal"><a href="#__codelineno-0-2953">2953</a></span>
+<span class="normal"><a href="#__codelineno-0-2954">2954</a></span>
+<span class="normal"><a href="#__codelineno-0-2955">2955</a></span>
+<span class="normal"><a href="#__codelineno-0-2956">2956</a></span>
+<span class="normal"><a href="#__codelineno-0-2957">2957</a></span>
+<span class="normal"><a href="#__codelineno-0-2958">2958</a></span>
+<span class="normal"><a href="#__codelineno-0-2959">2959</a></span>
+<span class="normal"><a href="#__codelineno-0-2960">2960</a></span>
+<span class="normal"><a href="#__codelineno-0-2961">2961</a></span>
+<span class="normal"><a href="#__codelineno-0-2962">2962</a></span>
+<span class="normal"><a href="#__codelineno-0-2963">2963</a></span>
+<span class="normal"><a href="#__codelineno-0-2964">2964</a></span>
+<span class="normal"><a href="#__codelineno-0-2965">2965</a></span>
+<span class="normal"><a href="#__codelineno-0-2966">2966</a></span>
+<span class="normal"><a href="#__codelineno-0-2967">2967</a></span>
+<span class="normal"><a href="#__codelineno-0-2968">2968</a></span>
+<span class="normal"><a href="#__codelineno-0-2969">2969</a></span>
+<span class="normal"><a href="#__codelineno-0-2970">2970</a></span>
+<span class="normal"><a href="#__codelineno-0-2971">2971</a></span>
+<span class="normal"><a href="#__codelineno-0-2972">2972</a></span>
+<span class="normal"><a href="#__codelineno-0-2973">2973</a></span>
+<span class="normal"><a href="#__codelineno-0-2974">2974</a></span>
+<span class="normal"><a href="#__codelineno-0-2975">2975</a></span>
+<span class="normal"><a href="#__codelineno-0-2976">2976</a></span>
+<span class="normal"><a href="#__codelineno-0-2977">2977</a></span>
+<span class="normal"><a href="#__codelineno-0-2978">2978</a></span>
+<span class="normal"><a href="#__codelineno-0-2979">2979</a></span>
+<span class="normal"><a href="#__codelineno-0-2980">2980</a></span>
+<span class="normal"><a href="#__codelineno-0-2981">2981</a></span>
+<span class="normal"><a href="#__codelineno-0-2982">2982</a></span>
+<span class="normal"><a href="#__codelineno-0-2983">2983</a></span>
+<span class="normal"><a href="#__codelineno-0-2984">2984</a></span>
+<span class="normal"><a href="#__codelineno-0-2985">2985</a></span>
+<span class="normal"><a href="#__codelineno-0-2986">2986</a></span>
+<span class="normal"><a href="#__codelineno-0-2987">2987</a></span>
+<span class="normal"><a href="#__codelineno-0-2988">2988</a></span>
+<span class="normal"><a href="#__codelineno-0-2989">2989</a></span>
+<span class="normal"><a href="#__codelineno-0-2990">2990</a></span>
+<span class="normal"><a href="#__codelineno-0-2991">2991</a></span>
+<span class="normal"><a href="#__codelineno-0-2992">2992</a></span>
+<span class="normal"><a href="#__codelineno-0-2993">2993</a></span>
+<span class="normal"><a href="#__codelineno-0-2994">2994</a></span>
+<span class="normal"><a href="#__codelineno-0-2995">2995</a></span>
+<span class="normal"><a href="#__codelineno-0-2996">2996</a></span>
+<span class="normal"><a href="#__codelineno-0-2997">2997</a></span>
+<span class="normal"><a href="#__codelineno-0-2998">2998</a></span>
+<span class="normal"><a href="#__codelineno-0-2999">2999</a></span>
+<span class="normal"><a href="#__codelineno-0-3000">3000</a></span>
+<span class="normal"><a href="#__codelineno-0-3001">3001</a></span>
+<span class="normal"><a href="#__codelineno-0-3002">3002</a></span>
+<span class="normal"><a href="#__codelineno-0-3003">3003</a></span>
+<span class="normal"><a href="#__codelineno-0-3004">3004</a></span>
+<span class="normal"><a href="#__codelineno-0-3005">3005</a></span>
+<span class="normal"><a href="#__codelineno-0-3006">3006</a></span>
+<span class="normal"><a href="#__codelineno-0-3007">3007</a></span>
+<span class="normal"><a href="#__codelineno-0-3008">3008</a></span>
+<span class="normal"><a href="#__codelineno-0-3009">3009</a></span>
+<span class="normal"><a href="#__codelineno-0-3010">3010</a></span>
+<span class="normal"><a href="#__codelineno-0-3011">3011</a></span>
+<span class="normal"><a href="#__codelineno-0-3012">3012</a></span>
+<span class="normal"><a href="#__codelineno-0-3013">3013</a></span>
+<span class="normal"><a href="#__codelineno-0-3014">3014</a></span>
+<span class="normal"><a href="#__codelineno-0-3015">3015</a></span>
+<span class="normal"><a href="#__codelineno-0-3016">3016</a></span>
+<span class="normal"><a href="#__codelineno-0-3017">3017</a></span>
+<span class="normal"><a href="#__codelineno-0-3018">3018</a></span>
+<span class="normal"><a href="#__codelineno-0-3019">3019</a></span>
+<span class="normal"><a href="#__codelineno-0-3020">3020</a></span>
+<span class="normal"><a href="#__codelineno-0-3021">3021</a></span>
+<span class="normal"><a href="#__codelineno-0-3022">3022</a></span>
+<span class="normal"><a href="#__codelineno-0-3023">3023</a></span>
+<span class="normal"><a href="#__codelineno-0-3024">3024</a></span>
+<span class="normal"><a href="#__codelineno-0-3025">3025</a></span>
+<span class="normal"><a href="#__codelineno-0-3026">3026</a></span>
+<span class="normal"><a href="#__codelineno-0-3027">3027</a></span>
+<span class="normal"><a href="#__codelineno-0-3028">3028</a></span>
+<span class="normal"><a href="#__codelineno-0-3029">3029</a></span>
+<span class="normal"><a href="#__codelineno-0-3030">3030</a></span>
+<span class="normal"><a href="#__codelineno-0-3031">3031</a></span>
+<span class="normal"><a href="#__codelineno-0-3032">3032</a></span>
+<span class="normal"><a href="#__codelineno-0-3033">3033</a></span>
+<span class="normal"><a href="#__codelineno-0-3034">3034</a></span>
+<span class="normal"><a href="#__codelineno-0-3035">3035</a></span>
+<span class="normal"><a href="#__codelineno-0-3036">3036</a></span>
+<span class="normal"><a href="#__codelineno-0-3037">3037</a></span>
+<span class="normal"><a href="#__codelineno-0-3038">3038</a></span>
+<span class="normal"><a href="#__codelineno-0-3039">3039</a></span>
+<span class="normal"><a href="#__codelineno-0-3040">3040</a></span>
+<span class="normal"><a href="#__codelineno-0-3041">3041</a></span>
+<span class="normal"><a href="#__codelineno-0-3042">3042</a></span>
+<span class="normal"><a href="#__codelineno-0-3043">3043</a></span>
+<span class="normal"><a href="#__codelineno-0-3044">3044</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2942"><a id="__codelineno-0-2942" name="__codelineno-0-2942"></a><span class="nd">@return_new</span>
+</span><span id="__span-0-2943"><a id="__codelineno-0-2943" name="__codelineno-0-2943"></a><span class="k">def</span><span class="w"> </span><span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wrap_around</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+</span><span id="__span-0-2944"><a id="__codelineno-0-2944" name="__codelineno-0-2944"></a><span class="w">    </span><span class="sd">"""Creates an expression where the variable at each label is the next variable in the specified dimension.</span>
+</span><span id="__span-0-2945"><a id="__codelineno-0-2945" name="__codelineno-0-2945"></a>
+</span><span id="__span-0-2946"><a id="__codelineno-0-2946" name="__codelineno-0-2946"></a><span class="sd">    Parameters:</span>
+</span><span id="__span-0-2947"><a id="__codelineno-0-2947" name="__codelineno-0-2947"></a><span class="sd">        dim:</span>
+</span><span id="__span-0-2948"><a id="__codelineno-0-2948" name="__codelineno-0-2948"></a><span class="sd">            The dimension over which to shift the variable.</span>
+</span><span id="__span-0-2949"><a id="__codelineno-0-2949" name="__codelineno-0-2949"></a><span class="sd">        wrap_around:</span>
+</span><span id="__span-0-2950"><a id="__codelineno-0-2950" name="__codelineno-0-2950"></a><span class="sd">            If `True`, the last label in the dimension is connected to the first label.</span>
+</span><span id="__span-0-2951"><a id="__codelineno-0-2951" name="__codelineno-0-2951"></a>
+</span><span id="__span-0-2952"><a id="__codelineno-0-2952" name="__codelineno-0-2952"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-2953"><a id="__codelineno-0-2953" name="__codelineno-0-2953"></a><span class="sd">        &gt;&gt;&gt; time_dim = pl.DataFrame({"time": ["00:00", "06:00", "12:00", "18:00"]})</span>
+</span><span id="__span-0-2954"><a id="__codelineno-0-2954" name="__codelineno-0-2954"></a><span class="sd">        &gt;&gt;&gt; space_dim = pl.DataFrame({"city": ["Toronto", "Berlin"]})</span>
+</span><span id="__span-0-2955"><a id="__codelineno-0-2955" name="__codelineno-0-2955"></a><span class="sd">        &gt;&gt;&gt; m = pf.Model()</span>
+</span><span id="__span-0-2956"><a id="__codelineno-0-2956" name="__codelineno-0-2956"></a><span class="sd">        &gt;&gt;&gt; m.bat_charge = pf.Variable(time_dim, space_dim)</span>
+</span><span id="__span-0-2957"><a id="__codelineno-0-2957" name="__codelineno-0-2957"></a><span class="sd">        &gt;&gt;&gt; m.bat_flow = pf.Variable(time_dim, space_dim)</span>
+</span><span id="__span-0-2958"><a id="__codelineno-0-2958" name="__codelineno-0-2958"></a><span class="sd">        &gt;&gt;&gt; # Fails because the dimensions are not the same</span>
+</span><span id="__span-0-2959"><a id="__codelineno-0-2959" name="__codelineno-0-2959"></a><span class="sd">        &gt;&gt;&gt; m.bat_charge + m.bat_flow == m.bat_charge.next("time")</span>
+</span><span id="__span-0-2960"><a id="__codelineno-0-2960" name="__codelineno-0-2960"></a><span class="sd">        Traceback (most recent call last):</span>
+</span><span id="__span-0-2961"><a id="__codelineno-0-2961" name="__codelineno-0-2961"></a><span class="sd">        ...</span>
+</span><span id="__span-0-2962"><a id="__codelineno-0-2962" name="__codelineno-0-2962"></a><span class="sd">        pyoframe._constants.PyoframeError: Cannot subtract the two expressions below because expression 1 has extra labels.</span>
+</span><span id="__span-0-2963"><a id="__codelineno-0-2963" name="__codelineno-0-2963"></a><span class="sd">        Expression 1:	(bat_charge + bat_flow)</span>
+</span><span id="__span-0-2964"><a id="__codelineno-0-2964" name="__codelineno-0-2964"></a><span class="sd">        Expression 2:	bat_charge.next(…)</span>
+</span><span id="__span-0-2965"><a id="__codelineno-0-2965" name="__codelineno-0-2965"></a><span class="sd">        Extra labels in expression 1:</span>
+</span><span id="__span-0-2966"><a id="__codelineno-0-2966" name="__codelineno-0-2966"></a><span class="sd">        ┌───────┬─────────┐</span>
+</span><span id="__span-0-2967"><a id="__codelineno-0-2967" name="__codelineno-0-2967"></a><span class="sd">        │ time  ┆ city    │</span>
+</span><span id="__span-0-2968"><a id="__codelineno-0-2968" name="__codelineno-0-2968"></a><span class="sd">        ╞═══════╪═════════╡</span>
+</span><span id="__span-0-2969"><a id="__codelineno-0-2969" name="__codelineno-0-2969"></a><span class="sd">        │ 18:00 ┆ Toronto │</span>
+</span><span id="__span-0-2970"><a id="__codelineno-0-2970" name="__codelineno-0-2970"></a><span class="sd">        │ 18:00 ┆ Berlin  │</span>
+</span><span id="__span-0-2971"><a id="__codelineno-0-2971" name="__codelineno-0-2971"></a><span class="sd">        └───────┴─────────┘</span>
+</span><span id="__span-0-2972"><a id="__codelineno-0-2972" name="__codelineno-0-2972"></a><span class="sd">        Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
+</span><span id="__span-0-2973"><a id="__codelineno-0-2973" name="__codelineno-0-2973"></a><span class="sd">            https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
+</span><span id="__span-0-2974"><a id="__codelineno-0-2974" name="__codelineno-0-2974"></a>
+</span><span id="__span-0-2975"><a id="__codelineno-0-2975" name="__codelineno-0-2975"></a><span class="sd">        &gt;&gt;&gt; (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")</span>
+</span><span id="__span-0-2976"><a id="__codelineno-0-2976" name="__codelineno-0-2976"></a><span class="sd">        &lt;Constraint 'unnamed' (linear) height=6 terms=18&gt;</span>
+</span><span id="__span-0-2977"><a id="__codelineno-0-2977" name="__codelineno-0-2977"></a><span class="sd">        ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐</span>
+</span><span id="__span-0-2978"><a id="__codelineno-0-2978" name="__codelineno-0-2978"></a><span class="sd">        │ time  ┆ city    ┆ constraint                                                                     │</span>
+</span><span id="__span-0-2979"><a id="__codelineno-0-2979" name="__codelineno-0-2979"></a><span class="sd">        │ (3)   ┆ (2)     ┆                                                                                │</span>
+</span><span id="__span-0-2980"><a id="__codelineno-0-2980" name="__codelineno-0-2980"></a><span class="sd">        ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡</span>
+</span><span id="__span-0-2981"><a id="__codelineno-0-2981" name="__codelineno-0-2981"></a><span class="sd">        │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │</span>
+</span><span id="__span-0-2982"><a id="__codelineno-0-2982" name="__codelineno-0-2982"></a><span class="sd">        │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-2983"><a id="__codelineno-0-2983" name="__codelineno-0-2983"></a><span class="sd">        │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │</span>
+</span><span id="__span-0-2984"><a id="__codelineno-0-2984" name="__codelineno-0-2984"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-2985"><a id="__codelineno-0-2985" name="__codelineno-0-2985"></a><span class="sd">        │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │</span>
+</span><span id="__span-0-2986"><a id="__codelineno-0-2986" name="__codelineno-0-2986"></a><span class="sd">        │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-2987"><a id="__codelineno-0-2987" name="__codelineno-0-2987"></a><span class="sd">        │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │</span>
+</span><span id="__span-0-2988"><a id="__codelineno-0-2988" name="__codelineno-0-2988"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-2989"><a id="__codelineno-0-2989" name="__codelineno-0-2989"></a><span class="sd">        │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │</span>
+</span><span id="__span-0-2990"><a id="__codelineno-0-2990" name="__codelineno-0-2990"></a><span class="sd">        │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-2991"><a id="__codelineno-0-2991" name="__codelineno-0-2991"></a><span class="sd">        │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │</span>
+</span><span id="__span-0-2992"><a id="__codelineno-0-2992" name="__codelineno-0-2992"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-2993"><a id="__codelineno-0-2993" name="__codelineno-0-2993"></a><span class="sd">        └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘</span>
+</span><span id="__span-0-2994"><a id="__codelineno-0-2994" name="__codelineno-0-2994"></a>
+</span><span id="__span-0-2995"><a id="__codelineno-0-2995" name="__codelineno-0-2995"></a><span class="sd">        &gt;&gt;&gt; (m.bat_charge + m.bat_flow) == m.bat_charge.next(</span>
+</span><span id="__span-0-2996"><a id="__codelineno-0-2996" name="__codelineno-0-2996"></a><span class="sd">        ...     "time", wrap_around=True</span>
+</span><span id="__span-0-2997"><a id="__codelineno-0-2997" name="__codelineno-0-2997"></a><span class="sd">        ... )</span>
+</span><span id="__span-0-2998"><a id="__codelineno-0-2998" name="__codelineno-0-2998"></a><span class="sd">        &lt;Constraint 'unnamed' (linear) height=8 terms=24&gt;</span>
+</span><span id="__span-0-2999"><a id="__codelineno-0-2999" name="__codelineno-0-2999"></a><span class="sd">        ┌───────┬─────────┬────────────────────────────────────────────────────────────────────────────────┐</span>
+</span><span id="__span-0-3000"><a id="__codelineno-0-3000" name="__codelineno-0-3000"></a><span class="sd">        │ time  ┆ city    ┆ constraint                                                                     │</span>
+</span><span id="__span-0-3001"><a id="__codelineno-0-3001" name="__codelineno-0-3001"></a><span class="sd">        │ (4)   ┆ (2)     ┆                                                                                │</span>
+</span><span id="__span-0-3002"><a id="__codelineno-0-3002" name="__codelineno-0-3002"></a><span class="sd">        ╞═══════╪═════════╪════════════════════════════════════════════════════════════════════════════════╡</span>
+</span><span id="__span-0-3003"><a id="__codelineno-0-3003" name="__codelineno-0-3003"></a><span class="sd">        │ 00:00 ┆ Toronto ┆ bat_charge[00:00,Toronto] + bat_flow[00:00,Toronto]                            │</span>
+</span><span id="__span-0-3004"><a id="__codelineno-0-3004" name="__codelineno-0-3004"></a><span class="sd">        │       ┆         ┆ - bat_charge[06:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-3005"><a id="__codelineno-0-3005" name="__codelineno-0-3005"></a><span class="sd">        │ 00:00 ┆ Berlin  ┆ bat_charge[00:00,Berlin] + bat_flow[00:00,Berlin] - bat_charge[06:00,Berlin]   │</span>
+</span><span id="__span-0-3006"><a id="__codelineno-0-3006" name="__codelineno-0-3006"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-3007"><a id="__codelineno-0-3007" name="__codelineno-0-3007"></a><span class="sd">        │ 06:00 ┆ Toronto ┆ bat_charge[06:00,Toronto] + bat_flow[06:00,Toronto]                            │</span>
+</span><span id="__span-0-3008"><a id="__codelineno-0-3008" name="__codelineno-0-3008"></a><span class="sd">        │       ┆         ┆ - bat_charge[12:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-3009"><a id="__codelineno-0-3009" name="__codelineno-0-3009"></a><span class="sd">        │ 06:00 ┆ Berlin  ┆ bat_charge[06:00,Berlin] + bat_flow[06:00,Berlin] - bat_charge[12:00,Berlin]   │</span>
+</span><span id="__span-0-3010"><a id="__codelineno-0-3010" name="__codelineno-0-3010"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-3011"><a id="__codelineno-0-3011" name="__codelineno-0-3011"></a><span class="sd">        │ 12:00 ┆ Toronto ┆ bat_charge[12:00,Toronto] + bat_flow[12:00,Toronto]                            │</span>
+</span><span id="__span-0-3012"><a id="__codelineno-0-3012" name="__codelineno-0-3012"></a><span class="sd">        │       ┆         ┆ - bat_charge[18:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-3013"><a id="__codelineno-0-3013" name="__codelineno-0-3013"></a><span class="sd">        │ 12:00 ┆ Berlin  ┆ bat_charge[12:00,Berlin] + bat_flow[12:00,Berlin] - bat_charge[18:00,Berlin]   │</span>
+</span><span id="__span-0-3014"><a id="__codelineno-0-3014" name="__codelineno-0-3014"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-3015"><a id="__codelineno-0-3015" name="__codelineno-0-3015"></a><span class="sd">        │ 18:00 ┆ Toronto ┆ bat_charge[18:00,Toronto] + bat_flow[18:00,Toronto]                            │</span>
+</span><span id="__span-0-3016"><a id="__codelineno-0-3016" name="__codelineno-0-3016"></a><span class="sd">        │       ┆         ┆ - bat_charge[00:00,Toronto] = 0                                                │</span>
+</span><span id="__span-0-3017"><a id="__codelineno-0-3017" name="__codelineno-0-3017"></a><span class="sd">        │ 18:00 ┆ Berlin  ┆ bat_charge[18:00,Berlin] + bat_flow[18:00,Berlin] - bat_charge[00:00,Berlin]   │</span>
+</span><span id="__span-0-3018"><a id="__codelineno-0-3018" name="__codelineno-0-3018"></a><span class="sd">        │       ┆         ┆ = 0                                                                            │</span>
+</span><span id="__span-0-3019"><a id="__codelineno-0-3019" name="__codelineno-0-3019"></a><span class="sd">        └───────┴─────────┴────────────────────────────────────────────────────────────────────────────────┘</span>
+</span><span id="__span-0-3020"><a id="__codelineno-0-3020" name="__codelineno-0-3020"></a>
+</span><span id="__span-0-3021"><a id="__codelineno-0-3021" name="__codelineno-0-3021"></a><span class="sd">    """</span>
+</span><span id="__span-0-3022"><a id="__codelineno-0-3022" name="__codelineno-0-3022"></a>    <span class="n">wrapped</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-0-3023"><a id="__codelineno-0-3023" name="__codelineno-0-3023"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+</span><span id="__span-0-3024"><a id="__codelineno-0-3024" name="__codelineno-0-3024"></a>        <span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">maintain_order</span><span class="o">=</span><span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span><span class="p">)</span>
+</span><span id="__span-0-3025"><a id="__codelineno-0-3025" name="__codelineno-0-3025"></a>        <span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+</span><span id="__span-0-3026"><a id="__codelineno-0-3026" name="__codelineno-0-3026"></a>    <span class="p">)</span>
+</span><span id="__span-0-3027"><a id="__codelineno-0-3027" name="__codelineno-0-3027"></a>    <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">"__next"</span><span class="p">))</span>
+</span><span id="__span-0-3028"><a id="__codelineno-0-3028" name="__codelineno-0-3028"></a>    <span class="k">if</span> <span class="n">wrap_around</span><span class="p">:</span>
+</span><span id="__span-0-3029"><a id="__codelineno-0-3029" name="__codelineno-0-3029"></a>        <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">col</span><span class="p">(</span><span class="s2">"__next"</span><span class="p">)</span><span class="o">.</span><span class="n">fill_null</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">dim</span><span class="p">)))</span>
+</span><span id="__span-0-3030"><a id="__codelineno-0-3030" name="__codelineno-0-3030"></a>    <span class="k">else</span><span class="p">:</span>
+</span><span id="__span-0-3031"><a id="__codelineno-0-3031" name="__codelineno-0-3031"></a>        <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">drop_nulls</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
+</span><span id="__span-0-3032"><a id="__codelineno-0-3032" name="__codelineno-0-3032"></a>
+</span><span id="__span-0-3033"><a id="__codelineno-0-3033" name="__codelineno-0-3033"></a>    <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_expr</span><span class="p">()</span>
+</span><span id="__span-0-3034"><a id="__codelineno-0-3034" name="__codelineno-0-3034"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">dim</span><span class="p">:</span> <span class="s2">"__prev"</span><span class="p">})</span>
+</span><span id="__span-0-3035"><a id="__codelineno-0-3035" name="__codelineno-0-3035"></a>
+</span><span id="__span-0-3036"><a id="__codelineno-0-3036" name="__codelineno-0-3036"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+</span><span id="__span-0-3037"><a id="__codelineno-0-3037" name="__codelineno-0-3037"></a>        <span class="n">wrapped</span><span class="p">,</span>
+</span><span id="__span-0-3038"><a id="__codelineno-0-3038" name="__codelineno-0-3038"></a>        <span class="n">left_on</span><span class="o">=</span><span class="s2">"__prev"</span><span class="p">,</span>
+</span><span id="__span-0-3039"><a id="__codelineno-0-3039" name="__codelineno-0-3039"></a>        <span class="n">right_on</span><span class="o">=</span><span class="s2">"__next"</span><span class="p">,</span>
+</span><span id="__span-0-3040"><a id="__codelineno-0-3040" name="__codelineno-0-3040"></a>        <span class="c1"># We use "right" instead of "left" to maintain consistency with the behavior without maintain_order</span>
+</span><span id="__span-0-3041"><a id="__codelineno-0-3041" name="__codelineno-0-3041"></a>        <span class="n">maintain_order</span><span class="o">=</span><span class="s2">"right"</span> <span class="k">if</span> <span class="n">Config</span><span class="o">.</span><span class="n">maintain_order</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-3042"><a id="__codelineno-0-3042" name="__codelineno-0-3042"></a>    <span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s2">"__prev"</span><span class="p">,</span> <span class="s2">"__next"</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="__span-0-3043"><a id="__codelineno-0-3043" name="__codelineno-0-3043"></a>
+</span><span id="__span-0-3044"><a id="__codelineno-0-3044" name="__codelineno-0-3044"></a>    <span class="k">return</span> <span class="n">data</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3429,13 +3429,13 @@ If the rounding causes a change greater than <a class="autorefs autorefs-interna
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pyoframe/_core.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2760">2760</a></span>
-<span class="normal"><a href="#__codelineno-0-2761">2761</a></span>
-<span class="normal"><a href="#__codelineno-0-2762">2762</a></span>
-<span class="normal"><a href="#__codelineno-0-2763">2763</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2760"><a id="__codelineno-0-2760" name="__codelineno-0-2760"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
-</span><span id="__span-0-2761"><a id="__codelineno-0-2761" name="__codelineno-0-2761"></a><span class="w">    </span><span class="sd">"""Converts the Variable to an Expression."""</span>
-</span><span id="__span-0-2762"><a id="__codelineno-0-2762" name="__codelineno-0-2762"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_assert_has_ids</span><span class="p">()</span>
-</span><span id="__span-0-2763"><a id="__codelineno-0-2763" name="__codelineno-0-2763"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportArgumentType], we know it's safe after _assert_has_ids()</span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-2931">2931</a></span>
+<span class="normal"><a href="#__codelineno-0-2932">2932</a></span>
+<span class="normal"><a href="#__codelineno-0-2933">2933</a></span>
+<span class="normal"><a href="#__codelineno-0-2934">2934</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-2931"><a id="__codelineno-0-2931" name="__codelineno-0-2931"></a><span class="k">def</span><span class="w"> </span><span class="nf">to_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+</span><span id="__span-0-2932"><a id="__codelineno-0-2932" name="__codelineno-0-2932"></a><span class="w">    </span><span class="sd">"""Converts the Variable to an Expression."""</span>
+</span><span id="__span-0-2933"><a id="__codelineno-0-2933" name="__codelineno-0-2933"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_assert_has_ids</span><span class="p">()</span>
+</span><span id="__span-0-2934"><a id="__codelineno-0-2934" name="__codelineno-0-2934"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">SOLUTION_KEY</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># pyright: ignore[reportArgumentType], we know it's safe after _assert_has_ids()</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3471,7 +3471,7 @@ If the rounding causes a change greater than <a class="autorefs autorefs-interna
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 22:00:39 UTC">August 17, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 24, 2026 00:56:50 UTC">August 24, 2026</span>
   </span>
 
     
@@ -3481,7 +3481,7 @@ If the rounding causes a change greater than <a class="autorefs autorefs-interna
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 17, 2026 22:00:39 UTC">August 17, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="August 24, 2026 00:56:50 UTC">August 24, 2026</span>
   </span>
 
     
