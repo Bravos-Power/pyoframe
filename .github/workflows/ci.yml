@@ -90,8 +90,15 @@ jobs:
           MOSEK_LICENSE: ${{ secrets.MOSEK_LIC_FILE }}
       - name: Install dependencies
         run: pip install -e .[dev]
+      - name: Install GDB
+        run: sudo apt-get install -y gdb
       - name: Run tests and collect coverage
-        run: pytest --cov
+        run: |
+          gdb -batch \
+            -ex "set print thread-events off" \
+            -ex run \
+            -ex "thread apply all bt full" \
+            --args python -m pytest --cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:

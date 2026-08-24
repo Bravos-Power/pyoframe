@@ -108,7 +108,7 @@ Add one additional constraint to limit the `Dispatch` of variable generators (li
 
     1. You might find it helpful to complete this task in two steps. First, build a DataFrame containing the maximum generation limit at every hour (i.e., the product of the capacity factor with `Pmax`), then use that DataFrame to create a new constraint. Pandas' [`.merge`](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.merge.html) method might be helpful when creating the DataFrame.
 
-    2. Since not all generators are renewable generators with capacity factors, you will face a `PyoframeError`. [Learn to use](../concepts/addition.md#keep_extras-drop_extras) `.keep_extras()` or `.drop_extras()` to tell Pyoframe whether these "extra" generators should or shouldn't be kept in the constraint.
+    2. Since not all generators are renewable generators with capacity factors, you will face a `PyoframeError`. [Learn to use](../concepts/join_modifiers.md#keep_extras-drop_extras) `.keep_extras()` or `.drop_extras()` to tell Pyoframe whether these "extra" generators should or shouldn't be kept in the constraint.
 
 Your results should now look like this. This looks much more realistic!
 
