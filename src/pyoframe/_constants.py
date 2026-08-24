@@ -31,6 +31,7 @@ class _Solver:
     supports_square_brackets_in_lp_files: bool = True
     supports_deletion: bool = True
     supports_ilp_files: bool = False
+    supports_updating_coefficients: bool = True
     check_termination_status_when_retrieving_solution: bool = False
     accelerate_with_repeat_names: bool = False
     """
@@ -71,6 +72,7 @@ SUPPORTED_SOLVERS = [
         # ipopt just returns large numbers instead of "unbounded"
         supports_unbounded=False,
         supports_deletion=False,
+        supports_updating_coefficients=False,
     ),
     _Solver(
         "copt",
@@ -449,6 +451,15 @@ class ConstraintSense(Enum):
             return poi.ConstraintSense.GreaterEqual
         else:
             raise ValueError(f"Invalid constraint type: {self}")  # pragma: no cover
+
+    def _flip(self):
+        """Flips the constraint sense (e.g., LE becomes GE)."""
+        if self == ConstraintSense.LE:
+            return ConstraintSense.GE
+        elif self == ConstraintSense.GE:
+            return ConstraintSense.LE
+        else:  # pragma: no cover
+            raise ValueError(f"Cannot flip constraint of type: {self}")
 
 
 class ObjSense(Enum):

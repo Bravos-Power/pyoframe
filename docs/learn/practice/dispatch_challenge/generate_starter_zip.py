@@ -10,9 +10,13 @@ BENCHMARK_DIR = (
     / "benchmarks/src/energy_planning/model_data"
 )
 INPUT_DIR = Path(__file__).parent / "starter_code" / "input_data"
+SOLUTIONS_FILE = Path(__file__).parent / "solutions.py"
+STARTER_MAIN_FILE = Path(__file__).parent / "starter_code" / "main.py"
 
 
 def main():
+    generate_starter_main()
+
     copy_file(
         "generators.parquet",
         transform=lambda df: df.with_columns(
@@ -37,7 +41,51 @@ def main():
     copy_file("lines_simplified.parquet", dest_name="lines.parquet")
     copy_file("loads.parquet", reduce_datetime=True)
 
-    shutil.make_archive("starter_code_for_dispatch_challenge", "zip", "starter_code")
+    shutil.make_archive("starter_code", "zip", "starter_code")
+
+
+def generate_starter_main():
+    """Derive starter_code/main.py from the starter_code() function in solutions.py."""
+    source = SOLUTIONS_FILE.read_text()
+
+    _, _, starter_code_body = extract_function(source, "starter_code").partition("\n")
+
+    plot_results = extract_function(source, "plot_results")
+
+    content = f'''"""Starter code for the Pyoframe dispatch model challenge."""
+
+from pathlib import Path
+
+import pandas as pd
+
+import pyoframe as pf
+
+# Modify if the input_data folder is located elsewhere
+INPUT_DIR = Path(__file__).parent / "input_data"
+
+
+def main():
+{starter_code_body}
+
+
+{plot_results}
+
+
+if __name__ == "__main__":
+    plot_results(main())
+'''
+
+    STARTER_MAIN_FILE.write_text(content)
+
+
+def extract_function(source, name):
+    """Extract the full source of a top-level function definition by name."""
+    lines = source[source.index(f"def {name}(") :].splitlines()
+    end = next(
+        (i for i, line in enumerate(lines[1:], start=1) if line[:1] not in ("", " ")),
+        len(lines),
+    )
+    return "\n".join(lines[:end]).rstrip("\n")
 
 
 def copy_file(name, *, dest_name=None, reduce_datetime=False, transform=None):

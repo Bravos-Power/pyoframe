@@ -1444,6 +1444,8 @@ class Expression(BaseOperableBlock):
         data = self.data
 
         if self.is_quadratic:
+            # We pre-remove the zero variable for quadratics because it causes issues in highs/mosek where convex models are detected as non-convex.
+            # See https://github.com/Bravos-Power/pyoframe/issues/236
             quadratic_data = data.filter(pl.col(QUAD_VAR_KEY) != CONST_TERM)
             affine_data = data.filter(pl.col(QUAD_VAR_KEY) == CONST_TERM)
             if affine_data.is_empty():
@@ -1860,8 +1862,6 @@ class Constraint(BaseBlock):
         """This function is the main bottleneck for pyoframe.
 
         I've spent a lot of time optimizing it.
-
-        TODO: consider that the zero variables might need to be removed as it might cause issues similar to https://github.com/Bravos-Power/pyoframe/pull/237
         """
         assert self._model is not None
 
@@ -2218,6 +2218,177 @@ class Constraint(BaseBlock):
             m.objective = penalty
 
         return self
+
+    def _flip(self) -> Constraint:
+        """Returns a new Constraint with its sense flipped (i.e., lhs <= 0 becomes -lhs >= 0)."""
+        return Constraint(-self.lhs, self.sense._flip())
+
+    def update(self, new_constraint: Constraint) -> None:
+        """Updates the existing constraint(s) to match the constraint(s) in `new_constraint`.
+
+        `new_constraint` must have the same dimensions as the existing constraint. An equality constraint cannot be updated with an inequality constraint and vice versa.
+
+        !!! tip "Conflicting labels (dimensioned constraints only)"
+            An error will be raised if `new_constraint` tries to introduce labels that were not already present in the constraint.
+            If the constraint has labels that are not present in `new_constraint`, those labels and their associated constraints will be left untouched.
+
+        Parameters:
+            new_constraint:
+                A constraint with the same dimensions and sense as the existing constraint in the model.
+                The coefficients of this constraint will replace the coefficients of the existing constraint.
+
+        Examples:
+            Dimensionless constraints can be updated with new coefficients:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable(lb=0, ub=10)
+            >>> m.Y = pf.Variable(lb=0, ub=10)
+            >>> m.maximize = m.X + m.Y
+            >>> m.Con = m.X + 2 * m.Y <= 4
+            >>> m.optimize()
+            >>> m.X.solution, m.Y.solution
+            (4.0, 0.0)
+            >>> m.Con.update(m.X <= 6)
+            >>> m.optimize()
+            >>> m.X.solution, m.Y.solution
+            (6.0, 10.0)
+
+            Dimensioned constraints can also be updated:
+            >>> m = pf.Model()
+            >>> m.X = pf.Variable({"i": [1, 2, 3]}, lb=0, ub=10)
+            >>> m.maximize = m.X.sum()
+            >>> m.Con = m.X <= 4
+            >>> m.optimize()
+            >>> m.objective.value
+            12.0
+            >>> m.Con.update(m.X.filter(i=1) <= 5)
+            >>> m.optimize()
+            >>> m.objective.value
+            13.0
+        """
+        assert self._model is not None, (
+            "Constraint must be added to a model before it can be updated."
+        )
+        if not self._model.solver.supports_updating_coefficients:
+            raise PyoframeError(
+                f"Solver '{self._model.solver_name}' does not support updating constraint."
+            )
+        if self.is_quadratic or new_constraint.is_quadratic:
+            # Note to self: we probably shouldn't support changing the type during an update even if we do support quadratics
+            raise NotImplementedError(
+                f"Cannot update constraint '{self.name}' because updating with quadratic constraints is not yet supported."
+            )
+        if new_constraint._has_ids:
+            raise PyoframeError(
+                f"Cannot update constraint '{self.name}' because the new constraint was already added to the model."
+            )
+
+        if self.sense != new_constraint.sense:
+            if (
+                self.sense == ConstraintSense.EQ
+                or new_constraint.sense == ConstraintSense.EQ
+            ):
+                self_type, other_type = (
+                    ("equality", "inequality")
+                    if self.sense == ConstraintSense.EQ
+                    else ("inequality", "equality")
+                )
+                raise PyoframeError(
+                    f"Cannot update {self_type} constraint '{self.name}' with {other_type} constraint ({new_constraint.sense})."
+                )
+            new_constraint = new_constraint._flip()
+            assert self.sense == new_constraint.sense, (
+                "Unexpected: Constraint senses don't match ({self.sense}!={new_constraint.sense})."
+            )
+
+        dims = self._dimensions_unsafe
+
+        if set(dims) != set(new_constraint._dimensions_unsafe):
+            raise PyoframeError(
+                f"Cannot update constraint '{self.name}' (dimensions: {self.dimensions}) because new_constraint has different dimensions ({new_constraint.dimensions})."
+            )
+
+        new_data = new_constraint.lhs.data
+
+        COEF_KEY_OLD = COEF_KEY + "_old"
+        old_data = self.lhs.data.rename({COEF_KEY: COEF_KEY_OLD})
+
+        if dims:
+            # only update constraints with the same labels
+            old_data = old_data.join(
+                new_data,
+                on=dims,
+                how="semi",
+                maintain_order="left_right" if Config.maintain_order else None,
+            )
+
+        # identify which coefficients need to be updated
+        new_data = new_data.join(
+            old_data,
+            on=dims + self.lhs._variable_columns,
+            how="full",
+            coalesce=True,
+            maintain_order="left_right" if Config.maintain_order else None,
+        )
+        # missing entries could just mean the coefficient was zero
+        new_data = new_data.with_columns(pl.col(COEF_KEY, COEF_KEY_OLD).fill_null(0))
+        new_data = new_data.filter(pl.col(COEF_KEY) != pl.col(COEF_KEY_OLD)).drop(
+            COEF_KEY_OLD
+        )
+
+        # Get the constraint IDs
+        id_data = self.data
+        if self.dimensionless:
+            new_data = new_data.with_columns(
+                pl.lit(id_data.get_column(CONSTRAINT_KEY).item()).alias(CONSTRAINT_KEY)
+            )
+        else:
+            new_data = new_data.join(
+                id_data.select(dims + [CONSTRAINT_KEY]),
+                on=dims,
+                how="left",
+                maintain_order="left_right" if Config.maintain_order else None,
+            )
+            if new_data.get_column(CONSTRAINT_KEY).null_count() > 0:
+                extra_labels = (
+                    new_data.filter(pl.col(CONSTRAINT_KEY).is_null())
+                    .select(dims)
+                    .unique(maintain_order=Config.maintain_order)
+                )
+                raise PyoframeError(
+                    f"Could not update constraint '{self.name}' because new_constraint contains labels that do not exist in the existing constraint:\n{extra_labels}"
+                )
+
+        # update via pyoptinterface
+        assert self._model is not None
+        update_func = self._model.poi.set_normalized_coefficient
+        variable_indexes = new_data.get_column(VAR_KEY).to_list()
+        variable_indexes = [poi.VariableIndex(v) for v in variable_indexes]
+        constraint_indexes = new_data.get_column(CONSTRAINT_KEY).to_list()
+        _constraint_type = self._poi_constraint_type
+        constraint_indexes = [
+            poi.ConstraintIndex(_constraint_type, c) for c in constraint_indexes
+        ]
+        coefficients = new_data.get_column(COEF_KEY).to_list()
+
+        for con, var, value in zip(constraint_indexes, variable_indexes, coefficients):
+            update_func(con, var, value)
+
+        # update Pyoframe data
+        updated_data = (
+            self.lhs.data.rename({COEF_KEY: COEF_KEY_OLD})
+            .join(
+                new_data.select(dims + self.lhs._variable_columns + [COEF_KEY]),
+                on=dims + self.lhs._variable_columns,
+                how="full",
+                maintain_order="left_right" if Config.maintain_order else None,
+                coalesce=True,
+            )
+            .with_columns(pl.col(COEF_KEY).fill_null(pl.col(COEF_KEY_OLD)))
+            .drop(COEF_KEY_OLD)
+            .filter(pl.col(COEF_KEY) != 0)
+            .select(self.lhs.data.columns)  # reorder to maintain consistency
+        )
+        self.lhs._data = updated_data
 
     def estimated_size(self, *args, **kwargs):
         """Returns the estimated size of the constraint.
