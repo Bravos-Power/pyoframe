@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.24.0"
+__generated_with = "0.19.2"
 app = marimo.App()
 
 
@@ -16,7 +16,7 @@ def _():
 
 @app.cell
 def _():
-    DF_PERC_CUTOFF = 0.05
+    DF_PERC_CUTOFF = 0.02
     MIN_KV = 115
     ISLAND_SENSITIVITY = 1e-5
     return DF_PERC_CUTOFF, ISLAND_SENSITIVITY, MIN_KV
