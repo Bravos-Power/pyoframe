@@ -32,7 +32,9 @@ class Bench(Benchmark):
         capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
-        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
+        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_k_per_pu")[
+            "cost"
+        ].item()
         SLACK_BUS = 1
 
         ## DEFINE SETS AND PARAMS ##
@@ -45,20 +47,21 @@ class Bench(Benchmark):
             loads = loads.filter(pl.col("datetime").is_in(hours.implode()))
         m.hours = Set(hours)
 
-        m.line_rating = Param(lines["line_id", "line_rating_MW"])
-        susceptance = 1 / Param(lines["line_id", "reactance"])
-        loads = Param(loads["bus", "datetime", "active_load"])
+        m.line_rating = Param(lines["line_id", "line_rating_pu"])
+        # Scale susceptance to improve numerical stability
+        susceptance = 0.001 / Param(lines["line_id", "reactance"])
+        loads = Param(loads["bus", "datetime", "active_load_pu"])
 
         ## DEFINE VARIABLES ##
         if capacity_expansion:
-            m.Build_Out = Variable(m.gens["gen_id"], lb=0, ub=m.gens["gen_id", "Pmax"])
+            m.Build_Out = Variable(
+                m.gens["gen_id"], lb=0, ub=m.gens["gen_id", "Pmax_pu"]
+            )
             m.Dispatch = Variable(m.gens["gen_id"], m.hours, lb=0, ub=m.Build_Out)
         else:
             m.Dispatch = Variable(
-                m.gens["gen_id"], m.hours, lb=0, ub=m.gens["gen_id", "Pmax"]
+                m.gens["gen_id"], m.hours, lb=0, ub=m.gens["gen_id", "Pmax_pu"]
             )
-        # Note that technically, the voltage angle variable is scaled by 100x since the BASE_MW is 100.
-        # This improves numerical stability.
         m.Voltage_Angle = Variable(buses, m.hours)
         m.Power_Flow = Variable(
             lines["line_id"], m.hours, lb=-m.line_rating, ub=m.line_rating
@@ -82,12 +85,14 @@ class Bench(Benchmark):
 
         ## SET OBJECTIVE ##
         m.minimize = COST_UNSERVED_LOAD * m.Load_Unserved.sum()
-        m.minimize += (m.Dispatch * m.gens["gen_id", "cost_per_MWh_linear"]).sum()
+        m.minimize += (m.Dispatch * m.gens["gen_id", "cost_k_per_pu"]).sum()
 
         if capacity_expansion:
-            m.minimize += (m.Build_Out.map(m.gens[["gen_id", "type"]]) * capex).sum()
             m.minimize += (
-                m.Build_Out * m.gens["gen_id", "hourly_overhead_per_MW_capacity"]
+                m.Build_Out.map(m.gens[["gen_id", "type"]]) * capex
+            ).sum() * len(m.hours)
+            m.minimize += (
+                m.Build_Out * m.gens["gen_id", "hourly_overhead_k_per_pu"]
             ).sum() * len(m.hours)
 
         if security_constrained:
@@ -120,7 +125,7 @@ class Bench(Benchmark):
 
         m.Con_Variable_Dispatch_Limit = m.Dispatch.drop_extras() <= (
             vcf.map(vcf_type_to_type).map(m.gens[["gen_id", "type"]])
-            * m.gens["gen_id", "Pmax"]
+            * m.gens["gen_id", "Pmax_pu"]
         )
 
     def add_yearly_limits(self, m: Model):
@@ -148,14 +153,14 @@ class Bench(Benchmark):
 if __name__ == "__main__":
     base_dir = Path(__file__).parent
     benchmark = Bench(
-        size=1,
+        size=24,
         input_dir=base_dir / "model_data",
         results_dir=base_dir / "results_pyoframe",
         verbose=True,
-        capacity_expansion=False,
-        security_constrained=True,
-        # solver_args={"Method": 2, "BarHomogeneous": 1},
-        # yearly_limits=True,
-        # variable_capacity_factors=True,
+        capacity_expansion=True,
+        security_constrained=False,
+        solver_args={"Method": 2, "Crossover": False},
+        yearly_limits=True,
+        variable_capacity_factors=True,
     )
     m = benchmark.run()

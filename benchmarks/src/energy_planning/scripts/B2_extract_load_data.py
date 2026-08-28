@@ -24,7 +24,8 @@ def _():
 @app.cell
 def _():
     MIN_LOAD_MW = 0.01
-    return (MIN_LOAD_MW,)
+    BASE_MW = 100
+    return BASE_MW, MIN_LOAD_MW
 
 
 @app.cell
@@ -68,7 +69,7 @@ def _(df2, pl):
         .str.split_exact("+", 1)
         .struct.field("field_0")
         .cast(pl.Float64)
-        .alias("active_load")
+        .alias("active_load_MW")
     ).drop("load")
 
     df3.head().collect()
@@ -89,11 +90,11 @@ def _(df3, pl):
 def _(DEBUG, df2, df4, pl):
     # Confirm loads are always positive (i.e. dataset doesn't include generation) and drop zero loads
     if DEBUG:
-        assert df4.filter(pl.col("active_load") < 0).collect().height == 0, (
+        assert df4.filter(pl.col("active_load_MW") < 0).collect().height == 0, (
             "Negative active loads found!"
         )
 
-    df5 = df4.filter(pl.col("active_load") != 0)
+    df5 = df4.filter(pl.col("active_load_MW") != 0)
 
     print(
         df5.explain(optimized=True)
@@ -115,7 +116,7 @@ def _(DEBUG, df5, pl):
         _plt = (
             load_ca.group_by(pl.col("datetime").dt.hour())
             .mean()
-            .plot.line(x="datetime", y="active_load")
+            .plot.line(x="datetime", y="active_load_MW")
             .properties(title="Average Load by Hour in California")
         )
     _plt
@@ -129,7 +130,7 @@ def _(DEBUG, load_ca, pl):
         _plt = (
             load_ca.group_by(pl.col("datetime").dt.month())
             .mean()
-            .plot.line(x="datetime", y="active_load")
+            .plot.line(x="datetime", y="active_load_MW")
             .properties(title="Average Load by Month in California")
         )
     _plt
@@ -142,14 +143,14 @@ def _(DEBUG, MIN_LOAD_MW, alt, df5, pl):
     if DEBUG:
         _plt = (
             df5.group_by(
-                pl.col("active_load").log10().floor(),
-                (pl.col("active_load") >= MIN_LOAD_MW).alias("keep"),
+                pl.col("active_load_MW").log10().floor(),
+                (pl.col("active_load_MW") >= MIN_LOAD_MW).alias("keep"),
             )
             .len()
             .collect()
-            .with_columns(pl.col("active_load"))
+            .with_columns(pl.col("active_load_MW"))
             .plot.bar(
-                x="active_load",
+                x="active_load_MW",
                 y=alt.Y("len", scale=alt.Scale(type="symlog")),
                 color="keep:N",
             )
@@ -160,8 +161,13 @@ def _(DEBUG, MIN_LOAD_MW, alt, df5, pl):
 
 
 @app.cell
-def _(MIN_LOAD_MW, df5, pl):
-    df6 = df5.filter(pl.col("active_load") >= MIN_LOAD_MW)
+def _(BASE_MW, MIN_LOAD_MW, df5, pl):
+    df6 = df5.filter(pl.col("active_load_MW") >= MIN_LOAD_MW)
+    df6 = df6.with_columns(
+        (pl.col("active_load_MW") / BASE_MW).alias("active_load_pu")
+    ).drop("active_load_MW")
+    # Keep only two months to reduce file size
+    df6 = df6.filter(pl.col("datetime").dt.month() <= 2)
     return (df6,)
 
 

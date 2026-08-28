@@ -72,8 +72,7 @@ class Bench(Benchmark):
             minimize obj:
                 sum {(b,t) in LOADS} COST_UNSERVED_LOAD * Load_Unserved[b,t] +
                 sum {g in G, t in T} gen_cost[g] * Dispatch[g,t] +
-                sum {g in G} capex[gen_type[g]] * Build_Out[g] +
-                sum {g in G} gen_overhead[g] * Build_Out[g] * card(T);
+                sum {g in G} (capex[gen_type[g]] + gen_overhead[g]) * Build_Out[g] * card(T);
             """)
         else:
             ampl.eval("""
@@ -105,19 +104,19 @@ class Bench(Benchmark):
 
         ampl.param["gen_bus"] = gens["bus"]
         ampl.param["gen_type"] = gens["type"]
-        ampl.param["gen_pmax"] = gens["Pmax"]
-        ampl.param["gen_cost"] = gens["cost_per_MWh_linear"]
-        ampl.param["gen_overhead"] = gens["hourly_overhead_per_MW_capacity"]
-        ampl.param["capex"] = capex_df["yearly_capex_cost_per_KW"]
+        ampl.param["gen_pmax"] = gens["Pmax_pu"]
+        ampl.param["gen_cost"] = gens["cost_k_per_pu"]
+        ampl.param["gen_overhead"] = gens["hourly_overhead_k_per_pu"]
+        ampl.param["capex"] = capex_df["hourly_capex_cost_k_per_pu"]
 
         ampl.param["line_from"] = lines["from_bus"]
         ampl.param["line_to"] = lines["to_bus"]
-        ampl.param["line_rating"] = lines["line_rating_MW"]
-        ampl.param["susceptance"] = 1 / lines["reactance"]
+        ampl.param["line_rating"] = lines["line_rating_pu"]
+        ampl.param["susceptance"] = 0.001 / lines["reactance"]
 
-        ampl.param["load"] = loads_df["active_load"]
+        ampl.param["load"] = loads_df["active_load_pu"]
         ampl.param["COST_UNSERVED_LOAD"] = cost_params.query(
-            'name=="load_unserved_MWh"'
+            'name=="load_unserved_k_per_pu"'
         )["cost"].iloc[0]
         ampl.param["SLACK_BUS"] = 1
 
@@ -182,7 +181,7 @@ class Bench(Benchmark):
 
         yearly_df = pd.read_parquet("yearly_limits.parquet").set_index("type")
         ampl.set["TYPES_WITH_LIMIT"] = yearly_df.index
-        ampl.param["yearly_limit"] = yearly_df["limit"]
+        ampl.param["yearly_limit"] = yearly_df["limit_pu"]
 
     def write_results(
         self,

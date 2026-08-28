@@ -25,7 +25,7 @@ function main(
 	capex = CSV.read("capex_costs.csv", DataFrame)
 	cost_params = CSV.read("cost_parameters.csv", DataFrame)
 
-	COST_UNSERVED_LOAD = cost_params[cost_params.name .== "load_unserved_MWh", :cost][1]
+	COST_UNSERVED_LOAD = cost_params[cost_params.name .== "load_unserved_k_per_pu", :cost][1]
 	SLACK_BUS = 1
 
 	hours = sort(unique(loads_df.datetime))
@@ -54,12 +54,12 @@ function main(
 	# -------------------------
 	# PARAMETERS como contenedores
 	# -------------------------
-	gen_pmax = JuMP.Containers.DenseAxisArray(gens.Pmax, G)
-	gen_cost = JuMP.Containers.DenseAxisArray(gens.cost_per_MWh_linear, G)
-	gen_overhead = JuMP.Containers.DenseAxisArray(gens.hourly_overhead_per_MW_capacity, G)
+	gen_pmax = JuMP.Containers.DenseAxisArray(gens.Pmax_pu, G)
+	gen_cost = JuMP.Containers.DenseAxisArray(gens.cost_k_per_pu, G)
+	gen_overhead = JuMP.Containers.DenseAxisArray(gens.hourly_overhead_k_per_pu, G)
 
-	line_rating = JuMP.Containers.DenseAxisArray(lines.line_rating_MW, L)
-	susceptance = JuMP.Containers.DenseAxisArray(1.0 ./ lines.reactance, L)
+	line_rating = JuMP.Containers.DenseAxisArray(lines.line_rating_pu, L)
+	susceptance = JuMP.Containers.DenseAxisArray(0.001 ./ lines.reactance, L)
 
 	gens_at_bus = Dict(b => [g for g in G if gen_bus[g] == b] for b in B)
 	lines_to_bus = Dict(b => [l for l in L if line_to[l] == b] for b in B)
@@ -70,11 +70,11 @@ function main(
 		zeros(length(B), length(T)), B, T,
 	)
 	for r in eachrow(loads_df)
-		load[r.bus, r.datetime] = r.active_load
+		load[r.bus, r.datetime] = r.active_load_pu
 	end
 
 	# capex
-	capex_dict = Dict(zip(capex.type, capex.yearly_capex_cost_per_KW))
+	capex_dict = Dict(zip(capex.type, capex.hourly_capex_cost_k_per_pu))
 
 	# -------------------------
 	# VARIABLES (contenedores JuMP)
@@ -144,7 +144,7 @@ function main(
 			(capacity_expansion ?
 			 (
 				sum(
-					capex_dict[gen_type[g]] * Build_Out[g]
+					capex_dict[gen_type[g]] * Build_Out[g] * length(T)
 					for g in G if haskey(capex_dict, gen_type[g])
 				) + sum(
 					gen_overhead[g] * Build_Out[g] * length(T) for g in G
@@ -197,7 +197,7 @@ function main(
 	# -------------------------
 	if yearly_limits
 		yl = DataFrame(Dataset("yearly_limits.parquet"); copycols=false)
-		yearly_limit = Dict(zip(yl.type, yl.limit))
+		yearly_limit = Dict(zip(yl.type, yl.limit_pu))
 
 		@constraint(model, [cat in keys(yearly_limit)],
 			sum(Dispatch[g, t] for g in G, t in T if gen_type[g] == cat)
