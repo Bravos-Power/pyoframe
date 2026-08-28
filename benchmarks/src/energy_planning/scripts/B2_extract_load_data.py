@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.19.2"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -8,8 +8,10 @@ app = marimo.App()
 def _():
     import polars as pl
 
-    DEBUG = False
-    return DEBUG, pl
+    DEBUG = True
+    if DEBUG:
+        import altair as alt
+    return DEBUG, alt, pl
 
 
 @app.cell
@@ -17,6 +19,12 @@ def _():
     CATS_DATA = "../raw_data/downloads/CATS_loads.csv"
     LOAD_DATA_OUT = "../raw_data/preprocessed/loads.parquet"
     return CATS_DATA, LOAD_DATA_OUT
+
+
+@app.cell
+def _():
+    MIN_LOAD_MW = 0.01
+    return (MIN_LOAD_MW,)
 
 
 @app.cell
@@ -129,9 +137,38 @@ def _(DEBUG, load_ca, pl):
 
 
 @app.cell
-def _(LOAD_DATA_OUT, df5):
+def _(DEBUG, MIN_LOAD_MW, alt, df5, pl):
+    _plt = None
+    if DEBUG:
+        _plt = (
+            df5.group_by(
+                pl.col("active_load").log10().floor(),
+                (pl.col("active_load") >= MIN_LOAD_MW).alias("keep"),
+            )
+            .len()
+            .collect()
+            .with_columns(pl.col("active_load"))
+            .plot.bar(
+                x="active_load",
+                y=alt.Y("len", scale=alt.Scale(type="symlog")),
+                color="keep:N",
+            )
+            .properties(title="Distribution of Active Load")
+        )
+    _plt
+    return
+
+
+@app.cell
+def _(MIN_LOAD_MW, df5, pl):
+    df6 = df5.filter(pl.col("active_load") >= MIN_LOAD_MW)
+    return (df6,)
+
+
+@app.cell
+def _(LOAD_DATA_OUT, df6):
     # Save processed data
-    df5.sort(df5.collect_schema().names()).sink_parquet(LOAD_DATA_OUT)
+    df6.sort(df6.collect_schema().names()).sink_parquet(LOAD_DATA_OUT)
     return
 
 
