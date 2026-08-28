@@ -8,16 +8,19 @@ app = marimo.App()
 
 @app.cell
 def _():
+    from pathlib import Path
+
+    import marimo as mo  # keep for it to run headless
     import matplotlib.pyplot as plt
     import polars as pl
     from matplotlib.patches import Patch
 
-    return Patch, pl, plt
+    return Patch, Path, pl, plt, mo
 
 
 @app.cell
-def _():
-    RESULTS_FOLDER = "results/main"
+def _(Path):
+    RESULTS_FOLDER = Path(__file__).parent / "results/main_v2"
     BENCHMARK_PROBLEMS = {
         ("simple_problem", 10_000_000): "Trivial\nData\nProblem",
         ("energy_planning_capacity_expansion", 168): "Capacity\nExpansion\nProblem",

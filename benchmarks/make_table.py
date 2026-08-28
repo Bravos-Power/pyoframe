@@ -2,7 +2,7 @@
 
 import marimo
 
-__generated_with = "0.23.6"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -12,15 +12,16 @@ def _():
     from pathlib import Path
 
     import great_tables as gt
+    import marimo as mo
     import matplotlib as mpl
     import polars as pl
 
-    return Path, gt, log, mpl, pl
+    return Path, gt, log, mo, mpl, pl
 
 
 @app.cell
-def _():
-    RESULTS_FILE = "results/main/benchmark_results.csv"
+def _(Path):
+    RESULTS_FILE = Path(__file__).parent / "results/main_v2/benchmark_results.csv"
     return (RESULTS_FILE,)
 
 
@@ -590,6 +591,9 @@ def _(Path, RESULTS_FILE, pl, results_latest):
         "problem", "library", "size", "solve_time_s", "max_solver_memory_uss_gib"
     )
 
+    # Solve time only has 2 digits so we only display numbers greater than 1 second
+    df_solver = df_solver.filter(pl.col("solve_time_s") >= 1)
+
     # compute relative difference of solve_time_s relative to median
     df_solver = df_solver.with_columns(
         relative_solve_time_s=pl.col("solve_time_s")
@@ -608,7 +612,7 @@ def _(Path, RESULTS_FILE, pl, results_latest):
     df_solver = df_solver.with_columns(
         pl.col("metric").replace(
             {
-                "relative_solve_time_s": "Gurobi Solve Time",
+                "relative_solve_time_s": "Gurobi Solve Time (≥1sec)",
                 "relative_memory_gib": "Gurobi Memory Usage",
             }
         ),
