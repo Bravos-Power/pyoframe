@@ -53,8 +53,9 @@ class Benchmark:
 
 
 def run_all_benchmarks(
-    config, ignore_past_results=False, build_inputs=True, fail_on_error=False
+    config, ignore_past_results=False, build_inputs=True, fail_on_error=False, note=""
 ):
+    total_start_time = time.monotonic()
     base_dir = CWD / "results" / config["name"]
     base_dir.mkdir(parents=True, exist_ok=True)
 
@@ -115,6 +116,7 @@ def run_all_benchmarks(
                                 results_dir=get_results_dir(
                                     base_results_dir, library, solver
                                 ),
+                                note=note,
                             )
                     except BenchmarkError as e:
                         if fail_on_error:
@@ -133,6 +135,11 @@ def run_all_benchmarks(
                 check_results_output_match(
                     name, base_results_dir, past_results_df, config
                 )
+
+    total_time = time.monotonic() - total_start_time
+    print(
+        f"All benchmarks completed in {total_time // 3600:02.0f}:{(total_time % 3600) // 60:02.0f}:{total_time % 60:.1f}"
+    )
 
 
 def check_results_csv_aligns(df, problem, size):
@@ -260,6 +267,7 @@ def run_benchmark(
     timeout: int | None = None,
     input_dir=None,
     results_dir: Path | None = None,
+    note: str = "",
 ):
     def save_result(
         total_time: float | None = None,
@@ -287,6 +295,7 @@ def run_benchmark(
                 ),
                 "objective_value": monitor_result.objective_value,
                 "error": error,
+                "note": note,
             }
         )
 
@@ -526,6 +535,14 @@ def monitor_benchmark(
                         "Multiple objective values found"
                     )
                     result.objective_value = float(line.split(" ")[2].rstrip(","))
+                    event = Markers.GUROBI_END.value
+                elif line.startswith("Sub-optimal termination"):
+                    assert result.objective_value is None, (
+                        "Multiple objective values found"
+                    )
+                    result.objective_value = float(
+                        line.partition("objective")[2].strip()
+                    )
                     event = Markers.GUROBI_END.value
 
                 if event is not None:
@@ -804,6 +821,7 @@ class PastResults:
         "max_solver_memory_uss_mb": pl.Float64,
         "objective_value": pl.Float64,
         "error": pl.Utf8,
+        "note": pl.Utf8,
     }
 
     FILE_NAME = "benchmark_results.csv"
@@ -898,6 +916,13 @@ if __name__ == "__main__":
         default=None,
         help="Only run benchmarks for this problem size (e.g., 100).",
     )
+    argparser.add_argument(
+        "-n",
+        "--note",
+        type=str,
+        default="",
+        help="Optional note to add to the benchmark results file.",
+    )
     args = argparser.parse_args()
     assert args.size is None or args.problem is not None, (
         "Cannot specify size without problem."
@@ -916,4 +941,4 @@ if __name__ == "__main__":
 
         if args.size is not None:
             config["problems"][args.problem]["size"] = [args.size]
-    run_all_benchmarks(config, ignore_past_results=args.ignore_cache)
+    run_all_benchmarks(config, ignore_past_results=args.ignore_cache, note=args.note)
