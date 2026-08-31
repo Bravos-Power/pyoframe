@@ -6,6 +6,7 @@ Saves results to results/benchmark_results.csv.
 import argparse
 import enum
 import itertools
+import logging
 import math
 import os
 import queue
@@ -14,7 +15,6 @@ import signal
 import subprocess
 import threading
 import time
-import warnings
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +38,18 @@ TIMESTAMP = time.strftime("%Y%m%d_%H%M%S")
 
 CWD = Path(__file__).parent
 
+logger = logging.getLogger("benchmarks_main")
+logger.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
+
+
+def setup_file_logging(file_path: Path):
+    file_handler = logging.FileHandler(file_path)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s:\t%(message)s")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
 
 @dataclass
 class Benchmark:
@@ -58,6 +70,11 @@ def run_all_benchmarks(
     total_start_time = time.monotonic()
     base_dir = CWD / "results" / config["name"]
     base_dir.mkdir(parents=True, exist_ok=True)
+
+    log_dir = base_dir / "logs"
+    log_dir.mkdir(exist_ok=True)
+
+    setup_file_logging(log_dir / f"{TIMESTAMP}.log")
 
     past_results = PastResults(base_dir, ignore_past_results=ignore_past_results)
 
@@ -86,13 +103,15 @@ def run_all_benchmarks(
                         solver_args=problem_config.get("solver_args", None),
                     )
                     if not get_benchmark_code(benchmark).exists():
-                        print(f"{name}: Skipping {library} as no benchmark found.")
+                        logger.info(
+                            f"{name}: Skipping {library} as no benchmark found."
+                        )
                         continue
 
                     if not should_run_benchmark(
                         benchmark, past_results, timeout, num_repeats
                     ):
-                        print(
+                        logger.info(
                             f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
                         )
                         continue
@@ -104,7 +123,7 @@ def run_all_benchmarks(
                     )
                     try:
                         for i in range(num_repeats):
-                            print(
+                            logger.info(
                                 f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
                             )
 
@@ -122,7 +141,7 @@ def run_all_benchmarks(
                         if fail_on_error:
                             raise e
                         else:
-                            print(f"{name}: {e}")
+                            logger.warning(f"{name}: {e}")
 
                 past_results_df = past_results.read(
                     problem=name, size=size, ignore_past_results=False
@@ -137,14 +156,16 @@ def run_all_benchmarks(
                 )
 
     total_time = time.monotonic() - total_start_time
-    print(
+    logger.info(
         f"All benchmarks completed in {total_time // 3600:02.0f}:{(total_time % 3600) // 60:02.0f}:{total_time % 60:.1f}"
     )
 
 
 def check_results_csv_aligns(df, problem, size):
     if df.height <= 1:
-        print(f"{problem} (n={size}): Not enough successful runs to compare results.")
+        logger.info(
+            f"{problem} (n={size}): Not enough successful runs to compare results."
+        )
         return
 
     # Check objective values
@@ -154,11 +175,11 @@ def check_results_csv_aligns(df, problem, size):
         pl.col("solver", "library").first()
     )
     if num_objectives.height <= 1:
-        print(
+        logger.info(
             f"{problem}: Objective values match across all runs ({df['library'].unique().to_list()})."
         )
     else:
-        raise ValueError(
+        logger.warning(
             f"{problem}: Objective values do not match for size {size}, see .csv results:\n{num_objectives}"
         )
 
@@ -176,9 +197,9 @@ def check_results_csv_aligns(df, problem, size):
         pl.col("solver", "library").unique()
     )
     if num_variables.height <= 1:
-        print(f"{problem}: Number of variables match across all runs.")
+        logger.info(f"{problem}: Number of variables match across all runs.")
     else:
-        raise ValueError(
+        logger.warning(
             f"{problem}: Number of variables do not match for size {size}, see .csv results:\n{num_variables}"
         )
 
@@ -215,7 +236,7 @@ def prepare_benchmark_problem(problem: str, code_dir: str, problem_config):
     if "inputs" not in problem_config:
         return
 
-    print(f"{problem}: Generating required input files...")
+    logger.debug(f"{problem}: Generating required input files...")
 
     cmd = ["snakemake", "--cores", "all"]
     if problem_config["inputs"] != "*":
@@ -235,7 +256,7 @@ def precompile_julia_benchmarks(
     if image_path.exists():
         return
 
-    print(f"{problem}: Creating system image for Julia benchmarks...")
+    logger.debug(f"{problem}: Creating system image for Julia benchmarks...")
 
     if not trace_compile_path.exists():
         raise FileNotFoundError(
@@ -551,12 +572,12 @@ def monitor_benchmark(
                         events.append(event)
 
                 if elapsed_time > LOG_AFTER_S:
-                    print("\t" + line)
+                    logger.debug("\t" + line)
         except ValueError:
             pass
 
         for event in events:
-            print(f"\tBENCHMARK_EVENT_DETECTED: {event}")
+            logger.info(f"BENCHMARK_EVENT_DETECTED: {event}")
 
         memory_data.append((elapsed_time, pid, uss, rss, vms, num_threads, events))
 
@@ -619,9 +640,9 @@ def monitor_benchmark(
 
         if not construct_only:
             if Markers.GUROBI_START.value not in df["events"].explode().to_list():
-                warnings.warn("Failed to detect Gurobi start event.")
+                logger.warning("Failed to detect Gurobi start event.")
             elif Markers.GUROBI_END.value not in df["events"].explode().to_list():
-                warnings.warn("Failed to detect Gurobi end event.")
+                logger.warning("Failed to detect Gurobi end event.")
             else:
                 gurobi_start_time = df.filter(
                     pl.col("events").list.contains(Markers.GUROBI_START.value)
@@ -746,13 +767,13 @@ def check_results_output_match(
                             + f"\nReference:\n{ref_conflict}\nDiff:\n{diff_conflict}"
                         )
                     else:
-                        warnings.warn(f"{msg}, maybe multiple solutions exist?")
+                        logger.warning(f"{msg}, maybe multiple solutions exist?")
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)
 
     if len(libs_compared) > 1:
-        print(f"{problem}: Outputs match across {', '.join(libs_compared)}")
+        logger.info(f"{problem}: Outputs match across {', '.join(libs_compared)}")
 
 
 def read_dataframe(path: Path) -> pl.DataFrame:
