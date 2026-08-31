@@ -530,7 +530,6 @@ def monitor_benchmark(
 
                 if event is not None:
                     last_event_time = curr_time
-                    # print(f"[MARK] {marker}")
                     if event not in events:
                         events.append(event)
 
@@ -538,6 +537,9 @@ def monitor_benchmark(
                     print("\t" + line)
         except ValueError:
             pass
+
+        for event in events:
+            print(f"\tBENCHMARK_EVENT_DETECTED: {event}")
 
         memory_data.append((elapsed_time, pid, uss, rss, vms, num_threads, events))
 
