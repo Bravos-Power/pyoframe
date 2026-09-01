@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.24.0"
+__generated_with = "0.19.2"
 app = marimo.App()
 
 
@@ -158,7 +158,7 @@ def _(DF_PERC_CUTOFF, bodf_1, pl):
     # Plot distribution of factors
     bodf_1.sample(10_000).with_columns(
         pl.col("percent_increase", "factor").abs().log10(),
-        keep=(pl.col("percent_increase") > DF_PERC_CUTOFF),
+        keep=pl.col("percent_increase") > DF_PERC_CUTOFF,
     ).plot.scatter(x="factor", y="percent_increase", color="keep")
     return
 
