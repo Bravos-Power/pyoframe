@@ -31,7 +31,6 @@ if not _windows:
     import pty
 
 POLL_MIN_S, POLL_MAX_S, POLL_TRANSITION_S = 0.01, 1, 30
-LOG_AFTER_S = 0
 MIN_DATAPOINTS_FOR_GUROBI_MEMORY = 2
 
 TIMESTAMP = time.strftime("%Y%m%d_%H%M%S")
@@ -302,6 +301,7 @@ def run_benchmark(
             {
                 "date": TIMESTAMP,
                 "solver": benchmark.solver,
+                "solver_version": monitor_result.solver_version,
                 "problem": benchmark.name,
                 "size": benchmark.size,
                 "library": benchmark.library,
@@ -323,6 +323,7 @@ def run_benchmark(
         )
 
     using_julia = benchmark.library == "jump"
+    env = os.environ.copy()
 
     if not using_julia:
         args = dict(solver=f"'{benchmark.solver}'", emit_benchmarking_logs="True")
@@ -362,6 +363,8 @@ def run_benchmark(
 
         if benchmark.julia_trace_compile:
             cmd += ["--trace-compile", str(trace_compile_path)]
+            assert "GUROBI_HOME" in env, "GUROBI_HOME not set in environment"
+            env["GUROBI_JL_USE_GUROBI_JLL"] = "false"
         else:
             precompile_julia_benchmarks(
                 benchmark.name,
@@ -405,6 +408,8 @@ def run_benchmark(
         master_fd, slave_fd = pty.openpty()
         kwargs = dict(stdout=slave_fd)
         stdout = os.fdopen(master_fd, "r", buffering=1)
+
+    kwargs["env"] = env
 
     start_time = time.monotonic()
 
@@ -458,9 +463,17 @@ def run_benchmark(
         monitor_result=result,
     )
 
+    if using_julia and benchmark.julia_trace_compile:
+        # Sort trace file to avoid random changes in git
+        with open(trace_compile_path) as f:
+            lines = f.readlines()
+        with open(trace_compile_path, "w") as f:
+            f.writelines(sorted(lines))
+
 
 @dataclass
 class MonitorResult:
+    solver_version: str | None = None
     num_variables: int | None = None
     num_constraints: int | None = None
     num_nonzeros: int | None = None
@@ -522,9 +535,14 @@ def monitor_benchmark(
             for line in iter(stdout.readline, ""):
                 event = None
                 line = line.strip()
+                logger.debug("\t" + line)
 
                 if line.startswith("BENCHMARK_EVENT:"):
                     event = line.removeprefix("BENCHMARK_EVENT:").strip()
+                elif line.startswith("Gurobi Optimizer version "):
+                    result.solver_version = line.removeprefix(
+                        "Gurobi Optimizer version "
+                    ).partition(" ")[0]
                 elif line.startswith("Optimize a model with "):
                     event = Markers.GUROBI_START.value
                     result.num_variables = int(
@@ -573,11 +591,8 @@ def monitor_benchmark(
                     last_event_time = curr_time
                     if event not in events:
                         events.append(event)
-
-                if elapsed_time > LOG_AFTER_S:
-                    logger.debug("\t" + line)
-        except ValueError:
-            pass
+        except ValueError as e:
+            logger.warning(f"Error parsing line: {line}\n{e}")
 
         for event in events:
             logger.info(f"BENCHMARK_EVENT_DETECTED: {event}")
@@ -833,6 +848,7 @@ class PastResults:
         "problem": pl.Utf8,
         "library": pl.Utf8,
         "solver": pl.Utf8,
+        "solver_version": pl.Utf8,
         "size": pl.Int64,
         "num_variables": pl.Int64,
         "num_constraints": pl.Int64,
