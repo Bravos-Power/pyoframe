@@ -157,9 +157,9 @@ def run_all_benchmarks(
                     past_results_df = past_results.read(
                         problem=name, size=size, ignore_past_results=False
                     )
-                    past_results_df = past_results_df.filter(
-                        pl.col("error").is_null(), version=version
-                    )
+                    past_results_df = past_results_df.filter(pl.col("error").is_null())
+                    if version is not None:
+                        past_results_df = past_results_df.filter(version=version)
                     past_results_df = past_results_df.sort("date")
                     past_results_df = past_results_df.group_by(
                         "library", "solver"
@@ -327,8 +327,14 @@ def run_benchmark(
                 num_variables=monitor_result.num_variables,
                 num_constraints=monitor_result.num_constraints,
                 num_nonzeros=monitor_result.num_nonzeros,
-                total_time_s=total_time,
+                total_time_s=safe_round(total_time, 3),
                 solve_time_s=monitor_result.solve_time,
+                convert_to_solver_s=safe_round(
+                    monitor_result.convert_to_solver_time, 3
+                ),
+                convert_from_solver_s=safe_round(
+                    monitor_result.convert_from_solver_time, 3
+                ),
                 presolve_time_s=monitor_result.presolve_time,
                 max_memory_uss_mb=safe_round(monitor_result.max_memory_uss_mb, 3),
                 max_solver_memory_uss_mb=safe_round(
@@ -443,7 +449,7 @@ def run_benchmark(
                 stdout,
                 max_memory_queue,
                 mem_log_dir
-                / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}.parquet",
+                / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}_{benchmark.seed}.parquet",
                 benchmark.construct_only,
             ),
         )
@@ -457,7 +463,7 @@ def run_benchmark(
             save_result(total_time=timeout, error="TIMEOUT")
             raise BenchmarkError("Benchmark timed out")
         except KeyboardInterrupt as e:
-            logging.warning("KeyboardInterrupt received, terminating benchmark...")
+            logger.warning("KeyboardInterrupt received, terminating benchmark...")
             kill_process(benchmark_proc, using_julia)
             raise e
 
@@ -497,6 +503,8 @@ class MonitorResult:
     num_constraints: int | None = None
     num_nonzeros: int | None = None
     solve_time: float | None = None
+    convert_to_solver_time: float | None = None
+    convert_from_solver_time: float | None = None
     barrier_solve_time: float | None = None
     presolve_time: float | None = None
     max_memory_uss_mb: float | None = None
@@ -524,6 +532,8 @@ def monitor_benchmark(
 
     keep_checking = True
     last_event_time = start_time
+    solve_called_time = None
+    gurobi_done_time = None
 
     os.set_blocking(stdout.fileno(), False)  # Requires Python 3.12 for windows
 
@@ -558,12 +568,25 @@ def monitor_benchmark(
 
                 if line.startswith("BENCHMARK_EVENT:"):
                     event = line.removeprefix("BENCHMARK_EVENT:").strip()
+                    if event == "2_SOLVE":
+                        solve_called_time = curr_time
+                    elif event == "5_SOLVE_RETURNED":
+                        if gurobi_done_time is None:
+                            logger.warning(
+                                "Convert may have been too quick to register. Marking a zero"
+                            )
+                            result.convert_from_solver_time = 0
+                        else:
+                            result.convert_from_solver_time = (
+                                curr_time - gurobi_done_time
+                            )
                 elif line.startswith("Gurobi Optimizer version "):
                     result.solver_version = line.removeprefix(
                         "Gurobi Optimizer version "
                     ).partition(" ")[0]
                 elif line.startswith("Optimize a model with "):
                     event = Markers.GUROBI_START.value
+                    result.convert_to_solver_time = curr_time - solve_called_time
                     result.num_variables = int(
                         re.search(r"(\d+) columns", line).group(1)
                     )
@@ -581,6 +604,7 @@ def monitor_benchmark(
                     result.solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
+                    gurobi_done_time = curr_time
                     event = Markers.GUROBI_END.value
                 elif line.startswith(
                     ("Barrier solved model in ", "Barrier performed ")
@@ -594,6 +618,7 @@ def monitor_benchmark(
                     result.barrier_iterations = int(
                         re.search(r"(\d+) iterations", line).group(1)
                     )
+                    gurobi_done_time = curr_time
                     event = Markers.GUROBI_END.value
                 elif line.startswith(
                     ("Optimal objective ", "Sub-optimal termination ")
@@ -883,6 +908,8 @@ class PastResults:
         "num_nonzeros": pl.Int64,
         "total_time_s": pl.Float64,
         "solve_time_s": pl.Float64,
+        "convert_to_solver_s": pl.Float64,
+        "convert_from_solver_s": pl.Float64,
         "presolve_time_s": pl.Float64,
         "max_memory_uss_mb": pl.Float64,
         "max_solver_memory_uss_mb": pl.Float64,
