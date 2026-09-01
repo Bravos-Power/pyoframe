@@ -315,6 +315,7 @@ def run_benchmark(
                     monitor_result.max_solver_memory_uss_mb, 3
                 ),
                 "objective_value": monitor_result.objective_value,
+                "barrier_iterations": monitor_result.barrier_iterations,
                 "error": error,
                 "note": note,
             }
@@ -467,6 +468,7 @@ class MonitorResult:
     max_memory_uss_mb: float | None = None
     max_solver_memory_uss_mb: float | None = None
     objective_value: float | None = None
+    barrier_iterations: int | None = None
 
 
 class Markers(enum.Enum):
@@ -548,6 +550,9 @@ def monitor_benchmark(
                     )
                     result.barrier_solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
+                    )
+                    result.barrier_iterations = int(
+                        re.search(r"(\d+) iterations", line).group(1)
                     )
                 elif line.startswith(
                     ("Optimal objective ", "Sub-optimal termination ")
@@ -833,6 +838,7 @@ class PastResults:
         "max_memory_uss_mb": pl.Float64,
         "max_solver_memory_uss_mb": pl.Float64,
         "objective_value": pl.Float64,
+        "barrier_iterations": pl.Int64,
         "error": pl.Utf8,
         "note": pl.Utf8,
     }

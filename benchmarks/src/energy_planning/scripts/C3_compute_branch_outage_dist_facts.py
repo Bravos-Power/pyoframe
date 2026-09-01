@@ -17,10 +17,9 @@ def _():
 @app.cell
 def _():
     DF_PERC_CUTOFF = 0.02
-    MIN_DF = 0.001
     MIN_KV = 115
     ISLAND_SENSITIVITY = 1e-5
-    return DF_PERC_CUTOFF, ISLAND_SENSITIVITY, MIN_DF, MIN_KV
+    return DF_PERC_CUTOFF, ISLAND_SENSITIVITY, MIN_KV
 
 
 @app.cell
@@ -155,22 +154,19 @@ def _(alt, bodf, lines_1, pl):
 
 
 @app.cell
-def _(DF_PERC_CUTOFF, MIN_DF, bodf_1, pl):
+def _(DF_PERC_CUTOFF, bodf_1, pl):
     # Plot distribution of factors
     bodf_1.sample(10_000).with_columns(
         pl.col("percent_increase", "factor").abs().log10(),
-        keep=(pl.col("percent_increase") > DF_PERC_CUTOFF)
-        & (pl.col("factor").abs() > MIN_DF),
+        keep=(pl.col("percent_increase") > DF_PERC_CUTOFF),
     ).plot.scatter(x="factor", y="percent_increase", color="keep")
     return
 
 
 @app.cell
-def _(DF_PERC_CUTOFF, MIN_DF, bodf_1, pl):
+def _(DF_PERC_CUTOFF, bodf_1, pl):
     # Filter out near zeros
-    bodf_2 = bodf_1.filter(
-        pl.col("percent_increase") > DF_PERC_CUTOFF, pl.col("factor").abs() > MIN_DF
-    )
+    bodf_2 = bodf_1.filter(pl.col("percent_increase") > DF_PERC_CUTOFF)
     bodf_2 = bodf_2.drop("percent_increase")
     bodf_2 = bodf_2.sort("outage_line_id", "affected_line_id")
     bodf_2
