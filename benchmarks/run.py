@@ -539,15 +539,18 @@ def monitor_benchmark(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
                     event = Markers.GUROBI_END.value
-                elif line.startswith("Barrier solved model in "):
+                elif line.startswith(
+                    ("Barrier solved model in ", "Barrier performed ")
+                ):
                     assert result.barrier_solve_time is None, (
                         "Multiple barrier solve times found"
                     )
                     result.barrier_solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
-                    event = Markers.GUROBI_END.value
-                elif line.startswith("Optimal objective "):
+                elif line.startswith(
+                    ("Optimal objective ", "Sub-optimal termination ")
+                ):
                     # Allow multiple, always take last
                     result.objective_value = float(line.rpartition(" ")[2])
                     event = Markers.GUROBI_END.value
@@ -556,14 +559,6 @@ def monitor_benchmark(
                         "Multiple objective values found"
                     )
                     result.objective_value = float(line.split(" ")[2].rstrip(","))
-                    event = Markers.GUROBI_END.value
-                elif line.startswith("Sub-optimal termination"):
-                    assert result.objective_value is None, (
-                        "Multiple objective values found"
-                    )
-                    result.objective_value = float(
-                        line.partition("objective")[2].strip()
-                    )
                     event = Markers.GUROBI_END.value
 
                 if event is not None:
