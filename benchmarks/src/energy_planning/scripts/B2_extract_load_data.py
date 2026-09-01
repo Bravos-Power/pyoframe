@@ -23,7 +23,7 @@ def _():
 
 @app.cell
 def _():
-    MIN_LOAD_MW = 0.01
+    MIN_LOAD_MW = 0.01  # Improves performance and is realistic
     BASE_MW = 100
     return BASE_MW, MIN_LOAD_MW
 

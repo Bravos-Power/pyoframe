@@ -310,6 +310,7 @@ def run_benchmark(
                 "num_nonzeros": monitor_result.num_nonzeros,
                 "total_time_s": safe_round(total_time, 3),
                 "solve_time_s": safe_round(monitor_result.solve_time, 3),
+                "presolve_time_s": monitor_result.presolve_time,
                 "max_memory_uss_mb": safe_round(monitor_result.max_memory_uss_mb, 3),
                 "max_solver_memory_uss_mb": safe_round(
                     monitor_result.max_solver_memory_uss_mb, 3
@@ -465,6 +466,7 @@ class MonitorResult:
     num_nonzeros: int | None = None
     solve_time: float | None = None
     barrier_solve_time: float | None = None
+    presolve_time: float | None = None
     max_memory_uss_mb: float | None = None
     max_solver_memory_uss_mb: float | None = None
     objective_value: float | None = None
@@ -534,7 +536,8 @@ def monitor_benchmark(
                     result.num_nonzeros = int(
                         re.search(r"(\d+) nonzeros", line).group(1)
                     )
-                elif line.startswith("Presolved: "):
+                elif line.startswith("Presolve time: "):
+                    result.presolve_time = float(re.search(r"([\d.]+)s", line).group(1))
                     event = Markers.GUROBI_PRESOLVED.value
                 elif line.startswith("Solved in "):
                     assert result.solve_time is None, "Multiple solve times found"
@@ -835,6 +838,7 @@ class PastResults:
         "num_nonzeros": pl.Int64,
         "total_time_s": pl.Float64,
         "solve_time_s": pl.Float64,
+        "presolve_time_s": pl.Float64,
         "max_memory_uss_mb": pl.Float64,
         "max_solver_memory_uss_mb": pl.Float64,
         "objective_value": pl.Float64,
