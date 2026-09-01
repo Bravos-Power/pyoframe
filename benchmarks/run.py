@@ -165,10 +165,10 @@ def run_all_benchmarks(
                         "library", "solver"
                     ).last()
 
-                    check_results_csv_aligns(past_results_df, problem=name, size=size)
-                    check_results_output_match(
-                        name, base_results_dir, past_results_df, config
-                    )
+                check_results_csv_aligns(past_results_df, problem=name, size=size)
+                check_results_output_match(
+                    name, base_results_dir, past_results_df, config
+                )
 
     total_time = time.monotonic() - total_start_time
     logger.info(
