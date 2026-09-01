@@ -62,6 +62,8 @@ class Benchmark:
     julia_trace_compile: bool
     solver_args: dict | None
     note: str | None = None
+    seed: int | None = None
+    version: int | None = None
 
 
 def run_all_benchmarks(
@@ -78,70 +80,75 @@ def run_all_benchmarks(
 
     past_results = PastResults(base_dir, ignore_past_results=ignore_past_results)
 
-    timeout = config.get("timeout", None)
+    timeout = config.get("run_timeout_s", None)
+    num_repeats = config.get("repeat", 1)
+    version = config.get("version", None)
 
-    for name, problem_config in config["problems"].items():
+    for solver, i, (name, problem_config), library in itertools.product(
+        config["solvers"],
+        range(num_repeats),
+        config["problems"].items(),
+        config["libraries"],
+    ):
         code_dir = problem_config.get("code_dir", name)
-        if build_inputs:
+        if i == 0 and build_inputs:
             prepare_benchmark_problem(name, code_dir, problem_config)
 
-        num_repeats = problem_config.get("repeat", config.get("repeat", 1))
+        # start at 1000 to match previous work https://pubsonline.informs.org/doi/pdf/10.1287/educ.2013.0112
+        seed = 1000 + i
+
         for size in problem_config.get("size", [None]):
             with get_base_results_dir(config, base_dir, name, size) as base_results_dir:
-                for solver, library in itertools.product(
-                    config["solvers"], config["libraries"]
-                ):
-                    benchmark = Benchmark(
-                        name=name,
-                        code_dir=code_dir,
-                        solver=solver,
-                        library=library,
-                        size=size,
-                        construct_only=problem_config.get("construct_only", False),
-                        julia_trace_compile=config.get("julia_trace_compile", False),
-                        args=problem_config.get("args", {}),
-                        solver_args=problem_config.get("solver_args", None),
-                        note=note,
+                solver_args = problem_config.get("solver_args", {}).copy()
+                assert "Seed" not in solver_args, (
+                    "Seed should not be set in config.yaml"
+                )
+                solver_args["Seed"] = seed
+                benchmark = Benchmark(
+                    name=name,
+                    code_dir=code_dir,
+                    solver=solver,
+                    library=library,
+                    size=size,
+                    construct_only=problem_config.get("construct_only", False),
+                    julia_trace_compile=config.get("julia_trace_compile", False),
+                    args=problem_config.get("args", {}),
+                    solver_args=solver_args,
+                    note=note,
+                    seed=seed,
+                    version=version,
+                )
+                if not get_benchmark_code(benchmark).exists():
+                    logger.info(f"{name}: Skipping {library} as no benchmark found.")
+                    continue
+
+                if not should_run_benchmark(benchmark, past_results, timeout):
+                    logger.info(
+                        f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
                     )
-                    if not get_benchmark_code(benchmark).exists():
-                        logger.info(
-                            f"{name}: Skipping {library} as no benchmark found."
-                        )
-                        continue
+                    continue
 
-                    if not should_run_benchmark(
-                        benchmark, past_results, timeout, num_repeats
-                    ):
-                        logger.info(
-                            f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
-                        )
-                        continue
-
-                    input_dir = (
-                        CWD / "src" / code_dir / "model_data"
-                        if "inputs" in problem_config
-                        else None
+                input_dir = (
+                    CWD / "src" / code_dir / "model_data"
+                    if "inputs" in problem_config
+                    else None
+                )
+                try:
+                    logger.info(
+                        f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
                     )
-                    try:
-                        for i in range(num_repeats):
-                            logger.info(
-                                f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
-                            )
-
-                            run_benchmark(
-                                benchmark,
-                                past_results,
-                                timeout=timeout,
-                                input_dir=input_dir,
-                                results_dir=get_results_dir(
-                                    base_results_dir, library, solver
-                                ),
-                            )
-                    except BenchmarkError as e:
-                        if fail_on_error:
-                            raise e
-                        else:
-                            logger.warning(f"{name}: {e}")
+                    run_benchmark(
+                        benchmark,
+                        past_results,
+                        timeout=timeout,
+                        input_dir=input_dir,
+                        results_dir=get_results_dir(base_results_dir, library, solver),
+                    )
+                except BenchmarkError as e:
+                    if fail_on_error:
+                        raise e
+                    else:
+                        logger.warning(f"{name}: {e}")
 
                 past_results_df = past_results.read(
                     problem=name, size=size, ignore_past_results=False
@@ -204,7 +211,7 @@ def check_results_csv_aligns(df, problem, size):
         )
 
 
-def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeats):
+def should_run_benchmark(benchmark: Benchmark, past_results, timeout):
     past_results_df = past_results.read(
         problem=benchmark.name, library=benchmark.library, solver=benchmark.solver
     )
@@ -216,9 +223,11 @@ def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeat
     if benchmark.size is not None:
         past_results_df = past_results_df.filter(size=benchmark.size)
 
-    # Check if already completed
-    if past_results_df.filter(pl.col("error").is_null()).height >= num_repeats:
-        return False
+    if benchmark.seed is not None:
+        past_results_df = past_results_df.filter(seed=benchmark.seed)
+
+    if benchmark.version is not None:
+        past_results_df = past_results_df.filter(version=benchmark.version)
 
     # Previously timed out at this size, don't try again.
     prior_timeouts = past_results_df.filter(error="TIMEOUT")
@@ -298,28 +307,30 @@ def run_benchmark(
             monitor_result = MonitorResult()
 
         past_results.append(
-            {
-                "date": TIMESTAMP,
-                "solver": benchmark.solver,
-                "solver_version": monitor_result.solver_version,
-                "problem": benchmark.name,
-                "size": benchmark.size,
-                "library": benchmark.library,
-                "num_variables": monitor_result.num_variables,
-                "num_constraints": monitor_result.num_constraints,
-                "num_nonzeros": monitor_result.num_nonzeros,
-                "total_time_s": safe_round(total_time, 3),
-                "solve_time_s": safe_round(monitor_result.solve_time, 3),
-                "presolve_time_s": monitor_result.presolve_time,
-                "max_memory_uss_mb": safe_round(monitor_result.max_memory_uss_mb, 3),
-                "max_solver_memory_uss_mb": safe_round(
+            dict(
+                date=TIMESTAMP,
+                version=benchmark.version,
+                solver=benchmark.solver,
+                solver_version=monitor_result.solver_version,
+                seed=benchmark.seed,
+                problem=benchmark.name,
+                size=benchmark.size,
+                library=benchmark.library,
+                num_variables=monitor_result.num_variables,
+                num_constraints=monitor_result.num_constraints,
+                num_nonzeros=monitor_result.num_nonzeros,
+                total_time_s=total_time,
+                solve_time_s=monitor_result.solve_time,
+                presolve_time_s=monitor_result.presolve_time,
+                max_memory_uss_mb=safe_round(monitor_result.max_memory_uss_mb, 3),
+                max_solver_memory_uss_mb=safe_round(
                     monitor_result.max_solver_memory_uss_mb, 3
                 ),
-                "objective_value": monitor_result.objective_value,
-                "barrier_iterations": monitor_result.barrier_iterations,
-                "error": error,
-                "note": benchmark.note,
-            }
+                objective_value=monitor_result.objective_value,
+                barrier_iterations=monitor_result.barrier_iterations,
+                error=error,
+                note=benchmark.note,
+            )
         )
 
     using_julia = benchmark.library == "jump"
@@ -775,14 +786,15 @@ def check_results_output_match(
                         diff_col = -diff_col
                 if not (ref_col == diff_col).all():
                     # Compute number of >1% differences
-                    num_large_diffs = (
-                        (ref_col - diff_col).abs() / ref_col.abs() > 0.01
-                    ).sum()
+                    abs_diff = (ref_col - diff_col).abs()
+                    rel_diff = abs_diff / ref_col.abs()
+                    num_large_diffs = ((rel_diff > 0.01) & (abs_diff > 1e-6)).sum()
+                    num_diffs = (ref_col != diff_col).sum()
+                    frac_diffs = num_diffs / ref.height
+                    frac_large_diffs = num_large_diffs / ref.height
+                    frac_minor_diffs = frac_diffs - frac_large_diffs
 
-                    # Compute all differences
-                    num_conflicts = (ref_col != diff_col).sum()
-                    frac_error = num_conflicts / ref.height
-                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_error:.2%} of the {ref.height} rows differ ({num_large_diffs / ref.height:.2%} of rows have >1% differences)."
+                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_minor_diffs:.2%} minor differences, {frac_large_diffs:.2%} major differences"
                     logger.warning(f"{msg}, maybe multiple solutions exist?")
 
         libs_compared.add(ref_lib)
@@ -845,6 +857,8 @@ def get_results_dir(base_results_dir: Path | str, library: str, solver: str):
 class PastResults:
     BENCHMARK_RESULTS_SCHEMA: dict = {
         "date": pl.Utf8,
+        "version": pl.Int64,
+        "seed": pl.Int64,
         "problem": pl.Utf8,
         "library": pl.Utf8,
         "solver": pl.Utf8,

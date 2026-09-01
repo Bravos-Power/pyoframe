@@ -89,8 +89,7 @@ class Bench(Benchmark):
         if capacity_expansion:
             m.minimize += (
                 m.Build_Out.map(m.gens[["gen_id", "type"]]) * Param("capex_costs.csv")
-            ).sum() * len(m.hours)
-            m.minimize += (
+            ).sum() * len(m.hours) + (
                 m.Build_Out * m.gens["gen_id", "hourly_overhead_k_per_pu"]
             ).sum() * len(m.hours)
 

@@ -1,12 +1,13 @@
-repeat: 1 # TODO repeat
-timeout: 1200 # seconds, per run
-name: "main_v4"
+repeat: 3
+run_timeout_s: 1200
+version: 2
+name: "main"
 problems:
   energy_planning_security_constrained_dispatch:
     label: "Electrical Grid Dispatch Problem"
     code_dir: energy_planning
     inputs: "*"
-    size: [2, 24, 72, 8, 48]  # Different order to get most interesting first
+    size: [2, 24, 8, 48]
     args:
       security_constrained: true
       capacity_expansion: false
@@ -30,7 +31,7 @@ problems:
     label: "Electrical Grid Capacity Expansion Problem"
     code_dir: energy_planning
     inputs: "*"
-    size: [2, 4, 24, 168, 336]
+    size: [2, 168, 4, 24, 336]
     args:
       security_constrained: false
       capacity_expansion: true
@@ -53,16 +54,14 @@ problems:
 
 solvers:
   - gurobi
-  # - highs
-  # - mosek
 
 libraries:
   - pyoframe
-  - pyomo
-  - cvxpy
-  - gurobipy
+  - pyoptinterface
   - jump
   - linopy
-  - pyoptinterface
-  - pulp
+  - gurobipy
   - ampl
+  - pyomo
+  - cvxpy
+  - pulp
