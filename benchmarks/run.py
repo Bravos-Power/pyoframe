@@ -431,6 +431,7 @@ def run_benchmark(
             save_result(total_time=timeout, error="TIMEOUT")
             raise BenchmarkError("Benchmark timed out")
         except KeyboardInterrupt as e:
+            logging.warning("KeyboardInterrupt received, terminating benchmark...")
             kill_process(benchmark_proc, using_julia)
             raise e
 
