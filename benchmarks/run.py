@@ -61,10 +61,11 @@ class Benchmark:
     args: dict[str, str]
     julia_trace_compile: bool
     solver_args: dict | None
+    note: str | None = None
 
 
 def run_all_benchmarks(
-    config, ignore_past_results=False, build_inputs=True, fail_on_error=False, note=""
+    config, ignore_past_results=False, build_inputs=True, fail_on_error=False, note=None
 ):
     total_start_time = time.monotonic()
     base_dir = CWD / "results" / config["name"]
@@ -85,7 +86,7 @@ def run_all_benchmarks(
             prepare_benchmark_problem(name, code_dir, problem_config)
 
         num_repeats = problem_config.get("repeat", config.get("repeat", 1))
-        for size in sorted(problem_config.get("size", [None])):
+        for size in problem_config.get("size", [None]):
             with get_base_results_dir(config, base_dir, name, size) as base_results_dir:
                 for solver, library in itertools.product(
                     config["solvers"], config["libraries"]
@@ -100,6 +101,7 @@ def run_all_benchmarks(
                         julia_trace_compile=config.get("julia_trace_compile", False),
                         args=problem_config.get("args", {}),
                         solver_args=problem_config.get("solver_args", None),
+                        note=note,
                     )
                     if not get_benchmark_code(benchmark).exists():
                         logger.info(
@@ -134,7 +136,6 @@ def run_all_benchmarks(
                                 results_dir=get_results_dir(
                                     base_results_dir, library, solver
                                 ),
-                                note=note,
                             )
                     except BenchmarkError as e:
                         if fail_on_error:
@@ -287,7 +288,6 @@ def run_benchmark(
     timeout: int | None = None,
     input_dir=None,
     results_dir: Path | None = None,
-    note: str = "",
 ):
     def save_result(
         total_time: float | None = None,
@@ -318,7 +318,7 @@ def run_benchmark(
                 "objective_value": monitor_result.objective_value,
                 "barrier_iterations": monitor_result.barrier_iterations,
                 "error": error,
-                "note": note,
+                "note": benchmark.note,
             }
         )
 
@@ -960,7 +960,7 @@ if __name__ == "__main__":
         "-n",
         "--note",
         type=str,
-        default="",
+        default=None,
         help="Optional note to add to the benchmark results file.",
     )
     args = argparser.parse_args()
