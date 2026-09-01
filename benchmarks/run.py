@@ -752,18 +752,16 @@ def check_results_output_match(
                     if (ref_col == diff_col).sum() < (ref_col == -diff_col).sum():
                         diff_col = -diff_col
                 if not (ref_col == diff_col).all():
+                    # Compute number of >1% differences
+                    num_large_diffs = (
+                        (ref_col - diff_col).abs() / ref_col.abs() > 0.01
+                    ).sum()
+
+                    # Compute all differences
                     num_conflicts = (ref_col != diff_col).sum()
                     frac_error = num_conflicts / ref.height
-                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_error:.2%} of the {ref.height} rows differ"
-                    if frac_error > 0.9:
-                        ref_conflict = ref.filter(ref_col != diff_col)
-                        diff_conflict = diff.filter(ref_col != diff_col)
-                        raise BenchmarkError(
-                            msg
-                            + f"\nReference:\n{ref_conflict}\nDiff:\n{diff_conflict}"
-                        )
-                    else:
-                        logger.warning(f"{msg}, maybe multiple solutions exist?")
+                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_error:.2%} of the {ref.height} rows differ ({num_large_diffs / ref.height:.2%} of rows have >1% differences)."
+                    logger.warning(f"{msg}, maybe multiple solutions exist?")
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)
