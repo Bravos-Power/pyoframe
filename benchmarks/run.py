@@ -557,6 +557,7 @@ def monitor_benchmark(
                     result.barrier_iterations = int(
                         re.search(r"(\d+) iterations", line).group(1)
                     )
+                    event = Markers.GUROBI_END.value
                 elif line.startswith(
                     ("Optimal objective ", "Sub-optimal termination ")
                 ):
