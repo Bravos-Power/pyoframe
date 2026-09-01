@@ -29,7 +29,6 @@ class Bench(Benchmark):
         from_buses = lines.select("line_id", bus="from_bus")
         to_buses = lines.select("line_id", bus="to_bus")
         loads = pl.read_parquet("loads.parquet")
-        capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
         COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_k_per_pu")[
@@ -89,7 +88,7 @@ class Bench(Benchmark):
 
         if capacity_expansion:
             m.minimize += (
-                m.Build_Out.map(m.gens[["gen_id", "type"]]) * capex
+                m.Build_Out.map(m.gens[["gen_id", "type"]]) * Param("capex_costs.csv")
             ).sum() * len(m.hours)
             m.minimize += (
                 m.Build_Out * m.gens["gen_id", "hourly_overhead_k_per_pu"]
@@ -107,32 +106,31 @@ class Bench(Benchmark):
         return m
 
     def add_security_constraints(self, m: Model):
-        bodf = Param("branch_outage_dist_facts.parquet")
-
         # Power flow on outage_line * factor + affected_line_flow <= affected_line_rating
         conting_flow = m.Power_Flow.over(
             "outage_line_id"
-        ).drop_extras() + m.Power_Flow.rename(
-            {"line_id": "outage_line_id"}
-        ) * bodf.rename({"affected_line_id": "line_id"})
+        ).drop_extras() + m.Power_Flow.rename({"line_id": "outage_line_id"}) * Param(
+            "branch_outage_dist_facts.parquet"
+        ).rename({"affected_line_id": "line_id"})
         line_rating = m.line_rating.over("outage_line_id", "datetime").drop_extras()
         m.Con_Contingency_Pos = conting_flow <= line_rating
         m.Con_Contingency_Neg = -line_rating <= conting_flow
 
     def add_vcf(self, m: Model):
-        vcf = Param("variable_capacity_factors.parquet").within(m.hours)
         vcf_type_to_type = pl.read_csv("map_type_to_vcf_type.csv")
 
         m.Con_Variable_Dispatch_Limit = m.Dispatch.drop_extras() <= (
-            vcf.map(vcf_type_to_type).map(m.gens[["gen_id", "type"]])
+            Param("variable_capacity_factors.parquet")
+            .within(m.hours)
+            .map(vcf_type_to_type)
+            .map(m.gens[["gen_id", "type"]])
             * m.gens["gen_id", "Pmax_pu"]
         )
 
     def add_yearly_limits(self, m: Model):
-        yearly_limits = Param("yearly_limits.parquet")
         m.Con_Yearly_Limits = m.Dispatch.map(m.gens[["gen_id", "type"]]).sum(
             "datetime"
-        ).drop_extras() <= yearly_limits * len(m.hours) / (24 * 365)
+        ).drop_extras() <= Param("yearly_limits.parquet") * len(m.hours) / (24 * 365)
 
     def write_results(self, model, capacity_expansion: bool = True, **kwargs):
         model.Power_Flow.solution.join(

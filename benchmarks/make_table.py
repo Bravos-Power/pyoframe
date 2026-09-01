@@ -21,7 +21,7 @@ def _():
 
 @app.cell
 def _(Path):
-    RESULTS_FILE = Path(__file__).parent / "results/main_v2/benchmark_results.csv"
+    RESULTS_FILE = Path(__file__).parent / "results/main_v3/benchmark_results.csv"
     return (RESULTS_FILE,)
 
 

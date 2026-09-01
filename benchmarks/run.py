@@ -554,13 +554,11 @@ def monitor_benchmark(
                 ):
                     # Allow multiple, always take last
                     result.objective_value = float(line.rpartition(" ")[2])
-                    event = Markers.GUROBI_END.value
                 elif line.startswith("Best objective "):
                     assert result.objective_value is None, (
                         "Multiple objective values found"
                     )
                     result.objective_value = float(line.split(" ")[2].rstrip(","))
-                    event = Markers.GUROBI_END.value
 
                 if event is not None:
                     last_event_time = curr_time
