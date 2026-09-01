@@ -1,6 +1,6 @@
 repeat: 3
 run_timeout_s: 1200
-version: 2
+version: 6
 name: "main"
 problems:
   energy_planning_security_constrained_dispatch:

@@ -84,11 +84,8 @@ def run_all_benchmarks(
     num_repeats = config.get("repeat", 1)
     version = config.get("version", None)
 
-    for solver, i, (name, problem_config), library in itertools.product(
-        config["solvers"],
-        range(num_repeats),
-        config["problems"].items(),
-        config["libraries"],
+    for solver, i, (name, problem_config) in itertools.product(
+        config["solvers"], range(num_repeats), config["problems"].items()
     ):
         code_dir = problem_config.get("code_dir", name)
         if i == 0 and build_inputs:
@@ -98,69 +95,80 @@ def run_all_benchmarks(
         seed = 1000 + i
 
         for size in problem_config.get("size", [None]):
-            with get_base_results_dir(config, base_dir, name, size) as base_results_dir:
-                solver_args = problem_config.get("solver_args", {}).copy()
-                assert "Seed" not in solver_args, (
-                    "Seed should not be set in config.yaml"
-                )
-                solver_args["Seed"] = seed
-                benchmark = Benchmark(
-                    name=name,
-                    code_dir=code_dir,
-                    solver=solver,
-                    library=library,
-                    size=size,
-                    construct_only=problem_config.get("construct_only", False),
-                    julia_trace_compile=config.get("julia_trace_compile", False),
-                    args=problem_config.get("args", {}),
-                    solver_args=solver_args,
-                    note=note,
-                    seed=seed,
-                    version=version,
-                )
-                if not get_benchmark_code(benchmark).exists():
-                    logger.info(f"{name}: Skipping {library} as no benchmark found.")
-                    continue
-
-                if not should_run_benchmark(benchmark, past_results, timeout):
-                    logger.info(
-                        f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
+            with get_base_results_dir(
+                config, base_dir, name, size, seed
+            ) as base_results_dir:
+                for library in config["libraries"]:
+                    solver_args = problem_config.get("solver_args", {}).copy()
+                    assert "Seed" not in solver_args, (
+                        "Seed should not be set in config.yaml"
                     )
-                    continue
-
-                input_dir = (
-                    CWD / "src" / code_dir / "model_data"
-                    if "inputs" in problem_config
-                    else None
-                )
-                try:
-                    logger.info(
-                        f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
+                    solver_args["Seed"] = seed
+                    benchmark = Benchmark(
+                        name=name,
+                        code_dir=code_dir,
+                        solver=solver,
+                        library=library,
+                        size=size,
+                        construct_only=problem_config.get("construct_only", False),
+                        julia_trace_compile=config.get("julia_trace_compile", False),
+                        args=problem_config.get("args", {}),
+                        solver_args=solver_args,
+                        note=note,
+                        seed=seed,
+                        version=version,
                     )
-                    run_benchmark(
-                        benchmark,
-                        past_results,
-                        timeout=timeout,
-                        input_dir=input_dir,
-                        results_dir=get_results_dir(base_results_dir, library, solver),
+                    if not get_benchmark_code(benchmark).exists():
+                        logger.info(
+                            f"{name}: Skipping {library} as no benchmark found."
+                        )
+                        continue
+
+                    if not should_run_benchmark(benchmark, past_results, timeout):
+                        logger.info(
+                            f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
+                        )
+                        continue
+
+                    input_dir = (
+                        CWD / "src" / code_dir / "model_data"
+                        if "inputs" in problem_config
+                        else None
                     )
-                except BenchmarkError as e:
-                    if fail_on_error:
-                        raise e
-                    else:
-                        logger.warning(f"{name}: {e}")
+                    try:
+                        logger.info(
+                            f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
+                        )
+                        run_benchmark(
+                            benchmark,
+                            past_results,
+                            timeout=timeout,
+                            input_dir=input_dir,
+                            results_dir=get_results_dir(
+                                base_results_dir, library, solver
+                            ),
+                        )
+                    except BenchmarkError as e:
+                        if fail_on_error:
+                            raise e
+                        else:
+                            logger.warning(f"{name}: {e}")
 
-                past_results_df = past_results.read(
-                    problem=name, size=size, ignore_past_results=False
-                )
-                past_results_df = past_results_df.filter(pl.col("error").is_null())
-                past_results_df = past_results_df.sort("date")
-                past_results_df = past_results_df.group_by("library", "solver").last()
+                    past_results_df = past_results.read(
+                        problem=name, size=size, ignore_past_results=False
+                    )
+                    past_results_df = past_results_df.filter(
+                        pl.col("error").is_null(), version=version
+                    )
+                    past_results_df = past_results_df.sort("date")
+                    past_results_df = past_results_df.group_by(
+                        "library", "solver"
+                    ).last()
 
-                check_results_csv_aligns(past_results_df, problem=name, size=size)
-                check_results_output_match(
-                    name, base_results_dir, past_results_df, config
-                )
+                    check_results_csv_aligns(past_results_df, problem=name, size=size)
+                    check_results_output_match(
+                        name, base_results_dir, past_results_df, config
+                    )
 
     total_time = time.monotonic() - total_start_time
     logger.info(
@@ -794,8 +802,11 @@ def check_results_output_match(
                     frac_large_diffs = num_large_diffs / ref.height
                     frac_minor_diffs = frac_diffs - frac_large_diffs
 
-                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_minor_diffs:.2%} minor differences, {frac_large_diffs:.2%} major differences"
-                    logger.warning(f"{msg}, maybe multiple solutions exist?")
+                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_minor_diffs:.2%} minor differences, {frac_large_diffs:.2%} major differences, maybe multiple solutions exist?"
+                    if frac_large_diffs > 0.01:
+                        logger.warning(msg)
+                    else:
+                        logger.info(msg)
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)
@@ -834,13 +845,16 @@ def get_benchmark_code(benchmark: Benchmark) -> Path:
     return CWD / "src" / benchmark.code_dir / f"bm_{benchmark.library}.{ext}"
 
 
-def get_base_results_dir(config, base_dir: Path, problem: str, size: int | None):
+def get_base_results_dir(
+    config, base_dir: Path, problem: str, size: int | None, seed: int
+):
     if config.get("save_outputs", False):
         p: Path = (
             base_dir
             / problem
             / "outputs"
             / (str(size) if size is not None else "default")
+            / str(seed)
         )
         p.mkdir(parents=True, exist_ok=True)
         return nullcontext(p)
