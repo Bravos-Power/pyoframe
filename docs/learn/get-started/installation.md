@@ -18,7 +18,7 @@ Install Pyoframe using your preferred package manager:
 
 ## Step 2: Choose a solver
 
-Pyoframe makes it easy to _build_ models, but a separate solver is needed to _solve_ the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, choose HiGHS. Note that both Gurobi and COPT offer free licenses for academics. If you don't see your preferred solver [leave us a comment](https://github.com/Bravos-Power/pyoframe/issues/144) and we can consider adding support for it.
+Pyoframe makes it easy to _build_ models, but a separate solver is needed to _solve_ the model after it is built. Use the compatibility table below to choose a solver that fits your needs. If you're unsure, HiGHS is a good bet. Note that both Gurobi and COPT offer free licenses for academics. If you don't see your preferred solver [let us know](https://github.com/Bravos-Power/pyoframe/issues/new).
 
 | Compatibility table                                           | HiGHS (free) | Gurobi (paid) | COPT (paid) | Ipopt (free) | Mosek (paid) |
 | ------------------------------------------------------------- | ------------ | ------------- | ----------- | ------------ | ------------ |
