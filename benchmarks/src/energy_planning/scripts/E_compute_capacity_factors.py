@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -31,6 +31,12 @@ def _():
 
 
 @app.cell
+def _():
+    BASE_MW = 100
+    return (BASE_MW,)
+
+
+@app.cell
 def _(TYPE_MAPPING, pl):
     df_type_mapping = pl.read_csv(TYPE_MAPPING)
     df_type_mapping
@@ -55,10 +61,13 @@ def _(HOURLY_GENERATION_DATA, pl):
 
 
 @app.cell
-def _(YEARLY_LIMIT_OUTPUT, df, pl):
+def _(BASE_MW, YEARLY_LIMIT_OUTPUT, df, pl):
     # get large hydro upper limit
     max_energy_genearation = pl.DataFrame(
-        {"type": ["Hydropower"], "limit": [df.get_column("large hydro").sum()]}
+        {
+            "type": ["Hydropower"],
+            "limit_pu": [df.get_column("large hydro").sum() / BASE_MW],
+        }
     )
     max_energy_genearation.sort(max_energy_genearation.columns).write_parquet(
         YEARLY_LIMIT_OUTPUT

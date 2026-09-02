@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -16,7 +16,8 @@ def _():
 @app.cell
 def _():
     PAYBACK_PERIOD_YEARS = 20
-    return (PAYBACK_PERIOD_YEARS,)
+    BASE_MW = 100
+    return BASE_MW, PAYBACK_PERIOD_YEARS
 
 
 @app.cell
@@ -54,7 +55,7 @@ def _(PAYBACK_PERIOD_YEARS, df, pl):
 
 
 @app.cell
-def _(PAYBACK_PERIOD_YEARS, df_filter, pl):
+def _(BASE_MW, PAYBACK_PERIOD_YEARS, df_filter, pl):
     df_clean = df_filter
     for c in df_clean.columns:
         if df_clean[c].unique().len() == 1:
@@ -67,9 +68,14 @@ def _(PAYBACK_PERIOD_YEARS, df_filter, pl):
     )
 
     df_clean = df_clean.with_columns(
-        yearly_capex_cost_per_KW=pl.col("value") / PAYBACK_PERIOD_YEARS
+        hourly_capex_cost_per_KW=pl.col("value") / PAYBACK_PERIOD_YEARS / 365 / 24
     ).drop("value")
 
+    df_clean = df_clean.with_columns(
+        (pl.col("hourly_capex_cost_per_KW") * BASE_MW).alias(
+            "hourly_capex_cost_k_per_pu"
+        )
+    ).drop("hourly_capex_cost_per_KW")
     df_clean
     return (df_clean,)
 

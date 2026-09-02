@@ -35,17 +35,17 @@ class Bench(Benchmark):
         to_buses = lines["to_bus"].rename("bus")
         loads = (
             pd.read_parquet("loads.parquet")
-            .set_index(["bus", "datetime"])["active_load"]
+            .set_index(["bus", "datetime"])["active_load_pu"]
             .to_xarray()
         )
         capex = (
             pd.read_csv("capex_costs.csv")
-            .set_index("type")["yearly_capex_cost_per_KW"]
+            .set_index("type")["hourly_capex_cost_k_per_pu"]
             .to_xarray()
         )
         cost_params = pd.read_csv("cost_parameters.csv").set_index("name")["cost"]
 
-        COST_UNSERVED_LOAD = cost_params.loc["load_unserved_MWh"]
+        COST_UNSERVED_LOAD = cost_params.loc["load_unserved_k_per_pu"]
         SLACK_BUS = 1
 
         ## DEFINE SETS AND PARAMS ##
@@ -70,15 +70,15 @@ class Bench(Benchmark):
             loads = loads.sel(datetime=hours)
         container.hours = hours
 
-        container.line_rating = lines["line_rating_MW"]
-        susceptance = 1 / lines["reactance"]
+        container.line_rating = lines["line_rating_pu"]
+        susceptance = 0.001 / lines["reactance"]
 
         ## DEFINE VARIABLES ##
         if capacity_expansion:
             container.Build_Out = m.add_variables(
                 coords=[container.gens.gen_id],
                 lower=0,
-                upper=container.gens["Pmax"],
+                upper=container.gens["Pmax_pu"],
                 name="Build_Out",
             )
             container.Dispatch = m.add_variables(
@@ -93,7 +93,7 @@ class Bench(Benchmark):
             container.Dispatch = m.add_variables(
                 coords=[container.gens.gen_id, container.hours],
                 lower=0,
-                upper=container.gens["Pmax"],
+                upper=container.gens["Pmax_pu"],
                 name="Dispatch",
             )
 
@@ -142,9 +142,7 @@ class Bench(Benchmark):
 
         ## SET OBJECTIVE ##
         m.add_objective(COST_UNSERVED_LOAD * container.Load_Unserved.sum())
-        m.objective += (
-            container.Dispatch * container.gens["cost_per_MWh_linear"]
-        ).sum()
+        m.objective += (container.Dispatch * container.gens["cost_k_per_pu"]).sum()
 
         if capacity_expansion:
             m.objective += (
@@ -152,9 +150,9 @@ class Bench(Benchmark):
                 .sum()
                 .reindex(type=capex.type)
                 * capex
-            ).sum()
+            ).sum() * len(container.hours)
             m.objective += (
-                container.Build_Out * container.gens["hourly_overhead_per_MW_capacity"]
+                container.Build_Out * container.gens["hourly_overhead_k_per_pu"]
             ).sum() * len(container.hours)
 
         if security_constrained:
@@ -209,7 +207,7 @@ class Bench(Benchmark):
 
         vcf_by_gen = vcf_by_type.sel(type=gens_filtered).drop_vars("type")
 
-        max_dispatch = vcf_by_gen * container.gens["Pmax"]
+        max_dispatch = vcf_by_gen * container.gens["Pmax_pu"]
 
         filtered_dispatch = container.Dispatch.sel(
             gen_id=np.isin(
@@ -224,7 +222,7 @@ class Bench(Benchmark):
     def add_yearly_limits(self, m, container):
         yearly_limits = (
             pd.read_parquet("yearly_limits.parquet")
-            .set_index("type")["limit"]
+            .set_index("type")["limit_pu"]
             .to_xarray()
         )
         yearly_limits *= len(container.hours) / (24 * 365)

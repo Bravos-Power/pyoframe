@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.19.11"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -18,9 +18,10 @@ def _():
 
 @app.cell
 def _(Path):
-    RESULTS_DIR = Path("../results/")
+    RESULTS_DIR = Path("../results_pyoframe/")
     INPUT_DIR = Path("../model_data/")
-    return INPUT_DIR, RESULTS_DIR
+    BASE_MW = 100
+    return BASE_MW, INPUT_DIR, RESULTS_DIR
 
 
 @app.cell
@@ -32,10 +33,13 @@ def _(mo):
 
 
 @app.cell
-def _(INPUT_DIR, RESULTS_DIR, pl):
+def _(BASE_MW, INPUT_DIR, RESULTS_DIR, pl):
     buildout = pl.read_parquet(RESULTS_DIR / "build_out.parquet")
+    buildout = buildout.with_columns(build_mw=pl.col("solution") * BASE_MW).drop(
+        "solution"
+    )
     gens = pl.read_parquet(INPUT_DIR / "generators.parquet")
-    gen_data = gens.join(buildout.rename({"solution": "build_mw"}), on="gen_id")
+    gen_data = gens.join(buildout, on="gen_id")
     gen_data
     return gen_data, gens
 
@@ -65,10 +69,11 @@ def _(mo):
 
 
 @app.cell
-def _(INPUT_DIR, RESULTS_DIR, alt, gens, pl):
+def _(BASE_MW, INPUT_DIR, RESULTS_DIR, alt, gens, pl):
     dispatch = pl.read_parquet(RESULTS_DIR / "dispatch.parquet").filter(
         pl.col("solution") != 0
     )
+    dispatch = dispatch.with_columns(pl.col("solution") * BASE_MW)
 
     dispatch = dispatch.join(gens.select(["gen_id", "type"]), on="gen_id")
     dispatch = dispatch.group_by("type", "datetime").agg(pl.col("solution").sum())
@@ -83,9 +88,13 @@ def _(INPUT_DIR, RESULTS_DIR, alt, gens, pl):
     )
 
     load = pl.read_parquet(INPUT_DIR / "loads.parquet")
-    load = load.group_by("datetime").agg(pl.col("active_load").sum())
+    load = load.group_by("datetime").agg(
+        (pl.col("active_load_pu").sum() * BASE_MW).alias("active_load_MW")
+    )
     load = load.filter(pl.col("datetime").is_in(dispatch["datetime"].implode()))
-    _plot += load.plot.line(x="datetime:T", y="active_load", color=alt.value("black"))
+    _plot += load.plot.line(
+        x="datetime:T", y="active_load_MW", color=alt.value("black")
+    )
     _plot
     return (load,)
 
@@ -156,10 +165,10 @@ def _(df_unserved, pl):
 def _(df_unserved, load, pl):
     unserved_date = df_unserved.group_by("datetime").agg(pl.sum("solution"))
     unserved_date = unserved_date.join(
-        load.group_by("datetime").agg(pl.col("active_load").sum()), on="datetime"
+        load.group_by("datetime").agg(pl.col("active_load_MW").sum()), on="datetime"
     )
     unserved_date = unserved_date.with_columns(
-        percent_unserved=pl.col("solution") / pl.col("active_load")
+        percent_unserved=pl.col("solution") / pl.col("active_load_MW")
     )
     (
         unserved_date.plot.line(x="datetime", y="solution")

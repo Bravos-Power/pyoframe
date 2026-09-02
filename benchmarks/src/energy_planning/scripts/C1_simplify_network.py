@@ -23,6 +23,7 @@ f_bus = pl.col("from_bus")
 t_bus = pl.col("to_bus")
 voltage = pl.col("voltage_kv")
 EXPECTED_COLS = ["line_id", f_bus, t_bus, "reactance", "line_rating_MW", voltage]
+BASE_MW = 100
 
 
 def get_buses_degree(
@@ -269,6 +270,10 @@ def main(
 
     print(
         f"Simplified network has {lines.height} lines and {num_buses_simplified} buses."
+    )
+
+    lines = lines.with_columns(
+        (pl.col("line_rating_MW") / BASE_MW).alias("line_rating_pu")
     )
 
     lines.sort(lines.columns).write_parquet(output_path)

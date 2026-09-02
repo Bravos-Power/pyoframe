@@ -29,7 +29,9 @@ class Bench(Benchmark):
         capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
-        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
+        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_k_per_pu")[
+            "cost"
+        ].item()
         SLACK_BUS = 1
 
         # shrink time horizon
@@ -43,28 +45,28 @@ class Bench(Benchmark):
         # -------------------------
         container.gen_bus = poi.tupledict(dict(zip(gens["gen_id"], gens["bus"])))
         container.gen_type = poi.tupledict(dict(zip(gens["gen_id"], gens["type"])))
-        container.gen_pmax = poi.tupledict(dict(zip(gens["gen_id"], gens["Pmax"])))
+        container.gen_pmax = poi.tupledict(dict(zip(gens["gen_id"], gens["Pmax_pu"])))
         container.gen_cost = poi.tupledict(
-            dict(zip(gens["gen_id"], gens["cost_per_MWh_linear"]))
+            dict(zip(gens["gen_id"], gens["cost_k_per_pu"]))
         )
         container.gen_overhead = poi.tupledict(
-            zip(gens["gen_id"], gens["hourly_overhead_per_MW_capacity"])
+            zip(gens["gen_id"], gens["hourly_overhead_k_per_pu"])
         )
         container.line_from = poi.tupledict(
             dict(zip(lines["line_id"], lines["from_bus"]))
         )
         container.line_to = poi.tupledict(dict(zip(lines["line_id"], lines["to_bus"])))
         container.line_rating = poi.tupledict(
-            dict(zip(lines["line_id"], lines["line_rating_MW"]))
+            dict(zip(lines["line_id"], lines["line_rating_pu"]))
         )
         container.susceptance = poi.tupledict(
-            {lid: 1 / x for lid, x in zip(lines["line_id"], lines["reactance"])}
+            {lid: 0.001 / x for lid, x in zip(lines["line_id"], lines["reactance"])}
         )
         container.load = poi.tupledict(
-            zip(zip(loads_df["bus"], loads_df["datetime"]), loads_df["active_load"])
+            zip(zip(loads_df["bus"], loads_df["datetime"]), loads_df["active_load_pu"])
         )
         container.capex = poi.tupledict(
-            zip(capex["type"], capex["yearly_capex_cost_per_KW"])
+            zip(capex["type"], capex["hourly_capex_cost_k_per_pu"])
         )
 
         # -------------------------
@@ -207,6 +209,7 @@ class Bench(Benchmark):
                         poi.quicksum(
                             container.capex[container.gen_type[g]]
                             * container.Build_Out[g]
+                            * len(container.T)
                             for g in container.G
                             if container.gen_type[g] in container.capex
                         )
@@ -282,19 +285,21 @@ class Bench(Benchmark):
         container.Con_Variable_Dispatch_Limit = poi.make_tupledict(
             container.G,
             container.T,
-            rule=lambda g, t: model.add_linear_constraint(
-                container.Dispatch[g, t]
-                <= vcf_dict[type_to_vcf_type[container.gen_type[g]], t]
-                * container.gen_pmax[g]
-            )
-            if container.gen_type[g] in type_to_vcf_type
-            else None,
+            rule=lambda g, t: (
+                model.add_linear_constraint(
+                    container.Dispatch[g, t]
+                    <= vcf_dict[type_to_vcf_type[container.gen_type[g]], t]
+                    * container.gen_pmax[g]
+                )
+                if container.gen_type[g] in type_to_vcf_type
+                else None
+            ),
         )
 
     def add_yearly_limits(self, model, container):
         yearly_limits_df = pl.read_parquet("yearly_limits.parquet")
         yearly_limit = poi.tupledict(
-            dict(zip(yearly_limits_df["type"], yearly_limits_df["limit"]))
+            dict(zip(yearly_limits_df["type"], yearly_limits_df["limit_pu"]))
         )
 
         container.Con_Yearly_Limits = poi.make_tupledict(
