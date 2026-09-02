@@ -15,7 +15,6 @@ The variable can later be retrieved via the model attribute,
 ```pycon
 >>> m.Var_Name
 <Variable 'Var_Name' >
-Var_Name
 
 ```
 

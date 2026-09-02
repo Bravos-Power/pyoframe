@@ -27,7 +27,7 @@ def test_solver_works(solver_all):
     m.X = pf.Variable(lb=1)
     m.minimize = m.X
     m.optimize()
-    assert m.X.solution == 1
+    assert m.X.solution == approx(1, **get_tol(solver_all))
 
 
 def test_Config_default_solver():
