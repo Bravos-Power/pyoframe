@@ -20,8 +20,14 @@ def _():
 
 
 @app.cell
+def _():
+    VERSION = 7
+    return (VERSION,)
+
+
+@app.cell
 def _(Path):
-    RESULTS_FILE = Path(__file__).parent / "results/main_v3/benchmark_results.csv"
+    RESULTS_FILE = Path(__file__).parent / "results/main/benchmark_results.csv"
     return (RESULTS_FILE,)
 
 
@@ -33,18 +39,32 @@ def _(RESULTS_FILE, pl):
 
 
 @app.cell
-def _(pl, results_raw):
+def _(VERSION, pl, results_raw):
     results_latest = results_raw
 
-    results_latest = results_latest.cast({"max_solver_memory_uss_mb": pl.Float64})
+    results_latest = results_latest.cast(
+        {
+            "max_solver_memory_uss_mb": pl.Float64,
+            "presolve_time_s": pl.Float64,
+            "version": pl.Int64,
+        }
+    )
 
     # Only include gurobi for now
     results_latest = results_latest.filter(solver="gurobi").drop("solver")
 
+    if VERSION is not None:
+        results_latest = results_latest.filter(version=VERSION)
+    results_latest = results_latest.drop("version")
+
     # keep only latest result
     results_latest = (
         results_latest.sort("date")
-        .unique(subset=["problem", "library", "size"], keep="last", maintain_order=True)
+        .unique(
+            subset=["problem", "library", "size", "seed"],
+            keep="last",
+            maintain_order=True,
+        )
         .drop("date")
     )
 
@@ -52,9 +72,12 @@ def _(pl, results_raw):
     results_latest = results_latest.filter(
         (pl.col("error") == "TIMEOUT") | pl.col("error").is_null()
     )
+    has_timeout = (
+        (pl.col("error") == "TIMEOUT").any().over(["problem", "library", "size"])
+    )
     results_latest = results_latest.with_columns(
-        total_time_s=pl.when(error="TIMEOUT").then(None).otherwise("total_time_s"),
-        solve_time_s=pl.when(error="TIMEOUT").then(None).otherwise("solve_time_s"),
+        total_time_s=pl.when(has_timeout).then(None).otherwise("total_time_s"),
+        solve_time_s=pl.when(has_timeout).then(None).otherwise("solve_time_s"),
     )
 
     # convert to GiB
@@ -78,40 +101,57 @@ def _(pl, results_latest):
 
     # Replace zero solve_time with N/A
     results = results.with_columns(
-        pl.when(pl.col("solve_time_s") == 0)
+        solve_time_s=pl.when(solve_time_s=0)
         .then(pl.lit(None))
-        .otherwise(pl.col("solve_time_s"))
-        .alias("solve_time_s")
+        .otherwise("solve_time_s")
     )
 
-    # Determine median number of variables, and min solve time
+    # Determine median number of variables, and avg solve time
     results = results.with_columns(
         pl.col("num_variables").median().over("problem", "size"),
-        min_solve_time_s=pl.col("solve_time_s").min().over("problem", "size"),
+        avg_solve_time_s=pl.col("solve_time_s").mean().over("problem", "size"),
         solver_benchmark_memory_gib=pl.col("max_solver_memory_uss_gib")
-        .median()
+        .mean()
         .over("problem", "size"),
     )
 
     # compute time and memory overhead
     results = results.with_columns(
-        overhead_time_s=pl.when(pl.col("min_solve_time_s").is_not_null())
-        .then(pl.col("total_time_s") - pl.col("min_solve_time_s"))
+        overhead_time_s=pl.when(pl.col("solve_time_s").is_not_null())
+        .then(pl.col("total_time_s") - pl.col("solve_time_s"))
         .otherwise(pl.col("total_time_s")),
         overhead_memory_uss_gib=pl.when(
-            pl.col("solver_benchmark_memory_gib").is_not_null()
+            pl.col("max_solver_memory_uss_gib").is_not_null()
         )
-        .then(pl.col("max_memory_uss_gib") - pl.col("solver_benchmark_memory_gib"))
+        .then(pl.col("max_memory_uss_gib") - pl.col("max_solver_memory_uss_gib"))
         .otherwise("max_memory_uss_gib"),
+    )
+
+    # correct for presolve
+    presolve_attributable_to_lib = pl.col("presolve_time_s") - pl.col(
+        "presolve_time_s"
+    ).mean().over("problem", "size")
+    results = results.with_columns(
+        pl.col("overhead_time_s") + presolve_attributable_to_lib.fill_null(0)
+    )
+
+    # average across seeds
+    results = results.group_by("problem", "library", "size").agg(
+        pl.col("overhead_time_s", "overhead_memory_uss_gib").mean(),
+        pl.col(
+            "num_variables", "avg_solve_time_s", "solver_benchmark_memory_gib"
+        ).first(),
+        pl.col("error").drop_nulls().first(),
     )
 
     # compute overhead relative to solve time
     results = results.with_columns(
         overhead_time_relative_solve=(
-            pl.col("total_time_s") / pl.col("min_solve_time_s")
+            pl.col("overhead_time_s") / pl.col("avg_solve_time_s") + 1
         ),
         overhead_memory_relative_solve=(
-            pl.col("max_memory_uss_gib") / pl.col("solver_benchmark_memory_gib")
+            pl.col("overhead_memory_uss_gib") / pl.col("solver_benchmark_memory_gib")
+            + 1
         ),
     )
 
@@ -124,9 +164,8 @@ def _(pl, results_latest):
         "library",
         "size",
         "overhead_time_s",
-        "max_memory_uss_gib",
         "num_variables",
-        "min_solve_time_s",
+        "avg_solve_time_s",
         "solver_benchmark_memory_gib",
         "overhead_memory_uss_gib",
         "overhead_time_relative_solve",
@@ -183,12 +222,12 @@ def _(pl, results_latest):
 
     # Round seconds to 1 decimal place
     results = results.with_columns(
-        min_solve_time_s_pretty=pl.col("min_solve_time_s")
+        avg_solve_time_s_pretty=pl.col("avg_solve_time_s")
         .map_elements(format_time, pl.String)
-        .fill_null("N/A**"),
+        .fill_null("N/A*"),
         solver_benchmark_memory_gib_pretty=pl.col("solver_benchmark_memory_gib")
         .map_elements(format_memory, pl.String)
-        .fill_null("N/A**"),
+        .fill_null("N/A*"),
         time=pl.concat_str(
             pl.lit("<span style='font-weight: bold"),
             # pl.col("overhead_time_color"),
@@ -310,7 +349,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         "size",
         "time",
         "memory",
-        "min_solve_time_s_pretty",
+        "avg_solve_time_s_pretty",
         "solver_benchmark_memory_gib_pretty",
     )
     results_table = results_table.pivot(
@@ -319,14 +358,14 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             "problem",
             "problem_name",
             "size",
-            "min_solve_time_s_pretty",
+            "avg_solve_time_s_pretty",
             "solver_benchmark_memory_gib_pretty",
         ],
     ).fill_null("NI")
 
     # Reshuffle column order
     cols = (
-        ["problem", "problem_name", "size", "min_solve_time_s_pretty"]
+        ["problem", "problem_name", "size", "avg_solve_time_s_pretty"]
         + [c for c in results_table.columns if c.startswith("time_")]
         + ["solver_benchmark_memory_gib_pretty"]
         + [c for c in results_table.columns if c.startswith("memory")]
@@ -344,8 +383,8 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     )
 
     _col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
-    _col_names["min_solve_time_s_pretty"] = "Best Gurobi Solve Time"
-    _col_names["solver_benchmark_memory_gib_pretty"] = "Gurobi Memory Usage*"
+    _col_names["avg_solve_time_s_pretty"] = "Gurobi Solve Time (mean)"
+    _col_names["solver_benchmark_memory_gib_pretty"] = "Gurobi Memory Usage (mean)"
 
     table = (
         gt.GT(results_table.drop("problem"))
@@ -388,8 +427,7 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
                 <br/>TO = Timeout (benchmark did not complete within the 20 minute time limit)
                 <br/>NS = Not Supported (Linopy does not support quadratic constraints)
                 <br/>NI = Not Implemented (CVXPY and PuLP were not implemented for all benchmarks to limit the benchmarking scope)
-                <br/>* Gurobi's memory usage is estimated by taking the median memory usage across all benchmark runs.
-                <br/>** The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
+                <br/>* The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
                 """
             )
         )
@@ -473,7 +511,7 @@ def _(
         "library",
         "error",
         pl.col("size").str.replace("<br/>", " ", literal=True),
-        format_numeric("min_solve_time_s", fill_null="N/A*"),
+        format_numeric("avg_solve_time_s", fill_null="N/A*"),
         format_numeric("solver_benchmark_memory_gib", fill_null="N/A*"),
         time=pl.col("overhead_time_s").map_elements(round_two_sig_figs, pl.String),
         memory=pl.col("overhead_memory_uss_gib").map_elements(
@@ -492,14 +530,14 @@ def _(
             "problem",
             "problem_name",
             "size",
-            "min_solve_time_s",
+            "avg_solve_time_s",
             "solver_benchmark_memory_gib",
         ],
     ).fill_null("NI")
 
     # Reshuffle column order
     _cols = (
-        ["problem", "problem_name", "size", "min_solve_time_s"]
+        ["problem", "problem_name", "size", "avg_solve_time_s"]
         + [c for c in _results_table.columns if c.startswith("time_")]
         + ["solver_benchmark_memory_gib"]
         + [c for c in _results_table.columns if c.startswith("memory")]
@@ -517,7 +555,7 @@ def _(
     )
 
     _col_names = {c: c.split("_")[-1] for c in _results_table.columns if c != "problem"}
-    _col_names["min_solve_time_s"] = "Gurobi Solve Time (s)"
+    _col_names["avg_solve_time_s"] = "Gurobi Solve Time (s)"
     _col_names["solver_benchmark_memory_gib"] = "Gurobi Memory Usage (GB)"
     # _col_names = {}
 

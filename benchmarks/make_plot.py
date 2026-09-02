@@ -22,7 +22,7 @@ def _():
 @app.cell
 def _():
     VERSION = 7
-    GUROBI_VERSION = None  # "12.0.3"
+    GUROBI_VERSION = "12.0.3"
     CONFIDENCE_INTERVAL = 0.95
     return CONFIDENCE_INTERVAL, GUROBI_VERSION, VERSION
 
@@ -126,9 +126,7 @@ def _(BENCHMARK_PROBLEMS, GUROBI_VERSION, RESULTS_FOLDER, VERSION, pl):
         presolve_correction=presolve_attributable_to_lib,
     )
 
-    latest_runs.filter(
-        library="pyoframe", problem="energy_planning_security_constrained_dispatch"
-    )
+    latest_runs
     return (latest_runs,)
 
 
@@ -222,9 +220,7 @@ def _(CONFIDENCE_INTERVAL, latest_runs, pl, t):
         validate="m:1",
     )
 
-    data.filter(
-        library="pyoframe", problem="energy_planning_security_constrained_dispatch"
-    )
+    data
     return (data,)
 
 
