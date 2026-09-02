@@ -32,6 +32,8 @@ class _Solver:
     supports_deletion: bool = True
     supports_ilp_files: bool = False
     check_termination_status_when_retrieving_solution: bool = False
+    boundless_value: float = float("inf")
+    """Should be set to match the default value used in poi.RawModel.add_variable"""
     accelerate_with_repeat_names: bool = False
     """
     If True, Pyoframe sets all the variable and constraint names to 'V'
@@ -56,7 +58,12 @@ class _Solver:
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi", accelerate_with_repeat_names=True, supports_ilp_files=True),
+    _Solver(
+        "gurobi",
+        accelerate_with_repeat_names=True,
+        supports_ilp_files=True,
+        boundless_value=1e100,
+    ),
     _Solver(
         "highs",
         supports_quadratic_constraints=False,
@@ -77,6 +84,7 @@ SUPPORTED_SOLVERS = [
         supports_non_convex=False,
         # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
         check_termination_status_when_retrieving_solution=True,
+        boundless_value=1e30,
     ),
     _Solver(
         "mosek",
@@ -87,6 +95,7 @@ SUPPORTED_SOLVERS = [
         accelerate_with_repeat_names=True,
         supports_square_brackets_in_lp_files=False,
         supports_non_convex=False,
+        boundless_value=1e30,
     ),
 ]
 

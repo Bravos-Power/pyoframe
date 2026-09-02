@@ -2540,8 +2540,8 @@ class Variable(BaseOperableBlock):
                     f"Solver {solver.name} does not support integer or binary variables."
                 )
 
-        lb = -1e100 if self.lb is None else float(self.lb)
-        ub = 1e100 if self.ub is None else float(self.ub)
+        lb = -solver.boundless_value if self.lb is None else float(self.lb)
+        ub = solver.boundless_value if self.ub is None else float(self.ub)
 
         poi_add_var = self._model.poi.add_variable
 
