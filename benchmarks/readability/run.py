@@ -147,8 +147,16 @@ def measure_lines_of_code(file_path: Path) -> int:
             cleaned = tokenize.untokenize(toks)
             cleaned_file.write_text(cleaned)
 
-            # Run ruff format on file
+            # Run black to remove trailing commas
             cmd = ["black", "--skip-magic-trailing-comma", "--quiet", str(cleaned_file)]
+            print(f"{' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"black format failed with return code {result.returncode}: {result.stderr}"
+                )
+            # Run ruff to format the code
+            cmd = ["ruff", "format", "--quiet", str(cleaned_file)]
             print(f"{' '.join(cmd)}")
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:

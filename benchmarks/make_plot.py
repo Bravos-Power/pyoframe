@@ -22,9 +22,8 @@ def _():
 @app.cell
 def _():
     VERSION = 7
-    GUROBI_VERSION = "12.0.3"
     CONFIDENCE_INTERVAL = 0.95
-    return CONFIDENCE_INTERVAL, GUROBI_VERSION, VERSION
+    return CONFIDENCE_INTERVAL, VERSION
 
 
 @app.cell
@@ -43,7 +42,7 @@ def _(Path):
 
 
 @app.cell
-def _(BENCHMARK_PROBLEMS, GUROBI_VERSION, RESULTS_FOLDER, VERSION, pl):
+def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, VERSION, pl):
     latest_runs = pl.read_csv(f"{RESULTS_FOLDER}/benchmark_results.csv")
     latest_runs = latest_runs.cast(
         {
@@ -60,9 +59,6 @@ def _(BENCHMARK_PROBLEMS, GUROBI_VERSION, RESULTS_FOLDER, VERSION, pl):
     if VERSION is not None:
         latest_runs = latest_runs.filter(version=VERSION)
     latest_runs = latest_runs.drop("version")
-    if GUROBI_VERSION is not None:
-        latest_runs = latest_runs.filter(solver_version=GUROBI_VERSION)
-    latest_runs = latest_runs.drop("solver_version")
 
     # Non-errors and gurobi
     latest_runs = latest_runs.filter(pl.col("error").is_null(), solver="gurobi").drop(
@@ -78,6 +74,10 @@ def _(BENCHMARK_PROBLEMS, GUROBI_VERSION, RESULTS_FOLDER, VERSION, pl):
             maintain_order=True,
         )
         .drop("date")
+    )
+
+    assert latest_runs["solver_version"].n_unique() == 1, (
+        "Multiple Gurobi versions found"
     )
 
     # filter only relevant problem / sizes
@@ -244,7 +244,7 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
         "model": "gray",
         "convert": "lightgray",
     }
-    TITLES = {"time": "Time", "memory": "Peak Memory Usage"}
+    # TITLES = {"time": "Time", "memory": "Peak Memory Usage"}
     order = {description: i for i, description in enumerate(COLORS.keys())}
 
     plt.rcParams.update(
@@ -269,7 +269,7 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
     SOLVER_EXTRA_SPACING = 0.04
     PADDING = 0.1
 
-    TITLE_PADDING = 5
+    # TITLE_PADDING = 5
     WSPACE = 0.38
 
     BAR_TEXT_OFFSET = 8
@@ -277,7 +277,7 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
     Y_AXIS_EXTENSION = 0.07
 
     AXIS_LABEL_FONT_SIZE = 7
-    TITLE_FONTSIZE = 7
+    # TITLE_FONTSIZE = 7
 
     NUM_PROBLEMS = data.unique("problem").height
     NUM_BARS = data.unique(["problem", "library"]).height
@@ -420,9 +420,9 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
     axes[1].set_xlabel(
         "Memory usage\n(relative to Pyoframe)", fontsize=AXIS_LABEL_FONT_SIZE
     )
-    for ax in axes:
+    for ax, column in zip(axes, ["time", "memory"]):
         ax.set_xticks(range(0, int(ax.get_xlim()[1]) + 1))
-        ax.set_title(TITLES[column], fontsize=TITLE_FONTSIZE, pad=TITLE_PADDING)
+        # ax.set_title(TITLES[column], fontsize=TITLE_FONTSIZE, pad=TITLE_PADDING)
         ax.set_yticks([])
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)

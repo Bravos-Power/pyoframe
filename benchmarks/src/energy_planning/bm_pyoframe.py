@@ -117,12 +117,10 @@ class Bench(Benchmark):
 
     def add_vcf(self, m: Model):
         vcf_type_to_type = pl.read_csv("map_type_to_vcf_type.csv")
+        vcf = Param("variable_capacity_factors.parquet").within(m.hours)
 
         m.Con_Variable_Dispatch_Limit = m.Dispatch.drop_extras() <= (
-            Param("variable_capacity_factors.parquet")
-            .within(m.hours)
-            .map(vcf_type_to_type)
-            .map(m.gens[["gen_id", "type"]])
+            vcf.map(vcf_type_to_type).map(m.gens[["gen_id", "type"]])
             * m.gens["gen_id", "Pmax_pu"]
         )
 

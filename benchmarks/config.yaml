@@ -4,7 +4,7 @@ version: 7
 name: "main"
 problems:
   energy_planning_security_constrained_dispatch:
-    label: "Electrical Grid Dispatch Problem"
+    label: "Electrical Dispatch Problem"
     code_dir: energy_planning
     inputs: "*"
     size: [2, 24, 8, 48]
@@ -28,7 +28,7 @@ problems:
       # - Ordering becomes very slow (causes timeouts!). BarOrder: 0 helps.
       # - Even with BarOrder: 0, solving takes longer than using the default parameters (Method: -1) despite Barrier finishing first in the concurrent solver.
   energy_planning_capacity_expansion:
-    label: "Electrical Grid Capacity Expansion Problem"
+    label: "Capacity Expansion Problem"
     code_dir: energy_planning
     inputs: "*"
     size: [2, 168, 4, 24, 336]
@@ -39,7 +39,7 @@ problems:
       Method: 2
       Crossover: false
   simple_problem:
-    label: "Simple Problem"
+    label: "Trivial Data Problem"
     size: [10000, 100000, 1000000, 10000000, 50000000]
     inputs:
       - "input_10000.parquet"
@@ -48,7 +48,7 @@ problems:
       - "input_10000000.parquet"
       - "input_50000000.parquet"
   facility_location:
-    label: "Facility Location Problem (from JuMP paper)"
+    label: "Facility Location Problem"
     size: [16, 32, 64, 128, 192]
     construct_only: true
 

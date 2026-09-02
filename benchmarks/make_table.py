@@ -301,27 +301,27 @@ def _(pl, results_latest):
         ),
         problem_name=pl.col("problem").replace_strict(
             {
-                "simple_problem": "Trivial Problem (with data)",
+                "simple_problem": "Trivial Data Problem",
                 "energy_planning_capacity_expansion": "Electrical Grid Capacity Expansion Problem",
                 "energy_planning_security_constrained_dispatch": "Electrical Grid Dispatch Problem",
-                "facility_location": "Facility Location Problem (no data)",
+                "facility_location": "Facility Location Problem (no data, from JuMP paper)",
             }
         ),
         problem_order=pl.col("problem").replace_strict(
             {
-                "facility_location": 0,
-                "simple_problem": 1,
-                "energy_planning_capacity_expansion": 2,
-                "energy_planning_security_constrained_dispatch": 3,
+                "simple_problem": 0,
+                "energy_planning_capacity_expansion": 1,
+                "energy_planning_security_constrained_dispatch": 2,
+                "facility_location": 3,
             }
         ),
         library_order=pl.col("library").replace_strict(
             {
                 "pyoframe": 0,
                 "pyoptinterface": 1,
-                "gurobipy": 2,
+                "linopy": 2,
                 "jump": 3,
-                "linopy": 4,
+                "gurobipy": 4,
                 "ampl": 5,
                 "pyomo": 6,
                 "cvxpy": 7,

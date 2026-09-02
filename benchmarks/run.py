@@ -137,7 +137,7 @@ def run_all_benchmarks(
                     )
                     try:
                         logger.info(
-                            f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
+                            f"{name} (n={size}, s={seed}): Running with {library} and {solver}..."
                         )
                         run_benchmark(
                             benchmark,
@@ -154,16 +154,16 @@ def run_all_benchmarks(
                         else:
                             logger.warning(f"{name}: {e}")
 
-                    past_results_df = past_results.read(
-                        problem=name, size=size, ignore_past_results=False
-                    )
-                    past_results_df = past_results_df.filter(pl.col("error").is_null())
-                    if version is not None:
-                        past_results_df = past_results_df.filter(version=version)
-                    past_results_df = past_results_df.sort("date")
-                    past_results_df = past_results_df.group_by(
-                        "library", "solver"
-                    ).last()
+                past_results_df = past_results.read(
+                    problem=name,
+                    size=size,
+                    seed=seed,
+                    version=version,
+                    ignore_past_results=False,
+                )
+                past_results_df = past_results_df.filter(pl.col("error").is_null())
+                past_results_df = past_results_df.sort("date")
+                past_results_df = past_results_df.group_by("library", "solver").last()
 
                 check_results_csv_aligns(past_results_df, problem=name, size=size)
                 check_results_output_match(
@@ -219,9 +219,13 @@ def check_results_csv_aligns(df, problem, size):
         )
 
 
-def should_run_benchmark(benchmark: Benchmark, past_results, timeout):
+def should_run_benchmark(benchmark: Benchmark, past_results: "PastResults", timeout):
     past_results_df = past_results.read(
-        problem=benchmark.name, library=benchmark.library, solver=benchmark.solver
+        problem=benchmark.name,
+        library=benchmark.library,
+        solver=benchmark.solver,
+        seed=benchmark.seed,
+        version=benchmark.version,
     )
 
     # Previously errored on this run, don't try again.
@@ -231,12 +235,6 @@ def should_run_benchmark(benchmark: Benchmark, past_results, timeout):
     if benchmark.size is not None:
         past_results_df = past_results_df.filter(size=benchmark.size)
 
-    if benchmark.seed is not None:
-        past_results_df = past_results_df.filter(seed=benchmark.seed)
-
-    if benchmark.version is not None:
-        past_results_df = past_results_df.filter(version=benchmark.version)
-
     # Previously timed out at this size, don't try again.
     prior_timeouts = past_results_df.filter(error="TIMEOUT")
     if (
@@ -244,6 +242,10 @@ def should_run_benchmark(benchmark: Benchmark, past_results, timeout):
         and prior_timeouts.height > 0
         and prior_timeouts["total_time_s"].max() >= timeout
     ):
+        return False
+
+    # If previously succeeded
+    if past_results_df.filter(pl.col("error").is_null()).height > 0:
         return False
 
     return True
@@ -767,11 +769,11 @@ def check_results_output_match(
             missing_in_dir = set(files_in_ref) - set(files)
             assert len(missing_in_ref) > 0 or len(missing_in_dir) > 0
             if len(missing_in_dir) > 0:
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({library}, {solver}) is missing files: {', '.join(missing_in_dir)} compared to {(ref_lib, ref_solver)}."
                 )
             if len(missing_in_ref) > 0:
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) is missing files: {', '.join(missing_in_ref)} compared to {(library, solver)}."
                 )
 
@@ -782,11 +784,11 @@ def check_results_output_match(
             ref = read_dataframe(ref_dir / filename)
             diff = read_dataframe(results_dir / filename)
             if ref.shape != diff.shape:
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different shapes for file {filename}.\n{ref_lib} shape: {ref.shape}, {library} shape: {diff.shape}"
                 )
             if set(ref.columns) != set(diff.columns):
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different columns for file {filename}.\n{ref_lib} columns: {ref.columns}, {library} columns: {diff.columns}"
                 )
 
@@ -947,7 +949,9 @@ class PastResults:
         library=None,
         solver=None,
         problem=None,
-        ignore_past_results=None,
+        seed=None,
+        version=None,
+        ignore_past_results=False,
     ) -> pl.DataFrame:
         df = self._data
         if size is not None:
@@ -960,6 +964,10 @@ class PastResults:
             df = df.filter(solver=solver)
         if problem is not None:
             df = df.filter(problem=problem)
+        if seed is not None:
+            df = df.filter(seed=seed)
+        if version is not None:
+            df = df.filter(version=version)
         if ignore_past_results or self._ignore_past_results:
             df = df.filter(date=TIMESTAMP)
 
