@@ -30,11 +30,11 @@ Subject To
    + transport[3,3] + transport[3,4] - 20 ONE = 0
 Bounds
  ONE = 1
- open[0] >= -1e+100
- open[1] >= -1e+100
- open[2] >= -1e+100
- open[3] >= -1e+100
- open[4] >= -1e+100
+ open[0] free
+ open[1] free
+ open[2] free
+ open[3] free
+ open[4] free
 Binaries
  open[0]  open[1]  open[2]  open[3]  open[4]  
 END
