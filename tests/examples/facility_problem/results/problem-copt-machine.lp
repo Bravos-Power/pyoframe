@@ -18,11 +18,11 @@ Subject To
  R8: C21 + C22 + C23 + C24 + C25 - 20 ONE = 0
 Bounds
  ONE = 1
- C01 >= -1e+100
- C02 >= -1e+100
- C03 >= -1e+100
- C04 >= -1e+100
- C05 >= -1e+100
+ C01 free
+ C02 free
+ C03 free
+ C04 free
+ C05 free
 Binaries
  C01  C02  C03  C04  C05  
 END
