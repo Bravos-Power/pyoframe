@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  run:
+  benchmark:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

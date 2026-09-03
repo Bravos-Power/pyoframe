@@ -1333,10 +1333,7 @@ class Expression(BaseOperableBlock):
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
-                return pl.DataFrame(
-                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
-                )
+                return pl.DataFrame({COEF_KEY: [0.0]}, schema={COEF_KEY: pl.Float64})
             return constant_terms
 
     @property
@@ -1680,9 +1677,6 @@ class Expression(BaseOperableBlock):
 
     def __repr__(self) -> str:
         return self._str_header() + "\n" + self.to_str()
-
-    def __str__(self) -> str:
-        return self.to_str()
 
     @property
     def terms(self) -> int:
@@ -2626,18 +2620,22 @@ class Variable(BaseOperableBlock):
         self._attr = Container(self._set_attribute, self._get_attribute)
         self._equals: Expression | None = equals
 
+        def process_expr_bound(bound) -> Expression:
+            bound = bound.to_expr()  # TODO don't rely on monkey patch
+            missing_dims = [
+                d for d in self._dimensions_unsafe if d not in bound._dimensions_unsafe
+            ]
+            if missing_dims:
+                bound = bound.over(*missing_dims)
+            return bound
+
         if lb is not None and not isinstance(lb, (float, int)):
-            lb: Expression = lb.to_expr()  # TODO don't rely on monkey patch
-            if not self.dimensionless:
-                lb = lb.over(*self.dimensions)
-            self._lb_expr, self.lb = lb, None
+            self._lb_expr, self.lb = process_expr_bound(lb), None
         else:
             self._lb_expr, self.lb = None, lb
+
         if ub is not None and not isinstance(ub, (float, int)):
-            ub = ub.to_expr()  # TODO don't rely on monkey patch
-            if not self.dimensionless:
-                ub = ub.over(*self.dimensions)  # pyright: ignore[reportOptionalIterable]
-            self._ub_expr, self.ub = ub, None
+            self._ub_expr, self.ub = process_expr_bound(ub), None
         else:
             self._ub_expr, self.ub = None, ub
 
@@ -2745,6 +2743,8 @@ class Variable(BaseOperableBlock):
     def _on_add_to_model(self, model, name):
         super()._on_add_to_model(model, name)
         self._assign_ids()
+        # TODO keep reference to these so they can be accessed
+        #   Use reference in __repr__
         if self._lb_expr is not None:
             setattr(model, f"{name}_lb", self._lb_expr <= self)
 
@@ -2895,23 +2895,35 @@ class Variable(BaseOperableBlock):
         return solution
 
     def __repr__(self):
-        result = (
-            get_obj_repr(
-                self,
-                f"'{self.name}'",
-                lb=self.lb,
-                ub=self.ub,
-                height=self.data.height if self.dimensions else None,
+        def get_bound_name(bound_expr, suffix):
+            return (
+                f"'m.{self.name}_{suffix}'" if self._has_ids else f"'{bound_expr.name}'"
             )
-            + "\n"
+
+        lb = self.lb if self._lb_expr is None else get_bound_name(self._lb_expr, "lb")
+        ub = self.ub if self._ub_expr is None else get_bound_name(self._ub_expr, "ub")
+        equals = (
+            None if self._equals is None else get_bound_name(self._equals, "equals")
         )
-        if self._has_ids:
-            result += self.to_expr().to_str(str_col_name="variable")
-        else:
-            with Config.print_polars_config:
-                data = self._add_shape_to_columns(self.data)
-                # we don't try to include the allowed_new_dims because there are none for Variables (only exist on Expression or Sets)
-                result += repr(data)
+
+        result = get_obj_repr(
+            self,
+            f"'{self.name}'",
+            lb=lb,
+            ub=ub,
+            equals=equals,
+            height=self.data.height if self.dimensions else None,
+        )
+
+        if not self.dimensionless:
+            result += "\n"
+            if self._has_ids:
+                result += self.to_expr().to_str(str_col_name="variable")
+            else:
+                with Config.print_polars_config:
+                    data = self._add_shape_to_columns(self.data)
+                    # we don't try to include the allowed_new_dims because there are none for Variables (only exist on Expression or Sets)
+                    result += repr(data)
 
         return result
 

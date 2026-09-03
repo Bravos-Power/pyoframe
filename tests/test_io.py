@@ -13,8 +13,17 @@ from pyoframe import Model, Variable
 from pyoframe._constants import _Solver
 
 
-def test_variables_to_string(solver):
-    m = Model(solver)
+def test_variables_to_string_with_bounds(default_solver):
+    m = Model(default_solver)
+
+    m.X = Variable()
+    assert repr(Variable(lb=0, ub=m.X)) == "<Variable 'unnamed' lb=0 ub='X'>"
+    m.Trapped = Variable(lb=0, ub=m.X)
+    assert repr(m.Trapped) == "<Variable 'Trapped' lb=0 ub='m.Trapped_ub'>"
+
+
+def test_variables_to_string(default_solver):
+    m = Model(default_solver)
     m.x1 = Variable()
     m.x2 = Variable()
     m.x3 = Variable()
@@ -23,14 +32,14 @@ def test_variables_to_string(solver):
     assert expression.to_str() == "5 x1 +3.4 x2 -2.1 x3 +1.12312 x4"
 
 
-def test_variables_to_string_with_dimensions(solver):
+def test_variables_to_string_with_dimensions(default_solver):
     df = pl.DataFrame(
         {
             "x": [1, 2, 1, 2],
             "y": [1, 1, 2, 2],
         }
     )
-    m = Model(solver)
+    m = Model(default_solver)
     m.v1 = Variable(df)
     m.v2 = Variable(df)
     m.v3 = Variable(df)
@@ -54,11 +63,11 @@ def test_variables_to_string_with_dimensions(solver):
     )
 
 
-def test_expression_with_const_to_str(solver):
-    m = Model(solver)
+def test_expression_with_const_to_str(default_solver):
+    m = Model(default_solver)
     m.x1 = Variable()
     expr = 5 + 2 * m.x1
-    assert str(expr) == "2 x1 +5"
+    assert repr(expr) == "<Expression (linear) terms=2>\n2 x1 +5"
 
 
 def test_constraint_to_str(solver: _Solver):
@@ -88,6 +97,12 @@ x1 * x1 <= 5"""
             orient="row",
         ),
     )
+
+
+def test_constraint_to_str_edge_case(default_solver):
+    m = Model(default_solver)
+    m.x1 = Variable()
+    assert repr(m.x1 <= 0) == "<Constraint 'unnamed' (linear) terms=1>\nx1 <= 0"
 
 
 def test_write_lp(use_var_names, solver: _Solver):
