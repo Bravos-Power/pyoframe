@@ -54,7 +54,8 @@ docs = [
     "mkdocs-gen-files~=0.6.1",                          # allows running custom scripts during doc generation
     "mkdocs-section-index~=0.3.12",                     # allows sections to be clickable pages
     "mkdocs-awesome-nav~=3.3.0",                        # allows use of .nav.yml files
-    "doccmd==2026.02.27.1",                                 # allows running ruff formatter on documentation code
+    "doccmd~=2025.4.8",                                 # allows running ruff formatter on documentation code
+    "click==8.2.1",                                     # pin to fix https://github.com/mkdocs/mkdocs/issues/4032
     "mkdocs-table-reader-plugin~=3.1.0",                # allows displaying .csv files in documentation
     "markdown-katex==202406.1035",                      # allows rendering LaTeX math in documentation
     "mike==2.2.0",                                      # allows versioned documentation
