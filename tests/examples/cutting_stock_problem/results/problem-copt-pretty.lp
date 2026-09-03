@@ -128,16 +128,16 @@ Subject To
    + orders_in_stock[8,12] + orders_in_stock[9,12] - 2 ONE >= 0
 Bounds
  ONE = 1
- is_used[0] >= -1e+100
- is_used[1] >= -1e+100
- is_used[2] >= -1e+100
- is_used[3] >= -1e+100
- is_used[4] >= -1e+100
- is_used[5] >= -1e+100
- is_used[6] >= -1e+100
- is_used[7] >= -1e+100
- is_used[8] >= -1e+100
- is_used[9] >= -1e+100
+ is_used[0] free
+ is_used[1] free
+ is_used[2] free
+ is_used[3] free
+ is_used[4] free
+ is_used[5] free
+ is_used[6] free
+ is_used[7] free
+ is_used[8] free
+ is_used[9] free
 Generals
  orders_in_stock[0,0]  orders_in_stock[0,1]  orders_in_stock[0,2]  
  orders_in_stock[0,3]  orders_in_stock[0,4]  orders_in_stock[0,5]  
