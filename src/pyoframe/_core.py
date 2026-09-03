@@ -5,7 +5,8 @@ from __future__ import annotations
 import warnings
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Literal, Union, overload
+from itertools import pairwise
+from typing import TYPE_CHECKING, Literal, TypeAlias, overload
 
 import polars as pl
 import pyoptinterface as poi
@@ -42,7 +43,6 @@ from pyoframe._utils import (
     failed_attr_error,
     get_obj_repr,
     isinstance_pandas,
-    pairwise,
     parse_inputs_as_iterable,
     return_new,
     unwrap_single_values,
@@ -52,29 +52,16 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._model import Model
 
     try:
-        import pandas
+        import pandas as pd
     except ImportError:
         pass
 
-    Operable = Union[
-        "BaseOperableBlock",
-        pl.DataFrame,
-        int,
-        float,
-        "pandas.DataFrame",
-        "pandas.Series",
-    ]
+    Operable: TypeAlias = (
+        "BaseOperableBlock | pl.DataFrame | int | float | pd.DataFrame | pd.Series"
+    )
     """Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
 
-    SetTypes = Union[
-        pl.DataFrame,
-        "BaseOperableBlock",
-        Mapping[str, Sequence[object]],
-        "Set",
-        "Constraint",
-        "pandas.DataFrame",
-        "pandas.Index",
-    ]
+    SetTypes: TypeAlias = "pl.DataFrame | BaseOperableBlock | Mapping[str, Sequence[object]] | Set | Constraint | pd.DataFrame | pd.Index"
 
 
 class BaseOperableBlock(BaseBlock):
