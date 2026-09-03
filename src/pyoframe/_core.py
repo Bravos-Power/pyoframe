@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
 from itertools import pairwise
 from typing import TYPE_CHECKING, Literal, TypeAlias, overload
 
@@ -49,6 +48,8 @@ from pyoframe._utils import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Mapping, Sequence
+
     from pyoframe._model import Model
 
     try:
@@ -1702,54 +1703,6 @@ class Expression(BaseOperableBlock):
             3
         """
         return len(self.data)
-
-
-@overload
-def sum(over: str | Sequence[str], expr: Operable) -> Expression: ...
-
-
-@overload
-def sum(over: Operable) -> Expression: ...
-
-
-def sum(
-    over: str | Sequence[str] | Operable,
-    expr: Operable | None = None,
-) -> Expression:  # pragma: no cover
-    """Deprecated: Use Expression.sum() or Variable.sum() instead.
-
-    Examples:
-        >>> x = pf.Set(x=range(100))
-        >>> pf.sum(x)
-        Traceback (most recent call last):
-          ...
-        DeprecationWarning: pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.
-    """
-    warnings.warn(
-        "pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.",
-        DeprecationWarning,
-    )
-
-    if expr is None:
-        assert isinstance(over, BaseOperableBlock)
-        return over.to_expr().sum()
-    else:
-        assert isinstance(over, (str, Sequence))
-        if isinstance(over, str):
-            over = (over,)
-        return expr.to_expr().sum(*over)
-
-
-def sum_by(by: str | Sequence[str], expr: Operable) -> Expression:  # pragma: no cover
-    """Deprecated: Use Expression.sum() or Variable.sum() instead."""
-    warnings.warn(
-        "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
-        DeprecationWarning,
-    )
-
-    if isinstance(by, str):
-        by = [by]
-    return expr.to_expr().sum_by(*by)
 
 
 class Constraint(BaseBlock):
