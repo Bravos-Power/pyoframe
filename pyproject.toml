@@ -48,7 +48,7 @@ dev = [
 ]
 docs = [
     "mkdocs-material~=9.7.7",
-    "mkdocstrings[python]~=1.0.6",                     # used to generate API documentation
+    "mkdocstrings[python]~=0.30.1",                     # used to generate API documentation
     "mkdocs-git-revision-date-localized-plugin~=1.5.4", # displays the update date in documentation
     "mkdocs-git-committers-plugin-2~=2.5.0",            # displays who contributed in documentation
     "mkdocs-gen-files~=0.6.1",                          # allows running custom scripts during doc generation
