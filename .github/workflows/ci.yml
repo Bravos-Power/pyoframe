@@ -92,12 +92,13 @@ jobs:
         run: pip install -e .[dev]
       - name: Install GDB
         run: sudo apt-get install -y gdb
-      - name: Run tests and collect coverage
+      - name: Run tests and collect coverage  # quit $_exitcode passes through the pytest exit code
         run: |
           gdb -batch \
             -ex "set print thread-events off" \
             -ex run \
             -ex "thread apply all bt full" \
+            -ex 'quit $_exitcode' \
             --args python -m pytest --cov
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
