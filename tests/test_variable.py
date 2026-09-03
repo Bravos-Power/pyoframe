@@ -158,3 +158,12 @@ def test_solution_integer_tolerance(solver):
     Config.integer_tolerance = 0
 
     assert m.X.solution == 10
+
+
+def test_print_bounds(default_solver):
+    m = Model(default_solver)
+
+    m.X = Variable()
+    assert repr(Variable(lb=0, ub=m.X)) == "<Variable 'unnamed' lb=0 ub='X'>"
+    m.Trapped = Variable(lb=0, ub=m.X)
+    assert repr(m.Trapped) == "<Variable 'Trapped' lb=0 ub='m.Trapped_ub'>"
