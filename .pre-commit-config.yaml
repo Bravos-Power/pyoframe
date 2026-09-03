@@ -1,7 +1,7 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.12.7
+    rev: v0.16.5
     hooks:
       # Run the linter.
       - id: ruff-check
@@ -9,7 +9,7 @@ repos:
       # Run the formatter.
       - id: ruff-format
   - repo: https://github.com/adamtheturtle/doccmd-pre-commit
-    rev: v2025.4.8
+    rev: v2026.2.27.1
     hooks:
     -   id: doccmd
-        args: ["--language", "python", "--no-pad-file", "--no-use-pty", "--command", "ruff format"]
+        args: ["--language", "python", "--no-pad-file", "--command", "ruff format"]

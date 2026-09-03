@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 import polars as pl
 
@@ -12,16 +12,14 @@ from pyoframe._core import Expression
 from pyoframe._utils import isinstance_pandas
 
 if TYPE_CHECKING:  # pragma: no cover
-    from typing import Union
-
     try:
-        import pandas
+        import pandas as pd
     except ImportError:
         pass
 
-    ParamInput = Union[
-        pl.DataFrame, "pandas.DataFrame", "pandas.Series", dict, str, Path
-    ]
+    ParamInput: TypeAlias = (
+        "pl.DataFrame | pd.DataFrame | pd.Series | dict | str | Path"
+    )
 
 
 def Param(data: ParamInput) -> Expression:
@@ -86,7 +84,7 @@ def Param(data: ParamInput) -> Expression:
     if isinstance_pandas(data, "DataFrame"):
         data = pl.from_pandas(data)
 
-    if isinstance(data, (str, Path)):
+    if isinstance(data, str | Path):
         data = Path(data)
         if data.suffix.lower() == ".csv":
             data = pl.read_csv(data)
