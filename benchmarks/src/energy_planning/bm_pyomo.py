@@ -210,11 +210,13 @@ class Bench(Benchmark):
             m.G,
             m.T,
             rule=lambda m, g, t: (
-                m.Dispatch[g, t]
-                <= vcf_dict[type_to_vcf_type[m.gen_type[g]], t] * m.gen_pmax[g]
-            )
-            if m.gen_type[g] in type_to_vcf_type
-            else pyo.Constraint.Skip,
+                (
+                    m.Dispatch[g, t]
+                    <= vcf_dict[type_to_vcf_type[m.gen_type[g]], t] * m.gen_pmax[g]
+                )
+                if m.gen_type[g] in type_to_vcf_type
+                else pyo.Constraint.Skip
+            ),
         )
 
     def add_yearly_limits(self, m):

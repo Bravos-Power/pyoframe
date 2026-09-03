@@ -48,7 +48,9 @@ If this is intentional, use .over(…) to broadcast. Learn more at
 Do you understand what happened? The error informs us that `model.air_emissions` has dimension _`flight_no`_, but `model.ground_emissions` has dimension _`flight_number`_. Oops, the two datasets use slightly different spellings! You can use [`.rename(…)`][pyoframe.Expression.rename] to correct for the `Expression` objects having differing dimension names.
 
 ```pycon
->>> model.flight_emissions = model.air_emissions + model.ground_emissions.rename({"flight_number": "flight_no"})
+>>> model.flight_emissions = model.air_emissions + model.ground_emissions.rename(
+...     {"flight_number": "flight_no"}
+... )
 
 ```
 

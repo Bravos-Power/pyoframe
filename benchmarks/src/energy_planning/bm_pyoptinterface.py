@@ -282,13 +282,15 @@ class Bench(Benchmark):
         container.Con_Variable_Dispatch_Limit = poi.make_tupledict(
             container.G,
             container.T,
-            rule=lambda g, t: model.add_linear_constraint(
-                container.Dispatch[g, t]
-                <= vcf_dict[type_to_vcf_type[container.gen_type[g]], t]
-                * container.gen_pmax[g]
-            )
-            if container.gen_type[g] in type_to_vcf_type
-            else None,
+            rule=lambda g, t: (
+                model.add_linear_constraint(
+                    container.Dispatch[g, t]
+                    <= vcf_dict[type_to_vcf_type[container.gen_type[g]], t]
+                    * container.gen_pmax[g]
+                )
+                if container.gen_type[g] in type_to_vcf_type
+                else None
+            ),
         )
 
     def add_yearly_limits(self, model, container):
