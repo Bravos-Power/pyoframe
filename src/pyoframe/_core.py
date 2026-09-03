@@ -1678,9 +1678,6 @@ class Expression(BaseOperableBlock):
     def __repr__(self) -> str:
         return self._str_header() + "\n" + self.to_str()
 
-    def __str__(self) -> str:
-        return self.to_str()
-
     @property
     def terms(self) -> int:
         """The number of terms across all subexpressions.
