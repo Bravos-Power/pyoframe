@@ -8,7 +8,7 @@ import pyoptinterface as poi
 
 from pyoframe._constants import ObjSense
 from pyoframe._core import Expression
-from pyoframe._utils import failed_attr_error
+from pyoframe._utils import failed_attr_error, try_to_expr
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyoframe._core import Operable
@@ -73,7 +73,7 @@ class Objective(Expression):
         if isinstance(expr, (int, float)):
             expr = Expression.constant(expr)
         else:
-            expr = expr.to_expr()  # TODO don't rely on monkey patch
+            expr = try_to_expr(expr, "Could not create objective")
         super().__init__(expr.data, name="objective")
         self._model = expr._model
         if self.dimensions is not None:

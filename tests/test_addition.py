@@ -504,16 +504,12 @@ def test_keep_extras_shortcut():
     # should fail nicely in other cases
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
-        ),
+        match=re.escape("Could not use '|' operator on Expression 'Param[value]'"),
     ):
         expr1 | 1
 
     with pytest.raises(
         PyoframeError,
-        match=re.escape(
-            "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
-        ),
+        match=re.escape("Could not use '|' operator on Expression 'Param[value]'"),
     ):
         1 | expr1

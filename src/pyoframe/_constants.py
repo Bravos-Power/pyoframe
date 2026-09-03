@@ -223,8 +223,8 @@ class _Config:
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
-            Expression 1:   pop
-            Expression 2:   influx
+            Expression 1:   Param[pop]
+            Expression 2:   Param[influx]
             Extra labels in expression 1:
             ┌──────────┐
             │ city     │

@@ -44,6 +44,7 @@ from pyoframe._utils import (
     isinstance_pandas,
     parse_inputs_as_iterable,
     return_new,
+    try_to_expr,
     unwrap_single_values,
 )
 
@@ -57,9 +58,10 @@ if TYPE_CHECKING:  # pragma: no cover
     except ImportError:
         pass
 
-    Operable: TypeAlias = (
-        "BaseOperableBlock | pl.DataFrame | int | float | pd.DataFrame | pd.Series"
+    NonScalarOperable: TypeAlias = (
+        "BaseOperableBlock | pl.DataFrame | pd.DataFrame | pd.Series"
     )
+    Operable: TypeAlias = NonScalarOperable | int | float
     """Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
 
     SetTypes: TypeAlias = "pl.DataFrame | BaseOperableBlock | Mapping[str, Sequence[object]] | Set | Constraint | pd.DataFrame | pd.Index"
@@ -324,7 +326,9 @@ class BaseOperableBlock(BaseBlock):
             └──────┴────────────┘
         """
         if not isinstance(other, (int, float)):
-            other = other.to_expr()  # TODO don't rely on monkey patch
+            other = try_to_expr(
+                other, f"Could not subtract from Expression '{self.name}'"
+            )
         return self.to_expr() + (-other)
 
     def __rmul__(self, other):
@@ -379,19 +383,21 @@ class BaseOperableBlock(BaseBlock):
         """
         return other + (-self.to_expr())
 
-    def __or__(self, other: Operable) -> Expression:
-        if isinstance(other, (int, float)):
-            raise PyoframeError(
-                "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
-            )
-        return self.to_expr().keep_extras() + other.to_expr().keep_extras()  # type: ignore
+    def __or__(self, other: NonScalarOperable) -> Expression:
+        return (
+            self.to_expr().keep_extras()
+            + try_to_expr(
+                other, f"Could not use '|' operator on Expression '{self.name}'"
+            ).keep_extras()
+        )
 
     def __ror__(self, other: Operable) -> Expression:
-        if isinstance(other, (int, float)):
-            raise PyoframeError(
-                "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
-            )
-        return self.to_expr().keep_extras() + other.to_expr().keep_extras()  # type: ignore
+        return (
+            self.to_expr().keep_extras()
+            + try_to_expr(
+                other, f"Could not use '|' operator on Expression '{self.name}'"
+            ).keep_extras()
+        )
 
     def __le__(self, other):
         return Constraint(self - other, ConstraintSense.LE)
@@ -1149,7 +1155,7 @@ class Expression(BaseOperableBlock):
             ...
             pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
             Expression 1:	v
-            Expression 2:	add
+            Expression 2:	Param[add]
             Extra labels in expression 1:
             ┌──────┐
             │ dim1 │
@@ -1165,7 +1171,7 @@ class Expression(BaseOperableBlock):
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
-        other = other.to_expr()  # TODO don't rely on monkey patch
+        other = try_to_expr(other, f"Could not add to Expression '{self.name}'")
         self._learn_from_other(other)
         return add(self, other)
 
@@ -1178,7 +1184,7 @@ class Expression(BaseOperableBlock):
                 name=f"({other} * {self.name})",
             )
 
-        other: Expression = other.to_expr()  # TODO don't rely on monkey patch
+        other = try_to_expr(other, f"Could not multiply Expression '{self.name}'")
         self._learn_from_other(other)
         return multiply(self, other)
 
@@ -2539,7 +2545,7 @@ class Variable(BaseOperableBlock):
                 assert len(indexing_sets) == 0, (
                     "Cannot specify both 'equals' and 'indexing_sets'"
                 )
-                equals = equals.to_expr()  # TODO don't rely on monkey patch
+                equals = try_to_expr(equals, "Invalid value for equals=")
                 indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -2549,8 +2555,8 @@ class Variable(BaseOperableBlock):
         self._attr = Container(self._set_attribute, self._get_attribute)
         self._equals: Expression | None = equals
 
-        def process_expr_bound(bound) -> Expression:
-            bound = bound.to_expr()  # TODO don't rely on monkey patch
+        def process_expr_bound(bound, name) -> Expression:
+            bound = try_to_expr(bound, f"Invalid value for {name}=")
             missing_dims = [
                 d for d in self._dimensions_unsafe if d not in bound._dimensions_unsafe
             ]
@@ -2559,12 +2565,12 @@ class Variable(BaseOperableBlock):
             return bound
 
         if lb is not None and not isinstance(lb, (float, int)):
-            self._lb_expr, self.lb = process_expr_bound(lb), None
+            self._lb_expr, self.lb = process_expr_bound(lb, "lb"), None
         else:
             self._lb_expr, self.lb = None, lb
 
         if ub is not None and not isinstance(ub, (float, int)):
-            self._ub_expr, self.ub = process_expr_bound(ub), None
+            self._ub_expr, self.ub = process_expr_bound(ub, "ub"), None
         else:
             self._ub_expr, self.ub = None, ub
 

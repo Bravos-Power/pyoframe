@@ -104,5 +104,5 @@ def Param(data: ParamInput) -> Expression:
         data.rename({value_col: COEF_KEY})
         .drop_nulls(COEF_KEY)
         .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY)),
-        name=value_col,
+        name=f"Param[{value_col}]",
     )
