@@ -35,15 +35,32 @@ Note that the ipopt solver [does not support deletion](https://metab0t.github.io
 
 ## Set bounds
 
-By default, variables are unbounded. To set a lower or upper bound, use the `lb` or `ub` arguments. For example,
+By default, variables are unbounded. To set a lower or upper bound, use the `lb` or `ub` arguments.
 
 ```python
 m.Positive_Var = pf.Variable(lb=0)
 ```
 
-!!! tip "Bounds need not be constant"
+`lb` or `ub` also accepts non-constant bounds like DataFrames or even other [Pyoframe expressions](./create-expressions.md).
 
-    `lb` and `ub` accept non-constant bounds such as DataFrames and even [Pyoframe expressions](./create-expressions.md). Non-constant bounds will automatically be broadcasted to match the variable's dimensions, and a constraint (e.g., `m.Positive_Var_lb`) will be added to the model to enforce the bound. See, for example, the [diet problem](../../examples/diet.md#model) where a non-constant upper bound is used to create the `Buy` variable.
+```python
+m.Trapped_Var = pf.Variable(lb=0, ub=m.Positive_Var)
+```
+
+For dimensioned variables, the bounds will automatically be [broadcasted](../concepts/join_modifiers.md#over) to match the variable's dimensions.
+
+!!! tip "Under-the-hood"
+    
+    When a non-constant bound is provided, Pyoframe automatically adds a constraint to the model to enforce the bound.
+
+    ```pycon
+    >>> m.Trapped_Var
+    <Variable 'Trapped_Var' lb=0 ub='m.Trapped_Var_ub'>
+    >>> m.Trapped_Var_ub
+    <Constraint 'Trapped_Var_ub' (linear) terms=2>
+    Trapped_Var - Positive_Var <= 0
+
+    ```
 
 ## Set domain
 

@@ -1333,10 +1333,7 @@ class Expression(BaseOperableBlock):
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
-                return pl.DataFrame(
-                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
-                )
+                return pl.DataFrame({COEF_KEY: [0.0]}, schema={COEF_KEY: pl.Float64})
             return constant_terms
 
     @property
