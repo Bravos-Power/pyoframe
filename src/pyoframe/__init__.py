@@ -7,7 +7,7 @@ from pyoframe._constants import (
     VType,
     _Config,  # noqa: F401 Should be kept here to allow cross referencing in the documentation
 )
-from pyoframe._core import Constraint, Expression, Set, Variable, sum, sum_by
+from pyoframe._core import Constraint, Expression, Set, Variable
 from pyoframe._model import Model
 from pyoframe._monkey_patch import patch_dataframe_libraries
 from pyoframe._objective import Objective
@@ -29,8 +29,6 @@ __all__ = [
     "Param",
     "Set",
     "Config",
-    "sum",
-    "sum_by",
     "VType",
     "ObjSense",
     "PyoframeError",

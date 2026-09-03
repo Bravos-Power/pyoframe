@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
 from itertools import pairwise
 from typing import TYPE_CHECKING, Literal, TypeAlias, overload
 
@@ -49,6 +48,8 @@ from pyoframe._utils import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Mapping, Sequence
+
     from pyoframe._model import Model
 
     try:
@@ -110,22 +111,6 @@ class BaseOperableBlock(BaseBlock):
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.DROP
         return new
-
-    def keep_unmatched(self):  # pragma: no cover
-        """Deprecated, use [`keep_extras`][pyoframe.Expression.keep_extras] instead."""
-        warnings.warn(
-            "'keep_unmatched' has been renamed to 'keep_extras'. Please use 'keep_extras' instead.",
-            DeprecationWarning,
-        )
-        return self.keep_extras()
-
-    def drop_unmatched(self):  # pragma: no cover
-        """Deprecated, use [`drop_extras`][pyoframe.Expression.drop_extras] instead."""
-        warnings.warn(
-            "'drop_unmatched' has been renamed to 'drop_extras'. Please use 'drop_extras' instead.",
-            DeprecationWarning,
-        )
-        return self.drop_extras()
 
     def raise_extras(self):
         """Indicates that labels not present in the other expression should raise an error during joins.
@@ -267,14 +252,6 @@ class BaseOperableBlock(BaseBlock):
         df = df.with_columns(*(pl.lit("*").alias(c) for c in self._allowed_new_dims))
         df = df.select(cols[:-1] + self._allowed_new_dims + [cols[-1]])  # reorder
         return df
-
-    def add_dim(self, *dims: str):  # pragma: no cover
-        """Deprecated, use [`over`][pyoframe.Expression.over] instead."""
-        warnings.warn(
-            "'add_dim' has been renamed to 'over'. Please use 'over' instead.",
-            DeprecationWarning,
-        )
-        return self.over(*dims)
 
     @abstractmethod
     def to_expr(self) -> Expression:
@@ -1702,54 +1679,6 @@ class Expression(BaseOperableBlock):
             3
         """
         return len(self.data)
-
-
-@overload
-def sum(over: str | Sequence[str], expr: Operable) -> Expression: ...
-
-
-@overload
-def sum(over: Operable) -> Expression: ...
-
-
-def sum(
-    over: str | Sequence[str] | Operable,
-    expr: Operable | None = None,
-) -> Expression:  # pragma: no cover
-    """Deprecated: Use Expression.sum() or Variable.sum() instead.
-
-    Examples:
-        >>> x = pf.Set(x=range(100))
-        >>> pf.sum(x)
-        Traceback (most recent call last):
-          ...
-        DeprecationWarning: pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.
-    """
-    warnings.warn(
-        "pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.",
-        DeprecationWarning,
-    )
-
-    if expr is None:
-        assert isinstance(over, BaseOperableBlock)
-        return over.to_expr().sum()
-    else:
-        assert isinstance(over, (str, Sequence))
-        if isinstance(over, str):
-            over = (over,)
-        return expr.to_expr().sum(*over)
-
-
-def sum_by(by: str | Sequence[str], expr: Operable) -> Expression:  # pragma: no cover
-    """Deprecated: Use Expression.sum() or Variable.sum() instead."""
-    warnings.warn(
-        "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
-        DeprecationWarning,
-    )
-
-    if isinstance(by, str):
-        by = [by]
-    return expr.to_expr().sum_by(*by)
 
 
 class Constraint(BaseBlock):
