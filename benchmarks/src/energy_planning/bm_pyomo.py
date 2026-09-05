@@ -26,7 +26,9 @@ class Bench(Benchmark):
         capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
-        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
+        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_k_per_pu")[
+            "cost"
+        ].item()
         SLACK_BUS = 1
 
         # shrink time horizon
@@ -53,21 +55,19 @@ class Bench(Benchmark):
         # -------------------------
         m.gen_bus = dict(zip(gens["gen_id"], gens["bus"]))
         m.gen_type = dict(zip(gens["gen_id"], gens["type"]))
-        m.gen_pmax = dict(zip(gens["gen_id"], gens["Pmax"]))
-        m.gen_cost = dict(zip(gens["gen_id"], gens["cost_per_MWh_linear"]))
-        m.gen_overhead = dict(
-            zip(gens["gen_id"], gens["hourly_overhead_per_MW_capacity"])
-        )
+        m.gen_pmax = dict(zip(gens["gen_id"], gens["Pmax_pu"]))
+        m.gen_cost = dict(zip(gens["gen_id"], gens["cost_k_per_pu"]))
+        m.gen_overhead = dict(zip(gens["gen_id"], gens["hourly_overhead_k_per_pu"]))
         m.line_from = dict(zip(lines["line_id"], lines["from_bus"]))
         m.line_to = dict(zip(lines["line_id"], lines["to_bus"]))
-        m.line_rating = dict(zip(lines["line_id"], lines["line_rating_MW"]))
+        m.line_rating = dict(zip(lines["line_id"], lines["line_rating_pu"]))
         m.susceptance = {
-            lid: 1 / x for lid, x in zip(lines["line_id"], lines["reactance"])
+            lid: 0.001 / x for lid, x in zip(lines["line_id"], lines["reactance"])
         }
         m.load = dict(
-            zip(zip(loads_df["bus"], loads_df["datetime"]), loads_df["active_load"])
+            zip(zip(loads_df["bus"], loads_df["datetime"]), loads_df["active_load_pu"])
         )
-        m.capex = dict(zip(capex["type"], capex["yearly_capex_cost_per_KW"]))
+        m.capex = dict(zip(capex["type"], capex["hourly_capex_cost_k_per_pu"]))
 
         m.LOADS = pyo.Set(initialize=m.load.keys(), dimen=2)
 
@@ -144,7 +144,7 @@ class Bench(Benchmark):
                 + (
                     (
                         sum(
-                            m.capex[m.gen_type[g]] * m.Build_Out[g]
+                            m.capex[m.gen_type[g]] * m.Build_Out[g] * len(m.T)
                             for g in m.G
                             if m.gen_type[g] in m.capex
                         )
@@ -221,7 +221,7 @@ class Bench(Benchmark):
 
     def add_yearly_limits(self, m):
         yearly_limits_df = pl.read_parquet("yearly_limits.parquet")
-        yearly_limit = dict(zip(yearly_limits_df["type"], yearly_limits_df["limit"]))
+        yearly_limit = dict(zip(yearly_limits_df["type"], yearly_limits_df["limit_pu"]))
 
         m.TYPES_WITH_LIMIT = pyo.Set(initialize=yearly_limit.keys())
         m.Con_Yearly_Limits = pyo.Constraint(

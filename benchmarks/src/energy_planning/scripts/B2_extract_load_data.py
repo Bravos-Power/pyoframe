@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.19.2"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -8,8 +8,10 @@ app = marimo.App()
 def _():
     import polars as pl
 
-    DEBUG = False
-    return DEBUG, pl
+    DEBUG = True
+    if DEBUG:
+        import altair as alt
+    return DEBUG, alt, pl
 
 
 @app.cell
@@ -17,6 +19,13 @@ def _():
     CATS_DATA = "../raw_data/downloads/CATS_loads.csv"
     LOAD_DATA_OUT = "../raw_data/preprocessed/loads.parquet"
     return CATS_DATA, LOAD_DATA_OUT
+
+
+@app.cell
+def _():
+    MIN_LOAD_MW = 0.01  # Improves performance and is realistic
+    BASE_MW = 100
+    return BASE_MW, MIN_LOAD_MW
 
 
 @app.cell
@@ -60,7 +69,7 @@ def _(df2, pl):
         .str.split_exact("+", 1)
         .struct.field("field_0")
         .cast(pl.Float64)
-        .alias("active_load")
+        .alias("active_load_MW")
     ).drop("load")
 
     df3.head().collect()
@@ -81,11 +90,11 @@ def _(df3, pl):
 def _(DEBUG, df2, df4, pl):
     # Confirm loads are always positive (i.e. dataset doesn't include generation) and drop zero loads
     if DEBUG:
-        assert df4.filter(pl.col("active_load") < 0).collect().height == 0, (
+        assert df4.filter(pl.col("active_load_MW") < 0).collect().height == 0, (
             "Negative active loads found!"
         )
 
-    df5 = df4.filter(pl.col("active_load") != 0)
+    df5 = df4.filter(pl.col("active_load_MW") != 0)
 
     print(
         df5.explain(optimized=True)
@@ -107,7 +116,7 @@ def _(DEBUG, df5, pl):
         _plt = (
             load_ca.group_by(pl.col("datetime").dt.hour())
             .mean()
-            .plot.line(x="datetime", y="active_load")
+            .plot.line(x="datetime", y="active_load_MW")
             .properties(title="Average Load by Hour in California")
         )
     _plt
@@ -121,7 +130,7 @@ def _(DEBUG, load_ca, pl):
         _plt = (
             load_ca.group_by(pl.col("datetime").dt.month())
             .mean()
-            .plot.line(x="datetime", y="active_load")
+            .plot.line(x="datetime", y="active_load_MW")
             .properties(title="Average Load by Month in California")
         )
     _plt
@@ -129,9 +138,43 @@ def _(DEBUG, load_ca, pl):
 
 
 @app.cell
-def _(LOAD_DATA_OUT, df5):
+def _(DEBUG, MIN_LOAD_MW, alt, df5, pl):
+    _plt = None
+    if DEBUG:
+        _plt = (
+            df5.group_by(
+                pl.col("active_load_MW").log10().floor(),
+                (pl.col("active_load_MW") >= MIN_LOAD_MW).alias("keep"),
+            )
+            .len()
+            .collect()
+            .with_columns(pl.col("active_load_MW"))
+            .plot.bar(
+                x="active_load_MW",
+                y=alt.Y("len", scale=alt.Scale(type="symlog")),
+                color="keep:N",
+            )
+            .properties(title="Distribution of Active Load")
+        )
+    _plt
+    return
+
+
+@app.cell
+def _(BASE_MW, MIN_LOAD_MW, df5, pl):
+    df6 = df5.filter(pl.col("active_load_MW") >= MIN_LOAD_MW)
+    df6 = df6.with_columns(
+        (pl.col("active_load_MW") / BASE_MW).alias("active_load_pu")
+    ).drop("active_load_MW")
+    # Keep only two months to reduce file size
+    df6 = df6.filter(pl.col("datetime").dt.month() <= 2)
+    return (df6,)
+
+
+@app.cell
+def _(LOAD_DATA_OUT, df6):
     # Save processed data
-    df5.sort(df5.collect_schema().names()).sink_parquet(LOAD_DATA_OUT)
+    df6.sort(df6.collect_schema().names()).sink_parquet(LOAD_DATA_OUT)
     return
 
 

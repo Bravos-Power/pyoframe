@@ -13,7 +13,7 @@ dependencies = [
     "pyoptinterface",  # don't pin because Pyoframe will pin and we don't want conflicts
     "cvxpy[GUROBI,MOSEK]==1.7.1",
     "amplpy==0.16.0",
-    "pulp[gurobi,highs,copt]==3.2.1",
+    "pulp==3.2.1",
     # tools
     "snakemake==9.6.0",
     "gdown==5.2.2",             # To download data from Google Drive
@@ -25,9 +25,10 @@ dependencies = [
     "vl-convert-python==1.8.0", # For saving plots in altair
     "pytest==9.0.3",
     "great_tables[extra]==0.21.0",     # For creating tables for paper
-    "marimo==0.23.9",           # For the energy planning notebooks and table notebooks
+    "marimo==0.24.0",           # For the energy planning notebooks and table notebooks
     "matplotlib==3.10.9",       # For color scales
-    "black==26.5.1",        # For code formatting for readability benchmark
+    "black==26.5.1",            # For code formatting for readability benchmark
+    "gurobipy==13.0.2",         # Pin to avoid conflicting gurobi versions in e.g. Pyomo
 ]
 
 [project.optional-dependencies]

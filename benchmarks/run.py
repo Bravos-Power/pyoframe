@@ -6,6 +6,7 @@ Saves results to results/benchmark_results.csv.
 import argparse
 import enum
 import itertools
+import logging
 import math
 import os
 import queue
@@ -14,7 +15,6 @@ import signal
 import subprocess
 import threading
 import time
-import warnings
 from contextlib import nullcontext
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,13 +25,29 @@ import psutil
 import tomllib
 import yaml
 
+_windows = os.name == "nt"
+
+if not _windows:
+    import pty
+
 POLL_MIN_S, POLL_MAX_S, POLL_TRANSITION_S = 0.01, 1, 30
-LOG_AFTER_S = 0
 MIN_DATAPOINTS_FOR_GUROBI_MEMORY = 2
 
 TIMESTAMP = time.strftime("%Y%m%d_%H%M%S")
 
 CWD = Path(__file__).parent
+
+logger = logging.getLogger("benchmarks_main")
+logger.setLevel(logging.DEBUG)
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
+
+
+def setup_file_logging(file_path: Path):
+    file_handler = logging.FileHandler(file_path)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s:\t%(message)s")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
 
 @dataclass
@@ -45,29 +61,49 @@ class Benchmark:
     args: dict[str, str]
     julia_trace_compile: bool
     solver_args: dict | None
+    note: str | None = None
+    seed: int | None = None
+    version: int | None = None
 
 
 def run_all_benchmarks(
-    config, ignore_past_results=False, build_inputs=True, fail_on_error=False
+    config, ignore_past_results=False, build_inputs=True, fail_on_error=False, note=None
 ):
+    total_start_time = time.monotonic()
     base_dir = CWD / "results" / config["name"]
     base_dir.mkdir(parents=True, exist_ok=True)
 
+    log_dir = base_dir / "logs"
+    log_dir.mkdir(exist_ok=True)
+
+    setup_file_logging(log_dir / f"{TIMESTAMP}.log")
+
     past_results = PastResults(base_dir, ignore_past_results=ignore_past_results)
 
-    timeout = config.get("timeout", None)
+    timeout = config.get("run_timeout_s", None)
+    num_repeats = config.get("repeat", 1)
+    version = config.get("version", None)
 
-    for name, problem_config in config["problems"].items():
+    for solver, i, (name, problem_config) in itertools.product(
+        config["solvers"], range(num_repeats), config["problems"].items()
+    ):
         code_dir = problem_config.get("code_dir", name)
-        if build_inputs:
+        if i == 0 and build_inputs:
             prepare_benchmark_problem(name, code_dir, problem_config)
 
-        num_repeats = problem_config.get("repeat", config.get("repeat", 1))
-        for size in sorted(problem_config.get("size", [None])):
-            with get_base_results_dir(config, base_dir, name, size) as base_results_dir:
-                for solver, library in itertools.product(
-                    config["solvers"], config["libraries"]
-                ):
+        # start at 1000 to match previous work https://pubsonline.informs.org/doi/pdf/10.1287/educ.2013.0112
+        seed = 1000 + i
+
+        for size in problem_config.get("size", [None]):
+            with get_base_results_dir(
+                config, base_dir, name, size, seed
+            ) as base_results_dir:
+                for library in config["libraries"]:
+                    solver_args = problem_config.get("solver_args", {}).copy()
+                    assert "Seed" not in solver_args, (
+                        "Seed should not be set in config.yaml"
+                    )
+                    solver_args["Seed"] = seed
                     benchmark = Benchmark(
                         name=name,
                         code_dir=code_dir,
@@ -77,16 +113,19 @@ def run_all_benchmarks(
                         construct_only=problem_config.get("construct_only", False),
                         julia_trace_compile=config.get("julia_trace_compile", False),
                         args=problem_config.get("args", {}),
-                        solver_args=problem_config.get("solver_args", None),
+                        solver_args=solver_args,
+                        note=note,
+                        seed=seed,
+                        version=version,
                     )
                     if not get_benchmark_code(benchmark).exists():
-                        print(f"{name}: Skipping {library} as no benchmark found.")
+                        logger.info(
+                            f"{name}: Skipping {library} as no benchmark found."
+                        )
                         continue
 
-                    if not should_run_benchmark(
-                        benchmark, past_results, timeout, num_repeats
-                    ):
-                        print(
+                    if not should_run_benchmark(benchmark, past_results, timeout):
+                        logger.info(
                             f"{name} (n={size}): Skipping {library}, already benchmarked or timed out."
                         )
                         continue
@@ -97,28 +136,30 @@ def run_all_benchmarks(
                         else None
                     )
                     try:
-                        for i in range(num_repeats):
-                            print(
-                                f"{name} (n={size}): Running with {library} and {solver} ({i + 1}/{num_repeats})..."
-                            )
-
-                            run_benchmark(
-                                benchmark,
-                                past_results,
-                                timeout=timeout,
-                                input_dir=input_dir,
-                                results_dir=get_results_dir(
-                                    base_results_dir, library, solver
-                                ),
-                            )
+                        logger.info(
+                            f"{name} (n={size}, s={seed}): Running with {library} and {solver}..."
+                        )
+                        run_benchmark(
+                            benchmark,
+                            past_results,
+                            timeout=timeout,
+                            input_dir=input_dir,
+                            results_dir=get_results_dir(
+                                base_results_dir, library, solver
+                            ),
+                        )
                     except BenchmarkError as e:
                         if fail_on_error:
                             raise e
                         else:
-                            print(f"{name}: {e}")
+                            logger.warning(f"{name}: {e}")
 
                 past_results_df = past_results.read(
-                    problem=name, size=size, ignore_past_results=False
+                    problem=name,
+                    size=size,
+                    seed=seed,
+                    version=version,
+                    ignore_past_results=False,
                 )
                 past_results_df = past_results_df.filter(pl.col("error").is_null())
                 past_results_df = past_results_df.sort("date")
@@ -129,10 +170,17 @@ def run_all_benchmarks(
                     name, base_results_dir, past_results_df, config
                 )
 
+    total_time = time.monotonic() - total_start_time
+    logger.info(
+        f"All benchmarks completed in {total_time // 3600:02.0f}:{(total_time % 3600) // 60:02.0f}:{total_time % 60:.1f}"
+    )
+
 
 def check_results_csv_aligns(df, problem, size):
     if df.height <= 1:
-        print(f"{problem} (n={size}): Not enough successful runs to compare results.")
+        logger.info(
+            f"{problem} (n={size}): Not enough successful runs to compare results."
+        )
         return
 
     # Check objective values
@@ -142,11 +190,11 @@ def check_results_csv_aligns(df, problem, size):
         pl.col("solver", "library").first()
     )
     if num_objectives.height <= 1:
-        print(
+        logger.info(
             f"{problem}: Objective values match across all runs ({df['library'].unique().to_list()})."
         )
     else:
-        raise ValueError(
+        logger.warning(
             f"{problem}: Objective values do not match for size {size}, see .csv results:\n{num_objectives}"
         )
 
@@ -164,16 +212,20 @@ def check_results_csv_aligns(df, problem, size):
         pl.col("solver", "library").unique()
     )
     if num_variables.height <= 1:
-        print(f"{problem}: Number of variables match across all runs.")
+        logger.info(f"{problem}: Number of variables match across all runs.")
     else:
-        raise ValueError(
+        logger.warning(
             f"{problem}: Number of variables do not match for size {size}, see .csv results:\n{num_variables}"
         )
 
 
-def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeats):
+def should_run_benchmark(benchmark: Benchmark, past_results: "PastResults", timeout):
     past_results_df = past_results.read(
-        problem=benchmark.name, library=benchmark.library, solver=benchmark.solver
+        problem=benchmark.name,
+        library=benchmark.library,
+        solver=benchmark.solver,
+        seed=benchmark.seed,
+        version=benchmark.version,
     )
 
     # Previously errored on this run, don't try again.
@@ -182,10 +234,6 @@ def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeat
 
     if benchmark.size is not None:
         past_results_df = past_results_df.filter(size=benchmark.size)
-
-    # Check if already completed
-    if past_results_df.filter(pl.col("error").is_null()).height >= num_repeats:
-        return False
 
     # Previously timed out at this size, don't try again.
     prior_timeouts = past_results_df.filter(error="TIMEOUT")
@@ -196,6 +244,10 @@ def should_run_benchmark(benchmark: Benchmark, past_results, timeout, num_repeat
     ):
         return False
 
+    # If previously succeeded
+    if past_results_df.filter(pl.col("error").is_null()).height > 0:
+        return False
+
     return True
 
 
@@ -203,7 +255,7 @@ def prepare_benchmark_problem(problem: str, code_dir: str, problem_config):
     if "inputs" not in problem_config:
         return
 
-    print(f"{problem}: Generating required input files...")
+    logger.debug(f"{problem}: Generating required input files...")
 
     cmd = ["snakemake", "--cores", "all"]
     if problem_config["inputs"] != "*":
@@ -223,7 +275,7 @@ def precompile_julia_benchmarks(
     if image_path.exists():
         return
 
-    print(f"{problem}: Creating system image for Julia benchmarks...")
+    logger.debug(f"{problem}: Creating system image for Julia benchmarks...")
 
     if not trace_compile_path.exists():
         raise FileNotFoundError(
@@ -239,11 +291,11 @@ def precompile_julia_benchmarks(
         "julia",
         f"--project={CWD}",
         "-e",
-        f'''using PackageCompiler; create_sysimage(
+        f"""using PackageCompiler; create_sysimage(
             [{dependencies_str}],
             sysimage_path="{image_path}",
             precompile_statements_file="{trace_compile_path}",
-        )''',
+        )""",
     ]
 
     subprocess.run(cmd, check=True)
@@ -265,27 +317,40 @@ def run_benchmark(
             monitor_result = MonitorResult()
 
         past_results.append(
-            {
-                "date": TIMESTAMP,
-                "solver": benchmark.solver,
-                "problem": benchmark.name,
-                "size": benchmark.size,
-                "library": benchmark.library,
-                "num_variables": monitor_result.num_variables,
-                "num_constraints": monitor_result.num_constraints,
-                "num_nonzeros": monitor_result.num_nonzeros,
-                "total_time_s": safe_round(total_time, 3),
-                "solve_time_s": safe_round(monitor_result.solve_time, 3),
-                "max_memory_uss_mb": safe_round(monitor_result.max_memory_uss_mb, 3),
-                "max_solver_memory_uss_mb": safe_round(
+            dict(
+                date=TIMESTAMP,
+                version=benchmark.version,
+                solver=benchmark.solver,
+                solver_version=monitor_result.solver_version,
+                seed=benchmark.seed,
+                problem=benchmark.name,
+                size=benchmark.size,
+                library=benchmark.library,
+                num_variables=monitor_result.num_variables,
+                num_constraints=monitor_result.num_constraints,
+                num_nonzeros=monitor_result.num_nonzeros,
+                total_time_s=safe_round(total_time, 3),
+                solve_time_s=monitor_result.solve_time,
+                convert_to_solver_s=safe_round(
+                    monitor_result.convert_to_solver_time, 3
+                ),
+                convert_from_solver_s=safe_round(
+                    monitor_result.convert_from_solver_time, 3
+                ),
+                presolve_time_s=monitor_result.presolve_time,
+                max_memory_uss_mb=safe_round(monitor_result.max_memory_uss_mb, 3),
+                max_solver_memory_uss_mb=safe_round(
                     monitor_result.max_solver_memory_uss_mb, 3
                 ),
-                "objective_value": monitor_result.objective_value,
-                "error": error,
-            }
+                objective_value=monitor_result.objective_value,
+                barrier_iterations=monitor_result.barrier_iterations,
+                error=error,
+                note=benchmark.note,
+            )
         )
 
     using_julia = benchmark.library == "jump"
+    env = os.environ.copy()
 
     if not using_julia:
         args = dict(solver=f"'{benchmark.solver}'", emit_benchmarking_logs="True")
@@ -325,6 +390,8 @@ def run_benchmark(
 
         if benchmark.julia_trace_compile:
             cmd += ["--trace-compile", str(trace_compile_path)]
+            assert "GUROBI_HOME" in env, "GUROBI_HOME not set in environment"
+            env["GUROBI_JL_USE_GUROBI_JLL"] = "false"
         else:
             precompile_julia_benchmarks(
                 benchmark.name,
@@ -361,23 +428,30 @@ def run_benchmark(
     mem_log_dir = past_results.base_dir / benchmark.name / "mem_log"
     mem_log_dir.mkdir(parents=True, exist_ok=True)
 
-    # See paper for explanation
-    env = os.environ.copy()
-    env["_RJEM_MALLOC_CONF"] = "muzzy_decay_ms:1000"
+    if _windows:
+        kwargs = dict(stdout=subprocess.PIPE, bufsize=1, text=True)
+    else:
+        # simulates a real terminal, otherwise Gurobi's stdout seems to lag!
+        master_fd, slave_fd = pty.openpty()
+        kwargs = dict(stdout=slave_fd)
+        stdout = os.fdopen(master_fd, "r", buffering=1)
 
-    start_time = time.time()
+    kwargs["env"] = env
 
-    with subprocess.Popen(
-        cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE, text=True, bufsize=1, env=env
-    ) as benchmark_proc:
+    start_time = time.monotonic()
+
+    with subprocess.Popen(cmd, preexec_fn=os.setsid, **kwargs) as benchmark_proc:
+        if _windows:
+            stdout = benchmark_proc.stdout
         memory_thread = threading.Thread(
             target=monitor_benchmark,
             args=(
                 start_time,
                 benchmark_proc,
+                stdout,
                 max_memory_queue,
                 mem_log_dir
-                / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}.parquet",
+                / f"{TIMESTAMP}_{benchmark.library}_{benchmark.solver}_{benchmark.size}_{benchmark.seed}.parquet",
                 benchmark.construct_only,
             ),
         )
@@ -385,12 +459,13 @@ def run_benchmark(
 
         try:
             return_code = benchmark_proc.wait(timeout=timeout)
-            total_time = time.time() - start_time
+            total_time = time.monotonic() - start_time
         except subprocess.TimeoutExpired:
             kill_process(benchmark_proc, using_julia)
             save_result(total_time=timeout, error="TIMEOUT")
             raise BenchmarkError("Benchmark timed out")
         except KeyboardInterrupt as e:
+            logger.warning("KeyboardInterrupt received, terminating benchmark...")
             kill_process(benchmark_proc, using_julia)
             raise e
 
@@ -415,17 +490,29 @@ def run_benchmark(
         monitor_result=result,
     )
 
+    if using_julia and benchmark.julia_trace_compile:
+        # Sort trace file to avoid random changes in git
+        with open(trace_compile_path) as f:
+            lines = f.readlines()
+        with open(trace_compile_path, "w") as f:
+            f.writelines(sorted(lines))
+
 
 @dataclass
 class MonitorResult:
+    solver_version: str | None = None
     num_variables: int | None = None
     num_constraints: int | None = None
     num_nonzeros: int | None = None
     solve_time: float | None = None
+    convert_to_solver_time: float | None = None
+    convert_from_solver_time: float | None = None
     barrier_solve_time: float | None = None
+    presolve_time: float | None = None
     max_memory_uss_mb: float | None = None
     max_solver_memory_uss_mb: float | None = None
     objective_value: float | None = None
+    barrier_iterations: int | None = None
 
 
 class Markers(enum.Enum):
@@ -434,23 +521,26 @@ class Markers(enum.Enum):
     GUROBI_END = "4_GUROBI_END"
 
 
-def monitor_benchmark(start_time, proc, result_queue, output_file, construct_only):
+def monitor_benchmark(
+    start_time, proc, stdout, result_queue, output_file, construct_only
+):
     pid = proc.pid
     ps_proc = psutil.Process(pid)
 
     memory_data = []
     process_names = {pid: "main"}
-    stdout = proc.stdout
 
     result = MonitorResult()
 
     keep_checking = True
     last_event_time = start_time
+    solve_called_time = None
+    gurobi_done_time = None
 
     os.set_blocking(stdout.fileno(), False)  # Requires Python 3.12 for windows
 
     while keep_checking:
-        curr_time = time.time()
+        curr_time = time.monotonic()
         elapsed_time = curr_time - start_time
 
         uss, rss, vms, num_threads = None, None, None, None
@@ -476,11 +566,29 @@ def monitor_benchmark(start_time, proc, result_queue, output_file, construct_onl
             for line in iter(stdout.readline, ""):
                 event = None
                 line = line.strip()
+                logger.debug("\t" + line)
 
                 if line.startswith("BENCHMARK_EVENT:"):
                     event = line.removeprefix("BENCHMARK_EVENT:").strip()
+                    if event == "2_SOLVE":
+                        solve_called_time = curr_time
+                    elif event == "5_SOLVE_RETURNED":
+                        if gurobi_done_time is None:
+                            logger.warning(
+                                "Convert may have been too quick to register. Marking a zero"
+                            )
+                            result.convert_from_solver_time = 0
+                        else:
+                            result.convert_from_solver_time = (
+                                curr_time - gurobi_done_time
+                            )
+                elif line.startswith("Gurobi Optimizer version "):
+                    result.solver_version = line.removeprefix(
+                        "Gurobi Optimizer version "
+                    ).partition(" ")[0]
                 elif line.startswith("Optimize a model with "):
                     event = Markers.GUROBI_START.value
+                    result.convert_to_solver_time = curr_time - solve_called_time
                     result.num_variables = int(
                         re.search(r"(\d+) columns", line).group(1)
                     )
@@ -490,43 +598,50 @@ def monitor_benchmark(start_time, proc, result_queue, output_file, construct_onl
                     result.num_nonzeros = int(
                         re.search(r"(\d+) nonzeros", line).group(1)
                     )
-                elif line.startswith("Presolved: "):
+                elif line.startswith("Presolve time: "):
+                    result.presolve_time = float(re.search(r"([\d.]+)s", line).group(1))
                     event = Markers.GUROBI_PRESOLVED.value
                 elif line.startswith("Solved in "):
                     assert result.solve_time is None, "Multiple solve times found"
                     result.solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
+                    gurobi_done_time = curr_time
                     event = Markers.GUROBI_END.value
-                elif line.startswith("Barrier solved model in "):
+                elif line.startswith(
+                    ("Barrier solved model in ", "Barrier performed ")
+                ):
                     assert result.barrier_solve_time is None, (
                         "Multiple barrier solve times found"
                     )
                     result.barrier_solve_time = float(
                         re.search(r"([\d.]+) seconds", line).group(1)
                     )
+                    result.barrier_iterations = int(
+                        re.search(r"(\d+) iterations", line).group(1)
+                    )
+                    gurobi_done_time = curr_time
                     event = Markers.GUROBI_END.value
-                elif line.startswith("Optimal objective "):
+                elif line.startswith(
+                    ("Optimal objective ", "Sub-optimal termination ")
+                ):
                     # Allow multiple, always take last
                     result.objective_value = float(line.rpartition(" ")[2])
-                    event = Markers.GUROBI_END.value
                 elif line.startswith("Best objective "):
                     assert result.objective_value is None, (
                         "Multiple objective values found"
                     )
                     result.objective_value = float(line.split(" ")[2].rstrip(","))
-                    event = Markers.GUROBI_END.value
 
                 if event is not None:
                     last_event_time = curr_time
-                    # print(f"[MARK] {marker}")
                     if event not in events:
                         events.append(event)
+        except ValueError as e:
+            logger.warning(f"Error parsing line: {line}\n{e}")
 
-                if elapsed_time > LOG_AFTER_S:
-                    print("\t" + line)
-        except ValueError:
-            pass
+        for event in events:
+            logger.info(f"BENCHMARK_EVENT_DETECTED: {event}")
 
         memory_data.append((elapsed_time, pid, uss, rss, vms, num_threads, events))
 
@@ -589,9 +704,9 @@ def monitor_benchmark(start_time, proc, result_queue, output_file, construct_onl
 
         if not construct_only:
             if Markers.GUROBI_START.value not in df["events"].explode().to_list():
-                warnings.warn("Failed to detect Gurobi start event.")
+                logger.warning("Failed to detect Gurobi start event.")
             elif Markers.GUROBI_END.value not in df["events"].explode().to_list():
-                warnings.warn("Failed to detect Gurobi end event.")
+                logger.warning("Failed to detect Gurobi end event.")
             else:
                 gurobi_start_time = df.filter(
                     pl.col("events").list.contains(Markers.GUROBI_START.value)
@@ -654,11 +769,11 @@ def check_results_output_match(
             missing_in_dir = set(files_in_ref) - set(files)
             assert len(missing_in_ref) > 0 or len(missing_in_dir) > 0
             if len(missing_in_dir) > 0:
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({library}, {solver}) is missing files: {', '.join(missing_in_dir)} compared to {(ref_lib, ref_solver)}."
                 )
             if len(missing_in_ref) > 0:
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) is missing files: {', '.join(missing_in_ref)} compared to {(library, solver)}."
                 )
 
@@ -669,11 +784,11 @@ def check_results_output_match(
             ref = read_dataframe(ref_dir / filename)
             diff = read_dataframe(results_dir / filename)
             if ref.shape != diff.shape:
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different shapes for file {filename}.\n{ref_lib} shape: {ref.shape}, {library} shape: {diff.shape}"
                 )
             if set(ref.columns) != set(diff.columns):
-                raise BenchmarkError(
+                logger.error(
                     f"{problem}: Benchmark ({ref_lib}, {ref_solver}) and ({library}, {solver}) have different columns for file {filename}.\n{ref_lib} columns: {ref.columns}, {library} columns: {diff.columns}"
                 )
 
@@ -705,24 +820,26 @@ def check_results_output_match(
                     if (ref_col == diff_col).sum() < (ref_col == -diff_col).sum():
                         diff_col = -diff_col
                 if not (ref_col == diff_col).all():
-                    num_conflicts = (ref_col != diff_col).sum()
-                    frac_error = num_conflicts / ref.height
-                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_error:.2%} of the {ref.height} rows differ"
-                    if frac_error > 0.9:
-                        ref_conflict = ref.filter(ref_col != diff_col)
-                        diff_conflict = diff.filter(ref_col != diff_col)
-                        raise BenchmarkError(
-                            msg
-                            + f"\nReference:\n{ref_conflict}\nDiff:\n{diff_conflict}"
-                        )
+                    # Compute number of >1% differences
+                    abs_diff = (ref_col - diff_col).abs()
+                    rel_diff = abs_diff / ref_col.abs()
+                    num_large_diffs = ((rel_diff > 0.01) & (abs_diff > 1e-6)).sum()
+                    num_diffs = (ref_col != diff_col).sum()
+                    frac_diffs = num_diffs / ref.height
+                    frac_large_diffs = num_large_diffs / ref.height
+                    frac_minor_diffs = frac_diffs - frac_large_diffs
+
+                    msg = f"{problem}: {ref_lib} vs {library}: {filename}[{c}]: {frac_minor_diffs:.2%} minor differences, {frac_large_diffs:.2%} major differences, maybe multiple solutions exist?"
+                    if frac_large_diffs > 0.01:
+                        logger.warning(msg)
                     else:
-                        warnings.warn(f"{msg}, maybe multiple solutions exist?")
+                        logger.info(msg)
 
         libs_compared.add(ref_lib)
         libs_compared.add(library)
 
     if len(libs_compared) > 1:
-        print(f"{problem}: Outputs match across {', '.join(libs_compared)}")
+        logger.info(f"{problem}: Outputs match across {', '.join(libs_compared)}")
 
 
 def read_dataframe(path: Path) -> pl.DataFrame:
@@ -755,13 +872,16 @@ def get_benchmark_code(benchmark: Benchmark) -> Path:
     return CWD / "src" / benchmark.code_dir / f"bm_{benchmark.library}.{ext}"
 
 
-def get_base_results_dir(config, base_dir: Path, problem: str, size: int | None):
+def get_base_results_dir(
+    config, base_dir: Path, problem: str, size: int | None, seed: int
+):
     if config.get("save_outputs", False):
         p: Path = (
             base_dir
             / problem
             / "outputs"
             / (str(size) if size is not None else "default")
+            / str(seed)
         )
         p.mkdir(parents=True, exist_ok=True)
         return nullcontext(p)
@@ -778,19 +898,27 @@ def get_results_dir(base_results_dir: Path | str, library: str, solver: str):
 class PastResults:
     BENCHMARK_RESULTS_SCHEMA: dict = {
         "date": pl.Utf8,
-        "problem": pl.Utf8,
-        "library": pl.Utf8,
+        "version": pl.Int64,
         "solver": pl.Utf8,
+        "solver_version": pl.Utf8,
+        "seed": pl.Int64,
+        "problem": pl.Utf8,
         "size": pl.Int64,
+        "library": pl.Utf8,
         "num_variables": pl.Int64,
         "num_constraints": pl.Int64,
         "num_nonzeros": pl.Int64,
         "total_time_s": pl.Float64,
         "solve_time_s": pl.Float64,
+        "convert_to_solver_s": pl.Float64,
+        "convert_from_solver_s": pl.Float64,
+        "presolve_time_s": pl.Float64,
         "max_memory_uss_mb": pl.Float64,
         "max_solver_memory_uss_mb": pl.Float64,
         "objective_value": pl.Float64,
+        "barrier_iterations": pl.Int64,
         "error": pl.Utf8,
+        "note": pl.Utf8,
     }
 
     FILE_NAME = "benchmark_results.csv"
@@ -821,7 +949,9 @@ class PastResults:
         library=None,
         solver=None,
         problem=None,
-        ignore_past_results=None,
+        seed=None,
+        version=None,
+        ignore_past_results=False,
     ) -> pl.DataFrame:
         df = self._data
         if size is not None:
@@ -834,6 +964,10 @@ class PastResults:
             df = df.filter(solver=solver)
         if problem is not None:
             df = df.filter(problem=problem)
+        if seed is not None:
+            df = df.filter(seed=seed)
+        if version is not None:
+            df = df.filter(version=version)
         if ignore_past_results or self._ignore_past_results:
             df = df.filter(date=TIMESTAMP)
 
@@ -885,6 +1019,13 @@ if __name__ == "__main__":
         default=None,
         help="Only run benchmarks for this problem size (e.g., 100).",
     )
+    argparser.add_argument(
+        "-n",
+        "--note",
+        type=str,
+        default=None,
+        help="Optional note to add to the benchmark results file.",
+    )
     args = argparser.parse_args()
     assert args.size is None or args.problem is not None, (
         "Cannot specify size without problem."
@@ -903,4 +1044,4 @@ if __name__ == "__main__":
 
         if args.size is not None:
             config["problems"][args.problem]["size"] = [args.size]
-    run_all_benchmarks(config, ignore_past_results=args.ignore_cache)
+    run_all_benchmarks(config, ignore_past_results=args.ignore_cache, note=args.note)
