@@ -69,18 +69,43 @@ def _(data_raw, pl):
         }
     )
 
+    # Convert to GB
+    data = data.with_columns(
+        pl.col("memory_total", "memory_solver") / 1024.0,
+    )
+
+    # Keep only timeout errors
+    data = data.filter((pl.col("error") == "TIMEOUT") | pl.col("error").is_null())
+
+    # Filter out partial timeouts
+    has_timeout = (
+        (pl.col("error") == "TIMEOUT").any().over(["problem", "library", "size"])
+    )
+    data = data.with_columns(
+        pl.when(has_timeout).then(None).otherwise(pl.col(c)).alias(c)
+        for c in [
+            "time_total",
+            "time_solver",
+            "memory_total",
+            "memory_solver",
+            "time_presolve",
+        ]
+    )
+
     # Compute conversion
     data = data.with_columns(
         time_convert=pl.col("convert_to_solver_s") + pl.col("convert_from_solver_s")
     ).drop("convert_to_solver_s", "convert_from_solver_s")
 
-    # Remove change 0 to None for solver in facility location
+    # Change 0 to None for solver in facility location
     data = data.with_columns(
         pl.when(problem="facility_location")
         .then(None)
         .otherwise("time_solver")
         .alias("time_solver"),
     )
+    # Change 0 to None for solver memory (zero is invalid)
+    data = data.with_columns(pl.col("memory_solver").replace(0, None))
 
     # Compute overhead
     data = data.with_columns(
@@ -127,17 +152,6 @@ def _(data_raw, pl):
         .then("memory_total")
         .otherwise("memory_overhead_computed")
         .alias("memory_overhead_computed"),
-    )
-
-    # Convert to GB
-    data = data.with_columns(
-        pl.col(
-            "memory_total",
-            "memory_solver",
-            "memory_overhead",
-            "memory_overhead_computed",
-        )
-        / 1024.0,
     )
 
     # Standardize number of variables

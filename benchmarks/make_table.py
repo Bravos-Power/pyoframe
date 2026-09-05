@@ -20,138 +20,43 @@ def _():
 
 
 @app.cell
-def _():
-    VERSION = 7
-    return (VERSION,)
-
-
-@app.cell
 def _(Path):
-    RESULTS_FILE = Path(__file__).parent / "results/main/benchmark_results.csv"
-    return (RESULTS_FILE,)
+    RESULTS_FOLDER = Path(__file__).parent / "results/main"
+    return (RESULTS_FOLDER,)
 
 
 @app.cell
-def _(RESULTS_FILE, pl):
-    results_raw = pl.read_csv(RESULTS_FILE)
+def _(RESULTS_FOLDER, pl):
+    results_raw = pl.read_csv(RESULTS_FOLDER / "benchmark_results_processed.csv")
     results_raw
     return (results_raw,)
 
 
 @app.cell
-def _(VERSION, pl, results_raw):
-    results_latest = results_raw
+def _(pl, results_raw):
+    results = results_raw
 
-    results_latest = results_latest.cast(
-        {
-            "max_solver_memory_uss_mb": pl.Float64,
-            "presolve_time_s": pl.Float64,
-            "version": pl.Int64,
-        }
-    )
-
-    # Only include gurobi for now
-    results_latest = results_latest.filter(solver="gurobi").drop("solver")
-
-    if VERSION is not None:
-        results_latest = results_latest.filter(version=VERSION)
-    results_latest = results_latest.drop("version")
-
-    # keep only latest result
-    results_latest = (
-        results_latest.sort("date")
-        .unique(
-            subset=["problem", "library", "size", "seed"],
-            keep="last",
-            maintain_order=True,
-        )
-        .drop("date")
-    )
-
-    # keep only timeout errors
-    results_latest = results_latest.filter(
-        (pl.col("error") == "TIMEOUT") | pl.col("error").is_null()
-    )
-    has_timeout = (
-        (pl.col("error") == "TIMEOUT").any().over(["problem", "library", "size"])
-    )
-    results_latest = results_latest.with_columns(
-        total_time_s=pl.when(has_timeout).then(None).otherwise("total_time_s"),
-        solve_time_s=pl.when(has_timeout).then(None).otherwise("solve_time_s"),
-    )
-
-    # convert to GiB
-    results_latest = results_latest.with_columns(
-        max_memory_uss_gib=pl.col("max_memory_uss_mb") / 1024,
-        max_solver_memory_uss_gib=pl.col("max_solver_memory_uss_mb") / 1024,
-    ).drop("max_memory_uss_mb", "max_solver_memory_uss_mb")
-
-    # remove invalid solver_memory_uss_gib values
-    results_latest = results_latest.with_columns(
-        pl.col("max_solver_memory_uss_gib").replace(0, None)
-    )
-
-    results_latest
-    return (results_latest,)
-
-
-@app.cell
-def _(pl, results_latest):
-    results = results_latest
-
-    # Replace zero solve_time with N/A
+    # Determine median solve time
     results = results.with_columns(
-        solve_time_s=pl.when(solve_time_s=0)
-        .then(pl.lit(None))
-        .otherwise("solve_time_s")
-    )
-
-    # Determine median number of variables, and avg solve time
-    results = results.with_columns(
-        pl.col("num_variables").median().over("problem", "size"),
-        avg_solve_time_s=pl.col("solve_time_s").mean().over("problem", "size"),
-        solver_benchmark_memory_gib=pl.col("max_solver_memory_uss_gib")
-        .mean()
-        .over("problem", "size"),
-    )
-
-    # compute time and memory overhead
-    results = results.with_columns(
-        overhead_time_s=pl.when(pl.col("solve_time_s").is_not_null())
-        .then(pl.col("total_time_s") - pl.col("solve_time_s"))
-        .otherwise(pl.col("total_time_s")),
-        overhead_memory_uss_gib=pl.when(
-            pl.col("max_solver_memory_uss_gib").is_not_null()
-        )
-        .then(pl.col("max_memory_uss_gib") - pl.col("max_solver_memory_uss_gib"))
-        .otherwise("max_memory_uss_gib"),
-    )
-
-    # correct for presolve
-    presolve_attributable_to_lib = pl.col("presolve_time_s") - pl.col(
-        "presolve_time_s"
-    ).mean().over("problem", "size")
-    results = results.with_columns(
-        pl.col("overhead_time_s") + presolve_attributable_to_lib.fill_null(0)
+        time_solver_median=pl.col("time_solver").median().over("problem", "size")
     )
 
     # average across seeds
     results = results.group_by("problem", "library", "size").agg(
-        pl.col("overhead_time_s", "overhead_memory_uss_gib").mean(),
-        pl.col(
-            "num_variables", "avg_solve_time_s", "solver_benchmark_memory_gib"
-        ).first(),
-        pl.col("error").drop_nulls().first(),
+        pl.col("time_overhead", "memory_overhead").mean(),
+        pl.col("num_variables", "time_solver_median", "memory_solver_median")
+        .unique()
+        .item(),
+        pl.col("error").drop_nulls().unique().item(allow_empty=True),
     )
 
     # compute overhead relative to solve time
     results = results.with_columns(
         overhead_time_relative_solve=(
-            pl.col("overhead_time_s") / pl.col("avg_solve_time_s") + 1
+            pl.col("time_overhead") / pl.col("time_solver_median") + 1
         ),
-        overhead_memory_relative_solve=(
-            pl.col("overhead_memory_uss_gib") / pl.col("solver_benchmark_memory_gib")
-            + 1
+        memory_overhead_relative_solve=(
+            pl.col("memory_overhead") / pl.col("memory_solver_median") + 1
         ),
     )
 
@@ -163,31 +68,28 @@ def _(pl, results_latest):
         "problem",
         "library",
         "size",
-        "overhead_time_s",
+        "time_overhead",
         "num_variables",
-        "avg_solve_time_s",
-        "solver_benchmark_memory_gib",
-        "overhead_memory_uss_gib",
+        "time_solver_median",
+        "memory_solver_median",
+        "memory_overhead",
         "overhead_time_relative_solve",
-        "overhead_memory_relative_solve",
+        "memory_overhead_relative_solve",
         "error",
     )
 
     # Merge pyoframe results to get relative overheads
     pyoframe_results = results.filter(library="pyoframe")
     results = results.join(
-        pyoframe_results.select(
-            "problem", "size", "overhead_time_s", "overhead_memory_uss_gib"
-        ),
+        pyoframe_results.select("problem", "size", "time_overhead", "memory_overhead"),
         on=["problem", "size"],
         how="left",
         suffix="_pyoframe",
     )
     results = results.with_columns(
-        overhead_time_relative=pl.col("overhead_time_s")
-        / pl.col("overhead_time_s_pyoframe"),
-        memory_relative=pl.col("overhead_memory_uss_gib")
-        / pl.col("overhead_memory_uss_gib_pyoframe"),
+        overhead_time_relative=pl.col("time_overhead")
+        / pl.col("time_overhead_pyoframe"),
+        memory_relative=pl.col("memory_overhead") / pl.col("memory_overhead_pyoframe"),
     )
 
     def round_two_sig_figs(val):
@@ -222,10 +124,10 @@ def _(pl, results_latest):
 
     # Round seconds to 1 decimal place
     results = results.with_columns(
-        avg_solve_time_s_pretty=pl.col("avg_solve_time_s")
+        time_solver_median_pretty=pl.col("time_solver_median")
         .map_elements(format_time, pl.String)
         .fill_null("N/A*"),
-        solver_benchmark_memory_gib_pretty=pl.col("solver_benchmark_memory_gib")
+        memory_solver_median_pretty=pl.col("memory_solver_median")
         .map_elements(format_memory, pl.String)
         .fill_null("N/A*"),
         time=pl.concat_str(
@@ -254,11 +156,11 @@ def _(pl, results_latest):
             pl.lit(";'>"),
             pl.col("memory_relative").map_elements(round_two_sig_figs, pl.String),
             pl.lit("x</span>"),
-            pl.when(pl.col("overhead_memory_relative_solve").is_not_null())
+            pl.when(pl.col("memory_overhead_relative_solve").is_not_null())
             .then(
                 pl.concat_str(
                     pl.lit("<br/><span style='color: grey;'>("),
-                    pl.col("overhead_memory_relative_solve").map_elements(
+                    pl.col("memory_overhead_relative_solve").map_elements(
                         round_two_sig_figs, pl.String
                     ),
                     pl.lit("x)</span>"),
@@ -336,8 +238,12 @@ def _(pl, results_latest):
 
 
 @app.cell
-def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
+def _(RESULTS_FOLDER, gt, log, mpl, pl, results):
     results_table = results
+
+    vmin, vmax = 1 / 3, 3
+    color_min, color_max = "#A5D6A7", "#EF9A9A"
+    legend_block_size = "20px"
 
     n_libraries = results["library"].n_unique()
 
@@ -349,8 +255,8 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         "size",
         "time",
         "memory",
-        "avg_solve_time_s_pretty",
-        "solver_benchmark_memory_gib_pretty",
+        "time_solver_median_pretty",
+        "memory_solver_median_pretty",
     )
     results_table = results_table.pivot(
         on="library",
@@ -358,17 +264,27 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             "problem",
             "problem_name",
             "size",
-            "avg_solve_time_s_pretty",
-            "solver_benchmark_memory_gib_pretty",
+            "time_solver_median_pretty",
+            "memory_solver_median_pretty",
         ],
     ).fill_null("NI")
 
     # Reshuffle column order
     cols = (
-        ["problem", "problem_name", "size", "avg_solve_time_s_pretty"]
-        + [c for c in results_table.columns if c.startswith("time_")]
-        + ["solver_benchmark_memory_gib_pretty"]
-        + [c for c in results_table.columns if c.startswith("memory")]
+        ["problem", "problem_name", "size", "time_solver_median_pretty"]
+        + [
+            c
+            for c in results_table.columns
+            if c.startswith("time")
+            if c != "time_solver_median_pretty"
+        ]
+        + ["memory_solver_median_pretty"]
+        + [
+            c
+            for c in results_table.columns
+            if c.startswith("memory")
+            if c != "memory_solver_median_pretty"
+        ]
     )
     results_table = results_table.select(cols)
 
@@ -383,8 +299,8 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
     )
 
     _col_names = {c: c.split("_")[-1] for c in results_table.columns if c != "problem"}
-    _col_names["avg_solve_time_s_pretty"] = "Gurobi Solve Time (mean)"
-    _col_names["solver_benchmark_memory_gib_pretty"] = "Gurobi Memory Usage (mean)"
+    _col_names["time_solver_median_pretty"] = "Gurobi Solve Time"
+    _col_names["memory_solver_median_pretty"] = "Gurobi Memory Usage"
 
     table = (
         gt.GT(results_table.drop("problem"))
@@ -398,13 +314,21 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
             gt.html(
                 "<span style='font-weight: bold;'>Time overhead relative to Pyoframe</span><br><span style='color: grey;'>(Increase in solve time due to modeling interface)</span>"
             ),
-            columns=[c for c in results_table.columns if c.startswith("time_")],
+            columns=[
+                c
+                for c in results_table.columns
+                if c.startswith("time_") and c != "time_solver_median_pretty"
+            ],
         )
         .tab_spanner(
             gt.html(
                 "<span style='font-weight: bold;'>Memory overhead relative to Pyoframe</span><br><span style='color: grey;'>(Increase in peak memory usage due to modeling interface)</span>"
             ),
-            columns=[c for c in results_table.columns if c.startswith("memory_")],
+            columns=[
+                c
+                for c in results_table.columns
+                if c.startswith("memory_") and c != "memory_solver_median_pretty"
+            ],
         )
         .cols_label(_col_names)
         .tab_style(
@@ -422,6 +346,45 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         )
         .tab_source_note(
             gt.html(
+                f"""
+            <span style="font-size: 18px;">
+            <span style="
+                display:inline-block;
+                width:{legend_block_size};
+                height:{legend_block_size};
+                background:{color_min};
+                border:1px solid #aaa;
+                vertical-align:middle;
+            "></span>
+            &nbsp;Less than a third of Pyoframe's overhead (≤ 1/3×)
+            &nbsp;&nbsp;&nbsp;
+
+            <span style="
+                display:inline-block;
+                width:{legend_block_size};
+                height:{legend_block_size};
+                background:white;
+                border:1px solid #aaa;
+                vertical-align:middle;
+            "></span>
+            &nbsp;Same overhead as Pyoframe (1x)
+            &nbsp;&nbsp;&nbsp;
+
+            <span style="
+                display:inline-block;
+                width:{legend_block_size};
+                height:{legend_block_size};
+                background:{color_max};
+                border:1px solid #aaa;
+                vertical-align:middle;
+            "></span>
+            &nbsp;More than triple Pyoframe's overhead (≥3×)
+            </span>
+            """
+            )
+        )
+        .tab_source_note(
+            gt.html(
                 """
                 k = thousand; M = million; ms = milliseconds; s = seconds; min = minutes; kB = 1024 bytes; MB = 1,024² bytes; GB = 1,024³ bytes
                 <br/>TO = Timeout (benchmark did not complete within the 20 minute time limit)
@@ -433,10 +396,8 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
         )
     )
 
-    vmin = 1 / 3
-    vmax = 3
     color_norm = mpl.colors.Normalize(vmin=log(vmin), vmax=log(vmax), clip=True)
-    anchors = [(vmin, "#A5D6A7"), (1, "white"), (vmax, "#EF9A9A")]
+    anchors = [(vmin, color_min), (1, "white"), (vmax, color_max)]
     color_map = mpl.colors.LinearSegmentedColormap.from_list(
         "green_red",
         [
@@ -474,13 +435,19 @@ def _(Path, RESULTS_FILE, gt, log, mpl, pl, results):
                 )
 
     table.save(
-        Path(RESULTS_FILE).parent / "benchmark_results_table.png",
+        RESULTS_FOLDER / "benchmark_results_table.png",
         web_driver="edge",
         scale=2,
     )
-    table.write_raw_html(Path(RESULTS_FILE).parent / "benchmark_results_table.html")
+    table.write_raw_html(RESULTS_FOLDER / "benchmark_results_table.html")
     table
-    return (n_libraries,)
+    return n_libraries, results_table
+
+
+@app.cell
+def _(results_table):
+    results_table
+    return
 
 
 @app.cell(hide_code=True)
@@ -493,8 +460,7 @@ def _(mo):
 
 @app.cell
 def _(
-    Path,
-    RESULTS_FILE,
+    RESULTS_FOLDER,
     format_numeric,
     gt,
     n_libraries,
@@ -511,12 +477,10 @@ def _(
         "library",
         "error",
         pl.col("size").str.replace("<br/>", " ", literal=True),
-        format_numeric("avg_solve_time_s", fill_null="N/A*"),
-        format_numeric("solver_benchmark_memory_gib", fill_null="N/A*"),
-        time=pl.col("overhead_time_s").map_elements(round_two_sig_figs, pl.String),
-        memory=pl.col("overhead_memory_uss_gib").map_elements(
-            round_two_sig_figs, pl.String
-        ),
+        format_numeric("time_solver_median", fill_null="N/A*"),
+        format_numeric("memory_solver_median", fill_null="N/A*"),
+        time=pl.col("time_overhead").map_elements(round_two_sig_figs, pl.String),
+        memory=pl.col("memory_overhead").map_elements(round_two_sig_figs, pl.String),
     )
 
     _results_table = _results_table.with_columns(
@@ -530,17 +494,27 @@ def _(
             "problem",
             "problem_name",
             "size",
-            "avg_solve_time_s",
-            "solver_benchmark_memory_gib",
+            "time_solver_median",
+            "memory_solver_median",
         ],
     ).fill_null("NI")
 
     # Reshuffle column order
     _cols = (
-        ["problem", "problem_name", "size", "avg_solve_time_s"]
-        + [c for c in _results_table.columns if c.startswith("time_")]
-        + ["solver_benchmark_memory_gib"]
-        + [c for c in _results_table.columns if c.startswith("memory")]
+        ["problem", "problem_name", "size", "time_solver_median"]
+        + [
+            c
+            for c in _results_table.columns
+            if c.startswith("time_")
+            if c != "time_solver_median"
+        ]
+        + ["memory_solver_median"]
+        + [
+            c
+            for c in _results_table.columns
+            if c.startswith("memory")
+            if c != "memory_solver_median"
+        ]
     )
     _results_table = _results_table.select(_cols)
 
@@ -555,8 +529,8 @@ def _(
     )
 
     _col_names = {c: c.split("_")[-1] for c in _results_table.columns if c != "problem"}
-    _col_names["avg_solve_time_s"] = "Gurobi Solve Time (s)"
-    _col_names["solver_benchmark_memory_gib"] = "Gurobi Memory Usage (GB)"
+    _col_names["time_solver_median"] = "Gurobi Solve Time (s)"
+    _col_names["memory_solver_median"] = "Gurobi Memory Usage (GB)"
     # _col_names = {}
 
     _table = (
@@ -603,81 +577,11 @@ def _(
     )
 
     _table.save(
-        Path(RESULTS_FILE).parent / "benchmark_results_table_raw.png",
+        RESULTS_FOLDER / "benchmark_results_table_raw.png",
         web_driver="edge",
         scale=2,
     )
     _table
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    ## Solve time and memory usage for different runs
-    """)
-    return
-
-
-@app.cell
-def _(Path, RESULTS_FILE, pl, results_latest):
-    import altair as alt
-
-    df_solver = results_latest
-
-    df_solver.select(
-        "problem", "library", "size", "solve_time_s", "max_solver_memory_uss_gib"
-    )
-
-    # Solve time only has 2 digits so we only display numbers greater than 1 second
-    df_solver = df_solver.filter(pl.col("solve_time_s") >= 1)
-
-    # compute relative difference of solve_time_s relative to median
-    df_solver = df_solver.with_columns(
-        relative_solve_time_s=pl.col("solve_time_s")
-        / pl.col("solve_time_s").median().over("problem", "size"),
-        relative_memory_gib=pl.col("max_solver_memory_uss_gib")
-        / pl.col("max_solver_memory_uss_gib").median().over("problem", "size"),
-    )
-
-    df_solver = df_solver.unpivot(
-        ["relative_solve_time_s", "relative_memory_gib"],
-        index=["problem", "library", "size"],
-        variable_name="metric",
-        value_name="relative_value",
-    )
-
-    df_solver = df_solver.with_columns(
-        pl.col("metric").replace(
-            {
-                "relative_solve_time_s": "Gurobi Solve Time (≥1sec)",
-                "relative_memory_gib": "Gurobi Memory Usage",
-            }
-        ),
-        pl.col("problem").replace(
-            {
-                "energy_planning_capacity_expansion": "Electrical Grid Capacity Expansion Problem",
-                "energy_planning_security_constrained_dispatch": "Electrical Grid Dispatch Problem",
-                "simple_problem": "Trivial Problem",
-            }
-        ),
-    )
-
-    _fig = df_solver.plot.scatter(
-        x=alt.X(
-            "relative_value:Q",
-            scale=alt.Scale(type="log"),
-            title="Normalized value",
-        ),
-        y=alt.Y("library:O", title=""),
-        column=alt.Column("metric", title=""),
-        color=alt.Color(
-            "problem:N", title="Benchmark", legend=alt.Legend(labelLimit=200)
-        ),
-    )
-
-    _fig.save(Path(RESULTS_FILE).parent / "solver_performance.pdf")
-    _fig
     return
 
 
