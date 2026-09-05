@@ -14,16 +14,8 @@ def _():
     import polars as pl
     from matplotlib.patches import Patch
     from matplotlib.transforms import Affine2D
-    from scipy.stats import t
 
-    return Affine2D, Patch, Path, pl, plt, t
-
-
-@app.cell
-def _():
-    VERSION = 7
-    CONFIDENCE_INTERVAL = 0.95
-    return CONFIDENCE_INTERVAL, VERSION
+    return Affine2D, Patch, Path, pl, plt
 
 
 @app.cell
@@ -42,184 +34,99 @@ def _(Path):
 
 
 @app.cell
-def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, VERSION, pl):
-    latest_runs = pl.read_csv(f"{RESULTS_FOLDER}/benchmark_results.csv")
-    latest_runs = latest_runs.cast(
-        {
-            "version": pl.Int32,
-            "convert_from_solver_s": pl.Float64,
-            "convert_to_solver_s": pl.Float64,
-            "presolve_time_s": pl.Float64,
-        }
-    )
-    latest_runs = latest_runs.drop(
-        "num_constraints", "num_nonzeros", "barrier_iterations", "objective_value"
-    )
-
-    if VERSION is not None:
-        latest_runs = latest_runs.filter(version=VERSION)
-    latest_runs = latest_runs.drop("version")
+def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, pl):
+    data = pl.read_csv(f"{RESULTS_FOLDER}/benchmark_results_processed.csv")
 
     # Non-errors and gurobi
-    latest_runs = latest_runs.filter(pl.col("error").is_null(), solver="gurobi").drop(
-        "error", "solver"
-    )
-
-    # keep only latest result
-    latest_runs = (
-        latest_runs.sort("date")
-        .unique(
-            subset=["problem", "library", "size", "seed"],
-            keep="last",
-            maintain_order=True,
-        )
-        .drop("date")
-    )
-
-    assert latest_runs["solver_version"].n_unique() == 1, (
-        "Multiple Gurobi versions found"
-    )
+    data = data.filter(pl.col("error").is_null()).drop("error")
 
     # filter only relevant problem / sizes
-    latest_runs = latest_runs.filter(
-        pl.concat_str("problem", pl.col("size").cast(pl.Utf8), separator="_").is_in(
+    data = data.filter(
+        pl.concat_str("problem", "size", separator="_").is_in(
             [f"{problem}_{size}" for problem, size in BENCHMARK_PROBLEMS]
         )
     )
 
-    # Convert to GB
-    latest_runs = latest_runs.with_columns(
-        (pl.col("max_memory_uss_mb") / 1024).alias("max_memory"),
-        (pl.col("max_solver_memory_uss_mb") / 1024).alias("memory_solve"),
-    ).drop("max_memory_uss_mb", "max_solver_memory_uss_mb")
-
-    # Remove solve_time for facility location
-    latest_runs = latest_runs.with_columns(
-        solve_time_s=pl.when(problem="facility_location")
-        .then(None)
-        .otherwise(pl.col("solve_time_s"))
+    data = data.with_columns(
+        time_model=pl.col("time_overhead") - pl.col("time_convert"),
+        memory_model=pl.col("memory_overhead"),
     )
 
-    # Compute memory overhead
-    latest_runs = latest_runs.with_columns(
-        memory_model=pl.col("max_memory") - pl.col("memory_solve").fill_null(0)
-    )
-
-    # Compute time overhead
-    latest_runs = latest_runs.rename({"solve_time_s": "time_solve"})
-    latest_runs = latest_runs.with_columns(
-        time_convert=pl.col("convert_from_solver_s").fill_null(0)
-        + pl.col("convert_to_solver_s").fill_null(0),
-    ).with_columns(
-        time_model=pl.col("total_time_s")
-        - pl.col("time_convert")
-        - pl.col("time_solve").fill_null(0)
-    )
-
-    # Correct for differences in presolve_time_s between libraries
-    presolve_attributable_to_lib = pl.col("presolve_time_s") - pl.col(
-        "presolve_time_s"
-    ).mean().over("problem", "size")
-    latest_runs = latest_runs.with_columns(
-        pl.col("time_convert") + presolve_attributable_to_lib.fill_null(0),
-        pl.col("time_solve") - presolve_attributable_to_lib.fill_null(0),
-        presolve_correction=presolve_attributable_to_lib,
-    )
-
-    latest_runs
-    return (latest_runs,)
-
-
-@app.cell
-def _(CONFIDENCE_INTERVAL, latest_runs, pl, t):
-    data = latest_runs.select(
-        "problem",
-        "library",
-        "size",
-        "seed",
-        "time_solve",
-        "time_convert",
-        "time_model",
-        "memory_model",
-        "memory_solve",
-    )
     data = data.unpivot(
-        index=["problem", "size", "library", "seed"], value_name="amount"
+        index=["problem", "size", "library", "seed", "num_variables"],
+        on=[
+            "time_solver",
+            "memory_solver",
+            "time_model",
+            "memory_model",
+            "time_convert",
+        ],
     )
-    data = data.filter(pl.col("amount").is_not_null())
+    data = data.filter(pl.col("value").is_not_null())
     data = data.with_columns(
         pl.col("variable").str.split("_").list.get(0).alias("metric"),
         pl.col("variable").str.split("_").list.get(1).alias("type"),
     ).drop("variable")
 
     data_solver = (
-        data.filter(type="solve")
+        data.filter(type="solver")
         .group_by(["problem", "size", "metric", "type"])
         .agg(
             library=pl.lit("gurobi"),
-            amount=pl.col("amount").mean(),
-            amount_std=pl.col("amount").std(),
-            n=pl.len(),
+            value=pl.col("value").mean(),
+            value_min=pl.col("value").min(),
+            value_max=pl.col("value").max(),
         )
     )
 
     data_overhead = (
-        data.filter(pl.col("type") != "solve")
-        .group_by(["problem", "size", "metric", "type", "library"])
-        .agg(pl.col("amount").mean())
+        data.filter(pl.col("type") != "solver")
+        .group_by(["problem", "size", "metric", "library", "type"])
+        .agg(value=pl.col("value").mean())
     )
 
-    data_err = (
-        data.filter(pl.col("type") != "solve")
+    data_overhead_error = (
+        data.filter(pl.col("type") != "solver")
         .group_by(["problem", "size", "metric", "library", "seed"])
-        .agg(pl.col("amount").sum())
+        .agg(pl.col("value").sum())
         .group_by(["problem", "size", "metric", "library"])
-        .agg(amount_std=pl.col("amount").std(), n=pl.len())
+        .agg(
+            value_min=pl.col("value").min(),
+            value_max=pl.col("value").max(),
+        )
     )
-
     data_overhead = data_overhead.join(
-        data_err,
+        data_overhead_error,
         on=["problem", "size", "metric", "library"],
         how="left",
         validate="m:1",
     )
 
-    data = pl.concat([data_solver, data_overhead], how="diagonal")
-
-    def t_stat(n):
-        return t.ppf((1 + CONFIDENCE_INTERVAL) / 2, n - 1)
-
-    data = data.with_columns(
-        amount_ci=pl.when(pl.col("n") >= 3).then(
-            pl.col("n").map_elements(t_stat, pl.Float64)
-            * (pl.col("amount_std") / pl.col("n").sqrt())
-        )
-    ).drop("amount_std", "n")
+    data = pl.concat([data_solver, data_overhead], how="diagonal").join(
+        data.select("problem", "size", "num_variables").unique(),
+        on=["problem", "size"],
+        how="left",
+        validate="m:1",
+    )
 
     # Normalize to Pyoframe total time
     data = data.join(
         data_overhead.filter(library="pyoframe")
         .group_by("problem", "size", "metric")
-        .agg(pl.col("amount").sum()),
+        .agg(pl.col("value").sum()),
         on=["problem", "size", "metric"],
         how="left",
         validate="m:1",
         suffix="_pyoframe",
     )
     data = data.with_columns(
-        (pl.col("amount", "amount_ci") / pl.col("amount_pyoframe")).name.suffix(
-            "_normalized"
-        )
-    ).drop("amount_pyoframe")
+        (
+            pl.col("value", "value_min", "value_max") / pl.col("value_pyoframe")
+        ).name.suffix("_normalized")
+    ).drop("value_pyoframe")
 
-    # Join num_variables
-    data = data.join(
-        latest_runs.group_by("problem", "size").agg(pl.col("num_variables").median()),
-        on=["problem", "size"],
-        how="left",
-        validate="m:1",
-    )
-
+    data = data.sort("problem", "size", "metric", "library", "type")
+    data.write_csv(RESULTS_FOLDER / "plot_data.csv")
     data
     return (data,)
 
@@ -240,7 +147,7 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
     }
 
     COLORS = {
-        "solve": "white",
+        "solver": "white",
         "model": "gray",
         "convert": "lightgray",
     }
@@ -325,8 +232,8 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
             df_panel = df_row.filter(metric=column)
 
             df_panel = df_panel.sort(
-                pl.col("type") == "solve",
-                pl.col("amount").sum().over("library"),
+                pl.col("type") == "solver",
+                pl.col("value").sum().over("library"),
                 descending=[False, True],
             )
             for i, ((library,), bar) in enumerate(
@@ -339,13 +246,14 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
                 )
                 bar = bar.sort(pl.col("type").replace_strict(order))
                 _base = 0
-                _total_amount = bar.get_column("amount").sum()
-                _total_amount_normalized = bar.get_column("amount_normalized").sum()
-                _x_label = _total_amount_normalized
-                ci = bar.get_column("amount_ci_normalized").unique().item()
+                _total_amount = bar.get_column("value").sum()
+                _total_amount_normalized = bar.get_column("value_normalized").sum()
+                amount_min = bar.get_column("value_min_normalized").unique().item()
+                amount_max = bar.get_column("value_max_normalized").unique().item()
+                _x_label = amount_max
 
-                for description, amount, ci in bar.select(
-                    "type", "amount_normalized", "amount_ci_normalized"
+                for description, amount in bar.select(
+                    "type", "value_normalized"
                 ).iter_rows():
                     ax.barh(
                         width=amount,
@@ -356,18 +264,17 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
                     )
                     _base += amount
 
-                if ci is not None:
+                if amount_min / _base != _base or amount_max != _base:
                     ax.errorbar(
                         x=_base,
                         y=_y_bar,
-                        xerr=ci,
+                        xerr=[[_base - amount_min], [amount_max - _base]],
                         fmt="none",
                         ecolor="black",
                         elinewidth=0.5,
                         capsize=1,
                         capthick=0.5,
                     )
-                    _x_label += ci
 
                 if library in ("pyoframe", "gurobi"):
                     if column == "time":
@@ -421,7 +328,6 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
         "Memory usage\n(relative to Pyoframe)", fontsize=AXIS_LABEL_FONT_SIZE
     )
     for ax, column in zip(axes, ["time", "memory"]):
-        ax.set_xticks(range(0, int(ax.get_xlim()[1]) + 1))
         # ax.set_title(TITLES[column], fontsize=TITLE_FONTSIZE, pad=TITLE_PADDING)
         ax.set_yticks([])
         ax.spines["right"].set_visible(False)
@@ -430,12 +336,12 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
         ax.set_ylim(0, _y)
 
     LEGEND_HANDLES_TIME = [
-        (COLORS["solve"], "Solver (for reference)"),
+        (COLORS["solver"], "Solver (for reference)"),
         (COLORS["model"], "Overhead (model code)"),
         (COLORS["convert"], "Overhead (conversions)"),
     ]
     LEGEND_HANDLES_MEMORY = [
-        (COLORS["solve"], "Solver (for reference)"),
+        (COLORS["solver"], "Solver (for reference)"),
         (COLORS["model"], "Overhead"),
     ]
 

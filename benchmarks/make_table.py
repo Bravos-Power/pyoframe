@@ -309,21 +309,21 @@ def _(pl, results_latest):
         ),
         problem_order=pl.col("problem").replace_strict(
             {
-                "simple_problem": 0,
-                "energy_planning_capacity_expansion": 1,
-                "energy_planning_security_constrained_dispatch": 2,
-                "facility_location": 3,
+                "facility_location": 0,
+                "simple_problem": 1,
+                "energy_planning_capacity_expansion": 2,
+                "energy_planning_security_constrained_dispatch": 3,
             }
         ),
         library_order=pl.col("library").replace_strict(
             {
                 "pyoframe": 0,
                 "pyoptinterface": 1,
-                "linopy": 2,
+                "gurobipy": 2,
                 "jump": 3,
-                "gurobipy": 4,
-                "ampl": 5,
-                "pyomo": 6,
+                "ampl": 4,
+                "pyomo": 5,
+                "linopy": 6,
                 "cvxpy": 7,
                 "pulp": 8,
             }
