@@ -564,6 +564,12 @@ def _(
             style=gt.style.borders(sides="left"),
             locations=gt.loc.body(columns=3),
         )
+        .tab_style(
+            style=gt.style.text(weight="bold"),
+            locations=gt.loc.column_labels(
+                columns=["time_Pyoframe", "memory_Pyoframe"]
+            ),
+        )
         .cols_label_rotate()
         .tab_options(row_striping_background_color="white", data_row_padding="0.5")
         .cols_align(
