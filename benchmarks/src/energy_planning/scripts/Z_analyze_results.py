@@ -24,6 +24,27 @@ def _(Path):
     return BASE_MW, INPUT_DIR, RESULTS_DIR
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Stats
+    """)
+    return
+
+
+@app.cell
+def _(INPUT_DIR, pl):
+    lines = pl.read_parquet(INPUT_DIR / "lines_simplified.parquet")
+    gens = pl.read_parquet(INPUT_DIR / "generators.parquet")
+    num_buses = (
+        pl.concat([lines.select(bus="from_bus"), lines.select(bus="to_bus")])
+        .unique()
+        .height
+    )
+    lines.height, num_buses, gens.height
+    return (gens,)
+
+
 @app.cell
 def _(mo):
     mo.md(r"""
@@ -33,15 +54,15 @@ def _(mo):
 
 
 @app.cell
-def _(BASE_MW, INPUT_DIR, RESULTS_DIR, pl):
+def _(BASE_MW, RESULTS_DIR, gens, pl):
     buildout = pl.read_parquet(RESULTS_DIR / "build_out.parquet")
     buildout = buildout.with_columns(build_mw=pl.col("solution") * BASE_MW).drop(
         "solution"
     )
-    gens = pl.read_parquet(INPUT_DIR / "generators.parquet")
+
     gen_data = gens.join(buildout, on="gen_id")
     gen_data
-    return gen_data, gens
+    return (gen_data,)
 
 
 @app.cell

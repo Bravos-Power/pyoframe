@@ -15,8 +15,9 @@ def _():
     import marimo as mo
     import matplotlib as mpl
     import polars as pl
+    from utils import human_format
 
-    return Path, gt, log, mo, mpl, pl
+    return Path, gt, human_format, log, mo, mpl, pl
 
 
 @app.cell
@@ -92,19 +93,60 @@ def _(pl, results_raw):
         memory_relative=pl.col("memory_overhead") / pl.col("memory_overhead_pyoframe"),
     )
 
+    results
+    return (results,)
+
+
+@app.cell
+def _(pl, results):
+    _df_stats = results.filter(
+        (
+            (pl.col("problem") == "energy_planning_capacity_expansion")
+            & (pl.col("size").is_in([168, 336]))
+        )
+        | (
+            (pl.col("problem") == "energy_planning_security_constrained_dispatch")
+            & (pl.col("size").is_in([24, 48]))
+        )
+    ).filter(pl.col("error").is_null())
+    _keys = ["problem", "library", "size"]
+    _df_stats = _df_stats.select(
+        "overhead_time_relative_solve", "memory_overhead_relative_solve", *_keys
+    )
+
+    _df_savings = _df_stats.join(
+        _df_stats.filter(library="pyoframe"),
+        on=["problem", "size"],
+        how="left",
+        suffix="_pyoframe",
+        validate="m:1",
+    ).with_columns(
+        time_savings_relative=1
+        - pl.col("overhead_time_relative_solve_pyoframe")
+        / pl.col("overhead_time_relative_solve"),
+        memory_savings_relative=1
+        - pl.col("memory_overhead_relative_solve_pyoframe")
+        / pl.col("memory_overhead_relative_solve"),
+    )
+
+    (
+        _df_stats.sort("memory_overhead_relative_solve", descending=False).head(1),
+        _df_savings.sort("time_savings_relative", descending=True).head(1),
+        _df_savings.sort("memory_savings_relative", descending=True).head(1),
+    )
+    return
+
+
+@app.cell
+def _(human_format, pl, results):
+    results_formatted = results
+
     def round_two_sig_figs(val):
         if val >= 10:
             return f"{val:.0f}"
         if val >= 1:
             return f"{val:.1f}"
         return f"{val:.2f}"
-
-    def human_format(num):
-        for unit in ["", "k", "M", "B", "T"]:
-            if abs(num) < 1000:
-                return f"{num:.0f}{unit}"
-            num /= 1000
-        return f"{num:.0f}P"
 
     def format_time(val_s):
         if val_s < 1:
@@ -123,7 +165,7 @@ def _(pl, results_raw):
             return round_two_sig_figs(val_gib) + " GB"
 
     # Round seconds to 1 decimal place
-    results = results.with_columns(
+    results_formatted = results_formatted.with_columns(
         time_solver_median_pretty=pl.col("time_solver_median")
         .map_elements(format_time, pl.String)
         .fill_null("N/A*"),
@@ -183,13 +225,13 @@ def _(pl, results_raw):
     )
 
     # Handle timeout
-    results = results.with_columns(
+    results_formatted = results_formatted.with_columns(
         time=pl.when(error="TIMEOUT").then(pl.lit("TO")).otherwise(pl.col("time")),
         memory=pl.when(error="TIMEOUT").then(pl.lit("TO")).otherwise(pl.col("memory")),
     )
 
     # Rename problems for better display
-    results = results.with_columns(
+    results_formatted = results_formatted.with_columns(
         pl.col("library")
         .str.to_titlecase()
         .replace(
@@ -231,15 +273,15 @@ def _(pl, results_raw):
             }
         ),
     )
-    results = results.sort(["problem_order", "library_order", "num_variables"])
-
-    results
-    return results, round_two_sig_figs
+    results_formatted = results_formatted.sort(
+        ["problem_order", "library_order", "num_variables"]
+    )
+    return results_formatted, round_two_sig_figs
 
 
 @app.cell
-def _(RESULTS_FOLDER, gt, log, mpl, pl, results):
-    results_table = results
+def _(RESULTS_FOLDER, gt, log, mpl, pl, results, results_formatted):
+    results_table = results_formatted
 
     vmin, vmax = 1 / 3, 3
     color_min, color_max = "#A5D6A7", "#EF9A9A"
@@ -345,14 +387,57 @@ def _(RESULTS_FOLDER, gt, log, mpl, pl, results):
                 columns=["time_Pyoframe", "memory_Pyoframe"]
             ),
         )
+        .tab_style(
+            style=gt.style.borders(
+                sides=["top", "bottom"],
+                color="#8E44AD",
+                style="solid",
+                weight="2px",
+            ),
+            locations=gt.loc.body(
+                columns=[
+                    "time_solver_median_pretty",
+                    "time_Pyoframe",
+                    "time_PyOptInterface",
+                ],
+                rows=results_table.height - 1,
+            ),
+        )
+        .tab_style(
+            style=gt.style.borders(
+                sides=["left"],
+                color="#8E44AD",
+                style="solid",
+                weight="2px",
+            ),
+            locations=gt.loc.body(
+                columns=[
+                    "time_solver_median_pretty",
+                ],
+                rows=results_table.height - 1,
+            ),
+        )
+        .tab_style(
+            style=gt.style.borders(
+                sides=["right"],
+                color="#8E44AD",
+                style="solid",
+                weight="2px",
+            ),
+            locations=gt.loc.body(
+                columns=[
+                    "time_PyOptInterface",
+                ],
+                rows=results_table.height - 1,
+            ),
+        )
         .cols_label_rotate()
         .tab_options(row_striping_background_color="white", data_row_padding="0.5")
         .cols_align(
             align="right",
         )
         .tab_source_note(
-            gt.html(
-                f"""
+            gt.html(f"""
             <span style="font-size: 18px;">
             <span style="
                 display:inline-block;
@@ -386,19 +471,16 @@ def _(RESULTS_FOLDER, gt, log, mpl, pl, results):
             "></span>
             &nbsp;More than triple Pyoframe's overhead (≥3×)
             </span>
-            """
-            )
+            """)
         )
         .tab_source_note(
-            gt.html(
-                """
+            gt.html("""
                 k = thousand; M = million; ms = milliseconds; s = seconds; min = minutes; kB = 1024 bytes; MB = 1,024² bytes; GB = 1,024³ bytes
                 <br/>TO = Timeout (benchmark did not complete within the 20 minute time limit)
                 <br/>NS = Not Supported (Linopy does not support quadratic constraints)
                 <br/>NI = Not Implemented (CVXPY and PuLP were not implemented for all benchmarks to limit the benchmarking scope)
                 <br/>* The facility location benchmark developed by the JuMP and PyOptInterface authors does not involve solving the optimization problem.<br/>Only the time and memory needed to construct the problem is measured.
-                """
-            )
+                """)
         )
     )
 

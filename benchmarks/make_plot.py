@@ -14,8 +14,9 @@ def _():
     import polars as pl
     from matplotlib.patches import Patch
     from matplotlib.transforms import Affine2D
+    from utils import human_format
 
-    return Affine2D, Patch, Path, pl, plt
+    return Affine2D, Patch, Path, human_format, pl, plt
 
 
 @app.cell
@@ -28,7 +29,7 @@ def _(Path):
             "energy_planning_security_constrained_dispatch",
             24,
         ): "Electricity\nDispatch\nProblem",
-        ("facility_location", 128): "Facility\nLocation\nProblem*",
+        ("facility_location", 128): "Facility\nLocation\nProblem",
     }
     return BENCHMARK_PROBLEMS, RESULTS_FOLDER
 
@@ -49,7 +50,7 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, pl):
 
     data = data.with_columns(
         time_model=pl.col("time_overhead") - pl.col("time_convert"),
-        memory_model=pl.col("memory_overhead"),
+        memory_convert=pl.col("memory_overhead"),
     )
 
     data = data.unpivot(
@@ -58,7 +59,7 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, pl):
             "time_solver",
             "memory_solver",
             "time_model",
-            "memory_model",
+            "memory_convert",
             "time_convert",
         ],
     )
@@ -132,7 +133,16 @@ def _(BENCHMARK_PROBLEMS, RESULTS_FOLDER, pl):
 
 
 @app.cell
-def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
+def _(
+    Affine2D,
+    BENCHMARK_PROBLEMS,
+    Patch,
+    RESULTS_FOLDER,
+    data,
+    human_format,
+    pl,
+    plt,
+):
     LIBRARY_LABELS = {
         "gurobi": "Gurobi",
         "pyoframe": "Pyoframe",
@@ -148,8 +158,8 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
 
     COLORS = {
         "solver": "white",
-        "model": "gray",
-        "convert": "lightgray",
+        "convert": "gray",
+        "model": "lightgray",
     }
     # TITLES = {"time": "Time", "memory": "Peak Memory Usage"}
     order = {description: i for i, description in enumerate(COLORS.keys())}
@@ -225,8 +235,12 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
         if df_row.is_empty():
             continue
 
-        num_vars = df_row.get_column("num_variables").unique().item()
-        num_vars_str = f"{num_vars / 1e6:.1f}M"
+        num_vars = (
+            df_row.get_column("num_variables")
+            .map_elements(human_format)
+            .unique()
+            .item()
+        )
 
         for column, ax in zip(["time", "memory"], axes):
             df_panel = df_row.filter(metric=column)
@@ -305,7 +319,7 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
         axes[0].text(
             -Y_LABEL_OFFSET,
             (_y_start + _y - BAR_HEIGHT) / 2,
-            problem_label + "\n" + f"(n={num_vars_str})",
+            problem_label + "\n" + f"(n={num_vars})",
             va="center",
             ha="right",
             fontsize=AXIS_LABEL_FONT_SIZE,
@@ -337,12 +351,12 @@ def _(Affine2D, BENCHMARK_PROBLEMS, Patch, RESULTS_FOLDER, data, pl, plt):
 
     LEGEND_HANDLES_TIME = [
         (COLORS["solver"], "Solver (for reference)"),
-        (COLORS["model"], "Overhead (model code)"),
-        (COLORS["convert"], "Overhead (conversions)"),
+        (COLORS["convert"], "Overhead (.optimize() call)"),
+        (COLORS["model"], "Overhead (elsewhere)"),
     ]
     LEGEND_HANDLES_MEMORY = [
         (COLORS["solver"], "Solver (for reference)"),
-        (COLORS["model"], "Overhead"),
+        (COLORS["convert"], "Overhead"),
     ]
 
     for ax, LEGEND_HANDLES, x_offset, y_offset in zip(

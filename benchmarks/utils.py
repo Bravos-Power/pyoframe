@@ -21,13 +21,9 @@ PROBLEM_NAME_MAP = {
 }
 
 
-def set_altair_theme():
-    from altair import theme
-
-    @theme.register("custom", enable=True)
-    def custom_theme():
-        return {
-            "config": {
-                "font": ["Helvetica", "Nimbus Sans"],
-            }
-        }
+def human_format(num):
+    for unit in ["", "k", "M", "B", "T"]:
+        if abs(num) < 1000:
+            return f"{num:.0f}{unit}"
+        num /= 1000
+    return f"{num:.0f}P"
