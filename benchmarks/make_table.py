@@ -99,7 +99,7 @@ def _(pl, results_raw):
 
 @app.cell
 def _(pl, results):
-    _df_stats = results.filter(
+    _df_stats_abstract = results.filter(
         (
             (pl.col("problem") == "energy_planning_capacity_expansion")
             & (pl.col("size").is_in([168, 336]))
@@ -108,31 +108,88 @@ def _(pl, results):
             (pl.col("problem") == "energy_planning_security_constrained_dispatch")
             & (pl.col("size").is_in([24, 48]))
         )
+        | (
+            (pl.col("problem") == "simple_problem")
+            & (pl.col("size").is_in([1_000_000, 10_000_000, 50_000_000]))
+        )
     ).filter(pl.col("error").is_null())
     _keys = ["problem", "library", "size"]
-    _df_stats = _df_stats.select(
+    _df_stats = _df_stats_abstract.select(
         "overhead_time_relative_solve", "memory_overhead_relative_solve", *_keys
     )
+    (
+        _df_stats.sort("overhead_time_relative_solve", descending=False).head(1),
+        _df_stats.sort("memory_overhead_relative_solve", descending=False).head(1),
+    )
+    return
 
-    _df_savings = _df_stats.join(
-        _df_stats.filter(library="pyoframe"),
+
+@app.cell
+def _(pl, results):
+    _df_savings = results
+
+    _keys = ["problem", "library", "size"]
+    _df_savings = _df_savings.select(
+        "overhead_time_relative_solve",
+        "memory_overhead_relative_solve",
+        "error",
+        *_keys,
+    )
+
+    _df_savings = _df_savings.join(
+        _df_savings.filter(library="pyoframe"),
         on=["problem", "size"],
         how="left",
         suffix="_pyoframe",
         validate="m:1",
     ).with_columns(
-        time_savings_relative=1
-        - pl.col("overhead_time_relative_solve_pyoframe")
-        / pl.col("overhead_time_relative_solve"),
-        memory_savings_relative=1
-        - pl.col("memory_overhead_relative_solve_pyoframe")
-        / pl.col("memory_overhead_relative_solve"),
+        time_savings_relative=(
+            1
+            - pl.col("overhead_time_relative_solve_pyoframe")
+            / pl.col("overhead_time_relative_solve")
+        ).round(2),
+        memory_savings_relative=(
+            1
+            - pl.col("memory_overhead_relative_solve_pyoframe")
+            / pl.col("memory_overhead_relative_solve")
+        ).round(2),
     )
 
+    is_energy_large = (
+        (pl.col("problem") == "energy_planning_capacity_expansion")
+        & (pl.col("size").is_in([168, 336]))
+    ) | (
+        (pl.col("problem") == "energy_planning_security_constrained_dispatch")
+        & (pl.col("size").is_in([24, 48]))
+    )
+    _df_stats = _df_savings.filter(is_energy_large).filter(pl.col("error").is_null())
+    _df_stats_abstract = _df_savings.filter(
+        is_energy_large
+        | (
+            (pl.col("problem") == "simple_problem")
+            & (pl.col("size").is_in([1_000_000, 10_000_000, 50_000_000]))
+        )
+    ).filter(pl.col("error").is_null())
+
     (
-        _df_stats.sort("memory_overhead_relative_solve", descending=False).head(1),
-        _df_savings.sort("time_savings_relative", descending=True).head(1),
-        _df_savings.sort("memory_savings_relative", descending=True).head(1),
+        _df_stats.sort("overhead_time_relative_solve", descending=False)
+        .head(1)
+        .select(_keys + ["overhead_time_relative_solve"]),
+        _df_stats.sort("memory_overhead_relative_solve", descending=False)
+        .head(1)
+        .select(_keys + ["memory_overhead_relative_solve"]),
+        _df_stats.sort("time_savings_relative", descending=True)
+        .head(1)
+        .select(_keys + ["time_savings_relative"]),
+        _df_stats.sort("memory_savings_relative", descending=True)
+        .head(1)
+        .select(_keys + ["memory_savings_relative"]),
+        _df_stats_abstract.sort("time_savings_relative", descending=True)
+        .head(1)
+        .select(_keys + ["time_savings_relative"]),
+        _df_stats_abstract.sort("memory_savings_relative", descending=True)
+        .head(1)
+        .select(_keys + ["memory_savings_relative"]),
     )
     return
 
