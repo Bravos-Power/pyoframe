@@ -46,6 +46,42 @@ def _(INPUT_DIR, pl):
 
 
 @app.cell
+def _(INPUT_DIR, gens, pl):
+    _df = gens
+
+    _df = _df.join(
+        pl.read_csv(INPUT_DIR / "capex_costs.csv"),
+        on="type",
+        how="left",
+    )
+    print(_df.columns)
+    _df.group_by(
+        pl.col("type").replace(
+            {
+                "CSP": "Solar",
+                "Solar PV": "Solar",
+                "Natural Gas": "Thermal",
+                "Coal": "Thermal",
+                "Biopower": "Thermal",
+                "Other Natural Gas": "Thermal",
+            }
+        )
+    ).agg(
+        n=pl.len(),
+        capacity=pl.col("Pmax").sum().round(0),
+        median_operating_cost=pl.col("cost_per_MWh_linear").median().round(1),
+        median_fixed_cost_per_h=pl.col("hourly_overhead_per_MW_capacity")
+        .median()
+        .round(1),
+        median_capital_cost=(
+            1000 / 100 * pl.col("hourly_capex_cost_k_per_pu").median()
+        ).round(1),
+        # median_amortizing_cost=pl.col("cost_per_MWh_amortized").median(),
+    ).sort("capacity", descending=True)
+    return
+
+
+@app.cell
 def _(mo):
     mo.md(r"""
     ## Analayze buildout
