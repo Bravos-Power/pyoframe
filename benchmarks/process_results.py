@@ -265,7 +265,7 @@ def _(
     )
     _df = _df.sort("type", descending=True)
     _plt = None
-    TITLES = {"time": "Solver Time (≥ 1 s)", "memory": "Solver Memory Usage (≥0.5 GB)"}
+    TITLES = {"time": "Gurobi Solve Time", "memory": "Gurobi Memory Usage"}
 
     for (_type,), _df_panel in _df.group_by("type", maintain_order=True):
         _is_left = _type == "time"
