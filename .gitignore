@@ -18,3 +18,4 @@ htmlcov/
 /sketch.py
 /*.sol
 /*.lp
+__marimo__/

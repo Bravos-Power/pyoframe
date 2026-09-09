@@ -1163,7 +1163,7 @@ class Expression(BaseOperableBlock):
             │ 3    │
             └──────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+                https://pyoframe.com/latest/learn/concepts/join_modifiers
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression (linear) terms=2>
@@ -2904,7 +2904,7 @@ class Variable(BaseOperableBlock):
             │ 18:00 ┆ Berlin  │
             └───────┴─────────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+                https://pyoframe.com/latest/learn/concepts/join_modifiers
 
             >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
             <Constraint 'unnamed' (linear) height=6 terms=18>

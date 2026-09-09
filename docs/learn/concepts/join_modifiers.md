@@ -41,7 +41,7 @@ pyoframe._constants.PyoframeError: Cannot add the two expressions below because 
 Expression 1:  air_emissions
 Expression 2:  ground_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-  https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over
+  https://pyoframe.com/latest/learn/concepts/join_modifiers/#over
 
 ```
 
@@ -73,7 +73,7 @@ pyoframe._constants.PyoframeError: Cannot subtract the two expressions below bec
 Expression 1:  E_max
 Expression 2:  flight_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over
+    https://pyoframe.com/latest/learn/concepts/join_modifiers/#over
 
 ```
 
@@ -151,7 +151,7 @@ Extra labels in expression 1:
 │ D1206     │
 └───────────┘
 Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+    https://pyoframe.com/latest/learn/concepts/join_modifiers
 
 ```
 
@@ -181,7 +181,7 @@ Extra labels in expression 2:
 │ B3420     │
 └───────────┘
 Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+    https://pyoframe.com/latest/learn/concepts/join_modifiers
 
 ```
 
