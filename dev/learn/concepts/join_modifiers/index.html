@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/dev/learn/concepts/join_modifiers/">
+        <link rel="canonical" href="https://pyoframe.com/dev/learn/concepts/join_modifiers/">
       
       
         <link rel="prev" href="../../develop/read-results/">
@@ -2680,7 +2680,7 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="x">Expression 1:  air_emissions</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="x">Expression 2:  ground_emissions</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="x">If this is intentional, use .over(…) to broadcast. Learn more at</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="x">  https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="x">  https://pyoframe.com/latest/learn/concepts/join_modifiers/#over</span>
 </span></code></pre></div>
 <p>Do you understand what happened? The error informs us that <code>model.air_emissions</code> has dimension <em><code>flight_no</code></em>, but <code>model.ground_emissions</code> has dimension <em><code>flight_number</code></em>. Oops, the two datasets use slightly different spellings! You can use <a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;rename&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;kwargs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;/code&gt;" href="../../../reference/bases/BaseOperableBlock/#pyoframe._core.BaseOperableBlock.rename"><code>.rename(…)</code></a> to correct for the <code>Expression</code> objects having differing dimension names.</p>
 <div class="language-pycon highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">flight_emissions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">air_emissions</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ground_emissions</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
@@ -2701,7 +2701,7 @@ model.ground_emissions = pf.Param(
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="x">Expression 1:  E_max</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="x">Expression 2:  flight_emissions</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="x">If this is intentional, use .over(…) to broadcast. Learn more at</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="x">    https://pyoframe.com/latest/learn/concepts/join_modifiers/#over</span>
 </span></code></pre></div>
 <p>The error indicates that <code>E_max</code> has no dimensions but <code>flight_emissions</code> has dimensions <code>flight_no</code>. The error is raised because, by default, combining terms with differing dimensions is not allowed (as explained in <a href="#example-1-catching-a-mistake">example 1</a>).</p>
 <p>What we'd like to do is effectively 'copy' (aka. 'broadcast') <code>E_max</code> <em>over</em> every flight number. <code>E_max.over("flight_no")</code> does just this:</p>
@@ -2762,7 +2762,7 @@ Let's say that you fixed the error in example 1, but when you try the addition a
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="x">│ D1206     │</span>
 </span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="x">└───────────┘</span>
 </span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="x">Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="x">    https://pyoframe.com/latest/learn/concepts/join_modifiers</span>
 </span></code></pre></div>
 <p>Do you understand what happened? The error explains that <code>air_emissions</code> contains flight numbers that are not present in <code>ground_emissions</code> (specifically flight numbers <code>D2082</code>, <code>D8432</code>, and <code>D1206</code>). Your ground emissions dataset is missing some flights!</p>
 <p>Pyoframe raised an error because it is unclear how you'd like the addition to be performed. In fact, you have three options:</p>
@@ -2786,7 +2786,7 @@ Let's say that you fixed the error in example 1, but when you try the addition a
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="x">│ B3420     │</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="x">└───────────┘</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="x">Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="x">    https://pyoframe.com/latest/learn/concepts/join_modifiers</span>
 </span></code></pre></div>
 <p>Argh, another error! Do you understand what happened? This time <code>ground_emissions</code> has extra labels: flight <code>B3420</code> is present in <code>ground_emissions</code> but not <code>air_emissions</code>. Again, Pyoframe raised an error because it is unclear what should be done:</p>
 <ol>
@@ -2863,7 +2863,7 @@ you can simply write</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 3, 2026 01:40:39 UTC">September 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 9, 2026 18:40:58 UTC">September 9, 2026</span>
   </span>
 
     
