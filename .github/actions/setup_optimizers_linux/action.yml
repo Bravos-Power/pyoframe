@@ -44,7 +44,7 @@ runs:
         curl -L -o ~/installers/gurobi.tar.gz https://packages.gurobi.com/12.0/gurobi12.0.2_linux64.tar.gz
         curl -L -o ~/installers/idaes-solvers.tar.gz https://github.com/IDAES/idaes-ext/releases/download/3.4.2/idaes-solvers-ubuntu2204-x86_64.tar.gz
         curl -L -o ~/installers/copt.tar.gz https://pub.shanshu.ai/download/copt/8.0.5/linux64/CardinalOptimizer-8.0.5-lnx64.tar.gz
-        curl -L -o ~/installers/mosek.tar.bz2 https://download.mosek.com/stable/10.2.0/mosektoolslinux64x86.tar.bz2
+        curl -L -o ~/installers/mosek.tar.bz2 https://download.mosek.com/stable/11.2.0/mosektoolslinux64x86.tar.bz2
 
     - name: Setup Gurobi Installation
       if: ${{ inputs.GUROBI_WLS != '' }}
@@ -106,11 +106,11 @@ runs:
         tar jxf ~/installers/mosek.tar.bz2 -C ~/
         ls ~/mosek
         # set environment variables
-        export MOSEK_10_2_BINDIR="${HOME}/mosek/10.2/tools/platform/linux64x86/bin"
-        echo "MOSEK_10_2_BINDIR=${MOSEK_10_2_BINDIR}" >> $GITHUB_ENV
-        echo "PATH=${PATH}:${MOSEK_10_2_BINDIR}" >> $GITHUB_ENV
-        echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MOSEK_10_2_BINDIR}" >> $GITHUB_ENV
-        echo $MOSEK_10_2_BINDIR
+        export MOSEK_BINDIR="${HOME}/mosek/11.2/tools/platform/linux64x86/bin"
+        echo "MOSEK_BINDIR=${MOSEK_BINDIR}" >> $GITHUB_ENV
+        echo "PATH=${PATH}:${MOSEK_BINDIR}" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MOSEK_BINDIR}" >> $GITHUB_ENV
+        echo $MOSEK_BINDIR
 
         # setup license using secrets
         echo "$MOSEK_LICENSE" > ~/mosek.lic
