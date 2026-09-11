@@ -734,7 +734,7 @@ class Expression(BaseOperableBlock):
                     COEF_KEY: [constant],
                     VAR_KEY: [CONST_TERM],
                 },
-                schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
+                schema={COEF_KEY: Config.coef_dtype, VAR_KEY: Config.id_dtype},
             ),
             name=str(constant),
         )
@@ -1257,7 +1257,7 @@ class Expression(BaseOperableBlock):
             if CONST_TERM not in data[VAR_KEY]:
                 const_df = pl.DataFrame(
                     {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
+                    schema={COEF_KEY: Config.coef_dtype, VAR_KEY: Config.id_dtype},
                 )
                 if self.is_quadratic:
                     const_df = const_df.with_columns(
@@ -1316,7 +1316,9 @@ class Expression(BaseOperableBlock):
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
-                return pl.DataFrame({COEF_KEY: [0.0]}, schema={COEF_KEY: pl.Float64})
+                return pl.DataFrame(
+                    {COEF_KEY: [0.0]}, schema={COEF_KEY: Config.coef_dtype}
+                )
             return constant_terms
 
     @property
@@ -1391,7 +1393,8 @@ class Expression(BaseOperableBlock):
                     ]
 
                     df = df.drop(var_col).with_columns(
-                        pl.col(SOLUTION_KEY) * pl.Series(values, dtype=pl.Float64)
+                        pl.col(SOLUTION_KEY)
+                        * pl.Series(values, dtype=Config.coef_dtype)
                     )
             except RuntimeError as e:
                 raise failed_attr_error(
