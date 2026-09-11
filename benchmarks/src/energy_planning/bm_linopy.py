@@ -225,7 +225,7 @@ class Bench(Benchmark):
             .set_index("type")["limit_pu"]
             .to_xarray()
         )
-        yearly_limits = yearly_limits * len(container.hours) / (24 * 365)
+        yearly_limits *= len(container.hours) / (24 * 365)
 
         dispatch_by_type = (
             container.Dispatch.sum("datetime").groupby(container.gens.type).sum()
