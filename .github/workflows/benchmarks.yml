@@ -22,7 +22,8 @@ jobs:
         uses: julia-actions/setup-julia@v3
       - uses: julia-actions/cache@v3
         with:
-          cache-name: julia-benchmarking-cache
+          cache-name: julia-benchmarking-cache-v2
+          version: '1.12'
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
