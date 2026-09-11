@@ -5,8 +5,6 @@ from __future__ import annotations
 from abc import ABC
 from typing import TYPE_CHECKING
 
-import polars as pl
-
 from pyoframe._arithmetic import _get_dimensions
 from pyoframe._constants import (
     COEF_KEY,
@@ -17,6 +15,8 @@ from pyoframe._constants import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
+    import polars as pl
+
     from pyoframe import Model
 
 
@@ -39,7 +39,7 @@ class BaseBlock(ABC):
 
         # Cast to proper dtype
         if COEF_KEY in data.columns:
-            data = data.cast({COEF_KEY: pl.Float64})
+            data = data.cast({COEF_KEY: Config.coef_dtype})
         if VAR_KEY in data.columns:
             data = data.cast({VAR_KEY: Config.id_dtype})
         if QUAD_VAR_KEY in data.columns:

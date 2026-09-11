@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, TypeAlias
 
 import polars as pl
 
-from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY
+from pyoframe._constants import COEF_KEY, CONST_TERM, VAR_KEY, Config, PyoframeError
 from pyoframe._core import Expression
 from pyoframe._utils import isinstance_pandas
 
@@ -100,9 +100,17 @@ def Param(data: ParamInput) -> Expression:
 
     value_col = data.columns[-1]
 
-    return Expression(
+    data = (
         data.rename({value_col: COEF_KEY})
         .drop_nulls(COEF_KEY)
-        .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY)),
-        name=f"Param[{value_col}]",
+        .with_columns(pl.lit(CONST_TERM).alias(VAR_KEY))
     )
+
+    try:
+        data = data.cast({COEF_KEY: Config.coef_dtype})
+    except pl.exceptions.InvalidOperationError as e:
+        raise PyoframeError(
+            f"Could not create parameter. The column '{value_col}' must be numeric, but it has type {data[COEF_KEY].dtype}."
+        ) from e
+
+    return Expression(data, name=f"Param[{value_col}]")

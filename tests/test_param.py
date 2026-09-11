@@ -27,3 +27,12 @@ def test_load_file():
         data.write_ipc(tmp.name)
         with pytest.raises(NotImplementedError):
             pf.Param(tmp.name)
+
+
+def test_friendly_error():
+    wrongly_ordered_column = pl.DataFrame(
+        {"hours": [8, 9, 7], "day": ["Mon", "Tue", "Wed"]}
+    )
+
+    with pytest.raises(pf.PyoframeError):
+        pf.Param(wrongly_ordered_column)

@@ -523,7 +523,7 @@ def _simplify_expr_df(df: pl.DataFrame) -> pl.DataFrame:
             if df.is_empty():
                 df = pl.DataFrame(
                     {VAR_KEY: [CONST_TERM], COEF_KEY: [0]},
-                    schema={VAR_KEY: Config.id_dtype, COEF_KEY: pl.Float64},
+                    schema={VAR_KEY: Config.id_dtype, COEF_KEY: Config.coef_dtype},
                 )
 
     if QUAD_VAR_KEY in df.columns and (df.get_column(QUAD_VAR_KEY) == CONST_TERM).all():

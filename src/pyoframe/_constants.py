@@ -134,6 +134,7 @@ class ConfigDefaults:
     print_max_terms: int = 5
     maintain_order: bool = True
     id_dtype = pl.UInt32
+    coef_dtype = pl.Float64
     _initialize_silent = False
 
 
@@ -416,6 +417,15 @@ class _Config:
     @id_dtype.setter
     def id_dtype(self, value):
         self._settings.id_dtype = value
+
+    @property
+    def coef_dtype(self):
+        """The Polars data type to use for coefficients of expressions."""
+        return self._settings.coef_dtype
+
+    @coef_dtype.setter
+    def coef_dtype(self, value):
+        self._settings.coef_dtype = value
 
     @property
     def _initialize_silent(self) -> bool:
