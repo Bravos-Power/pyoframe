@@ -33,6 +33,8 @@ class _Solver:
     supports_ilp_files: bool = False
     supports_updating_coefficients: bool = True
     check_termination_status_when_retrieving_solution: bool = False
+    boundless_value: float = float("inf")
+    """Should be set to match the default value used in poi.RawModel.add_variable"""
     accelerate_with_repeat_names: bool = False
     """
     If True, Pyoframe sets all the variable and constraint names to 'V'
@@ -57,7 +59,12 @@ class _Solver:
 
 
 SUPPORTED_SOLVERS = [
-    _Solver("gurobi", accelerate_with_repeat_names=True, supports_ilp_files=True),
+    _Solver(
+        "gurobi",
+        accelerate_with_repeat_names=True,
+        supports_ilp_files=True,
+        boundless_value=1e100,
+    ),
     _Solver(
         "highs",
         supports_quadratic_constraints=False,
@@ -79,6 +86,7 @@ SUPPORTED_SOLVERS = [
         supports_non_convex=False,
         # COPT will return a solution of 0.0 without complaining when the model is infeasible, so we need to check the termination status when retrieving the solution to avoid silent errors.
         check_termination_status_when_retrieving_solution=True,
+        boundless_value=1e30,
     ),
     _Solver(
         "mosek",
@@ -89,6 +97,7 @@ SUPPORTED_SOLVERS = [
         accelerate_with_repeat_names=True,
         supports_square_brackets_in_lp_files=False,
         supports_non_convex=False,
+        boundless_value=1e30,
     ),
 ]
 
@@ -214,8 +223,8 @@ class _Config:
             Traceback (most recent call last):
             ...
             pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
-            Expression 1:   pop
-            Expression 2:   influx
+            Expression 1:   Param[pop]
+            Expression 2:   Param[influx]
             Extra labels in expression 1:
             ┌──────────┐
             │ city     │
@@ -223,7 +232,7 @@ class _Config:
             │ Montreal │
             └──────────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+                https://pyoframe.com/latest/learn/concepts/join_modifiers
 
             But if `Config.disable_extras_checks = True`, the error is suppressed and the sum is considered to be `population.keep_extras() + population_influx.keep_extras()`:
             >>> pf.Config.disable_extras_checks = True

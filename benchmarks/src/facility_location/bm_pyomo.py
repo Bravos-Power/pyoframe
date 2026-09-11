@@ -31,8 +31,9 @@ class Bench(Benchmark):
         model.assmt = pyo.Constraint(
             model.Grid,
             model.Grid,
-            rule=lambda mod, i, j: sum([mod.is_closest[i, j, f] for f in mod.Facs])
-            == 1,
+            rule=lambda mod, i, j: (
+                sum([mod.is_closest[i, j, f] for f in mod.Facs]) == 1
+            ),
         )
         M = 2 * 1.414
 
@@ -40,32 +41,38 @@ class Bench(Benchmark):
             model.Grid,
             model.Grid,
             model.Facs,
-            rule=lambda mod, i, j, f: mod.dist[i, j, f]
-            == mod.max_distance + M * (1 - mod.is_closest[i, j, f]),
+            rule=lambda mod, i, j, f: (
+                mod.dist[i, j, f]
+                == mod.max_distance + M * (1 - mod.is_closest[i, j, f])
+            ),
         )
 
         model.quaddistk1 = pyo.Constraint(
             model.Grid,
             model.Grid,
             model.Facs,
-            rule=lambda mod, i, j, f: mod.r[i, j, f, 1]
-            == (1.0 * i) / G - mod.facility_position[f, 1],
+            rule=lambda mod, i, j, f: (
+                mod.r[i, j, f, 1] == (1.0 * i) / G - mod.facility_position[f, 1]
+            ),
         )
 
         model.quaddistk2 = pyo.Constraint(
             model.Grid,
             model.Grid,
             model.Facs,
-            rule=lambda mod, i, j, f: mod.r[i, j, f, 2]
-            == (1.0 * j) / G - mod.facility_position[f, 2],
+            rule=lambda mod, i, j, f: (
+                mod.r[i, j, f, 2] == (1.0 * j) / G - mod.facility_position[f, 2]
+            ),
         )
 
         model.quaddist = pyo.Constraint(
             model.Grid,
             model.Grid,
             model.Facs,
-            rule=lambda mod, i, j, f: mod.r[i, j, f, 1] ** 2 + mod.r[i, j, f, 2] ** 2
-            <= mod.dist[i, j, f] ** 2,
+            rule=lambda mod, i, j, f: (
+                mod.r[i, j, f, 1] ** 2 + mod.r[i, j, f, 2] ** 2
+                <= mod.dist[i, j, f] ** 2
+            ),
         )
 
         return model

@@ -41,14 +41,16 @@ pyoframe._constants.PyoframeError: Cannot add the two expressions below because 
 Expression 1:  air_emissions
 Expression 2:  ground_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-  https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over
+  https://pyoframe.com/latest/learn/concepts/join_modifiers/#over
 
 ```
 
 Do you understand what happened? The error informs us that `model.air_emissions` has dimension _`flight_no`_, but `model.ground_emissions` has dimension _`flight_number`_. Oops, the two datasets use slightly different spellings! You can use [`.rename(…)`][pyoframe.Expression.rename] to correct for the `Expression` objects having differing dimension names.
 
 ```pycon
->>> model.flight_emissions = model.air_emissions + model.ground_emissions.rename({"flight_number": "flight_no"})
+>>> model.flight_emissions = model.air_emissions + model.ground_emissions.rename(
+...     {"flight_number": "flight_no"}
+... )
 
 ```
 
@@ -71,7 +73,7 @@ pyoframe._constants.PyoframeError: Cannot subtract the two expressions below bec
 Expression 1:  E_max
 Expression 2:  flight_emissions
 If this is intentional, use .over(…) to broadcast. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers/#over
+    https://pyoframe.com/latest/learn/concepts/join_modifiers/#over
 
 ```
 
@@ -149,7 +151,7 @@ Extra labels in expression 1:
 │ D1206     │
 └───────────┘
 Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+    https://pyoframe.com/latest/learn/concepts/join_modifiers
 
 ```
 
@@ -179,7 +181,7 @@ Extra labels in expression 2:
 │ B3420     │
 └───────────┘
 Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+    https://pyoframe.com/latest/learn/concepts/join_modifiers
 
 ```
 

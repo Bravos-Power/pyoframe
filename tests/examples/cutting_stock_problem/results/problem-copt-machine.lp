@@ -61,16 +61,16 @@ Subject To
    - 2 ONE >= 0
 Bounds
  ONE = 1
- C131 >= -1e+100
- C132 >= -1e+100
- C133 >= -1e+100
- C134 >= -1e+100
- C135 >= -1e+100
- C136 >= -1e+100
- C137 >= -1e+100
- C138 >= -1e+100
- C139 >= -1e+100
- C140 >= -1e+100
+ C131 free
+ C132 free
+ C133 free
+ C134 free
+ C135 free
+ C136 free
+ C137 free
+ C138 free
+ C139 free
+ C140 free
 Generals
  C001  C002  C003  C004  C005  C006  C007  C008  C009  C010  C011  C012  
  C013  C014  C015  C016  C017  C018  C019  C020  C021  C022  C023  C024  

@@ -65,7 +65,7 @@ def main():
     )
 
     # Demand constraints
-    m.addConstrs((transport.sum(w) == demand[w] for w in warehouses), "Demand")
+    m.addConstrs((transport.sum(w, "*") == demand[w] for w in warehouses), "Demand")
 
     # Use barrier to solve root relaxation
     m.params.Method = 2

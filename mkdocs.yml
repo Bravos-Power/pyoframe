@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: Pyoframe
-site_url: https://Bravos-Power.github.io/pyoframe/
+site_url: https://pyoframe.com/
 repo_url: https://github.com/Bravos-Power/pyoframe
 edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2024-2025 Bravos Power

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import warnings
 from abc import abstractmethod
-from collections.abc import Iterable, Mapping, Sequence
-from typing import TYPE_CHECKING, Literal, Union, overload
+from itertools import pairwise
+from typing import TYPE_CHECKING, Literal, TypeAlias, overload
 
 import polars as pl
 import pyoptinterface as poi
@@ -42,39 +42,29 @@ from pyoframe._utils import (
     failed_attr_error,
     get_obj_repr,
     isinstance_pandas,
-    pairwise,
     parse_inputs_as_iterable,
     return_new,
+    try_to_expr,
     unwrap_single_values,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
+    from collections.abc import Iterable, Mapping, Sequence
+
     from pyoframe._model import Model
 
     try:
-        import pandas
+        import pandas as pd
     except ImportError:
         pass
 
-    Operable = Union[
-        "BaseOperableBlock",
-        pl.DataFrame,
-        int,
-        float,
-        "pandas.DataFrame",
-        "pandas.Series",
-    ]
+    NonScalarOperable: TypeAlias = (
+        "BaseOperableBlock | pl.DataFrame | pd.DataFrame | pd.Series"
+    )
+    Operable: TypeAlias = NonScalarOperable | int | float
     """Any of the following objects: `int`, `float`, [Variable][pyoframe.Variable], [Expression][pyoframe.Expression], [Set][pyoframe.Set], polars or pandas DataFrame, or pandas Series."""
 
-    SetTypes = Union[
-        pl.DataFrame,
-        "BaseOperableBlock",
-        Mapping[str, Sequence[object]],
-        "Set",
-        "Constraint",
-        "pandas.DataFrame",
-        "pandas.Index",
-    ]
+    SetTypes: TypeAlias = "pl.DataFrame | BaseOperableBlock | Mapping[str, Sequence[object]] | Set | Constraint | pd.DataFrame | pd.Index"
 
 
 class BaseOperableBlock(BaseBlock):
@@ -123,22 +113,6 @@ class BaseOperableBlock(BaseBlock):
         new._copy_flags(self)
         new._extras_strategy = ExtrasStrategy.DROP
         return new
-
-    def keep_unmatched(self):  # pragma: no cover
-        """Deprecated, use [`keep_extras`][pyoframe.Expression.keep_extras] instead."""
-        warnings.warn(
-            "'keep_unmatched' has been renamed to 'keep_extras'. Please use 'keep_extras' instead.",
-            DeprecationWarning,
-        )
-        return self.keep_extras()
-
-    def drop_unmatched(self):  # pragma: no cover
-        """Deprecated, use [`drop_extras`][pyoframe.Expression.drop_extras] instead."""
-        warnings.warn(
-            "'drop_unmatched' has been renamed to 'drop_extras'. Please use 'drop_extras' instead.",
-            DeprecationWarning,
-        )
-        return self.drop_extras()
 
     def raise_extras(self):
         """Indicates that labels not present in the other expression should raise an error during joins.
@@ -281,14 +255,6 @@ class BaseOperableBlock(BaseBlock):
         df = df.select(cols[:-1] + self._allowed_new_dims + [cols[-1]])  # reorder
         return df
 
-    def add_dim(self, *dims: str):  # pragma: no cover
-        """Deprecated, use [`over`][pyoframe.Expression.over] instead."""
-        warnings.warn(
-            "'add_dim' has been renamed to 'over'. Please use 'over' instead.",
-            DeprecationWarning,
-        )
-        return self.over(*dims)
-
     @abstractmethod
     def to_expr(self) -> Expression:
         """Converts the object to a Pyoframe Expression."""
@@ -360,7 +326,9 @@ class BaseOperableBlock(BaseBlock):
             └──────┴────────────┘
         """
         if not isinstance(other, (int, float)):
-            other = other.to_expr()  # TODO don't rely on monkey patch
+            other = try_to_expr(
+                other, f"Could not subtract from Expression '{self.name}'"
+            )
         return self.to_expr() + (-other)
 
     def __rmul__(self, other):
@@ -415,19 +383,21 @@ class BaseOperableBlock(BaseBlock):
         """
         return other + (-self.to_expr())
 
-    def __or__(self, other: Operable) -> Expression:
-        if isinstance(other, (int, float)):
-            raise PyoframeError(
-                "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
-            )
-        return self.to_expr().keep_extras() + other.to_expr().keep_extras()  # type: ignore
+    def __or__(self, other: NonScalarOperable) -> Expression:
+        return (
+            self.to_expr().keep_extras()
+            + try_to_expr(
+                other, f"Could not use '|' operator on Expression '{self.name}'"
+            ).keep_extras()
+        )
 
     def __ror__(self, other: Operable) -> Expression:
-        if isinstance(other, (int, float)):
-            raise PyoframeError(
-                "Cannot use '|' operator with scalars. Did you mean to use '+' instead?"
-            )
-        return self.to_expr().keep_extras() + other.to_expr().keep_extras()  # type: ignore
+        return (
+            self.to_expr().keep_extras()
+            + try_to_expr(
+                other, f"Could not use '|' operator on Expression '{self.name}'"
+            ).keep_extras()
+        )
 
     def __le__(self, other):
         return Constraint(self - other, ConstraintSense.LE)
@@ -1185,7 +1155,7 @@ class Expression(BaseOperableBlock):
             ...
             pyoframe._constants.PyoframeError: Cannot add the two expressions below because expression 1 has extra labels.
             Expression 1:	v
-            Expression 2:	add
+            Expression 2:	Param[add]
             Extra labels in expression 1:
             ┌──────┐
             │ dim1 │
@@ -1193,7 +1163,7 @@ class Expression(BaseOperableBlock):
             │ 3    │
             └──────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+                https://pyoframe.com/latest/learn/concepts/join_modifiers
             >>> m.v2 = Variable()
             >>> 5 + 2 * m.v2
             <Expression (linear) terms=2>
@@ -1201,7 +1171,7 @@ class Expression(BaseOperableBlock):
         """
         if isinstance(other, (int, float)):
             return self._add_const(other)
-        other = other.to_expr()  # TODO don't rely on monkey patch
+        other = try_to_expr(other, f"Could not add to Expression '{self.name}'")
         self._learn_from_other(other)
         return add(self, other)
 
@@ -1214,7 +1184,7 @@ class Expression(BaseOperableBlock):
                 name=f"({other} * {self.name})",
             )
 
-        other: Expression = other.to_expr()  # TODO don't rely on monkey patch
+        other = try_to_expr(other, f"Could not multiply Expression '{self.name}'")
         self._learn_from_other(other)
         return multiply(self, other)
 
@@ -1346,10 +1316,7 @@ class Expression(BaseOperableBlock):
             return df.with_columns(pl.col(COEF_KEY).fill_null(0.0))
         else:
             if len(constant_terms) == 0:
-                return pl.DataFrame(
-                    {COEF_KEY: [0.0], VAR_KEY: [CONST_TERM]},
-                    schema={COEF_KEY: pl.Float64, VAR_KEY: Config.id_dtype},
-                )
+                return pl.DataFrame({COEF_KEY: [0.0]}, schema={COEF_KEY: pl.Float64})
             return constant_terms
 
     @property
@@ -1694,9 +1661,6 @@ class Expression(BaseOperableBlock):
     def __repr__(self) -> str:
         return self._str_header() + "\n" + self.to_str()
 
-    def __str__(self) -> str:
-        return self.to_str()
-
     @property
     def terms(self) -> int:
         """The number of terms across all subexpressions.
@@ -1721,54 +1685,6 @@ class Expression(BaseOperableBlock):
             3
         """
         return len(self.data)
-
-
-@overload
-def sum(over: str | Sequence[str], expr: Operable) -> Expression: ...
-
-
-@overload
-def sum(over: Operable) -> Expression: ...
-
-
-def sum(
-    over: str | Sequence[str] | Operable,
-    expr: Operable | None = None,
-) -> Expression:  # pragma: no cover
-    """Deprecated: Use Expression.sum() or Variable.sum() instead.
-
-    Examples:
-        >>> x = pf.Set(x=range(100))
-        >>> pf.sum(x)
-        Traceback (most recent call last):
-          ...
-        DeprecationWarning: pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.
-    """
-    warnings.warn(
-        "pf.sum() is deprecated. Use Expression.sum() or Variable.sum() instead.",
-        DeprecationWarning,
-    )
-
-    if expr is None:
-        assert isinstance(over, BaseOperableBlock)
-        return over.to_expr().sum()
-    else:
-        assert isinstance(over, (str, Sequence))
-        if isinstance(over, str):
-            over = (over,)
-        return expr.to_expr().sum(*over)
-
-
-def sum_by(by: str | Sequence[str], expr: Operable) -> Expression:  # pragma: no cover
-    """Deprecated: Use Expression.sum() or Variable.sum() instead."""
-    warnings.warn(
-        "pf.sum_by() is deprecated. Use Expression.sum_by() or Variable.sum_by() instead.",
-        DeprecationWarning,
-    )
-
-    if isinstance(by, str):
-        by = [by]
-    return expr.to_expr().sum_by(*by)
 
 
 class Constraint(BaseBlock):
@@ -2629,7 +2545,7 @@ class Variable(BaseOperableBlock):
                 assert len(indexing_sets) == 0, (
                     "Cannot specify both 'equals' and 'indexing_sets'"
                 )
-                equals = equals.to_expr()  # TODO don't rely on monkey patch
+                equals = try_to_expr(equals, "Invalid value for equals=")
                 indexing_sets = (equals,)
 
         data = Set(*indexing_sets).data if len(indexing_sets) > 0 else pl.DataFrame()
@@ -2639,18 +2555,22 @@ class Variable(BaseOperableBlock):
         self._attr = Container(self._set_attribute, self._get_attribute)
         self._equals: Expression | None = equals
 
+        def process_expr_bound(bound, name) -> Expression:
+            bound = try_to_expr(bound, f"Invalid value for {name}=")
+            missing_dims = [
+                d for d in self._dimensions_unsafe if d not in bound._dimensions_unsafe
+            ]
+            if missing_dims:
+                bound = bound.over(*missing_dims)
+            return bound
+
         if lb is not None and not isinstance(lb, (float, int)):
-            lb: Expression = lb.to_expr()  # TODO don't rely on monkey patch
-            if not self.dimensionless:
-                lb = lb.over(*self.dimensions)
-            self._lb_expr, self.lb = lb, None
+            self._lb_expr, self.lb = process_expr_bound(lb, "lb"), None
         else:
             self._lb_expr, self.lb = None, lb
+
         if ub is not None and not isinstance(ub, (float, int)):
-            ub = ub.to_expr()  # TODO don't rely on monkey patch
-            if not self.dimensionless:
-                ub = ub.over(*self.dimensions)  # pyright: ignore[reportOptionalIterable]
-            self._ub_expr, self.ub = ub, None
+            self._ub_expr, self.ub = process_expr_bound(ub, "ub"), None
         else:
             self._ub_expr, self.ub = None, ub
 
@@ -2711,8 +2631,8 @@ class Variable(BaseOperableBlock):
                     f"Solver {solver.name} does not support integer or binary variables."
                 )
 
-        lb = -1e100 if self.lb is None else float(self.lb)
-        ub = 1e100 if self.ub is None else float(self.ub)
+        lb = -solver.boundless_value if self.lb is None else float(self.lb)
+        ub = solver.boundless_value if self.ub is None else float(self.ub)
 
         poi_add_var = self._model.poi.add_variable
 
@@ -2758,6 +2678,8 @@ class Variable(BaseOperableBlock):
     def _on_add_to_model(self, model, name):
         super()._on_add_to_model(model, name)
         self._assign_ids()
+        # TODO keep reference to these so they can be accessed
+        #   Use reference in __repr__
         if self._lb_expr is not None:
             setattr(model, f"{name}_lb", self._lb_expr <= self)
 
@@ -2908,23 +2830,35 @@ class Variable(BaseOperableBlock):
         return solution
 
     def __repr__(self):
-        result = (
-            get_obj_repr(
-                self,
-                f"'{self.name}'",
-                lb=self.lb,
-                ub=self.ub,
-                height=self.data.height if self.dimensions else None,
+        def get_bound_name(bound_expr, suffix):
+            return (
+                f"'m.{self.name}_{suffix}'" if self._has_ids else f"'{bound_expr.name}'"
             )
-            + "\n"
+
+        lb = self.lb if self._lb_expr is None else get_bound_name(self._lb_expr, "lb")
+        ub = self.ub if self._ub_expr is None else get_bound_name(self._ub_expr, "ub")
+        equals = (
+            None if self._equals is None else get_bound_name(self._equals, "equals")
         )
-        if self._has_ids:
-            result += self.to_expr().to_str(str_col_name="variable")
-        else:
-            with Config.print_polars_config:
-                data = self._add_shape_to_columns(self.data)
-                # we don't try to include the allowed_new_dims because there are none for Variables (only exist on Expression or Sets)
-                result += repr(data)
+
+        result = get_obj_repr(
+            self,
+            f"'{self.name}'",
+            lb=lb,
+            ub=ub,
+            equals=equals,
+            height=self.data.height if self.dimensions else None,
+        )
+
+        if not self.dimensionless:
+            result += "\n"
+            if self._has_ids:
+                result += self.to_expr().to_str(str_col_name="variable")
+            else:
+                with Config.print_polars_config:
+                    data = self._add_shape_to_columns(self.data)
+                    # we don't try to include the allowed_new_dims because there are none for Variables (only exist on Expression or Sets)
+                    result += repr(data)
 
         return result
 
@@ -2970,7 +2904,7 @@ class Variable(BaseOperableBlock):
             │ 18:00 ┆ Berlin  │
             └───────┴─────────┘
             Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at
-                https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers
+                https://pyoframe.com/latest/learn/concepts/join_modifiers
 
             >>> (m.bat_charge + m.bat_flow).drop_extras() == m.bat_charge.next("time")
             <Constraint 'unnamed' (linear) height=6 terms=18>

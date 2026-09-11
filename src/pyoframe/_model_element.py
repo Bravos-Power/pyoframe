@@ -52,7 +52,7 @@ class BaseBlock(ABC):
         When an object is added to a model, this name is updated to the name used in the model."""
 
     def _on_add_to_model(self, model: Model, name: str):
-        self.name = name
+        self.name = name  # TODO make a separate debug name variable that starts with 'm.' while leaving the name as is for e.g. solver purposes
         self._model = model
 
     @property

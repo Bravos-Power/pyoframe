@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import itertools
-import sys
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import polars as pl
 import pyoptinterface as poi
@@ -18,23 +16,26 @@ from pyoframe._constants import (
     RESERVED_COL_KEYS,
     VAR_KEY,
     Config,
+    PyoframeError,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from pyoframe._core import BaseOperableBlock
+    from pyoframe._core import BaseOperableBlock, Expression
     from pyoframe._model import Variable
 
-if sys.version_info >= (3, 10):
-    pairwise = itertools.pairwise
-else:
 
-    def pairwise(iterable):
-        iterator = iter(iterable)
-        a = next(iterator)
-
-        for b in iterator:
-            yield a, b
-            a = b
+def try_to_expr(expressionable, error_msg: str) -> Expression:
+    if hasattr(expressionable, "to_expr"):
+        return expressionable.to_expr()  # TODO find a way to avoid the monkey patch without introducing circular dependencies
+    else:
+        raise PyoframeError(f"""{error_msg} because object of type '{type(expressionable)}' cannot be converted to a Pyoframe Expression. Allowed types are:
+- pandas Series
+- pandas DataFrames
+- polars DataFrames
+- pyoframe Variable
+- pyoframe Param
+- pyoframe Set
+- pyoframe Expression""")
 
 
 def get_obj_repr(obj: object, *props: str | None, **kwargs):

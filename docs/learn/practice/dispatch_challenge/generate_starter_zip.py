@@ -19,17 +19,19 @@ def main():
 
     copy_file(
         "generators.parquet",
-        transform=lambda df: df.with_columns(
-            pl.col("type").replace(
-                {
-                    "Other Natural Gas": "Natural Gas",
-                    "CSP": "Solar",
-                    "Solar PV": "Solar",
-                }
+        transform=lambda df: (
+            df.with_columns(
+                pl.col("type").replace(
+                    {
+                        "Other Natural Gas": "Natural Gas",
+                        "CSP": "Solar",
+                        "Solar PV": "Solar",
+                    }
+                )
             )
-        )
-        .filter(pl.col("type") != "IMPORT")
-        .drop("hourly_overhead_per_MW_capacity", "PlantAndGenID"),
+            .filter(pl.col("type") != "IMPORT")
+            .drop("hourly_overhead_per_MW_capacity", "PlantAndGenID")
+        ),
     )
     copy_file(
         "variable_capacity_factors.parquet",

@@ -8,7 +8,7 @@ import pyoframe as pf
 
 def test_param_smart_naming():
     df = pl.DataFrame({"dim": [1, 2], "val": [2, 3]})
-    assert pf.Param(df).name == "val"
+    assert pf.Param(df).name == "Param[val]"
 
 
 def test_variables(default_solver):
@@ -59,7 +59,7 @@ def test_transforms(default_solver):
     # compound
     assert (m.X.next("dim", wrap_around=True) + df).rename(
         {"dim": "dim2"}
-    ).name == "(X.next(…) + val).rename(…)"
+    ).name == "(X.next(…) + Param[val]).rename(…)"
 
 
 def test_set():
@@ -79,15 +79,16 @@ def test_warning_without_name():
 
 def test_addition_modifiers():
     expr = pf.Param({"dim": [1, 2], "val": [2, 3]})
-    assert expr.name == "val"
+    assert expr.name == "Param[val]"
 
-    assert expr.keep_extras().name == "val.keep_extras()"
+    assert expr.keep_extras().name == "Param[val].keep_extras()"
 
-    assert expr.keep_extras().keep_extras().name == "val.keep_extras()"
-    assert expr.drop_extras().drop_extras().name == "val.drop_extras()"
-    assert expr.raise_extras().raise_extras().name == "val"
+    assert expr.keep_extras().keep_extras().name == "Param[val].keep_extras()"
+    assert expr.drop_extras().drop_extras().name == "Param[val].drop_extras()"
+    assert expr.raise_extras().raise_extras().name == "Param[val]"
 
-    assert (expr | expr).name == "(val.keep_extras() + val.keep_extras())"
+    assert (expr | expr).name == "(Param[val].keep_extras() + Param[val].keep_extras())"
     assert (
-        expr | expr | expr
-    ).name == "((val.keep_extras() + val.keep_extras()) + val.keep_extras())"
+        (expr | expr | expr).name
+        == "((Param[val].keep_extras() + Param[val].keep_extras()) + Param[val].keep_extras())"
+    )
