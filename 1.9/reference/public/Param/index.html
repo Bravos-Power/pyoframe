@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/1.9/reference/public/Param/">
+        <link rel="canonical" href="https://pyoframe.com/1.9/reference/public/Param/">
       
       
         <link rel="prev" href="../Objective/">
@@ -2654,7 +2654,15 @@ This makes debugging models with inline parameters easier.</p>
 <span class="normal"><a href="#__codelineno-0-105">105</a></span>
 <span class="normal"><a href="#__codelineno-0-106">106</a></span>
 <span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="k">def</span><span class="w"> </span><span class="nf">Param</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">ParamInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="k">def</span><span class="w"> </span><span class="nf">Param</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">ParamInput</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Expression</span><span class="p">:</span>
 </span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">    </span><span class="sd">"""Creates a model parameter, i.e. an [Expression][pyoframe.Expression] that doesn't involve any variables.</span>
 </span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a>
 </span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    A Parameter can be created from a DataFrame, CSV file, Parquet file, data dictionary, or a Pandas Series.</span>
@@ -2732,12 +2740,20 @@ This makes debugging models with inline parameters easier.</p>
 </span><span id="__span-0-100"><a id="__codelineno-0-100" name="__codelineno-0-100"></a>
 </span><span id="__span-0-101"><a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="n">value_col</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span id="__span-0-102"><a id="__codelineno-0-102" name="__codelineno-0-102"></a>
-</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span>
+</span><span id="__span-0-103"><a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
 </span><span id="__span-0-104"><a id="__codelineno-0-104" name="__codelineno-0-104"></a>        <span class="n">data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="n">value_col</span><span class="p">:</span> <span class="n">COEF_KEY</span><span class="p">})</span>
 </span><span id="__span-0-105"><a id="__codelineno-0-105" name="__codelineno-0-105"></a>        <span class="o">.</span><span class="n">drop_nulls</span><span class="p">(</span><span class="n">COEF_KEY</span><span class="p">)</span>
-</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">CONST_TERM</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="n">VAR_KEY</span><span class="p">)),</span>
-</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Param[</span><span class="si">{</span><span class="n">value_col</span><span class="si">}</span><span class="s2">]"</span><span class="p">,</span>
-</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="p">)</span>
+</span><span id="__span-0-106"><a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="o">.</span><span class="n">with_columns</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">lit</span><span class="p">(</span><span class="n">CONST_TERM</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="n">VAR_KEY</span><span class="p">))</span>
+</span><span id="__span-0-107"><a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="p">)</span>
+</span><span id="__span-0-108"><a id="__codelineno-0-108" name="__codelineno-0-108"></a>
+</span><span id="__span-0-109"><a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="k">try</span><span class="p">:</span>
+</span><span id="__span-0-110"><a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">cast</span><span class="p">({</span><span class="n">COEF_KEY</span><span class="p">:</span> <span class="n">Config</span><span class="o">.</span><span class="n">coef_dtype</span><span class="p">})</span>
+</span><span id="__span-0-111"><a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="k">except</span> <span class="n">pl</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidOperationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="__span-0-112"><a id="__codelineno-0-112" name="__codelineno-0-112"></a>        <span class="k">raise</span> <span class="n">PyoframeError</span><span class="p">(</span>
+</span><span id="__span-0-113"><a id="__codelineno-0-113" name="__codelineno-0-113"></a>            <span class="sa">f</span><span class="s2">"Could not create parameter. The column '</span><span class="si">{</span><span class="n">value_col</span><span class="si">}</span><span class="s2">' must be numeric, but it has type </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="n">COEF_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">."</span>
+</span><span id="__span-0-114"><a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</span><span id="__span-0-115"><a id="__codelineno-0-115" name="__codelineno-0-115"></a>
+</span><span id="__span-0-116"><a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Param[</span><span class="si">{</span><span class="n">value_col</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2765,7 +2781,7 @@ This makes debugging models with inline parameters easier.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 3, 2026 06:12:05 UTC">September 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 12, 2026 00:09:36 UTC">September 12, 2026</span>
   </span>
 
     
@@ -2775,7 +2791,7 @@ This makes debugging models with inline parameters easier.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 3, 2026 06:12:05 UTC">September 3, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="September 12, 2026 00:09:36 UTC">September 12, 2026</span>
   </span>
 
     

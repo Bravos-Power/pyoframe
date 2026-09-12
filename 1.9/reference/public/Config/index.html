@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://Bravos-Power.github.io/pyoframe/1.9/reference/public/Config/">
+        <link rel="canonical" href="https://pyoframe.com/1.9/reference/public/Config/">
       
       
         <link rel="prev" href="../Set/">
@@ -1979,6 +1979,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pyoframe._constants._Config.coef_dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        coef_dtype
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pyoframe._constants._Config.default_solver" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2561,6 +2572,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pyoframe._constants._Config.coef_dtype" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        coef_dtype
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pyoframe._constants._Config.default_solver" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2775,6 +2797,16 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
+            <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;coef_dtype&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;pyoframe._constants._Config.coef_dtype&lt;/code&gt;)" href="#pyoframe._constants._Config.coef_dtype">coef_dtype</a></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The Polars data type to use for coefficients of expressions.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
             <td><code><a class="autorefs autorefs-internal" title="&lt;code class=&quot;highlight language-python&quot;&gt;&lt;span class=&quot;n&quot;&gt;default_solver&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SUPPORTED_SOLVER_TYPES&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;_Solver&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Literal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&#x27;raise&#x27;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&#x27;auto&#x27;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;/code&gt; (&lt;code&gt;pyoframe._constants._Config.default_solver&lt;/code&gt;)" href="#pyoframe._constants._Config.default_solver">default_solver</a></code></td>
             <td>
                   <code><span title="pyoframe._constants.SUPPORTED_SOLVER_TYPES">SUPPORTED_SOLVER_TYPES</span> | <span title="pyoframe._constants._Solver">_Solver</span> | <span title="typing.Literal">Literal</span>[&#39;raise&#39;, &#39;auto&#39;]</code>
@@ -2888,9 +2920,9 @@
 
                   <details class="mkdocstrings-source">
                     <summary>Source code in <code>pyoframe/_constants.py</code></summary>
-                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-146">146</a></span>
-<span class="normal"><a href="#__codelineno-0-147">147</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-146"><a id="__codelineno-0-146" name="__codelineno-0-146"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-0-147"><a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="n">ConfigDefaults</span><span class="p">()</span>
+                    <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-147">147</a></span>
+<span class="normal"><a href="#__codelineno-0-148">148</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-147"><a id="__codelineno-0-147" name="__codelineno-0-147"></a><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-0-148"><a id="__codelineno-0-148" name="__codelineno-0-148"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="n">ConfigDefaults</span><span class="p">()</span>
 </span></code></pre></div></td></tr></table></div>
                   </details>
 
@@ -2903,6 +2935,24 @@
 
 
 
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="pyoframe._constants._Config.coef_dtype" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">coef_dtype</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>The Polars data type to use for coefficients of expressions.</p>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-attribute">
 
@@ -2977,7 +3027,7 @@ Only consider enabling after you have thoroughly tested your code.</p>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="x">│ Montreal │</span>
 </span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="x">└──────────┘</span>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="x">Use .drop_extras() or .keep_extras() to indicate how the extra labels should be handled. Learn more at</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="x">    https://bravos-power.github.io/pyoframe/latest/learn/concepts/join_modifiers</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="x">    https://pyoframe.com/latest/learn/concepts/join_modifiers</span>
 </span></code></pre></div>
     <p>But if <code>Config.disable_extras_checks = True</code>, the error is suppressed and the sum is considered to be <code>population.keep_extras() + population_influx.keep_extras()</code>:</p>
     <div class="language-pycon highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">Config</span><span class="o">.</span><span class="n">disable_extras_checks</span> <span class="o">=</span> <span class="kc">True</span>
@@ -3286,33 +3336,33 @@ as well as those returned via <a class="autorefs autorefs-internal" title="&lt;c
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>pyoframe/_constants.py</code></summary>
-              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-429">429</a></span>
-<span class="normal"><a href="#__codelineno-0-430">430</a></span>
-<span class="normal"><a href="#__codelineno-0-431">431</a></span>
-<span class="normal"><a href="#__codelineno-0-432">432</a></span>
-<span class="normal"><a href="#__codelineno-0-433">433</a></span>
-<span class="normal"><a href="#__codelineno-0-434">434</a></span>
-<span class="normal"><a href="#__codelineno-0-435">435</a></span>
-<span class="normal"><a href="#__codelineno-0-436">436</a></span>
-<span class="normal"><a href="#__codelineno-0-437">437</a></span>
-<span class="normal"><a href="#__codelineno-0-438">438</a></span>
-<span class="normal"><a href="#__codelineno-0-439">439</a></span>
+              <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-439">439</a></span>
 <span class="normal"><a href="#__codelineno-0-440">440</a></span>
 <span class="normal"><a href="#__codelineno-0-441">441</a></span>
-<span class="normal"><a href="#__codelineno-0-442">442</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-429"><a id="__codelineno-0-429" name="__codelineno-0-429"></a><span class="k">def</span><span class="w"> </span><span class="nf">reset_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="__span-0-430"><a id="__codelineno-0-430" name="__codelineno-0-430"></a><span class="w">    </span><span class="sd">"""Resets all configuration options to their default values.</span>
-</span><span id="__span-0-431"><a id="__codelineno-0-431" name="__codelineno-0-431"></a>
-</span><span id="__span-0-432"><a id="__codelineno-0-432" name="__codelineno-0-432"></a><span class="sd">    Examples:</span>
-</span><span id="__span-0-433"><a id="__codelineno-0-433" name="__codelineno-0-433"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks</span>
-</span><span id="__span-0-434"><a id="__codelineno-0-434" name="__codelineno-0-434"></a><span class="sd">        False</span>
-</span><span id="__span-0-435"><a id="__codelineno-0-435" name="__codelineno-0-435"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks = True</span>
-</span><span id="__span-0-436"><a id="__codelineno-0-436" name="__codelineno-0-436"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks</span>
-</span><span id="__span-0-437"><a id="__codelineno-0-437" name="__codelineno-0-437"></a><span class="sd">        True</span>
-</span><span id="__span-0-438"><a id="__codelineno-0-438" name="__codelineno-0-438"></a><span class="sd">        &gt;&gt;&gt; pf.Config.reset_defaults()</span>
-</span><span id="__span-0-439"><a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks</span>
-</span><span id="__span-0-440"><a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="sd">        False</span>
-</span><span id="__span-0-441"><a id="__codelineno-0-441" name="__codelineno-0-441"></a><span class="sd">    """</span>
-</span><span id="__span-0-442"><a id="__codelineno-0-442" name="__codelineno-0-442"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="n">ConfigDefaults</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-442">442</a></span>
+<span class="normal"><a href="#__codelineno-0-443">443</a></span>
+<span class="normal"><a href="#__codelineno-0-444">444</a></span>
+<span class="normal"><a href="#__codelineno-0-445">445</a></span>
+<span class="normal"><a href="#__codelineno-0-446">446</a></span>
+<span class="normal"><a href="#__codelineno-0-447">447</a></span>
+<span class="normal"><a href="#__codelineno-0-448">448</a></span>
+<span class="normal"><a href="#__codelineno-0-449">449</a></span>
+<span class="normal"><a href="#__codelineno-0-450">450</a></span>
+<span class="normal"><a href="#__codelineno-0-451">451</a></span>
+<span class="normal"><a href="#__codelineno-0-452">452</a></span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-439"><a id="__codelineno-0-439" name="__codelineno-0-439"></a><span class="k">def</span><span class="w"> </span><span class="nf">reset_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="__span-0-440"><a id="__codelineno-0-440" name="__codelineno-0-440"></a><span class="w">    </span><span class="sd">"""Resets all configuration options to their default values.</span>
+</span><span id="__span-0-441"><a id="__codelineno-0-441" name="__codelineno-0-441"></a>
+</span><span id="__span-0-442"><a id="__codelineno-0-442" name="__codelineno-0-442"></a><span class="sd">    Examples:</span>
+</span><span id="__span-0-443"><a id="__codelineno-0-443" name="__codelineno-0-443"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks</span>
+</span><span id="__span-0-444"><a id="__codelineno-0-444" name="__codelineno-0-444"></a><span class="sd">        False</span>
+</span><span id="__span-0-445"><a id="__codelineno-0-445" name="__codelineno-0-445"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks = True</span>
+</span><span id="__span-0-446"><a id="__codelineno-0-446" name="__codelineno-0-446"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks</span>
+</span><span id="__span-0-447"><a id="__codelineno-0-447" name="__codelineno-0-447"></a><span class="sd">        True</span>
+</span><span id="__span-0-448"><a id="__codelineno-0-448" name="__codelineno-0-448"></a><span class="sd">        &gt;&gt;&gt; pf.Config.reset_defaults()</span>
+</span><span id="__span-0-449"><a id="__codelineno-0-449" name="__codelineno-0-449"></a><span class="sd">        &gt;&gt;&gt; pf.Config.disable_extras_checks</span>
+</span><span id="__span-0-450"><a id="__codelineno-0-450" name="__codelineno-0-450"></a><span class="sd">        False</span>
+</span><span id="__span-0-451"><a id="__codelineno-0-451" name="__codelineno-0-451"></a><span class="sd">    """</span>
+</span><span id="__span-0-452"><a id="__codelineno-0-452" name="__codelineno-0-452"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="n">ConfigDefaults</span><span class="p">()</span>
 </span></code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3354,6 +3404,22 @@ as well as those returned via <a class="autorefs autorefs-internal" title="&lt;c
 
 
 
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h2 id="pyoframe._constants.ConfigDefaults.coef_dtype" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">coef_dtype</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">Float64</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-attribute">
 
