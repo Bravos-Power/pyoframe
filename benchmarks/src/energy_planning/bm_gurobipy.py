@@ -31,7 +31,9 @@ class Bench(Benchmark):
         capex = pl.read_csv("capex_costs.csv")
         cost_params = pl.read_csv("cost_parameters.csv")
 
-        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_MWh")["cost"].item()
+        COST_UNSERVED_LOAD = cost_params.filter(name="load_unserved_k_per_pu")[
+            "cost"
+        ].item()
         SLACK_BUS = 1
 
         hours = loads_df.get_column("datetime").unique().sort()
@@ -49,21 +51,21 @@ class Bench(Benchmark):
 
         container.gen_bus = dict(zip(gens["gen_id"], gens["bus"]))
         container.gen_type = dict(zip(gens["gen_id"], gens["type"]))
-        container.gen_pmax = dict(zip(gens["gen_id"], gens["Pmax"]))
-        container.gen_cost = dict(zip(gens["gen_id"], gens["cost_per_MWh_linear"]))
+        container.gen_pmax = dict(zip(gens["gen_id"], gens["Pmax_pu"]))
+        container.gen_cost = dict(zip(gens["gen_id"], gens["cost_k_per_pu"]))
         container.gen_overhead = dict(
-            zip(gens["gen_id"], gens["hourly_overhead_per_MW_capacity"])
+            zip(gens["gen_id"], gens["hourly_overhead_k_per_pu"])
         )
         container.line_from = dict(zip(lines["line_id"], lines["from_bus"]))
         container.line_to = dict(zip(lines["line_id"], lines["to_bus"]))
-        container.line_rating = dict(zip(lines["line_id"], lines["line_rating_MW"]))
+        container.line_rating = dict(zip(lines["line_id"], lines["line_rating_pu"]))
         container.susceptance = {
-            lid: 1 / x for lid, x in zip(lines["line_id"], lines["reactance"])
+            lid: 0.001 / x for lid, x in zip(lines["line_id"], lines["reactance"])
         }
         container.load = dict(
-            zip(zip(loads_df["bus"], loads_df["datetime"]), loads_df["active_load"])
+            zip(zip(loads_df["bus"], loads_df["datetime"]), loads_df["active_load_pu"])
         )
-        container.capex = dict(zip(capex["type"], capex["yearly_capex_cost_per_KW"]))
+        container.capex = dict(zip(capex["type"], capex["hourly_capex_cost_k_per_pu"]))
 
         container.gens_at_bus = {
             b: [g for g in container.G if container.gen_bus[g] == b]
@@ -192,14 +194,15 @@ class Bench(Benchmark):
             )
         )
         if capacity_expansion:
+            num_hours = len(container.T)
             capex_coeffs = {
-                g: container.capex[container.gen_type[g]]
+                g: container.capex[container.gen_type[g]] * num_hours
                 for g in container.G
                 if container.gen_type[g] in container.capex
             }
             objective += container.Build_Out.prod(capex_coeffs)
             overhead_coeffs = {
-                g: container.gen_overhead[g] * len(container.T) for g in container.G
+                g: container.gen_overhead[g] * num_hours for g in container.G
             }
             objective += container.Build_Out.prod(overhead_coeffs)
 
@@ -268,7 +271,7 @@ class Bench(Benchmark):
 
     def add_yearly_limits(self, model, container):
         yearly_limits_df = pl.read_parquet("yearly_limits.parquet")
-        yearly_limit = dict(zip(yearly_limits_df["type"], yearly_limits_df["limit"]))
+        yearly_limit = dict(zip(yearly_limits_df["type"], yearly_limits_df["limit_pu"]))
 
         container.Con_Yearly_Limits = model.addConstrs(
             (

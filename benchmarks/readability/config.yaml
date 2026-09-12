@@ -4,7 +4,7 @@ benchmarks:
     label: "Facility Location Problem"
   simple_problem:
     path: "src/simple_problem"
-    label: "Trivial Problem"
+    label: "Trivial Data Problem"
   energy_planning:
     path: "src/energy_planning"
     label: "Electrical Grid Problem"

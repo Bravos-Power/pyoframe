@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.9"
+__generated_with = "0.24.0"
 app = marimo.App()
 
 
@@ -28,6 +28,12 @@ def _():
     MATPOWER_DATA = "../raw_data/preprocessed/matpower_gen.parquet"
     OUTPUT_PATH = "../raw_data/preprocessed/generators.parquet"
     return CATS_DATA, MATPOWER_DATA, OUTPUT_PATH
+
+
+@app.cell
+def _():
+    BASE_MW = 100
+    return (BASE_MW,)
 
 
 @app.cell
@@ -376,8 +382,21 @@ def _(df_clean6):
 
 
 @app.cell
-def _(OUTPUT_PATH, df_clean6):
-    df_clean6.sort(df_clean6.columns).write_parquet(OUTPUT_PATH)
+def _(BASE_MW, df_clean6, pl):
+    df_clean7 = df_clean6.with_columns(
+        (pl.col("Pmax") / BASE_MW).alias("Pmax_pu"),
+        (pl.col("cost_per_MWh_linear") / 1000 * BASE_MW).alias("cost_k_per_pu"),
+        (pl.col("hourly_overhead_per_MW_capacity") / 1000 * BASE_MW).alias(
+            "hourly_overhead_k_per_pu"
+        ),
+    )
+    return (df_clean7,)
+
+
+@app.cell
+def _(OUTPUT_PATH, df_clean7):
+    df_clean7.sort(df_clean7.columns).write_parquet(OUTPUT_PATH)
+    df_clean7
     return
 
 

@@ -1,0 +1,7 @@
+metric,50_time,95_time,50_memory,95_memory
+total,1.3,14.2,1.1,4.9
+solver,2.3,26.5,5.6,67.4
+presolve,1.2,9.1,,
+overhead,1.1,5.8,3.9,15.6
+overhead_computed,1.8,48.9,2.0,7.7
+solver_minus_presolve,4.1,NaN,,

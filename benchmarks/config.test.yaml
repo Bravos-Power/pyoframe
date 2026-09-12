@@ -31,8 +31,6 @@ problems:
 
 solvers:
   - gurobi
-  # - highs
-  # - mosek
 
 libraries:
   - pyoframe

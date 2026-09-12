@@ -345,9 +345,9 @@ version = "1.4.0"
 
 [[deps.Gurobi]]
 deps = ["Gurobi_jll", "Libdl", "MathOptInterface", "PrecompileTools"]
-git-tree-sha1 = "a39349533a3fe9f60cf05e1a56644f804473c46a"
+git-tree-sha1 = "0c937687e3f5812ecdba2b9986418cac7a873874"
 uuid = "2e9cd046-0924-5485-92f1-d5272153d98b"
-version = "1.7.5"
+version = "1.9.2"
 
 [[deps.Gurobi_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]

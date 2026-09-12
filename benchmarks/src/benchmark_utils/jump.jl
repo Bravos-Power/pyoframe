@@ -55,8 +55,11 @@ function optimize!(model::JuMP.Model)
     if solver_args !== nothing
         for arg in split(solver_args, ",")
             k, v = split(arg, "=", limit=2)
-            v = parse(Int, v)
-            set_optimizer_attribute(model, k, v)
+            v_parsed = tryparse(Int, v)
+            if v_parsed === nothing
+                v_parsed = parse(Float64, v)
+            end
+            set_optimizer_attribute(model, k, v_parsed)
         end
     end
 

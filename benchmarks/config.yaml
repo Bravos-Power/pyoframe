@@ -1,9 +1,45 @@
-repeat: 1 # TODO repeat
-timeout: 1200 # seconds, per run
+repeat: 3
+run_timeout_s: 1200
+version: 7
 name: "main"
 problems:
+  energy_planning_security_constrained_dispatch:
+    label: "Electrical Dispatch Problem"
+    code_dir: energy_planning
+    inputs: "*"
+    size: [2, 24, 8, 48]
+    args:
+      security_constrained: true
+      capacity_expansion: false
+    solver_args:
+      Method: 2
+      Crossover: false
+      # NOTES
+      # This problem ocassionaly (and seemingly randomly) results in sub-optimal solutions. I tried to fix this but couldn't find a solution short of enabling crossover.
+      # Thankfully, the sub-optimal solutions are still good enough for any practical applications and thus using them makes for an arguably realistic benchmark.
+      # Things I tried (for reference):
+      # - Improve numerical range of model (implemented, didn't fix problem)
+      # - Remove outlier data (implemented, didn't fix the problem)
+      # - BarHomogeneous: 1 (didn't fix the problem)
+      # - BarConvTol: 1.0e-7 (didn't fix the problem)
+      # - BarConvTol: 1.0e-5 (fixes the problem but results are not accurate enough)
+      # - BarConvTol: 1.0e-6 (seems to fix the problem, but results are worse than accepting the sub-optimal solution)
+      # More notes on what happens if we enable crossover:
+      # - Ordering becomes very slow (causes timeouts!). BarOrder: 0 helps.
+      # - Even with BarOrder: 0, solving takes longer than using the default parameters (Method: -1) despite Barrier finishing first in the concurrent solver.
+  energy_planning_capacity_expansion:
+    label: "Capacity Expansion Problem"
+    code_dir: energy_planning
+    inputs: "*"
+    size: [2, 168, 4, 24, 336]
+    args:
+      security_constrained: false
+      capacity_expansion: true
+    solver_args:
+      Method: 2
+      Crossover: false
   simple_problem:
-    label: "Simple Problem"
+    label: "Trivial Data Problem"
     size: [10000, 100000, 1000000, 10000000, 50000000]
     inputs:
       - "input_10000.parquet"
@@ -12,44 +48,20 @@ problems:
       - "input_10000000.parquet"
       - "input_50000000.parquet"
   facility_location:
-    label: "Facility Location Problem (from JuMP paper)"
+    label: "Facility Location Problem"
     size: [16, 32, 64, 128, 192]
     construct_only: true
-  energy_planning_capacity_expansion:
-    label: "Electrical Grid Capacity Expansion Problem"
-    code_dir: energy_planning
-    inputs: "*"
-    size: [2, 4, 24, 168, 336]
-    args:
-      security_constrained: false
-      capacity_expansion: true
-    solver_args:
-      Method: 2
-      Crossover: false
-  energy_planning_security_constrained_dispatch:
-    label: "Electrical Grid Dispatch Problem"
-    code_dir: energy_planning
-    inputs: "*"
-    size: [2, 4, 24, 48, 72]
-    args:
-      security_constrained: true
-      capacity_expansion: false
-    solver_args:
-      Method: 2
-      Crossover: false
 
 solvers:
   - gurobi
-  # - highs
-  # - mosek
 
 libraries:
   - pyoframe
-  - pyomo
-  - cvxpy
-  - gurobipy
+  - pyoptinterface
   - jump
   - linopy
-  - pyoptinterface
-  - pulp
+  - gurobipy
   - ampl
+  - pyomo
+  - cvxpy
+  - pulp

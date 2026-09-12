@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 5 * * WED"  # Every Wed at 05:00
+  pull_request:
+    paths:
+      - 'benchmarks/**'
 
 # needed to allow julia-actions/cache to delete old caches that it has created
 permissions:
@@ -19,7 +22,8 @@ jobs:
         uses: julia-actions/setup-julia@v3
       - uses: julia-actions/cache@v3
         with:
-          cache-name: julia-benchmarking-cache
+          cache-name: julia-benchmarking-cache-v2
+          version: '1.12.6'
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
