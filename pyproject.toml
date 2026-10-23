@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-highs = ["highsbox<=1.13.1"]
+highs = ["highsbox<=1.15.1"]
 ipopt = [
     "pyoptinterface[nlp]",
     "llvmlite<=0.49.0",    # Capped to prevent breaking changes in pyoptinterface. See https://github.com/metab0t/PyOptInterface/issues/56
@@ -42,7 +42,7 @@ dev = [
     "ipykernel==7.3.0",    # add support for jupyter notebooks
     # Automatically install as many solvers as possible
     # (we don't pin since we want to test against the latest)
-    "highsbox<=1.13.1",
+    "highsbox<=1.15.1",
     "pyoptinterface[nlp]",
     "numpy",               # for testing with np.nan, don't pin so that two versions of Python are possible
 ]
