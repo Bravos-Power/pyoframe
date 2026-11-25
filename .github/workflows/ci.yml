@@ -128,8 +128,24 @@ jobs:
           ):
               raise RuntimeError("MOSEK shared-library dependencies did not resolve")
 
-          ctypes.CDLL(str(library))
-          print(f"ctypes loaded {library}")
+          program_headers = subprocess.run(
+              ["readelf", "-W", "-l", str(library)],
+              capture_output=True,
+              text=True,
+              check=True,
+          )
+          stack_headers = [
+              line for line in program_headers.stdout.splitlines() if "GNU_STACK" in line
+          ]
+          print(f"MOSEK GNU_STACK program header: {stack_headers}")
+
+          ctypes_error = None
+          try:
+              ctypes.CDLL(str(library))
+              print(f"ctypes loaded {library}")
+          except OSError as error:
+              ctypes_error = error
+              print(f"ctypes could not load {library}: {error}")
 
           candidates = poi_mosek.detected_libraries()
           print(f"PyOptInterface library candidates: {candidates}")
@@ -140,7 +156,10 @@ jobs:
                   if is_library_loaded():
                       break
           if not is_library_loaded():
-              raise RuntimeError("PyOptInterface could not load the MOSEK library")
+              raise RuntimeError(
+                  "PyOptInterface could not load the MOSEK library; "
+                  f"ctypes load error: {ctypes_error!r}"
+              )
 
           model = pf.Model("mosek")
           model.X = pf.Variable(lb=1)
