@@ -59,7 +59,7 @@ jobs:
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') || 
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository) || 
       (github.event_name != 'pull_request_target' && github.event_name != 'pull_request')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned because MOSEK breaks due to GitHub Actions security?
     needs: check_permissions
     continue-on-error: ${{ !matrix.latest }}
     strategy:
