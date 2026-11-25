@@ -35,7 +35,7 @@ runs:
       uses: actions/cache@v6
       with:
         path: ~/installers
-        key: installers-${{ runner.os }}
+        key: installers-v1-${{ runner.os }}
 
     - name: Download Installers
       if: ${{ steps.cache-installers.outputs.cache-hit != 'true' }}
