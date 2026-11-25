@@ -97,14 +97,14 @@ jobs:
           ulimit -c unlimited
           export PYTHONFAULTHANDLER=1
           gdb --batch --return-child-result \
-            -x .github/scripts/mosek-segfault.gdb \
+            -x .github/scripts/native-crash.gdb \
             --args python -m pytest --cov
       - name: Print backtrace from core dump
         if: always()
         run: |
-          core=/tmp/pyoframe-mosek-segfault.core
+          core=/tmp/pyoframe-native-crash.core
           if [[ ! -f "$core" ]]; then
-            echo "No MOSEK test core dump was generated."
+            echo "No native crash core dump was generated."
             exit 0
           fi
           trap 'rm -f -- "$core"' EXIT
