@@ -92,14 +92,31 @@ jobs:
         run: pip install -e .[dev]
       - name: Install GDB
         run: sudo apt-get update && sudo apt-get install -y gdb
-      - name: Run tests and collect coverage  # quit $_exitcode passes through the pytest exit code
+      - name: Record runner CPU capabilities
         run: |
-          gdb -batch \
-            -ex "set print thread-events off" \
-            -ex run \
-            -ex "thread apply all bt full" \
-            -ex 'quit $_exitcode' \
+          lscpu
+          grep -m1 '^flags' /proc/cpuinfo
+      - name: Run tests and collect coverage
+        run: |
+          ulimit -c unlimited
+          export PYTHONFAULTHANDLER=1
+          gdb --batch --return-child-result \
+            -x .github/scripts/native-crash.gdb \
             --args python -m pytest --cov
+      - name: Print backtrace from core dump
+        if: always()
+        run: |
+          core=/tmp/pyoframe-native-crash.core
+          if [[ ! -f "$core" ]]; then
+            echo "No native crash core dump was generated."
+            exit 0
+          fi
+          trap 'rm -f -- "$core"' EXIT
+          gdb --batch \
+            -ex "set pagination off" \
+            -ex "set print thread-events off" \
+            -ex "thread apply all bt full" \
+            "$(command -v python)" "$core"
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
