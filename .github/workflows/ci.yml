@@ -90,6 +90,65 @@ jobs:
           MOSEK_LICENSE: ${{ secrets.MOSEK_LIC_FILE }}
       - name: Install dependencies
         run: pip install -e .[dev]
+      - name: Test MOSEK Python binding
+        if: ${{ env.MOSEK_10_2_BINDIR != '' }}
+        run: |
+          python - <<'PY'
+          import ctypes
+          import os
+          import subprocess
+          from pathlib import Path
+
+          import pyoframe as pf
+          import pyoptinterface._src.mosek as poi_mosek
+          from pyoptinterface._src.mosek_model_ext import (
+              is_library_loaded,
+              load_library,
+          )
+
+          bindir = Path(os.environ["MOSEK_10_2_BINDIR"])
+          libraries = sorted(bindir.glob("libmosek64.so*"))
+          print(f"MOSEK shared libraries in {bindir}: {libraries}")
+          if not libraries:
+              raise FileNotFoundError(f"No MOSEK shared library found in {bindir}")
+
+          library = next(
+              (path for path in libraries if path.name == "libmosek64.so"),
+              libraries[0],
+          )
+          ldd = subprocess.run(
+              ["ldd", "-r", str(library)], capture_output=True, text=True
+          )
+          ldd_output = ldd.stdout + ldd.stderr
+          print(f"ldd -r {library}:\n{ldd_output}")
+          if (
+              ldd.returncode
+              or "not found" in ldd_output
+              or "undefined symbol" in ldd_output
+          ):
+              raise RuntimeError("MOSEK shared-library dependencies did not resolve")
+
+          ctypes.CDLL(str(library))
+          print(f"ctypes loaded {library}")
+
+          candidates = poi_mosek.detected_libraries()
+          print(f"PyOptInterface library candidates: {candidates}")
+          if not is_library_loaded():
+              for candidate in candidates:
+                  loaded = load_library(candidate)
+                  print(f"PyOptInterface load_library({candidate!r}): {loaded}")
+                  if is_library_loaded():
+                      break
+          if not is_library_loaded():
+              raise RuntimeError("PyOptInterface could not load the MOSEK library")
+
+          model = pf.Model("mosek")
+          model.X = pf.Variable(lb=1)
+          model.minimize = model.X
+          model.optimize()
+          assert abs(model.X.solution - 1) < 1e-4
+          print("Pyoframe solved the MOSEK smoke-test model")
+          PY
       - name: Install GDB
         run: sudo apt-get update && sudo apt-get install -y gdb
       - name: Run tests and collect coverage  # quit $_exitcode passes through the pytest exit code
