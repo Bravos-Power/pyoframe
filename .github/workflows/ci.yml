@@ -92,6 +92,10 @@ jobs:
         run: pip install -e .[dev]
       - name: Install GDB
         run: sudo apt-get update && sudo apt-get install -y gdb
+      - name: Record runner CPU capabilities
+        run: |
+          lscpu
+          grep -m1 '^flags' /proc/cpuinfo
       - name: Run tests and collect coverage
         run: |
           ulimit -c unlimited
